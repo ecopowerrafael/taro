@@ -1,0 +1,24 @@
+{
+  "name": "Taro Consultas",
+  "short_name": "Taro",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090812",
+  "theme_color": "#C5A059",
+  "description": "Plataforma mística para consultas em vídeo e pacotes de perguntas.",
+  "icons": [
+    {
+      "src": "/astrologa.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
