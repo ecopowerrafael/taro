@@ -179,7 +179,34 @@ export const initializeSchema = async (pool) => {
       dailyRoomName VARCHAR(255) NULL,
       pixKey VARCHAR(255) NULL,
       pixReceiverName VARCHAR(120) NULL,
-      pixReceiverCity VARCHAR(120) NULL
+      pixReceiverCity VARCHAR(120) NULL,
+      smtpHost VARCHAR(255) NULL,
+      smtpPort INT NULL,
+      smtpUser VARCHAR(255) NULL,
+      smtpPass VARCHAR(255) NULL,
+      smtpFrom VARCHAR(255) NULL
+    )
+  `)
+
+  // Garantir colunas de SMTP para bancos antigos
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpHost VARCHAR(255) NULL') } catch (e) {}
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpPort INT NULL') } catch (e) {}
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpUser VARCHAR(255) NULL') } catch (e) {}
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpPass VARCHAR(255) NULL') } catch (e) {}
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpFrom VARCHAR(255) NULL') } catch (e) {}
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS video_sessions (
+      id VARCHAR(50) PRIMARY KEY,
+      userId VARCHAR(50) NOT NULL,
+      consultantId VARCHAR(50) NOT NULL,
+      status ENUM('waiting', 'active', 'finished') NOT NULL DEFAULT 'waiting',
+      roomUrl VARCHAR(255) NULL,
+      createdAt DATETIME NOT NULL,
+      startedAt DATETIME NULL,
+      finishedAt DATETIME NULL,
+      CONSTRAINT fk_vs_user FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT fk_vs_consultant FOREIGN KEY (consultantId) REFERENCES consultants(id) ON DELETE CASCADE
     )
   `)
 

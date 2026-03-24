@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Sparkles } from 'lucide-react'
 
 // Base dos 22 Arcanos Maiores do Tarot
 const MAJOR_ARCANA = [

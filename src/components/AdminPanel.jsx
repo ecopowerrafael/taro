@@ -82,6 +82,11 @@ export function AdminPanel({
     pixKey: '',
     pixReceiverName: '',
     pixReceiverCity: '',
+    smtpHost: '',
+    smtpPort: '',
+    smtpUser: '',
+    smtpPass: '',
+    smtpFrom: '',
   })
 
   useEffect(() => {
@@ -96,6 +101,11 @@ export function AdminPanel({
         pixKey: mpCredentials?.pixKey || '',
         pixReceiverName: mpCredentials?.pixReceiverName || '',
         pixReceiverCity: mpCredentials?.pixReceiverCity || '',
+        smtpHost: dailyCredentials?.smtpHost || '',
+        smtpPort: dailyCredentials?.smtpPort || '',
+        smtpUser: dailyCredentials?.smtpUser || '',
+        smtpPass: dailyCredentials?.smtpPass || '',
+        smtpFrom: dailyCredentials?.smtpFrom || '',
       })
     }
   }, [mpCredentials, dailyCredentials])
@@ -119,6 +129,14 @@ export function AdminPanel({
         pixKey: credentialsDraft.pixKey,
         pixReceiverName: credentialsDraft.pixReceiverName,
         pixReceiverCity: credentialsDraft.pixReceiverCity,
+      }
+    } else if (type === 'smtp') {
+      data = {
+        smtpHost: credentialsDraft.smtpHost,
+        smtpPort: credentialsDraft.smtpPort,
+        smtpUser: credentialsDraft.smtpUser,
+        smtpPass: credentialsDraft.smtpPass,
+        smtpFrom: credentialsDraft.smtpFrom,
       }
     }
     // As the prop is `onMpCredentialsChange` but it's passed `savePlatformCredentials` from Context
@@ -736,6 +754,72 @@ export function AdminPanel({
                     value={credentialsDraft.dailyRoomName}
                     onChange={(e) => setCredentialsDraft({ ...credentialsDraft, dailyRoomName: e.target.value })}
                     className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-xl text-mystic-goldSoft">Configurações de E-mail (SMTP)</h3>
+                  <p className="text-xs text-ethereal-silver/70">Servidor para envio de e-mails transacionais.</p>
+                </div>
+                <button
+                  onClick={() => handleSavePartial('smtp')}
+                  className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110"
+                >
+                  <Save size={14} />
+                  Salvar SMTP
+                </button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Servidor SMTP (Host)
+                  <input
+                    type="text"
+                    value={credentialsDraft.smtpHost}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, smtpHost: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                    placeholder="ex: smtp.hostinger.com"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Porta SMTP
+                  <input
+                    type="number"
+                    value={credentialsDraft.smtpPort}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, smtpPort: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                    placeholder="ex: 465"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Usuário (E-mail)
+                  <input
+                    type="text"
+                    value={credentialsDraft.smtpUser}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, smtpUser: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Senha do E-mail
+                  <input
+                    type="password"
+                    value={credentialsDraft.smtpPass}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, smtpPass: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75 md:col-span-2">
+                  E-mail de Remetente (From)
+                  <input
+                    type="text"
+                    value={credentialsDraft.smtpFrom}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, smtpFrom: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                    placeholder="ex: contato@appastria.online"
                   />
                 </label>
               </div>

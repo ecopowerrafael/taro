@@ -22,6 +22,7 @@ export function AreaConsultorPage() {
     minWithdrawalAmount,
     updateConsultantAvailability,
     authLoading,
+    token,
   } = usePlatformContext()
 
   const [selectedConsultantId, setSelectedConsultantId] = useState('')
@@ -31,6 +32,30 @@ export function AreaConsultorPage() {
   const [panelNotice, setPanelNotice] = useState('')
   const [responseDrafts, setResponseDrafts] = useState({})
   const [profileDraft, setProfileDraft] = useState(null)
+  const [pendingVideoSessions, setPendingVideoSessions] = useState([])
+
+  // Polling para novas chamadas de v\u00eddeo
+  useEffect(() => {
+    if (!token || isAdmin) return
+
+    const fetchPendingVideo = async () => {
+      try {
+        const res = await fetch('/api/video-sessions/pending', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setPendingVideoSessions(data)
+        }
+      } catch (e) {
+        // ignora
+      }
+    }
+
+    fetchPendingVideo()
+    const interval = setInterval(fetchPendingVideo, 5000)
+    return () => clearInterval(interval)
+  }, [token, isAdmin])
   const [referenceTimestamp] = useState(() => Date.now())
   const availabilityService = useMemo(() => new ConsultantAvailabilityService(), [])
 
@@ -302,9 +327,30 @@ export function AreaConsultorPage() {
   return (
     <PageShell
       title="Área do Consultor"
-      subtitle="Atendimentos de perguntas, carteira e saques do consultor."
+      subtitle="Atendimentos de perguntas, vídeo e carteira do consultor."
     >
-      <GlassCard title="Atendimento do Consultor" subtitle="Visualize e responda cada item enviado pelo cliente.">
+      {pendingVideoSessions.length > 0 && !isAdmin && (
+        <GlassCard title="Chamadas de Vídeo Pendentes" subtitle="Clientes aguardando você entrar na sala.">
+          <div className="grid gap-3">
+            {pendingVideoSessions.map((session) => (
+              <article key={session.id} className="flex items-center justify-between rounded-xl border border-mystic-gold/35 bg-black/30 p-4">
+                <div>
+                  <p className="text-sm text-amber-50">Cliente: <strong className="text-mystic-goldSoft">{session.userName}</strong></p>
+                  <p className="text-xs text-ethereal-silver/80">Solicitado agora pouco</p>
+                </div>
+                <button
+                  onClick={() => window.open(`/sala/${session.id}`, '_blank')}
+                  className="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110"
+                >
+                  Entrar na Sala
+                </button>
+              </article>
+            ))}
+          </div>
+        </GlassCard>
+      )}
+
+      <GlassCard title="Atendimento de Perguntas" subtitle="Visualize e responda cada item enviado pelo cliente.">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           {isAdmin ? (
             <select

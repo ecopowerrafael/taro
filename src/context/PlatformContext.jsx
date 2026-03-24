@@ -222,6 +222,7 @@ export function PlatformProvider({ children }) {
     roomName: 'hello',
   })
   const [questionRequests, setQuestionRequests] = useState([])
+  const [videoSessions, setVideoSessions] = useState([])
   const [consultantWallets, setConsultantWallets] = useState(initialConsultantWallets)
   const [paymentResult, setPaymentResult] = useState(null)
   const [systemNotice, setSystemNotice] = useState('')
@@ -1085,6 +1086,7 @@ export function PlatformProvider({ children }) {
     fetchPendingRecharges,
     requestRecharge,
     processRechargeAction,
+    token,
   }
 
   return <PlatformContext.Provider value={value}>{children}</PlatformContext.Provider>

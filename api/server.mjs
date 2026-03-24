@@ -11,6 +11,7 @@ import { createQuestionRequestsRouter } from './routes/questionRequests.mjs'
 import { createWalletsRouter } from './routes/wallets.mjs'
 import { createAuthRouter } from './routes/auth.mjs'
 import { createRechargesRouter } from './routes/recharges.mjs'
+import { createVideoSessionsRouter } from './routes/videoSessions.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -124,6 +125,7 @@ try {
   app.use('/api/credentials', createCredentialsRouter(pool))
   app.use('/api/question-requests', createQuestionRequestsRouter(pool))
   app.use('/api/wallets', createWalletsRouter(pool))
+  app.use('/api/video-sessions', createVideoSessionsRouter(pool))
 
   // Await schema initialization to avoid table not found errors
   console.log('[API] Inicializando schema...')

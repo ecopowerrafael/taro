@@ -14,6 +14,7 @@ import { AreaConsultorPage } from './pages/AreaConsultorPage'
 import { TermosPage } from './pages/TermosPage'
 import { PrivacidadePage } from './pages/PrivacidadePage'
 import { RecarregarPage } from './pages/RecarregarPage'
+import { VideoRoomPage } from './pages/VideoRoomPage'
 import { PageTransition } from './components/PageTransition'
 import { MobileBottomNav } from './components/MobileBottomNav'
 
@@ -63,6 +64,7 @@ function App() {
           <Route path="/entrar" element={wrapWithTransition(<EntrarPage />)} />
           <Route path="/consultores" element={wrapWithTransition(<ConsultoresPage />)} />
           <Route path="/seja-consultor" element={wrapWithTransition(<SejaConsultorPage />)} />
+          <Route path="/sala/:sessionId" element={wrapWithTransition(<VideoRoomPage />)} />
           <Route 
             path="/area-consultor" 
             element={<ProtectedRoute role="consultant">{wrapWithTransition(<AreaConsultorPage />)}</ProtectedRoute>} 

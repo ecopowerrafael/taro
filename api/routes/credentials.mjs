@@ -44,7 +44,12 @@ export const createCredentialsRouter = (pool) => {
         dailyRoomName: 'dailyRoomName',
         pixKey: 'pixKey',
         pixReceiverName: 'pixReceiverName',
-        pixReceiverCity: 'pixReceiverCity'
+        pixReceiverCity: 'pixReceiverCity',
+        smtpHost: 'smtpHost',
+        smtpPort: 'smtpPort',
+        smtpUser: 'smtpUser',
+        smtpPass: 'smtpPass',
+        smtpFrom: 'smtpFrom'
       }
 
       const updates = []
