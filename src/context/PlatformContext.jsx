@@ -119,17 +119,7 @@ const adminDashboardStats = {
   clientsCount: 8,
 }
 
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL
-  try {
-    if (process.env.VITE_API_BASE_URL) return process.env.VITE_API_BASE_URL
-  } catch (e) {
-    // process.env not defined
-  }
-  return ''
-}
-
-const API_BASE_URL = getApiBaseUrl().trim()
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
 
 const buildApiUrl = (resource) => {
   if (!API_BASE_URL) {

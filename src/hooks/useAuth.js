@@ -1,16 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL
-  try {
-    if (process.env.VITE_API_BASE_URL) return process.env.VITE_API_BASE_URL
-  } catch (e) {
-    // process.env not defined
-  }
-  return ''
-}
-
-const API_BASE_URL = getApiBaseUrl().trim()
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
 
 export function useAuth() {
   const [user, setUser] = useState(null)

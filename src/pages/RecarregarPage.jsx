@@ -1,14 +1,22 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { WalletCards, QrCode, CreditCard, Copy, CheckCircle2, Loader2 } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { QRCodeSVG } from 'qrcode.react'
-import { QrCodePix } from 'qrcode-pix'
+import * as QrCodePixModule from 'qrcode-pix'
 import { GlassCard } from '../components/GlassCard'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
 
+// Handle different import styles for qrcode-pix safely
+const getQrCodePix = () => {
+  if (!QrCodePixModule) return null
+  return QrCodePixModule.QrCodePix || QrCodePixModule.default || (typeof QrCodePixModule === 'function' ? QrCodePixModule : null)
+}
+
+const QrCodePix = getQrCodePix()
+
 export function RecarregarPage() {
-  const { minutePackages, rechargePackage, paymentResult, minutesBalance, mpCredentials, systemNotice, requestRecharge } = usePlatformContext()
+  const { minutePackages, rechargePackage, paymentResult, minutesBalance, mpCredentials, requestRecharge } = usePlatformContext()
   const [paymentMethod, setPaymentMethod] = useState(null) // 'pix' | 'card'
   const [selectedPack, setSelectedPack] = useState(null)
   const [copied, setCopied] = useState(false)
@@ -16,7 +24,7 @@ export function RecarregarPage() {
 
   // Gerar Pix Copia e Cola dinâmico baseado no pacote
   const pixData = useMemo(() => {
-    if (!selectedPack || !mpCredentials?.pixKey) return null
+    if (!selectedPack || !mpCredentials?.pixKey || typeof QrCodePix !== 'function') return null
     
     try {
       const amount = selectedPack.promoPrice ?? selectedPack.price
