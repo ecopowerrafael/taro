@@ -132,6 +132,22 @@ export const createVideoSessionsRouter = (pool) => {
         })
       }
 
+      // Envia notificação Web Push se o consultor tiver assinatura
+      const pushSubscriptions = request.app.get('pushSubscriptions')
+      const webpush = request.app.get('webpush')
+      if (pushSubscriptions && webpush && pushSubscriptions[consultant.userId]) {
+        const subs = pushSubscriptions[consultant.userId]
+        const payload = JSON.stringify({
+          title: 'Nova Chamada de Vídeo',
+          body: `O cliente ${user.name} está aguardando na sala!`,
+          url: `https://appastria.online/sala/${sessionId}`
+        })
+        
+        subs.forEach(sub => {
+          webpush.sendNotification(sub, payload).catch(e => console.error('Erro no webpush:', e))
+        })
+      }
+
       response.status(201).json({ sessionId, roomUrl })
 
     } catch (error) {

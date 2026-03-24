@@ -238,6 +238,45 @@ export function PlatformProvider({ children }) {
     return consultants.find((c) => c.userId === profile.id || c.email === profile.email)
   }, [profile, consultants])
 
+  // Registra Service Worker e Push Subscription.
+  const registerPushSubscription = async (userId) => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js')
+      const publicVapidKeyRes = await fetch('/api/push/public-key')
+      const publicVapidKey = await publicVapidKeyRes.text()
+
+      // Convert VAPID key to Uint8Array
+      const padding = '='.repeat((4 - publicVapidKey.length % 4) % 4)
+      const base64 = (publicVapidKey + padding).replace(/-/g, '+').replace(/_/g, '/')
+      const rawData = window.atob(base64)
+      const outputArray = new Uint8Array(rawData.length)
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i)
+      }
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: outputArray
+      })
+
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        body: JSON.stringify({ subscription, userId }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+    } catch (e) {
+      console.error('Erro ao registrar Push:', e)
+    }
+  }
+
+  useEffect(() => {
+    if (profile?.id) {
+      registerPushSubscription(profile.id)
+    }
+  }, [profile?.id])
+
   const debitMinutes = async (minutes) => {
     // In a real app, this would be an API call
     // For now, let's keep it local but it should ideally sync with DB

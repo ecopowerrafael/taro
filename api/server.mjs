@@ -14,11 +14,24 @@ import { createWalletsRouter } from './routes/wallets.mjs'
 import { createAuthRouter } from './routes/auth.mjs'
 import { createRechargesRouter } from './routes/recharges.mjs'
 import { createVideoSessionsRouter } from './routes/videoSessions.mjs'
+import webpush from 'web-push'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 dotenv.config({ path: path.join(__dirname, '.env') })
+
+// Configuração Web Push (VAPID Keys)
+// Em produção, isso deve vir do .env
+const vapidKeys = {
+  publicKey: process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuB-5b-YnB32Y5o9f-4Z8K-M4Y',
+  privateKey: process.env.VAPID_PRIVATE_KEY || 'k7-p8KxPqLzXwJ-5c7Z_wN2x9m8yB_uF6oJ_bK7L9hY'
+}
+webpush.setVapidDetails(
+  'mailto:contato@appastria.online',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+)
 
 // CAPTURA DE ERROS CRÍTICOS (CRASH LOG)
 process.on('uncaughtException', (err) => {
@@ -41,8 +54,39 @@ const io = new Server(httpServer, {
   }
 })
 
-// Adiciona o socket.io ao app para ser acessado nas rotas
+// Adiciona o socket.io e o webpush ao app para serem acessados nas rotas
 app.set('io', io)
+app.set('webpush', webpush)
+
+// Variável global para armazenar as assinaturas push em memória
+// Em produção real, o ideal é salvar isso no banco de dados!
+const pushSubscriptions = {}
+app.set('pushSubscriptions', pushSubscriptions)
+
+// Rota para salvar a assinatura push
+app.post('/api/push/subscribe', (req, res) => {
+  const { subscription, userId } = req.body
+  if (!subscription || !userId) {
+    return res.status(400).json({ error: 'Faltam dados de assinatura ou usuário' })
+  }
+  
+  if (!pushSubscriptions[userId]) {
+    pushSubscriptions[userId] = []
+  }
+  
+  // Evitar duplicatas (simplificado)
+  const exists = pushSubscriptions[userId].find(s => s.endpoint === subscription.endpoint)
+  if (!exists) {
+    pushSubscriptions[userId].push(subscription)
+  }
+  
+  res.status(201).json({ success: true })
+})
+
+// Rota para retornar a Public Key do VAPID para o frontend
+app.get('/api/push/public-key', (req, res) => {
+  res.send(vapidKeys.publicKey)
+})
 
 // Lógica de Sockets para notificações em tempo real
 io.on('connection', (socket) => {
