@@ -121,6 +121,8 @@ export function AdminPanel({
         pixReceiverCity: credentialsDraft.pixReceiverCity,
       }
     }
+    // As the prop is `onMpCredentialsChange` but it's passed `savePlatformCredentials` from Context
+    // which expects `(type, data)`, we use it generically for all types:
     onMpCredentialsChange(type, data)
   }
 

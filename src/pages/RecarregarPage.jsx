@@ -135,7 +135,8 @@ export function RecarregarPage() {
     const ok = await requestRecharge(amount, selectedPack.minutes, 'pix')
     setRequesting(false)
     if (ok) {
-      alert('Solicitação enviada! Após o pagamento, seu saldo será liberado pelo administrador.')
+      const msg = encodeURIComponent(`Olá, realizei uma recarga no app no valor de R$ ${amount.toFixed(2).replace('.', ',')} e gostaria de enviar o comprovante para creditar em minha conta.`)
+      window.open(`https://wa.me/551152864205?text=${msg}`, '_blank')
     }
   }
 
@@ -200,7 +201,7 @@ export function RecarregarPage() {
           </div>
 
           <GlassCard 
-            title={`Pacote ${selectedPack.minutes} min - R$ ${(selectedPack.promoPrice ?? selectedPack.price).toFixed(2)}`} 
+            title={`Pacote R$ ${(selectedPack.promoPrice ?? selectedPack.price).toFixed(2)}`} 
             subtitle="Escolha o método de pagamento para este pacote."
           >
             <div className="grid gap-4 md:grid-cols-2">
