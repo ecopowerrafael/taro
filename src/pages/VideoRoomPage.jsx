@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
-import { Loader2, Video, PhoneOff } from 'lucide-react'
+import { Loader2, Video, PhoneOff, Clock3, Wallet, XCircle } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
 import DailyIframe from '@daily-co/daily-js'
 
@@ -14,8 +14,31 @@ export function VideoRoomPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isCallActive, setIsCallActive] = useState(false)
+  const [callStartedAt, setCallStartedAt] = useState(null)
+  const [localElapsedSeconds, setLocalElapsedSeconds] = useState(0)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [endModal, setEndModal] = useState(null)
   const callFrameRef = useRef(null)
   const containerRef = useRef(null)
+
+  const formatElapsed = (seconds) => {
+    const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
+    const secs = String(seconds % 60).padStart(2, '0')
+    return `${minutes}:${secs}`
+  }
+
+  useEffect(() => {
+    if (!callStartedAt || !isCallActive) {
+      setLocalElapsedSeconds(0)
+      return undefined
+    }
+
+    const interval = window.setInterval(() => {
+      setLocalElapsedSeconds(Math.floor((Date.now() - callStartedAt) / 1000))
+    }, 1000)
+
+    return () => window.clearInterval(interval)
+  }, [callStartedAt, isCallActive])
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -26,6 +49,16 @@ export function VideoRoomPage() {
         const data = await res.json()
         if (!res.ok) throw new Error(data.message)
         setSession(data)
+        if (['cancelled', 'rejected'].includes(data.status)) {
+          setEndModal({
+            title: data.status === 'rejected' ? 'Chamada recusada' : 'Chamada cancelada',
+            message:
+              data.status === 'rejected'
+                ? 'O consultor recusou a chamada. Você pode escolher outro consultor.'
+                : 'A chamada foi cancelada.',
+            actionLabel: data.status === 'rejected' ? 'Escolher outro consultor' : 'Voltar',
+          })
+        }
       } catch (err) {
         setError(err.message || 'Erro ao carregar a sala.')
       } finally {
@@ -53,21 +86,41 @@ export function VideoRoomPage() {
           headers: { Authorization: `Bearer ${token}` }
         })
         const data = await res.json()
+        setSession(data)
+        if (data.status === 'rejected') {
+          setEndModal({
+            title: 'Chamada recusada',
+            message: 'O consultor recusou a chamada. Você pode escolher outro consultor.',
+            actionLabel: 'Escolher outro consultor',
+          })
+          clearInterval(interval)
+          return
+        }
+        if (data.status === 'cancelled') {
+          setEndModal({
+            title: 'Chamada cancelada',
+            message: 'A chamada foi cancelada.',
+            actionLabel: 'Voltar',
+          })
+          clearInterval(interval)
+          return
+        }
         if (data.status === 'active' && !isCallActive) {
           // Both are ready! O consultor já iniciou!
           setIsCallActive(true) // Libera a div do iframe
+          setCallStartedAt(Date.now())
           setTimeout(() => {
             joinCall(data)
           }, 100)
         }
-      } catch (e) {
-        // ignore
+      } catch {
+        void 0
       }
     }, 5000)
     return () => clearInterval(interval)
-  }, [session, isCallActive, sessionId, token])
+  }, [session, isCallActive, sessionId, token, joinCall])
 
-  const joinCall = async (sessionData) => {
+  const joinCall = useCallback(async (sessionData) => {
     if (!containerRef.current) return
     
     // Marcar sessão como ativa no DB se ainda não estiver
@@ -80,7 +133,8 @@ export function VideoRoomPage() {
     }
 
     const callFrame = DailyIframe.createFrame(containerRef.current, {
-      showLeaveButton: false, // Nós gerenciamos o botão de sair
+      showLeaveButton: false,
+      showPrejoinUI: false,
       iframeStyle: {
         width: '100%',
         height: '100%',
@@ -110,11 +164,12 @@ export function VideoRoomPage() {
         token: sessionData.dailyToken // Usado se a sala for privada
       })
       setIsCallActive(true)
+      setCallStartedAt((prev) => prev ?? Date.now())
     } catch (e) {
       console.error('Erro ao entrar na sala do Daily', e)
       setSystemNotice('Erro ao conectar na sala de vídeo.')
     }
-  }
+  }, [billing, sessionId, setSystemNotice, token, handleLeaveCall])
 
   const handleStartByConsultant = () => {
     // Para o container ser renderizado e a div ficar "block" primeiro,
@@ -128,7 +183,7 @@ export function VideoRoomPage() {
     }, 100)
   }
 
-  const handleLeaveCall = async () => {
+  const handleLeaveCall = useCallback(async () => {
     if (callFrameRef.current) {
       await callFrameRef.current.leave()
       callFrameRef.current.destroy()
@@ -147,6 +202,20 @@ export function VideoRoomPage() {
 
     navigate(session?.isConsultant ? '/area-consultor' : '/consultores')
     setSystemNotice('Chamada encerrada com sucesso.')
+  }, [billing, navigate, session?.isConsultant, sessionId, setSystemNotice, token])
+
+  const handleCancelWaiting = async () => {
+    setShowCancelConfirm(false)
+    try {
+      await fetch(`/api/video-sessions/${sessionId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'cancelled' })
+      })
+    } catch {
+      setSystemNotice('Não foi possível cancelar a chamada no momento.')
+    }
+    navigate('/consultores')
   }
 
   // Cleanup on unmount
@@ -160,7 +229,7 @@ export function VideoRoomPage() {
         billing.stopSession()
       }
     }
-  }, [isCallActive, session])
+  }, [billing, isCallActive, session])
 
   if (loading) {
     return (
@@ -191,6 +260,35 @@ export function VideoRoomPage() {
         <div 
           className={`relative overflow-hidden rounded-2xl border border-mystic-gold/30 bg-black/50 shadow-[0_0_30px_rgba(197,160,89,0.15)] ${isCallActive ? 'h-[70vh]' : 'h-auto p-8 text-center'}`}
         >
+          {isCallActive && (
+            <div className="absolute left-4 top-4 right-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-mystic-gold/30 bg-black/60 px-4 py-3 backdrop-blur-md">
+              <div className="flex items-center gap-3 text-xs text-amber-50">
+                <span className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/40 px-3 py-2">
+                  <Clock3 size={16} className="text-mystic-goldSoft" />
+                  Tempo: {formatElapsed(localElapsedSeconds)}
+                </span>
+                {session.isConsultant ? (
+                  <span className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/40 px-3 py-2">
+                    <Wallet size={16} className="text-mystic-goldSoft" />
+                    Total: R$ {((localElapsedSeconds / 60) * (session.pricePerMinute ?? 0)).toFixed(2)}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/40 px-3 py-2">
+                    <Wallet size={16} className="text-mystic-goldSoft" />
+                    Minutos restantes: {Number(billing.remainingMinutes ?? 0).toFixed(2)}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={handleLeaveCall}
+                className="flex items-center gap-2 rounded-lg bg-red-600/90 px-4 py-2 text-xs font-bold text-white transition hover:bg-red-500"
+              >
+                <PhoneOff size={16} />
+                Encerrar
+              </button>
+            </div>
+          )}
+
           {/* Waiting Room */}
           {!isCallActive && (
             <div className="flex flex-col items-center justify-center py-12">
@@ -214,6 +312,15 @@ export function VideoRoomPage() {
                   Iniciar Atendimento
                 </button>
               )}
+
+              {!session.isConsultant && (
+                <button
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="mt-6 rounded-lg border border-mystic-gold/30 bg-black/40 px-6 py-3 text-sm font-bold text-amber-50 transition hover:bg-black/60"
+                >
+                  Cancelar chamada
+                </button>
+              )}
             </div>
           )}
 
@@ -233,6 +340,60 @@ export function VideoRoomPage() {
           )}
         </div>
       </div>
+
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
+            <div className="mb-4 flex items-center justify-center text-amber-400">
+              <XCircle size={48} />
+            </div>
+            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">
+              Cancelar chamada?
+            </h3>
+            <p className="mb-6 text-center text-amber-100/80">
+              O consultor pode estar se preparando para te atender melhor. Tem certeza que deseja cancelar?
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleCancelWaiting}
+                className="w-full rounded-lg bg-red-600/90 py-3 font-bold text-white transition hover:bg-red-500"
+              >
+                Sim, cancelar
+              </button>
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
+              >
+                Voltar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {endModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
+            <div className="mb-4 flex items-center justify-center text-amber-400">
+              <XCircle size={48} />
+            </div>
+            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">
+              {endModal.title}
+            </h3>
+            <p className="mb-6 text-center text-amber-100/80">
+              {endModal.message}
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => navigate('/consultores')}
+                className="w-full rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 py-3 font-bold text-black transition hover:brightness-110"
+              >
+                {endModal.actionLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageShell>
   )
 }

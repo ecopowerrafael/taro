@@ -21,17 +21,13 @@ const __dirname = path.dirname(__filename)
 
 dotenv.config({ path: path.join(__dirname, '.env') })
 
-// Configuração Web Push (VAPID Keys)
-// Em produção, isso deve vir do .env
-const vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuB-5b-YnB32Y5o9f-4Z8K-M4Y',
-  privateKey: process.env.VAPID_PRIVATE_KEY || 'k7-p8KxPqLzXwJ-5c7Z_wN2x9m8yB_uF6oJ_bK7L9hY'
+const vapidPublicKey = (process.env.VAPID_PUBLIC_KEY ?? '').trim()
+const vapidPrivateKey = (process.env.VAPID_PRIVATE_KEY ?? '').trim()
+const isWebPushEnabled = Boolean(vapidPublicKey && vapidPrivateKey)
+
+if (isWebPushEnabled) {
+  webpush.setVapidDetails('mailto:contato@appastria.online', vapidPublicKey, vapidPrivateKey)
 }
-webpush.setVapidDetails(
-  'mailto:contato@appastria.online',
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-)
 
 // CAPTURA DE ERROS CRÍTICOS (CRASH LOG)
 process.on('uncaughtException', (err) => {
@@ -56,7 +52,7 @@ const io = new Server(httpServer, {
 
 // Adiciona o socket.io e o webpush ao app para serem acessados nas rotas
 app.set('io', io)
-app.set('webpush', webpush)
+app.set('webpush', isWebPushEnabled ? webpush : null)
 
 // Variável global para armazenar as assinaturas push em memória
 // Em produção real, o ideal é salvar isso no banco de dados!
@@ -85,7 +81,11 @@ app.post('/api/push/subscribe', (req, res) => {
 
 // Rota para retornar a Public Key do VAPID para o frontend
 app.get('/api/push/public-key', (req, res) => {
-  res.send(vapidKeys.publicKey)
+  if (!isWebPushEnabled) {
+    res.status(503).send('')
+    return
+  }
+  res.send(vapidPublicKey)
 })
 
 // Lógica de Sockets para notificações em tempo real

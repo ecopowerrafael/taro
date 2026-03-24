@@ -21,7 +21,7 @@ import { MobileBottomNav } from './components/MobileBottomNav'
 const wrapWithTransition = (element) => <PageTransition>{element}</PageTransition>
 
 function ProtectedRoute({ children, role }) {
-  const { profile, authLoading, isAuthenticated, isAdmin, isConsultant } = usePlatformContext()
+  const { authLoading, isAuthenticated, isAdmin, isConsultant } = usePlatformContext()
 
   if (authLoading) {
     return (

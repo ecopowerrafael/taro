@@ -200,7 +200,7 @@ export const initializeSchema = async (pool) => {
       id VARCHAR(50) PRIMARY KEY,
       userId VARCHAR(50) NOT NULL,
       consultantId VARCHAR(50) NOT NULL,
-      status ENUM('waiting', 'active', 'finished') NOT NULL DEFAULT 'waiting',
+      status ENUM('waiting', 'active', 'finished', 'cancelled', 'rejected') NOT NULL DEFAULT 'waiting',
       roomUrl VARCHAR(255) NULL,
       createdAt DATETIME NOT NULL,
       startedAt DATETIME NULL,
@@ -209,6 +209,10 @@ export const initializeSchema = async (pool) => {
       CONSTRAINT fk_vs_consultant FOREIGN KEY (consultantId) REFERENCES consultants(id) ON DELETE CASCADE
     )
   `)
+
+  try {
+    await pool.query("ALTER TABLE video_sessions MODIFY COLUMN status ENUM('waiting', 'active', 'finished', 'cancelled', 'rejected') NOT NULL DEFAULT 'waiting'")
+  } catch (e) {}
 
   // Garantir colunas de PIX para bancos antigos
   try {

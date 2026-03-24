@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Sparkles } from 'lucide-react'
 
 // Base dos 22 Arcanos Maiores do Tarot
@@ -28,53 +28,45 @@ const MAJOR_ARCANA = [
 ]
 
 export function DailyTarotCard() {
-  const [isFlipped, setIsFlipped] = useState(false)
-  const [dailyCard, setDailyCard] = useState(null)
-
-  useEffect(() => {
-    // Verifica se já existe uma carta sorteada hoje no localStorage
+  const [state, setState] = useState(() => {
     const todayStr = new Date().toISOString().split('T')[0]
     const savedDataStr = localStorage.getItem('astria_daily_card')
-    
+
     if (savedDataStr) {
       try {
         const savedData = JSON.parse(savedDataStr)
-        if (savedData.date === todayStr) {
-          setDailyCard(savedData.card)
-          setIsFlipped(true)
-          return
+        if (savedData.date === todayStr && savedData.card) {
+          return { isFlipped: true, dailyCard: savedData.card }
         }
-      } catch (e) {
-        // ignora e sorteia nova
+      } catch {
+        void 0
       }
     }
 
-    // Se não tem ou expirou, prepara uma carta aleatória (mas não vira ainda)
     const randomCard = MAJOR_ARCANA[Math.floor(Math.random() * MAJOR_ARCANA.length)]
-    setDailyCard(randomCard)
-  }, [])
+    return { isFlipped: false, dailyCard: randomCard }
+  })
 
   const handleFlip = () => {
-    if (isFlipped) return // Já foi virada hoje
+    if (state.isFlipped) return
 
     const todayStr = new Date().toISOString().split('T')[0]
-    
-    // Salva no localstorage
+
     localStorage.setItem('astria_daily_card', JSON.stringify({
       date: todayStr,
-      card: dailyCard
+      card: state.dailyCard
     }))
-    
-    setIsFlipped(true)
+
+    setState((prev) => ({ ...prev, isFlipped: true }))
   }
 
-  if (!dailyCard) return null
+  if (!state.dailyCard) return null
 
   return (
     <div className="group flex h-48 w-full perspective-1000">
       <div 
         onClick={handleFlip}
-        className={`relative h-full w-full transform-style-3d transition-transform duration-700 ease-in-out ${isFlipped ? 'rotate-y-180' : 'cursor-pointer hover:scale-105'}`}
+        className={`relative h-full w-full transform-style-3d transition-transform duration-700 ease-in-out ${state.isFlipped ? 'rotate-y-180' : 'cursor-pointer hover:scale-105'}`}
       >
         {/* Frente da carta (Costas/Verso com o desenho da sorte) */}
         <div className="absolute inset-0 backface-hidden rounded-xl border-2 border-mystic-gold/40 bg-gradient-to-br from-mystic-purple via-black to-mystic-gold/20 shadow-glow flex flex-col items-center justify-center p-4 text-center">
@@ -86,10 +78,10 @@ export function DailyTarotCard() {
         {/* Verso da carta (Face revelada com a mensagem) */}
         <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-xl border border-mystic-gold/60 bg-gradient-to-b from-[#1f0f38] to-[#0b0715] p-5 shadow-[0_0_20px_rgba(197,160,89,0.2)] overflow-y-auto custom-scrollbar">
           <div className="flex flex-col h-full justify-center text-center">
-            <h4 className="font-display text-2xl text-mystic-goldSoft mb-2">{dailyCard.name}</h4>
+            <h4 className="font-display text-2xl text-mystic-goldSoft mb-2">{state.dailyCard.name}</h4>
             <div className="h-[1px] w-12 bg-mystic-gold/50 mx-auto mb-3"></div>
             <p className="text-sm text-amber-100/90 leading-relaxed italic">
-              "{dailyCard.message}"
+              "{state.dailyCard.message}"
             </p>
             <p className="text-[10px] text-ethereal-silver/50 mt-4 uppercase tracking-wider">
               Volte amanhã para uma nova carta

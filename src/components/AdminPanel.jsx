@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Activity,
   AlertCircle,
@@ -50,13 +50,10 @@ export function AdminPanel({
   mpCredentials,
   onMpCredentialsChange,
   dailyCredentials,
-  onDailyCredentialsChange,
-  onSaveCredentials,
   rechargeRequests,
   onRechargeAction,
 }) {
   const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'financeiro' | 'credenciais' | 'recharges'
-  const [searchQuery, setSearchSearchQuery] = useState('')
   const [editingConsultantId, setEditingConsultantId] = useState(null)
   const [editForm, setEditForm] = useState(null)
   const [commissionDraft, setCommissionDraft] = useState(globalCommission?.toString() ?? '0')
@@ -89,8 +86,9 @@ export function AdminPanel({
     smtpFrom: '',
   })
 
-  useEffect(() => {
-    if (mpCredentials || dailyCredentials) {
+  const selectTab = (tab) => {
+    setActiveTab(tab)
+    if (tab === 'credenciais') {
       setCredentialsDraft({
         mpPublicKey: mpCredentials?.publicKey || '',
         mpAccessToken: mpCredentials?.accessToken || '',
@@ -108,7 +106,7 @@ export function AdminPanel({
         smtpFrom: dailyCredentials?.smtpFrom || '',
       })
     }
-  }, [mpCredentials, dailyCredentials])
+  }
 
   const handleSavePartial = (type) => {
     let data = {}
@@ -144,20 +142,12 @@ export function AdminPanel({
     onMpCredentialsChange(type, data)
   }
 
-  const [credentialsSaving, setCredentialsSaving] = useState(false)
-  const [credentialsFeedback, setCredentialsFeedback] = useState('')
-
   const tabButtonClass = (tabId) =>
     `inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition ${
       activeTab === tabId
         ? 'border-mystic-gold/70 bg-mystic-gold/20 text-mystic-goldSoft'
         : 'border-mystic-gold/35 text-amber-100/80 hover:bg-mystic-gold/10'
     }`
-
-  const normalizeNullableText = (value) => {
-    const normalized = (value ?? '').trim()
-    return normalized === '' ? null : normalized
-  }
 
   const parseNumberValue = (value) => {
     const parsed = Number(value)
@@ -195,24 +185,6 @@ export function AdminPanel({
     return featuredFinanceId !== (minutePackages.find((pack) => pack.isFeatured)?.id ?? null)
   }, [featuredFinanceId, financeDraft, minutePackages])
 
-  const credentialsDirty = useMemo(() => {
-    const normalizedPublicKey = normalizeNullableText(credentialsDraft.publicKey)
-    const normalizedAccessToken = normalizeNullableText(credentialsDraft.accessToken)
-    const normalizedWebhookSecret = normalizeNullableText(credentialsDraft.webhookSecret)
-    const normalizedDailyApiKey = normalizeNullableText(credentialsDraft.dailyApiKey)
-    const normalizedDailyDomain = normalizeNullableText(credentialsDraft.dailyDomain)
-    const normalizedDailyRoomName = normalizeNullableText(credentialsDraft.dailyRoomName)
-
-    return (
-      normalizedPublicKey !== (mpCredentials?.publicKey ?? null) ||
-      normalizedAccessToken !== (mpCredentials?.accessToken ?? null) ||
-      normalizedWebhookSecret !== (mpCredentials?.webhookSecret ?? null) ||
-      normalizedDailyApiKey !== (dailyCredentials?.apiKey ?? null) ||
-      normalizedDailyDomain !== (dailyCredentials?.domain ?? null) ||
-      normalizedDailyRoomName !== (dailyCredentials?.roomName ?? null)
-    )
-  }, [credentialsDraft, dailyCredentials, mpCredentials])
-
   const commissionDirty = useMemo(() => {
     return parseNumberValue(commissionDraft) !== globalCommission
   }, [commissionDraft, globalCommission])
@@ -239,47 +211,6 @@ export function AdminPanel({
     if (featuredFinanceId) {
       setFeaturedPackage(featuredFinanceId)
     }
-  }
-
-  const saveCredentials = async () => {
-    setCredentialsSaving(true)
-    setCredentialsFeedback('')
-    const normalizedPublicKey = normalizeNullableText(credentialsDraft.publicKey)
-    const normalizedAccessToken = normalizeNullableText(credentialsDraft.accessToken)
-    const normalizedWebhookSecret = normalizeNullableText(credentialsDraft.webhookSecret)
-    const normalizedDailyApiKey = normalizeNullableText(credentialsDraft.dailyApiKey)
-    const normalizedDailyDomain = normalizeNullableText(credentialsDraft.dailyDomain)
-    const normalizedDailyRoomName = normalizeNullableText(credentialsDraft.dailyRoomName)
-
-    setCredentialsDraft({
-      publicKey: normalizedPublicKey ?? '',
-      accessToken: normalizedAccessToken ?? '',
-      webhookSecret: normalizedWebhookSecret ?? '',
-      dailyApiKey: normalizedDailyApiKey ?? '',
-      dailyDomain: normalizedDailyDomain ?? '',
-      dailyRoomName: normalizedDailyRoomName ?? '',
-    })
-
-    const nextMpCredentials = {
-      publicKey: normalizedPublicKey ?? '',
-      accessToken: normalizedAccessToken ?? '',
-      webhookSecret: normalizedWebhookSecret ?? '',
-    }
-    const nextDailyCredentials = {
-      apiKey: normalizedDailyApiKey ?? '',
-      domain: normalizedDailyDomain ?? 'demo.daily.co',
-      roomName: normalizedDailyRoomName ?? 'hello',
-    }
-
-    const saved = await onSaveCredentials(nextMpCredentials, nextDailyCredentials)
-    if (saved) {
-      onMpCredentialsChange(nextMpCredentials)
-      onDailyCredentialsChange(nextDailyCredentials)
-      setCredentialsFeedback('Credenciais salvas com sucesso.')
-    } else {
-      setCredentialsFeedback('Não foi possível salvar credenciais. Tente novamente.')
-    }
-    setCredentialsSaving(false)
   }
 
   const openEditConsultant = (consultant) => {
@@ -330,21 +261,21 @@ export function AdminPanel({
       subtitle="Gestão de consultores, financeiro e regras de comissão."
     >
       <div className="mb-4 flex flex-wrap gap-2">
-        <button className={tabButtonClass('consultores')} onClick={() => setActiveTab('consultores')}>
+        <button className={tabButtonClass('consultores')} onClick={() => selectTab('consultores')}>
           <Check size={14} />
           Consultores
         </button>
-        <button className={tabButtonClass('financeiro')} onClick={() => setActiveTab('financeiro')}>
+        <button className={tabButtonClass('financeiro')} onClick={() => selectTab('financeiro')}>
           <CreditCard size={14} />
           Recarga
         </button>
-        <button className={tabButtonClass('credenciais')} onClick={() => setActiveTab('credenciais')}>
+        <button className={tabButtonClass('credenciais')} onClick={() => selectTab('credenciais')}>
           <Landmark size={14} />
           Credenciais
         </button>
         <button
           className={tabButtonClass('recharges')}
-          onClick={() => setActiveTab('recharges')}
+          onClick={() => selectTab('recharges')}
         >
           <Wallet size={14} />
           Recargas
@@ -824,7 +755,6 @@ export function AdminPanel({
                 </label>
               </div>
             </section>
-            {credentialsFeedback && <p className="mt-2 text-xs text-amber-100/80">{credentialsFeedback}</p>}
           </div>
         )}
       </div>

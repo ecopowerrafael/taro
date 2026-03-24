@@ -25,7 +25,7 @@ export const createVideoSessionsRouter = (pool) => {
       const user = users[0]
 
       // Obter informações do consultor
-      const [consultants] = await pool.query('SELECT id, name, email FROM consultants WHERE id = ?', [consultantId])
+      const [consultants] = await pool.query('SELECT id, name, email, userId FROM consultants WHERE id = ?', [consultantId])
       if (consultants.length === 0) {
         return response.status(404).json({ message: 'Consultor não encontrado.' })
       }
@@ -270,14 +270,88 @@ export const createVideoSessionsRouter = (pool) => {
     const { sessionId } = request.params
     const { status } = request.body
 
-    if (!['active', 'finished'].includes(status)) {
+    if (!['active', 'finished', 'cancelled', 'rejected'].includes(status)) {
       return response.status(400).json({ message: 'Status inválido.' })
     }
 
     try {
-      const timeField = status === 'active' ? 'startedAt' : 'finishedAt'
-      await pool.query(`UPDATE video_sessions SET status = ?, ${timeField} = NOW() WHERE id = ?`, [status, sessionId])
-      response.json({ ok: true })
+      const userId = request.user.id
+      const [sessions] = await pool.query(
+        'SELECT id, userId, consultantId, status FROM video_sessions WHERE id = ?',
+        [sessionId],
+      )
+
+      if (sessions.length === 0) {
+        return response.status(404).json({ message: 'Sessão não encontrada.' })
+      }
+
+      const session = sessions[0]
+      const [consultantRows] = await pool.query(
+        'SELECT userId FROM consultants WHERE id = ?',
+        [session.consultantId],
+      )
+      const consultantUserId = consultantRows[0]?.userId
+      const isCustomer = session.userId === userId
+      const isConsultant = consultantUserId === userId
+
+      if (!isCustomer && !isConsultant) {
+        return response.status(403).json({ message: 'Acesso negado.' })
+      }
+
+      if (status === 'active') {
+        if (!isConsultant) {
+          return response.status(403).json({ message: 'Somente o consultor pode iniciar.' })
+        }
+        if (session.status !== 'waiting') {
+          return response.status(409).json({ message: 'Sessão não está aguardando.' })
+        }
+        await pool.query(
+          'UPDATE video_sessions SET status = ?, startedAt = NOW() WHERE id = ?',
+          ['active', sessionId],
+        )
+        return response.json({ ok: true, status: 'active' })
+      }
+
+      if (status === 'cancelled') {
+        if (!isCustomer) {
+          return response.status(403).json({ message: 'Somente o cliente pode cancelar.' })
+        }
+        if (session.status !== 'waiting') {
+          return response.status(409).json({ message: 'A sessão já foi iniciada.' })
+        }
+        await pool.query(
+          'UPDATE video_sessions SET status = ?, finishedAt = NOW() WHERE id = ?',
+          ['cancelled', sessionId],
+        )
+        return response.json({ ok: true, status: 'cancelled' })
+      }
+
+      if (status === 'rejected') {
+        if (!isConsultant) {
+          return response.status(403).json({ message: 'Somente o consultor pode recusar.' })
+        }
+        if (session.status !== 'waiting') {
+          return response.status(409).json({ message: 'A sessão já foi iniciada.' })
+        }
+        await pool.query(
+          'UPDATE video_sessions SET status = ?, finishedAt = NOW() WHERE id = ?',
+          ['rejected', sessionId],
+        )
+        return response.json({ ok: true, status: 'rejected' })
+      }
+
+      if (status === 'finished') {
+        if (!['active', 'waiting'].includes(session.status)) {
+          return response.status(409).json({ message: 'Sessão já finalizada.' })
+        }
+        await pool.query(
+          'UPDATE video_sessions SET status = ?, finishedAt = NOW() WHERE id = ?',
+          ['finished', sessionId],
+        )
+        return response.json({ ok: true, status: 'finished' })
+      }
+
+      return response.status(400).json({ message: 'Status inválido.' })
     } catch (error) {
       response.status(500).json({ message: 'Erro ao atualizar status da sessão.' })
     }
