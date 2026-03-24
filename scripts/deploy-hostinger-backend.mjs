@@ -23,6 +23,7 @@ const uploadItems = [
   { local: 'dist', remote: 'dist', ignore: ['.htaccess'] },
   { local: 'package.json', remote: 'package.json' },
   { local: 'package-lock.json', remote: 'package-lock.json' },
+  { local: '.env', remote: '.env' },
 ]
 
 const run = async () => {

@@ -12,7 +12,10 @@ import { createWalletsRouter } from './routes/wallets.mjs'
 import { createAuthRouter } from './routes/auth.mjs'
 import { createRechargesRouter } from './routes/recharges.mjs'
 
-dotenv.config()
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+dotenv.config({ path: path.join(__dirname, '.env') })
 
 // CAPTURA DE ERROS CRÍTICOS (CRASH LOG)
 process.on('uncaughtException', (err) => {
@@ -36,8 +39,6 @@ try {
 
 // Force restart: 2026-03-24 15:00 (V11)
 const port = Number(process.env.PORT || 3000)
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 console.log('[API] __dirname:', __dirname)
 const distPath = path.join(__dirname, 'dist')
