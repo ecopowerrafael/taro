@@ -107,7 +107,10 @@ export function VideoRoomPage() {
   }
 
   const handleStartByConsultant = () => {
-    joinCall(session)
+    // Só dispara se o container existir, senão ele vai bugar
+    if (session) {
+      joinCall(session)
+    }
   }
 
   const handleLeaveCall = async () => {
@@ -200,7 +203,7 @@ export function VideoRoomPage() {
           )}
 
           {/* Daily.co Iframe Container */}
-          <div ref={containerRef} className={`h-full w-full ${isCallActive ? 'block' : 'hidden'}`} />
+          <div ref={containerRef} className={`h-full w-full min-h-[400px] ${isCallActive ? 'block' : 'hidden'}`} />
           
           {isCallActive && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2">

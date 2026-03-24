@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 import { assertDatabaseConfig, createPool, initializeSchema } from './db.mjs'
 import { createConsultantsRouter } from './routes/consultants.mjs'
 import { createCredentialsRouter } from './routes/credentials.mjs'
@@ -31,6 +33,30 @@ process.on('unhandledRejection', (reason, promise) => {
 })
 
 const app = express()
+const httpServer = createServer(app)
+const io = new Server(httpServer, {
+  cors: {
+    origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
+    methods: ["GET", "POST"]
+  }
+})
+
+// Adiciona o socket.io ao app para ser acessado nas rotas
+app.set('io', io)
+
+// Lógica de Sockets para notificações em tempo real
+io.on('connection', (socket) => {
+  // Consultor entra na sua própria sala privada para receber notificações
+  socket.on('join_consultant_room', (consultantId) => {
+    socket.join(`consultant_${consultantId}`)
+    console.log(`[Socket] Consultor ${consultantId} conectou e entrou na sala.`)
+  })
+
+  socket.on('disconnect', () => {
+    // console.log('[Socket] Cliente desconectado')
+  })
+})
+
 console.log('[API] Servidor iniciando...')
 
 // Tentar criar um arquivo de log de inicialização (debug)
@@ -196,7 +222,7 @@ app.use((error, _request, response, _next) => {
   })
 })
 
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`API Express iniciada na porta ${port}`)
 })
 

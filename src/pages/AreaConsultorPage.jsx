@@ -393,14 +393,6 @@ export function AreaConsultorPage() {
               />
             </button>
           </div>
-          <button
-            onClick={() => {
-              void handleSilenceIncomingAlert()
-            }}
-            className="rounded-lg border border-mystic-gold/45 px-3 py-2 text-xs text-ethereal-silver/80 transition hover:bg-mystic-gold/10"
-          >
-            Silenciar alerta
-          </button>
         </div>
         <div className="grid gap-3">
           {pendingRequests.length === 0 && (

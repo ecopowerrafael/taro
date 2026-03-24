@@ -40,13 +40,18 @@ export const createVideoSessionsRouter = (pool) => {
       let roomUrl = ''
 
       // Se tivermos a API do Daily, podemos criar a sala via API. Caso contrário, montamos a URL se for demo
-      if (credentials.dailyApiKey && credentials.dailyDomain) {
+      let apiKey = credentials.dailyApiKey
+      if (apiKey) {
+        apiKey = apiKey.trim()
+      }
+
+      if (apiKey && credentials.dailyDomain) {
         try {
           const dailyRes = await fetch('https://api.daily.co/v1/rooms', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${credentials.dailyApiKey}`
+              Authorization: `Bearer ${apiKey}`
             },
             body: JSON.stringify({
               name: roomId,
@@ -115,6 +120,16 @@ export const createVideoSessionsRouter = (pool) => {
                  <p>Acesse o link abaixo para entrar na sala e iniciar o atendimento:</p>
                  <a href="${link}">${link}</a>`
         }).catch(e => console.error('Erro ao enviar email para consultor:', e))
+      }
+
+      // Emite evento via socket.io para o consultor
+      const io = request.app.get('io')
+      if (io) {
+        io.to(`consultant_${consultantId}`).emit('incoming_call', {
+          sessionId,
+          customerName: user.name,
+          roomUrl
+        })
       }
 
       response.status(201).json({ sessionId, roomUrl })
@@ -186,7 +201,12 @@ export const createVideoSessionsRouter = (pool) => {
       // Adicionamos o daily token se for uma sala privada e tivermos API key
       let dailyToken = null
       const [creds] = await pool.query('SELECT dailyApiKey FROM platform_credentials WHERE id = 1')
-      const apiKey = creds[0]?.dailyApiKey
+      let apiKey = creds[0]?.dailyApiKey
+
+      // Remove eventuais espaços ou aspas da apiKey
+      if (apiKey) {
+        apiKey = apiKey.trim()
+      }
 
       if (apiKey) {
         try {
