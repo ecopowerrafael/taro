@@ -1,21 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Camera } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Camera, Loader2 } from 'lucide-react'
 import { GlassCard } from '../components/GlassCard'
 import { PageShell } from '../components/PageShell'
+import { usePlatformContext } from '../context/platform-context'
 
 export function SejaConsultorPage() {
+  const navigate = useNavigate()
+  const { registerConsultant, setSystemNotice } = usePlatformContext()
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
-    headline: '',
-    about: '',
-    pricePerMinute: '',
-    priceThreeQuestions: '',
-    priceFiveQuestions: '',
+    tagline: '',
+    description: '',
+    pricePerMinute: '5.00',
+    priceThreeQuestions: '15.00',
+    priceFiveQuestions: '25.00',
     profilePhoto: null,
   })
+  const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
   const updateField = (field, value) => {
@@ -41,9 +45,36 @@ export function SejaConsultorPage() {
     [photoPreviewUrl],
   )
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    setSubmitted(true)
+    setLoading(true)
+
+    // Convert photo to base64 if exists
+    let photoBase64 = null
+    if (form.profilePhoto) {
+      const reader = new FileReader()
+      photoBase64 = await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result)
+        reader.readAsDataURL(form.profilePhoto)
+      })
+    }
+
+    const result = await registerConsultant({
+      ...form,
+      photo: photoBase64,
+      pricePerMinute: parseFloat(form.pricePerMinute),
+      priceThreeQuestions: parseFloat(form.priceThreeQuestions),
+      priceFiveQuestions: parseFloat(form.priceFiveQuestions),
+    })
+
+    setLoading(false)
+    if (result.ok) {
+      setSubmitted(true)
+      setSystemNotice('Cadastro realizado com sucesso! Bem-vindo à equipe.')
+      setTimeout(() => navigate('/area-consultor'), 2000)
+    } else {
+      setSystemNotice(result.message || 'Erro ao realizar cadastro.')
+    }
   }
 
   return (
@@ -108,23 +139,23 @@ export function SejaConsultorPage() {
             </div>
           </label>
           <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
-            Breve Descrição (card de listagem)
+            Frase de Efeito (Tagline)
             <input
               required
-              placeholder="Ex: Tarólogo especializado em vidas passadas"
-              value={form.headline}
-              onChange={(event) => updateField('headline', event.target.value)}
+              value={form.tagline}
+              onChange={(event) => updateField('tagline', event.target.value)}
+              placeholder="Ex: Leio energias de amor com objetividade."
               className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
             />
           </label>
           <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
-            Sobre Você
+            Sobre Você (Descrição)
             <textarea
               required
-              rows={5}
-              placeholder="Conte um pouco sobre sua experiência, especialidades e abordagem..."
-              value={form.about}
-              onChange={(event) => updateField('about', event.target.value)}
+              rows={4}
+              value={form.description}
+              onChange={(event) => updateField('description', event.target.value)}
+              placeholder="Conte um pouco sobre sua experiência e especialidades..."
               className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
             />
           </label>
@@ -169,9 +200,17 @@ export function SejaConsultorPage() {
           </label>
           <button
             type="submit"
-            className="rounded-lg border border-mystic-gold/80 bg-gradient-to-r from-mystic-gold/90 to-amber-500/85 px-4 py-2 font-medium text-black transition hover:brightness-110 md:col-span-2"
+            disabled={loading}
+            className="flex items-center justify-center gap-2 rounded-lg border border-mystic-gold/80 bg-gradient-to-r from-mystic-gold/90 to-amber-500/85 px-4 py-2 font-medium text-black transition hover:brightness-110 disabled:opacity-50 md:col-span-2"
           >
-            Enviar Cadastro
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                Processando...
+              </>
+            ) : (
+              'Enviar Cadastro'
+            )}
           </button>
         </form>
         {submitted && (

@@ -1,4 +1,5 @@
 import mysql from 'mysql2/promise'
+import bcrypt from 'bcryptjs'
 
 const requiredEnvVars = [
   'DB_HOST',
@@ -25,8 +26,9 @@ const resolveDatabaseHost = () => {
   return host
 }
 
-export const createPool = () =>
-  mysql.createPool({
+export const createPool = () => {
+  console.log(`[DB] Criando pool de conexão para ${process.env.DB_HOST} (User: ${process.env.DB_USER})`)
+  return mysql.createPool({
     host: resolveDatabaseHost(),
     port: Number(process.env.DB_PORT),
     user: process.env.DB_USER,
@@ -37,8 +39,22 @@ export const createPool = () =>
     queueLimit: 0,
     decimalNumbers: true,
   })
+}
 
 export const initializeSchema = async (pool) => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id VARCHAR(50) PRIMARY KEY,
+      name VARCHAR(120) NOT NULL,
+      email VARCHAR(190) NOT NULL UNIQUE,
+      password VARCHAR(255) NOT NULL,
+      role ENUM('client', 'consultant', 'admin') NOT NULL DEFAULT 'client',
+      birthDate DATE NULL,
+      minutesBalance DECIMAL(10,2) NOT NULL DEFAULT 0,
+      createdAt DATETIME NOT NULL
+    )
+  `)
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS consultants (
       id VARCHAR(50) PRIMARY KEY,
@@ -55,9 +71,29 @@ export const initializeSchema = async (pool) => {
       realSessions INT NOT NULL DEFAULT 0,
       ratingAverage DECIMAL(3,2) NOT NULL DEFAULT 0,
       commissionOverride DECIMAL(5,2) NULL,
-      createdAt DATE NULL
+      createdAt DATE NULL,
+      userId VARCHAR(50) NULL,
+      CONSTRAINT fk_consultant_user
+        FOREIGN KEY (userId) REFERENCES users(id)
+        ON DELETE SET NULL
     )
   `)
+
+  // Garantir que a coluna userId existe em consultants (para bancos já criados)
+  try {
+    await pool.query('ALTER TABLE consultants ADD COLUMN userId VARCHAR(50) NULL')
+    await pool.query('ALTER TABLE consultants ADD CONSTRAINT fk_consultant_user FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL')
+  } catch (e) {
+    // Ignora se a coluna já existir
+  }
+
+  // Garantir que a coluna birthDate e minutesBalance existem em users (para bancos já criados)
+  try {
+    await pool.query('ALTER TABLE users ADD COLUMN birthDate DATE NULL')
+    await pool.query('ALTER TABLE users ADD COLUMN minutesBalance DECIMAL(10,2) NOT NULL DEFAULT 0')
+  } catch (e) {
+    // Ignora se já existirem
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS question_requests (
@@ -152,4 +188,19 @@ export const initializeSchema = async (pool) => {
       dailyRoomName
     ) VALUES (1, NULL, NULL, NULL, NULL, 'demo.daily.co', 'hello')
   `)
+
+  // Criar admin se não existir
+  const [admins] = await pool.query('SELECT id FROM users WHERE role = "admin"')
+  if (admins.length === 0) {
+    const adminId = 'admin_' + Math.random().toString(36).substr(2, 9)
+    const hashedPassword = await bcrypt.hash('admin123', 10)
+    await pool.query(
+      `
+        INSERT INTO users (id, name, email, password, role, createdAt)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `,
+      [adminId, 'Admin Astria', 'admin@astria.com.br', hashedPassword, 'admin', new Date()],
+    )
+    console.log('Usuário admin padrão criado: admin@astria.com.br / admin123')
+  }
 }

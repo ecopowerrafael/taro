@@ -1,8 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { Client } from 'basic-ftp'
+import dotenv from 'dotenv'
 
-const requiredEnvVars = ['HOSTINGER_FTP_HOST', 'HOSTINGER_FTP_USER', 'HOSTINGER_FTP_PASSWORD']
+dotenv.config()
+
+const requiredEnvVars = ['FRONT_FTP_HOST', 'FRONT_FTP_USER', 'FRONT_FTP_PASSWORD']
 
 const getMissingVars = () => requiredEnvVars.filter((key) => !process.env[key]?.trim())
 
@@ -16,48 +19,54 @@ const resolveBoolean = (value, fallback) => {
 const run = async () => {
   const missingVars = getMissingVars()
   if (missingVars.length > 0) {
-    throw new Error(`Variáveis ausentes: ${missingVars.join(', ')}`)
+    throw new Error(`Variáveis de frontend ausentes: ${missingVars.join(', ')}`)
   }
 
   const client = new Client()
-  client.ftp.verbose = false
+  client.ftp.verbose = true // Ativado para debugar se necessário
 
-  const secure = resolveBoolean(process.env.HOSTINGER_FTP_SECURE, false)
-  const remoteBaseDir = (process.env.HOSTINGER_REMOTE_DIR || '/public_html').trim()
-  const shouldClean = resolveBoolean(process.env.HOSTINGER_DEPLOY_CLEAN, true)
+  const secure = resolveBoolean(process.env.FTP_SECURE, false)
+  const remoteBaseDir = (process.env.FRONT_REMOTE_DIR || 'public_html').trim()
+  const shouldClean = resolveBoolean(process.env.DEPLOY_CLEAN, true)
   const localDist = path.resolve(process.cwd(), 'dist')
-  const localHtaccess = path.join(localDist, '.htaccess')
+  const localHtaccess = path.join(process.cwd(), 'public', '.htaccess')
 
   try {
-    console.log('Conectando ao FTP da Hostinger...')
+    console.log(`Conectando ao FTP do Frontend (${process.env.FRONT_FTP_HOST})...`)
     await client.access({
-      host: process.env.HOSTINGER_FTP_HOST.trim(),
-      user: process.env.HOSTINGER_FTP_USER.trim(),
-      password: process.env.HOSTINGER_FTP_PASSWORD,
+      host: process.env.FRONT_FTP_HOST.trim(),
+      user: process.env.FRONT_FTP_USER.trim(),
+      password: process.env.FRONT_FTP_PASSWORD,
       secure,
     })
 
+    console.log(`Garantindo diretório remoto: ${remoteBaseDir}`)
     await client.ensureDir(remoteBaseDir)
-    await client.cd(remoteBaseDir)
+    // Usamos o caminho absoluto a partir da raiz para evitar erros de CWD relativo
+    await client.cd(`/${remoteBaseDir}`)
 
     if (shouldClean) {
       console.log(`Limpando diretório remoto: ${remoteBaseDir}`)
       await client.clearWorkingDir()
     }
 
-    console.log(`Enviando arquivos de ${localDist} para ${remoteBaseDir}...`)
+    console.log(`Enviando arquivos de ${localDist} para . (diretório atual)...`)
     await client.uploadFromDir(localDist)
+    
+    // Tenta enviar o .htaccess da pasta public se existir (útil para roteamento SPA)
     if (fs.existsSync(localHtaccess)) {
+      console.log('Enviando .htaccess...')
       await client.uploadFrom(localHtaccess, '.htaccess')
     }
-    console.log('Deploy concluído com sucesso.')
+    
+    console.log('Deploy do Frontend concluído com sucesso.')
   } finally {
     client.close()
   }
 }
 
 run().catch((error) => {
-  console.error('Falha no deploy para Hostinger.')
+  console.error('Falha no deploy do Frontend para Hostinger.')
   console.error(error.message)
   process.exit(1)
 })

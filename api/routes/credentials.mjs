@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { authenticate, authorizeAdmin } from '../middleware/auth.mjs'
 
 const normalizeNullableText = (value) => {
   const normalized = (value ?? '').toString().trim()
@@ -7,6 +8,8 @@ const normalizeNullableText = (value) => {
 
 export const createCredentialsRouter = (pool) => {
   const router = Router()
+
+  router.use(authenticate, authorizeAdmin)
 
   router.get('/', async (_request, response) => {
     const [rows] = await pool.query(

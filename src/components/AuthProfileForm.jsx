@@ -1,29 +1,37 @@
 import { useState } from 'react'
-import { UserRoundPlus } from 'lucide-react'
+import { UserRoundPlus, Save, Loader2 } from 'lucide-react'
 import { GlassCard } from './GlassCard'
 import { ZodiacIcon } from './ZodiacIcon'
 
-export function AuthProfileForm({ profile, sign, onRegister }) {
+export function AuthProfileForm({ profile, sign, onRegister, onUpdate, isRegister = true }) {
   const [form, setForm] = useState({
     name: profile?.name ?? '',
     email: profile?.email ?? '',
-    birthDate: profile?.birthDate ?? '',
+    password: '',
+    birthDate: profile?.birthDate ? new Date(profile.birthDate).toISOString().split('T')[0] : '',
   })
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (event) => {
     const { name, value } = event.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    onRegister(form)
+    setLoading(true)
+    if (isRegister) {
+      await onRegister(form)
+    } else {
+      await onUpdate({ name: form.name, birthDate: form.birthDate })
+    }
+    setLoading(false)
   }
 
   return (
     <GlassCard
-      title="Cadastro e Perfil"
-      subtitle="Crie sua conta para iniciar consultas de Tarot ao vivo."
+      title={isRegister ? 'Criar Conta' : 'Meu Perfil'}
+      subtitle={isRegister ? 'Crie sua conta para iniciar consultas.' : 'Gerencie seus dados e saldo.'}
     >
       <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 text-left text-sm text-amber-100/80">
@@ -44,9 +52,24 @@ export function AuthProfileForm({ profile, sign, onRegister }) {
             value={form.email}
             onChange={handleChange}
             required
-            className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 transition focus:ring-2"
+            disabled={!isRegister}
+            className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 transition focus:ring-2 disabled:opacity-50"
           />
         </label>
+        {isRegister && (
+          <label className="grid gap-2 text-left text-sm text-amber-100/80 md:col-span-2">
+            Senha
+            <input
+              name="password"
+              type="password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              minLength={6}
+              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 transition focus:ring-2"
+            />
+          </label>
+        )}
         <label className="grid gap-2 text-left text-sm text-amber-100/80 md:col-span-2">
           Data de Nascimento
           <input
@@ -60,10 +83,17 @@ export function AuthProfileForm({ profile, sign, onRegister }) {
         </label>
         <button
           type="submit"
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-mystic-gold/70 bg-gradient-to-r from-mystic-gold/90 to-amber-500/80 px-4 py-2 font-medium text-black transition hover:brightness-110 md:col-span-2"
+          disabled={loading}
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-mystic-gold/70 bg-gradient-to-r from-mystic-gold/90 to-amber-500/80 px-4 py-2 font-medium text-black transition hover:brightness-110 disabled:opacity-50 md:col-span-2"
         >
-          <UserRoundPlus size={18} />
-          Salvar Perfil
+          {loading ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : isRegister ? (
+            <UserRoundPlus size={18} />
+          ) : (
+            <Save size={18} />
+          )}
+          {isRegister ? 'Criar Conta' : 'Salvar Alterações'}
         </button>
       </form>
 
@@ -77,3 +107,4 @@ export function AuthProfileForm({ profile, sign, onRegister }) {
     </GlassCard>
   )
 }
+

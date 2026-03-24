@@ -12,16 +12,19 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy:hostinger": "npm run build && node scripts/deploy-hostinger.mjs",
-    "deploy:hostinger:backend": "node scripts/deploy-hostinger-backend.mjs"
+    "deploy:frontend": "npm run build && node scripts/deploy-hostinger.mjs",
+    "deploy:backend": "node scripts/deploy-hostinger-backend.mjs",
+    "deploy:all": "npm run deploy:frontend && npm run deploy:backend"
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.87.0",
+    "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "framer-motion": "^12.38.0",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.0.1",
     "mysql2": "^3.20.0",
     "react": "^19.2.4",

@@ -20,6 +20,7 @@ export function AdminPage() {
     updateConsultantByAdmin,
     mpCredentials,
     setMpCredentials,
+    savePlatformCredentials,
     dailyCredentials,
     setDailyCredentials,
     adminDashboardStats,
@@ -126,6 +127,7 @@ export function AdminPage() {
         onMpCredentialsChange={setMpCredentials}
         dailyCredentials={dailyCredentials}
         onDailyCredentialsChange={setDailyCredentials}
+        onSaveCredentials={savePlatformCredentials}
       />
     </PageShell>
   )

@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { authenticate, authorizeAdmin } from '../middleware/auth.mjs'
 
 const parseNumber = (value, fallback = 0) => {
   const parsed = Number(value)
@@ -34,7 +35,7 @@ export const createConsultantsRouter = (pool) => {
     response.json(rows)
   })
 
-  router.put('/:id', async (request, response) => {
+  router.put('/:id', authenticate, authorizeAdmin, async (request, response) => {
     const { id } = request.params
     const {
       name,
@@ -126,7 +127,7 @@ export const createConsultantsRouter = (pool) => {
     response.json({ ok: true })
   })
 
-  router.patch('/:id/status', async (request, response) => {
+  router.patch('/:id/status', authenticate, async (request, response) => {
     const { id } = request.params
     const { status } = request.body ?? {}
 

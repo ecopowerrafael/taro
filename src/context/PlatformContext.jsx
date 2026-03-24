@@ -1,8 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useMockAuth } from '../hooks/useMockAuth'
+import { useAuth } from '../hooks/useAuth'
+import { getZodiacSign } from '../utils/zodiac'
 import { useBilling } from '../hooks/useBilling'
 import { createRechargePreference } from '../services/mercadoPagoMock'
 import { PlatformContext } from './platform-context'
+
+const horoscopeBySign = {
+  Áries: 'Hoje é dia de liderança intuitiva e decisões rápidas.',
+  Touro: 'Seu poder está na constância e no foco em prosperidade.',
+  Gêmeos: 'Conversas estratégicas trarão boas oportunidades.',
+  Câncer: 'Escute sua sensibilidade para proteger o que importa.',
+  Leão: 'Sua presença magnética abre portas profissionais.',
+  Virgem: 'A organização emocional destrava um novo ciclo.',
+  Libra: 'Parcerias harmoniosas elevam sua energia.',
+  Escorpião: 'Transformações profundas trazem ganhos concretos.',
+  Sagitário: 'Expansão espiritual e coragem caminham juntos.',
+  Capricórnio: 'Disciplina com propósito gera crescimento sustentável.',
+  Aquário: 'Inovação e visão de futuro serão diferenciais.',
+  Peixes: 'Sua intuição está afiada para escolhas certeiras.',
+}
 
 const initialConsultants = [
   {
@@ -103,7 +119,7 @@ const adminDashboardStats = {
   clientsCount: 8,
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || '').trim()
 
 const buildApiUrl = (resource) => {
   if (!API_BASE_URL) {
@@ -166,8 +182,26 @@ const normalizeWalletState = (walletRows, fallback = {}) => {
 }
 
 export function PlatformProvider({ children }) {
-  const { profile, sign, minutesBalance, dailyHoroscope, register, debitMinutes, creditMinutes } =
-    useMockAuth()
+  const {
+    user: profile,
+    token,
+    loading: authLoading,
+    login,
+    register,
+    registerConsultant,
+    logout,
+    updateProfile,
+    isAuthenticated,
+    isAdmin,
+    isConsultant,
+  } = useAuth()
+
+  const sign = useMemo(() => getZodiacSign(profile?.birthDate) ?? null, [profile?.birthDate])
+
+  const dailyHoroscope = sign
+    ? horoscopeBySign[sign]
+    : 'Finalize seu cadastro para receber seu horóscopo diário.'
+
   const [consultants, setConsultants] = useState(initialConsultants)
   const [pendingConsultants, setPendingConsultants] = useState(initialPendingConsultants)
   const [statusFilter, setStatusFilter] = useState('Todos')
@@ -190,6 +224,26 @@ export function PlatformProvider({ children }) {
   const [systemNotice, setSystemNotice] = useState('')
   const mpCredentialsRef = useRef(mpCredentials)
   const dailyCredentialsRef = useRef(dailyCredentials)
+
+  const minutesBalance = profile?.minutesBalance || 0
+
+  const userConsultantProfile = useMemo(() => {
+    if (!profile || (profile.role !== 'consultant' && profile.role !== 'admin')) {
+      return null
+    }
+    return consultants.find((c) => c.userId === profile.id || c.email === profile.email)
+  }, [profile, consultants])
+
+  const debitMinutes = async (minutes) => {
+    // In a real app, this would be an API call
+    // For now, let's keep it local but it should ideally sync with DB
+    console.log(`Debitando ${minutes} minutos`)
+  }
+
+  const creditMinutes = async (minutes) => {
+    // In a real app, this would be an API call
+    console.log(`Creditando ${minutes} minutos`)
+  }
 
   const ensureWalletsForConsultants = (consultantList) => {
     setConsultantWallets((prev) => {
@@ -255,11 +309,6 @@ export function PlatformProvider({ children }) {
         webhookSecret: next?.webhookSecret ?? '',
       }
       mpCredentialsRef.current = normalized
-      void persistCredentialsOnApi(normalized, dailyCredentialsRef.current).then((ok) => {
-        if (!ok) {
-          setSystemNotice('Não foi possível salvar credenciais de pagamento no backend.')
-        }
-      })
       return normalized
     })
   }
@@ -273,13 +322,37 @@ export function PlatformProvider({ children }) {
         roomName: next?.roomName ?? 'hello',
       }
       dailyCredentialsRef.current = normalized
-      void persistCredentialsOnApi(mpCredentialsRef.current, normalized).then((ok) => {
-        if (!ok) {
-          setSystemNotice('Não foi possível salvar credenciais de vídeo no backend.')
-        }
-      })
       return normalized
     })
+  }
+
+  const savePlatformCredentials = async (nextMpCredentials, nextDailyCredentials) => {
+    const normalizedMp = {
+      publicKey: nextMpCredentials?.publicKey ?? '',
+      accessToken: nextMpCredentials?.accessToken ?? '',
+      webhookSecret: nextMpCredentials?.webhookSecret ?? '',
+    }
+    const normalizedDaily = {
+      apiKey: nextDailyCredentials?.apiKey ?? '',
+      domain: nextDailyCredentials?.domain ?? 'demo.daily.co',
+      roomName: nextDailyCredentials?.roomName ?? 'hello',
+    }
+    try {
+      const ok = await persistCredentialsOnApi(normalizedMp, normalizedDaily)
+      if (!ok) {
+        setSystemNotice('Não foi possível salvar credenciais no backend.')
+        return false
+      }
+      mpCredentialsRef.current = normalizedMp
+      dailyCredentialsRef.current = normalizedDaily
+      setMpCredentialsState(normalizedMp)
+      setDailyCredentialsState(normalizedDaily)
+      setSystemNotice('Credenciais salvas com sucesso.')
+      return true
+    } catch {
+      setSystemNotice('Falha de conexão ao salvar credenciais.')
+      return false
+    }
   }
 
   const upsertConsultantOnApi = async (consultant) => {
@@ -872,7 +945,17 @@ export function PlatformProvider({ children }) {
     sign,
     minutesBalance,
     dailyHoroscope,
+    login,
     register,
+    registerConsultant,
+    logout,
+    updateProfile,
+    isAuthenticated,
+    isAdmin,
+    isConsultant,
+    userConsultantProfile,
+    authLoading,
+    token,
     consultants,
     pendingConsultants,
     statusFilter,
@@ -890,6 +973,7 @@ export function PlatformProvider({ children }) {
     setFeaturedPackage,
     mpCredentials,
     setMpCredentials,
+    savePlatformCredentials,
     dailyCredentials,
     setDailyCredentials,
     submitQuestionConsultation,

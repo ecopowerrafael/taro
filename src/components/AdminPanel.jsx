@@ -20,6 +20,7 @@ export function AdminPanel({
   onMpCredentialsChange,
   dailyCredentials,
   onDailyCredentialsChange,
+  onSaveCredentials,
 }) {
   const [activeTab, setActiveTab] = useState('consultores')
   const [editingConsultantId, setEditingConsultantId] = useState(null)
@@ -45,6 +46,8 @@ export function AdminPanel({
     dailyDomain: dailyCredentials?.domain ?? '',
     dailyRoomName: dailyCredentials?.roomName ?? '',
   })
+  const [credentialsSaving, setCredentialsSaving] = useState(false)
+  const [credentialsFeedback, setCredentialsFeedback] = useState('')
 
   const tabButtonClass = (tabId) =>
     `inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition ${
@@ -140,7 +143,9 @@ export function AdminPanel({
     }
   }
 
-  const saveCredentials = () => {
+  const saveCredentials = async () => {
+    setCredentialsSaving(true)
+    setCredentialsFeedback('')
     const normalizedPublicKey = normalizeNullableText(credentialsDraft.publicKey)
     const normalizedAccessToken = normalizeNullableText(credentialsDraft.accessToken)
     const normalizedWebhookSecret = normalizeNullableText(credentialsDraft.webhookSecret)
@@ -157,18 +162,26 @@ export function AdminPanel({
       dailyRoomName: normalizedDailyRoomName ?? '',
     })
 
-    onMpCredentialsChange((prev) => ({
-      ...prev,
-      publicKey: normalizedPublicKey,
-      accessToken: normalizedAccessToken,
-      webhookSecret: normalizedWebhookSecret,
-    }))
-    onDailyCredentialsChange((prev) => ({
-      ...prev,
-      apiKey: normalizedDailyApiKey,
-      domain: normalizedDailyDomain,
-      roomName: normalizedDailyRoomName,
-    }))
+    const nextMpCredentials = {
+      publicKey: normalizedPublicKey ?? '',
+      accessToken: normalizedAccessToken ?? '',
+      webhookSecret: normalizedWebhookSecret ?? '',
+    }
+    const nextDailyCredentials = {
+      apiKey: normalizedDailyApiKey ?? '',
+      domain: normalizedDailyDomain ?? 'demo.daily.co',
+      roomName: normalizedDailyRoomName ?? 'hello',
+    }
+
+    const saved = await onSaveCredentials(nextMpCredentials, nextDailyCredentials)
+    if (saved) {
+      onMpCredentialsChange(nextMpCredentials)
+      onDailyCredentialsChange(nextDailyCredentials)
+      setCredentialsFeedback('Credenciais salvas com sucesso.')
+    } else {
+      setCredentialsFeedback('Não foi possível salvar credenciais. Tente novamente.')
+    }
+    setCredentialsSaving(false)
   }
 
   const openEditConsultant = (consultant) => {
@@ -505,11 +518,12 @@ export function AdminPanel({
             </div>
             <button
               onClick={saveCredentials}
-              disabled={!credentialsDirty}
+              disabled={!credentialsDirty || credentialsSaving}
               className="mt-3 rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200 transition enabled:hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Salvar credenciais
+              {credentialsSaving ? 'Salvando credenciais...' : 'Salvar credenciais'}
             </button>
+            {credentialsFeedback && <p className="mt-2 text-xs text-amber-100/80">{credentialsFeedback}</p>}
           </section>
         )}
       </div>

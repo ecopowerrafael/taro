@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { SendHorizontal, Wallet } from 'lucide-react'
+import { SendHorizontal, Wallet, Lock, UserPlus, Info } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
 import { usePlatformContext } from '../context/platform-context'
@@ -7,6 +8,10 @@ import { ConsultantAvailabilityService } from '../services/consultantAvailabilit
 
 export function AreaConsultorPage() {
   const {
+    profile,
+    isConsultant,
+    isAdmin,
+    userConsultantProfile,
     consultants,
     updateConsultantByAdmin,
     questionRequests,
@@ -16,31 +21,78 @@ export function AreaConsultorPage() {
     requestConsultantWithdrawal,
     minWithdrawalAmount,
     updateConsultantAvailability,
+    authLoading,
   } = usePlatformContext()
-  const [selectedConsultantId, setSelectedConsultantId] = useState(consultants[0]?.id ?? '')
+
+  const [selectedConsultantId, setSelectedConsultantId] = useState('')
   const [gainFilter, setGainFilter] = useState('total')
   const [pixDraft, setPixDraft] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [panelNotice, setPanelNotice] = useState('')
   const [responseDrafts, setResponseDrafts] = useState({})
-  const [profileDraft, setProfileDraft] = useState(
-    consultants[0]
-      ? {
-          name: consultants[0].name,
-          email: consultants[0].email,
-          tagline: consultants[0].tagline,
-          description: consultants[0].description,
-          photo: consultants[0].photo ?? '',
-          pricePerMinute: consultants[0].pricePerMinute,
-          priceThreeQuestions: consultants[0].priceThreeQuestions,
-          priceFiveQuestions: consultants[0].priceFiveQuestions,
-        }
-      : null,
-  )
+  const [profileDraft, setProfileDraft] = useState(null)
   const [referenceTimestamp] = useState(() => Date.now())
   const availabilityService = useMemo(() => new ConsultantAvailabilityService(), [])
 
+  // Atualizar o consultor selecionado quando o perfil carregar
+  useEffect(() => {
+    if (userConsultantProfile) {
+      setSelectedConsultantId(userConsultantProfile.id)
+      setProfileDraft({
+        name: userConsultantProfile.name,
+        email: userConsultantProfile.email,
+        tagline: userConsultantProfile.tagline,
+        description: userConsultantProfile.description,
+        photo: userConsultantProfile.photo ?? '',
+        pricePerMinute: userConsultantProfile.pricePerMinute,
+        priceThreeQuestions: userConsultantProfile.priceThreeQuestions,
+        priceFiveQuestions: userConsultantProfile.priceFiveQuestions,
+      })
+    } else if (isAdmin && consultants.length > 0) {
+      // Se for admin mas não tiver perfil de consultor, mostra o primeiro da lista
+      setSelectedConsultantId(consultants[0].id)
+    }
+  }, [userConsultantProfile, isAdmin, consultants])
+
   const selectedConsultant = consultants.find((consultant) => consultant.id === selectedConsultantId)
+
+  // Renderização condicional para quem não é consultor
+  if (!authLoading && !isConsultant && !isAdmin) {
+    return (
+      <PageShell title="Área do Consultor" subtitle="Painel Restrito">
+        <div className="flex flex-col items-center justify-center py-12">
+          <GlassCard className="max-w-md text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="rounded-full bg-mystic-gold/10 p-6 text-mystic-gold">
+                <Lock size={48} />
+              </div>
+            </div>
+            <h2 className="mb-4 font-display text-3xl text-mystic-goldSoft">Acesso Restrito</h2>
+            <p className="mb-8 text-amber-100/70">
+              Esta área é exclusiva para nossos consultores. Se você é um tarólogo experiente, 
+              venha fazer parte do nosso time!
+            </p>
+            <div className="flex flex-col gap-4">
+              <Link
+                to="/seja-consultor"
+                className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 px-8 py-3 font-bold text-black transition hover:brightness-110"
+              >
+                <UserPlus size={20} />
+                Torne-se um Consultor
+              </Link>
+              <Link
+                to="/"
+                className="text-sm text-amber-100/50 hover:text-mystic-goldSoft transition"
+              >
+                Voltar para a Home
+              </Link>
+            </div>
+          </GlassCard>
+        </div>
+      </PageShell>
+    )
+  }
+
   const isSelectedConsultantOnline = selectedConsultant?.status === 'Online'
   const wallet = consultantWallets[selectedConsultantId] ?? {
     availableBalance: 0,
@@ -81,6 +133,9 @@ export function AreaConsultorPage() {
   }, [availabilityService])
 
   const handleSelectConsultant = async (consultantId) => {
+    // Apenas permitir trocar se for admin
+    if (!isAdmin) return
+
     const previousConsultantId = selectedConsultantId
     if (previousConsultantId && previousConsultantId !== consultantId) {
       const previousConsultant = consultants.find((item) => item.id === previousConsultantId)

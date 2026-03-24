@@ -9,6 +9,7 @@ import { createConsultantsRouter } from './routes/consultants.mjs'
 import { createCredentialsRouter } from './routes/credentials.mjs'
 import { createQuestionRequestsRouter } from './routes/questionRequests.mjs'
 import { createWalletsRouter } from './routes/wallets.mjs'
+import { createAuthRouter } from './routes/auth.mjs'
 
 dotenv.config()
 
@@ -16,14 +17,36 @@ const app = express()
 const port = Number(process.env.PORT || 3000)
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const distPath = path.resolve(__dirname, '..', 'dist')
-const hasFrontendBuild = fs.existsSync(path.join(distPath, 'index.html'))
 
 app.use(cors())
 app.use(express.json({ limit: '4mb' }))
 
+// Logger middleware
+app.use((request, _response, next) => {
+  console.log(`[${new Date().toISOString()}] ${request.method} ${request.url}`)
+  next()
+})
+
 app.get('/api/health', (_request, response) => {
   response.json({ ok: true, service: 'api', timestamp: new Date().toISOString() })
+})
+
+app.get('/api/health-db', async (_request, response) => {
+  let pool = null
+  try {
+    pool = createPool()
+    // Timeout de 5 segundos para a query
+    const [rows] = await Promise.race([
+      pool.query('SELECT 1 as ok'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 5000))
+    ])
+    response.json({ ok: true, db: rows[0].ok === 1, config: { host: process.env.DB_HOST, user: process.env.DB_USER } })
+  } catch (err) {
+    console.error('Erro no health-db:', err)
+    response.status(500).json({ ok: false, error: err.message })
+  } finally {
+    if (pool) await pool.end()
+  }
 })
 
 let databaseConfigError = null
@@ -31,6 +54,7 @@ let databaseConfigError = null
 try {
   assertDatabaseConfig()
   const pool = createPool()
+  app.use('/api/auth', createAuthRouter(pool))
   app.use('/api/consultants', createConsultantsRouter(pool))
   app.use('/api/credentials', createCredentialsRouter(pool))
   app.use('/api/question-requests', createQuestionRequestsRouter(pool))
@@ -64,21 +88,13 @@ app.get('/api/runtime-info', (_request, response) => {
     ok: true,
     node: process.version,
     port,
-    hasFrontendBuild,
     cwd: process.cwd(),
   })
 })
 
-if (hasFrontendBuild) {
-  app.use(express.static(distPath))
-  app.get('/{*any}', (_request, response) => {
-    response.sendFile(path.join(distPath, 'index.html'))
-  })
-} else {
-  app.get('/', (_request, response) => {
-    response.json({ ok: true, service: 'api', mode: 'backend-only' })
-  })
-}
+app.get('/', (_request, response) => {
+  response.json({ ok: true, service: 'api', mode: 'backend-only' })
+})
 
 app.use((error, _request, response, _next) => {
   response.status(500).json({

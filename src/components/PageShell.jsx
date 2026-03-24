@@ -1,15 +1,35 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { LogOut } from 'lucide-react'
 import { StarField } from './StarField'
-
-const mainLinks = [
-  { to: '/', label: 'Home' },
-  { to: '/cadastro', label: 'Cadastro' },
-  { to: '/perfil', label: 'Perfil' },
-  { to: '/consultores', label: 'Consultores' },
-  { to: '/admin', label: 'Admin' },
-]
+import { usePlatformContext } from '../context/platform-context'
 
 export function PageShell({ title, subtitle, children }) {
+  const navigate = useNavigate()
+  const { isAdmin, isConsultant, isAuthenticated, logout } = usePlatformContext()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
+  const mainLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/consultores', label: 'Consultores' },
+  ]
+
+  if (!isAuthenticated) {
+    mainLinks.push({ to: '/cadastro', label: 'Cadastro' })
+    mainLinks.push({ to: '/entrar', label: 'Entrar' })
+  } else {
+    mainLinks.push({ to: '/perfil', label: 'Perfil' })
+    if (isConsultant || isAdmin) {
+      mainLinks.push({ to: '/area-consultor', label: 'Consultor' })
+    }
+    if (isAdmin) {
+      mainLinks.push({ to: '/admin', label: 'Admin' })
+    }
+  }
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-mystic-gradient px-4 py-8 pb-28 text-amber-50 md:px-8 md:pb-8">
       <StarField />
@@ -38,6 +58,16 @@ export function PageShell({ title, subtitle, children }) {
                   {link.label}
                 </Link>
               ))}
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  title="Sair da conta"
+                  className="flex items-center gap-1 rounded-lg border border-red-500/35 px-3 py-1 text-xs text-red-400 transition hover:bg-red-500/10"
+                >
+                  <LogOut size={14} />
+                  Sair
+                </button>
+              )}
             </nav>
           </div>
         </header>
