@@ -63,12 +63,14 @@ export function VideoRoomPage() {
   const joinCall = async (sessionData) => {
     if (!containerRef.current) return
     
-    // Marcar sessão como ativa no DB
-    await fetch(`/api/video-sessions/${sessionId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status: 'active' })
-    })
+    // Marcar sessão como ativa no DB se ainda não estiver
+    if (sessionData.status !== 'active') {
+      await fetch(`/api/video-sessions/${sessionId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'active' })
+      })
+    }
 
     const callFrame = DailyIframe.createFrame(containerRef.current, {
       iframeStyle: {
@@ -107,10 +109,15 @@ export function VideoRoomPage() {
   }
 
   const handleStartByConsultant = () => {
-    // Só dispara se o container existir, senão ele vai bugar
-    if (session) {
-      joinCall(session)
-    }
+    // Para o container ser renderizado e a div ficar "block" primeiro,
+    // precisamos ativar isCallActive ANTES de chamar o joinCall, 
+    // ou usar um setTimeout para o React ter tempo de montar a DOM
+    setIsCallActive(true)
+    setTimeout(() => {
+      if (session) {
+        joinCall(session)
+      }
+    }, 100)
   }
 
   const handleLeaveCall = async () => {
