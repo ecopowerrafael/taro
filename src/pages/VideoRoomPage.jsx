@@ -42,6 +42,10 @@ export function VideoRoomPage() {
   useEffect(() => {
     if (!session || isCallActive) return
     
+    // Se o consultor for quem estiver na tela, ele NÃO faz polling pra entrar sozinho,
+    // ele que clica no botão "Iniciar Atendimento" e muda o status.
+    if (session.isConsultant) return
+
     const interval = setInterval(async () => {
       // In a real prod environment we'd use WebSockets. Here we poll status every 5s
       try {
@@ -50,8 +54,11 @@ export function VideoRoomPage() {
         })
         const data = await res.json()
         if (data.status === 'active' && !isCallActive) {
-          // Both are ready!
-          joinCall(data)
+          // Both are ready! O consultor já iniciou!
+          setIsCallActive(true) // Libera a div do iframe
+          setTimeout(() => {
+            joinCall(data)
+          }, 100)
         }
       } catch (e) {
         // ignore
@@ -73,6 +80,7 @@ export function VideoRoomPage() {
     }
 
     const callFrame = DailyIframe.createFrame(containerRef.current, {
+      showLeaveButton: false, // Nós gerenciamos o botão de sair
       iframeStyle: {
         width: '100%',
         height: '100%',
