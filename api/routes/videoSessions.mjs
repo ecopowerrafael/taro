@@ -201,13 +201,17 @@ export const createVideoSessionsRouter = (pool) => {
               properties: {
                 room_name: roomName,
                 is_owner: isConsultant,
-                user_name: isConsultant ? session.consultantName : session.userName
+                user_name: isConsultant ? session.consultantName : session.userName,
+                exp: Math.floor(Date.now() / 1000) + 24 * 3600 // Expira em 24h
               }
             })
           })
           if (tokenRes.ok) {
             const tokenData = await tokenRes.json()
             dailyToken = tokenData.token
+          } else {
+            const errorData = await tokenRes.json()
+            console.error('Erro retornado pela API do Daily ao gerar token:', errorData)
           }
         } catch (e) {
           console.error('Erro ao gerar token do Daily:', e)
