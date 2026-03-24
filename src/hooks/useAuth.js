@@ -18,10 +18,15 @@ export function useAuth() {
       const response = await fetch(buildApiUrl('/api/auth/profile'), {
         headers: {
           Authorization: `Bearer ${tokenToUse}`
-        }
+        },
+        signal: AbortSignal.timeout(10000)
       })
       if (response.ok) {
         const userData = await response.json()
+        // Converter birthDate para string se vier do MySQL como objeto Date
+        if (userData.birthDate) {
+          userData.birthDate = new Date(userData.birthDate).toISOString().split('T')[0]
+        }
         setUser(userData)
       } else {
         logout()
@@ -145,6 +150,32 @@ export function useAuth() {
     }
   }
 
+  const rechargeMinutes = async (minutes) => {
+    try {
+      const response = await fetch(buildApiUrl('/api/auth/recharge'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ minutes }),
+        signal: AbortSignal.timeout(10000)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setUser(prev => ({ ...prev, minutesBalance: data.minutesBalance }))
+        return { ok: true, minutesBalance: data.minutesBalance }
+      } else {
+        const data = await response.json()
+        return { ok: false, message: data.message || 'Erro ao recarregar.' }
+      }
+    } catch (error) {
+      console.error('Erro na recarga:', error)
+      return { ok: false, message: 'Falha na conexão com o servidor.' }
+    }
+  }
+
   return {
     user,
     token,
@@ -154,6 +185,7 @@ export function useAuth() {
     registerConsultant,
     logout,
     updateProfile,
+    rechargeMinutes,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
     isConsultant: user?.role === 'consultant'

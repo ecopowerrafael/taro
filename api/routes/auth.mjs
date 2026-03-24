@@ -203,5 +203,39 @@ export const createAuthRouter = (pool) => {
     }
   })
 
+  // Add Minutes (Recharge)
+  router.post('/recharge', async (request, response) => {
+    const authHeader = request.headers.authorization
+    if (!authHeader) {
+      return response.status(401).json({ message: 'Não autorizado.' })
+    }
+
+    const token = authHeader.split(' ')[1]
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET)
+      const { minutes } = request.body
+
+      if (!minutes || minutes <= 0) {
+        return response.status(400).json({ message: 'Quantidade de minutos inválida.' })
+      }
+
+      await pool.query(
+        'UPDATE users SET minutesBalance = minutesBalance + ? WHERE id = ?',
+        [minutes, decoded.id]
+      )
+
+      const [updated] = await pool.query('SELECT minutesBalance FROM users WHERE id = ?', [decoded.id])
+
+      response.json({ 
+        ok: true, 
+        message: 'Recarga realizada com sucesso.', 
+        minutesBalance: updated[0].minutesBalance 
+      })
+    } catch (error) {
+      console.error('Erro na recarga:', error)
+      response.status(401).json({ message: 'Token inválido ou erro no servidor.' })
+    }
+  })
+
   return router
 }

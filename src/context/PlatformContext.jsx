@@ -702,6 +702,8 @@ export function PlatformProvider({ children }) {
 
   const rechargePackage = async (pack) => {
     const amount = pack.promoPrice ?? pack.price
+    /* 
+    // Removendo o mock do Mercado Pago para teste direto
     const response = await createRechargePreference({
       packageId: pack.id,
       minutes: pack.minutes,
@@ -709,8 +711,16 @@ export function PlatformProvider({ children }) {
       customerEmail: profile?.email ?? 'guest@taro.com',
     })
     setPaymentResult(response)
-    creditMinutes(pack.minutes)
-    setSystemNotice(`Recarga confirmada: +${pack.minutes} minutos por R$ ${amount.toFixed(2)}.`)
+    */
+    
+    // Chamada real para atualizar o saldo no banco de dados
+    const result = await rechargeMinutes(pack.minutes)
+    
+    if (result.ok) {
+      setSystemNotice(`Recarga confirmada: +${pack.minutes} minutos por R$ ${amount.toFixed(2)}.`)
+    } else {
+      setSystemNotice(result.message || 'Erro ao processar recarga.')
+    }
   }
 
   const updateMinutePackage = (id, updates) => {
@@ -969,6 +979,7 @@ export function PlatformProvider({ children }) {
     billing,
     roomUrl,
     minutePackages,
+    setMinutePackages,
     updateMinutePackage,
     setFeaturedPackage,
     mpCredentials,
@@ -986,6 +997,7 @@ export function PlatformProvider({ children }) {
     minWithdrawalAmount: MIN_WITHDRAWAL_AMOUNT,
     adminDashboardStats,
     selectConsultant,
+    setSelectedConsultant,
     connectSession,
     disconnectSession,
     approveConsultant,

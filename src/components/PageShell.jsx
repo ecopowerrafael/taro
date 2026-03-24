@@ -38,7 +38,7 @@ export function PageShell({ title, subtitle, children }) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <img
-                src="/logo.png"
+                src="/logoastria.png"
                 alt="Astria"
                 className="h-12 w-12 rounded-xl border border-mystic-gold/40 bg-black/30 object-contain p-1"
               />
