@@ -69,7 +69,7 @@ app.get('/api/runtime-info', (_request, response) => {
 
 if (hasFrontendBuild) {
   app.use(express.static(distPath))
-  app.get('*', (_request, response) => {
+  app.get('/{*any}', (_request, response) => {
     response.sendFile(path.join(distPath, 'index.html'))
   })
 } else {
