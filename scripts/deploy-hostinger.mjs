@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import { Client } from 'basic-ftp'
 
@@ -25,6 +26,7 @@ const run = async () => {
   const remoteBaseDir = (process.env.HOSTINGER_REMOTE_DIR || '/public_html').trim()
   const shouldClean = resolveBoolean(process.env.HOSTINGER_DEPLOY_CLEAN, true)
   const localDist = path.resolve(process.cwd(), 'dist')
+  const localHtaccess = path.join(localDist, '.htaccess')
 
   try {
     console.log('Conectando ao FTP da Hostinger...')
@@ -45,6 +47,9 @@ const run = async () => {
 
     console.log(`Enviando arquivos de ${localDist} para ${remoteBaseDir}...`)
     await client.uploadFromDir(localDist)
+    if (fs.existsSync(localHtaccess)) {
+      await client.uploadFrom(localHtaccess, '.htaccess')
+    }
     console.log('Deploy concluído com sucesso.')
   } finally {
     client.close()

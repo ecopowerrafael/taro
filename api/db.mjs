@@ -17,9 +17,17 @@ export const assertDatabaseConfig = () => {
   }
 }
 
+const resolveDatabaseHost = () => {
+  const host = (process.env.DB_HOST || '').trim()
+  if (host.toLowerCase() === 'localhost') {
+    return '127.0.0.1'
+  }
+  return host
+}
+
 export const createPool = () =>
   mysql.createPool({
-    host: process.env.DB_HOST,
+    host: resolveDatabaseHost(),
     port: Number(process.env.DB_PORT),
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
@@ -116,8 +124,32 @@ export const initializeSchema = async (pool) => {
   `)
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS app_credentials (
+      id TINYINT PRIMARY KEY,
+      mpPublicKey VARCHAR(255) NULL,
+      mpAccessToken TEXT NULL,
+      mpWebhookSecret TEXT NULL,
+      dailyApiKey TEXT NULL,
+      dailyDomain VARCHAR(255) NULL,
+      dailyRoomName VARCHAR(255) NULL
+    )
+  `)
+
+  await pool.query(`
     INSERT IGNORE INTO consultant_wallets (consultantId, availableBalance, pixKey)
     SELECT id, 0, NULL
     FROM consultants
+  `)
+
+  await pool.query(`
+    INSERT IGNORE INTO app_credentials (
+      id,
+      mpPublicKey,
+      mpAccessToken,
+      mpWebhookSecret,
+      dailyApiKey,
+      dailyDomain,
+      dailyRoomName
+    ) VALUES (1, NULL, NULL, NULL, NULL, 'demo.daily.co', 'hello')
   `)
 }

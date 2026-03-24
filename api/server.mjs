@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 import express from 'express'
 import { assertDatabaseConfig, createPool, initializeSchema } from './db.mjs'
 import { createConsultantsRouter } from './routes/consultants.mjs'
+import { createCredentialsRouter } from './routes/credentials.mjs'
 import { createQuestionRequestsRouter } from './routes/questionRequests.mjs'
 import { createWalletsRouter } from './routes/wallets.mjs'
 
@@ -31,6 +32,7 @@ try {
   assertDatabaseConfig()
   const pool = createPool()
   app.use('/api/consultants', createConsultantsRouter(pool))
+  app.use('/api/credentials', createCredentialsRouter(pool))
   app.use('/api/question-requests', createQuestionRequestsRouter(pool))
   app.use('/api/wallets', createWalletsRouter(pool))
 

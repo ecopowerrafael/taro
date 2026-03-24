@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMockAuth } from '../hooks/useMockAuth'
 import { useBilling } from '../hooks/useBilling'
 import { createRechargePreference } from '../services/mercadoPagoMock'
@@ -174,12 +174,12 @@ export function PlatformProvider({ children }) {
   const [selectedConsultant, setSelectedConsultant] = useState(null)
   const [globalCommission, setGlobalCommission] = useState(20)
   const [minutePackages, setMinutePackages] = useState(initialMinutePackages)
-  const [mpCredentials, setMpCredentials] = useState({
+  const [mpCredentials, setMpCredentialsState] = useState({
     publicKey: '',
     accessToken: '',
     webhookSecret: '',
   })
-  const [dailyCredentials, setDailyCredentials] = useState({
+  const [dailyCredentials, setDailyCredentialsState] = useState({
     apiKey: '',
     domain: 'demo.daily.co',
     roomName: 'hello',
@@ -188,6 +188,8 @@ export function PlatformProvider({ children }) {
   const [consultantWallets, setConsultantWallets] = useState(initialConsultantWallets)
   const [paymentResult, setPaymentResult] = useState(null)
   const [systemNotice, setSystemNotice] = useState('')
+  const mpCredentialsRef = useRef(mpCredentials)
+  const dailyCredentialsRef = useRef(dailyCredentials)
 
   const ensureWalletsForConsultants = (consultantList) => {
     setConsultantWallets((prev) => {
@@ -222,31 +224,100 @@ export function PlatformProvider({ children }) {
     return `https://${domain}/${roomName}`
   }, [dailyCredentials.domain, dailyCredentials.roomName])
 
+  useEffect(() => {
+    mpCredentialsRef.current = mpCredentials
+  }, [mpCredentials])
+
+  useEffect(() => {
+    dailyCredentialsRef.current = dailyCredentials
+  }, [dailyCredentials])
+
+  const persistCredentialsOnApi = async (nextMpCredentials, nextDailyCredentials) => {
+    const response = await fetch(buildApiUrl('/api/credentials'), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        mpCredentials: nextMpCredentials,
+        dailyCredentials: nextDailyCredentials,
+      }),
+    })
+    return response.ok
+  }
+
+  const setMpCredentials = (updater) => {
+    setMpCredentialsState((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      const normalized = {
+        publicKey: next?.publicKey ?? '',
+        accessToken: next?.accessToken ?? '',
+        webhookSecret: next?.webhookSecret ?? '',
+      }
+      mpCredentialsRef.current = normalized
+      void persistCredentialsOnApi(normalized, dailyCredentialsRef.current).then((ok) => {
+        if (!ok) {
+          setSystemNotice('Não foi possível salvar credenciais de pagamento no backend.')
+        }
+      })
+      return normalized
+    })
+  }
+
+  const setDailyCredentials = (updater) => {
+    setDailyCredentialsState((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      const normalized = {
+        apiKey: next?.apiKey ?? '',
+        domain: next?.domain ?? 'demo.daily.co',
+        roomName: next?.roomName ?? 'hello',
+      }
+      dailyCredentialsRef.current = normalized
+      void persistCredentialsOnApi(mpCredentialsRef.current, normalized).then((ok) => {
+        if (!ok) {
+          setSystemNotice('Não foi possível salvar credenciais de vídeo no backend.')
+        }
+      })
+      return normalized
+    })
+  }
+
+  const upsertConsultantOnApi = async (consultant) => {
+    const response = await fetch(buildApiUrl(`/api/consultants/${consultant.id}`), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(consultant),
+    })
+    return response.ok
+  }
+
   const persistConsultant = async (consultant) => {
     try {
-      await fetch(buildApiUrl(`/api/consultants/${consultant.id}`), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(consultant),
-      })
+      const ok = await upsertConsultantOnApi(consultant)
+      if (!ok) {
+        setSystemNotice('Não foi possível salvar alterações do consultor no backend.')
+      }
     } catch {
-      return
+      setSystemNotice('Falha de conexão ao salvar dados do consultor.')
     }
   }
 
   const persistConsultantStatus = async (id, status) => {
     try {
-      await fetch(buildApiUrl(`/api/consultants/${id}/status`), {
+      const response = await fetch(buildApiUrl(`/api/consultants/${id}/status`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status }),
       })
+      if (!response.ok) {
+        setSystemNotice('Não foi possível sincronizar o status do consultor no backend.')
+      }
     } catch {
-      return
+      setSystemNotice('Falha de conexão ao atualizar status do consultor.')
     }
   }
 
@@ -327,7 +398,12 @@ export function PlatformProvider({ children }) {
           return
         }
         const payload = await response.json()
-        if (!Array.isArray(payload) || payload.length === 0) {
+        if (!Array.isArray(payload)) {
+          return
+        }
+        if (payload.length === 0) {
+          ensureWalletsForConsultants(initialConsultants)
+          await Promise.all(initialConsultants.map((consultant) => upsertConsultantOnApi(consultant)))
           return
         }
         const normalized = payload.map(normalizeConsultant)
@@ -338,6 +414,35 @@ export function PlatformProvider({ children }) {
       }
     }
     void loadConsultants()
+  }, [])
+
+  useEffect(() => {
+    const loadCredentials = async () => {
+      try {
+        const response = await fetch(buildApiUrl('/api/credentials'))
+        if (!response.ok) {
+          return
+        }
+        const payload = await response.json()
+        const mp = {
+          publicKey: payload?.mpCredentials?.publicKey ?? '',
+          accessToken: payload?.mpCredentials?.accessToken ?? '',
+          webhookSecret: payload?.mpCredentials?.webhookSecret ?? '',
+        }
+        const daily = {
+          apiKey: payload?.dailyCredentials?.apiKey ?? '',
+          domain: payload?.dailyCredentials?.domain ?? 'demo.daily.co',
+          roomName: payload?.dailyCredentials?.roomName ?? 'hello',
+        }
+        mpCredentialsRef.current = mp
+        dailyCredentialsRef.current = daily
+        setMpCredentialsState(mp)
+        setDailyCredentialsState(daily)
+      } catch {
+        return
+      }
+    }
+    void loadCredentials()
   }, [])
 
   useEffect(() => {
