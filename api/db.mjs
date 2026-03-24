@@ -173,8 +173,24 @@ export const initializeSchema = async (pool) => {
       dailyDomain VARCHAR(255) NULL,
       dailyRoomName VARCHAR(255) NULL,
       pixKey VARCHAR(255) NULL,
-      pixQR LONGTEXT NULL,
-      pixCopyPaste TEXT NULL
+      pixReceiverName VARCHAR(120) NULL,
+      pixReceiverCity VARCHAR(120) NULL
+    )
+  `)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS recharge_requests (
+      id VARCHAR(50) PRIMARY KEY,
+      userId VARCHAR(50) NOT NULL,
+      amount DECIMAL(10,2) NOT NULL,
+      minutes INT NOT NULL,
+      method ENUM('pix', 'card') NOT NULL,
+      status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+      createdAt DATETIME NOT NULL,
+      updatedAt DATETIME NULL,
+      CONSTRAINT fk_recharge_user
+        FOREIGN KEY (userId) REFERENCES users(id)
+        ON DELETE CASCADE
     )
   `)
 

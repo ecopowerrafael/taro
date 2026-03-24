@@ -30,24 +30,25 @@ export const createCredentialsRouter = (pool) => {
       dailyDomain,
       dailyRoomName,
       pixKey,
-      pixQR,
-      pixCopyPaste
+      pixReceiverName,
+      pixReceiverCity
     } = request.body
 
     try {
+      // Usar COALESCE para manter valores atuais se vierem undefined/null no body (salvamento parcial)
       await pool.query(
         `
           UPDATE platform_credentials
           SET
-            mpPublicKey = ?,
-            mpAccessToken = ?,
-            mpWebhookSecret = ?,
-            dailyApiKey = ?,
-            dailyDomain = ?,
-            dailyRoomName = ?,
-            pixKey = ?,
-            pixQR = ?,
-            pixCopyPaste = ?
+            mpPublicKey = COALESCE(?, mpPublicKey),
+            mpAccessToken = COALESCE(?, mpAccessToken),
+            mpWebhookSecret = COALESCE(?, mpWebhookSecret),
+            dailyApiKey = COALESCE(?, dailyApiKey),
+            dailyDomain = COALESCE(?, dailyDomain),
+            dailyRoomName = COALESCE(?, dailyRoomName),
+            pixKey = COALESCE(?, pixKey),
+            pixReceiverName = COALESCE(?, pixReceiverName),
+            pixReceiverCity = COALESCE(?, pixReceiverCity)
           WHERE id = 1
         `,
         [
@@ -58,8 +59,8 @@ export const createCredentialsRouter = (pool) => {
           normalizeNullableText(dailyDomain),
           normalizeNullableText(dailyRoomName),
           normalizeNullableText(pixKey),
-          normalizeNullableText(pixQR),
-          normalizeNullableText(pixCopyPaste),
+          normalizeNullableText(pixReceiverName),
+          normalizeNullableText(pixReceiverCity),
         ],
       )
       response.json({ message: 'Configurações atualizadas com sucesso.' })

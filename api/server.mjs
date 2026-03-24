@@ -10,6 +10,7 @@ import { createCredentialsRouter } from './routes/credentials.mjs'
 import { createQuestionRequestsRouter } from './routes/questionRequests.mjs'
 import { createWalletsRouter } from './routes/wallets.mjs'
 import { createAuthRouter } from './routes/auth.mjs'
+import { createRechargesRouter } from './routes/recharges.mjs'
 
 dotenv.config()
 
@@ -55,6 +56,7 @@ try {
   assertDatabaseConfig()
   const pool = createPool()
   app.use('/api/auth', createAuthRouter(pool))
+  app.use('/api/recharges', createRechargesRouter(pool))
   app.use('/api/consultants', createConsultantsRouter(pool))
   app.use('/api/credentials', createCredentialsRouter(pool))
   app.use('/api/question-requests', createQuestionRequestsRouter(pool))

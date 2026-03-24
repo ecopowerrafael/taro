@@ -1,14 +1,38 @@
-import { useEffect, useState } from 'react'
-import { WalletCards, QrCode, CreditCard, Copy, CheckCircle2 } from 'lucide-react'
+import { useEffect, useState, useMemo } from 'react'
+import { WalletCards, QrCode, CreditCard, Copy, CheckCircle2, Loader2 } from 'lucide-react'
 import confetti from 'canvas-confetti'
+import { QRCodeSVG } from 'qrcode.react'
+import { Pix } from 'pix-utils'
 import { GlassCard } from '../components/GlassCard'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
 
 export function RecarregarPage() {
-  const { minutePackages, rechargePackage, paymentResult, minutesBalance, mpCredentials, systemNotice } = usePlatformContext()
+  const { minutePackages, rechargePackage, paymentResult, minutesBalance, mpCredentials, systemNotice, requestRecharge } = usePlatformContext()
   const [paymentMethod, setPaymentMethod] = useState(null) // 'pix' | 'card'
+  const [selectedPack, setSelectedPack] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [requesting, setRequesting] = useState(false)
+
+  // Gerar Pix Copia e Cola dinâmico baseado no pacote
+  const pixData = useMemo(() => {
+    if (!selectedPack || !mpCredentials?.pixKey) return null
+    
+    try {
+      const amount = selectedPack.promoPrice ?? selectedPack.price
+      const pix = Pix.BRCODE({
+        key: mpCredentials.pixKey,
+        name: mpCredentials.pixReceiverName || 'Astria Tarot',
+        city: mpCredentials.pixReceiverCity || 'SAO PAULO',
+        amount: amount,
+        description: `Recarga Astria - ${selectedPack.minutes} min`,
+      })
+      return pix.getBRCode()
+    } catch (e) {
+      console.error('Erro ao gerar PIX:', e)
+      return null
+    }
+  }, [selectedPack, mpCredentials])
 
   useEffect(() => {
     if (paymentResult?.status !== 'approved') {
@@ -27,10 +51,21 @@ export function RecarregarPage() {
   }, [paymentResult?.status])
 
   const handleCopyPix = () => {
-    if (mpCredentials?.pixCopyPaste) {
-      navigator.clipboard.writeText(mpCredentials.pixCopyPaste)
+    if (pixData) {
+      navigator.clipboard.writeText(pixData)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const handlePixRequest = async () => {
+    if (!selectedPack) return
+    setRequesting(true)
+    const amount = selectedPack.promoPrice ?? selectedPack.price
+    const ok = await requestRecharge(amount, selectedPack.minutes, 'pix')
+    setRequesting(false)
+    if (ok) {
+      alert('Solicitação enviada! Após o pagamento, seu saldo será liberado pelo administrador.')
     }
   }
 
@@ -43,56 +78,103 @@ export function RecarregarPage() {
         <p className="font-display text-4xl text-mystic-goldSoft">R$ {minutesBalance.toFixed(2)}</p>
       </GlassCard>
 
-      {!paymentMethod ? (
-        <GlassCard title="Escolha o Método de Pagamento" subtitle="Selecione como deseja pagar.">
-          <div className="grid gap-4 md:grid-cols-2">
-            <button
-              onClick={() => setPaymentMethod('pix')}
-              className="flex flex-col items-center gap-4 rounded-xl border border-mystic-gold/30 bg-black/30 p-8 transition hover:border-mystic-gold/60 hover:bg-black/50"
-            >
-              <div className="rounded-full bg-mystic-gold/10 p-4 text-mystic-gold">
-                <QrCode size={40} />
-              </div>
-              <div className="text-center">
-                <h3 className="font-display text-xl text-mystic-goldSoft">Pix</h3>
-                <p className="text-xs text-amber-100/60">Liberação instantânea</p>
-              </div>
-            </button>
-            <button
-              onClick={() => setPaymentMethod('card')}
-              className="flex flex-col items-center gap-4 rounded-xl border border-mystic-gold/30 bg-black/30 p-8 transition hover:border-mystic-gold/60 hover:bg-black/50"
-            >
-              <div className="rounded-full bg-mystic-gold/10 p-4 text-mystic-gold">
-                <CreditCard size={40} />
-              </div>
-              <div className="text-center">
-                <h3 className="font-display text-xl text-mystic-goldSoft">Cartão de Crédito</h3>
-                <p className="text-xs text-amber-100/60">Processado por Mercado Pago</p>
-              </div>
-            </button>
+      {!selectedPack ? (
+        <GlassCard title="Escolha um Pacote" subtitle="Selecione o valor desejado para recarga.">
+          <div className="grid gap-4 md:grid-cols-3">
+            {minutePackages.map((pack) => {
+              const finalPrice = pack.promoPrice ?? pack.price
+              return (
+                <article
+                  key={pack.id}
+                  className={`rounded-xl border p-4 cursor-pointer transition hover:scale-[1.02] ${
+                    pack.isFeatured
+                      ? 'border-mystic-gold/70 bg-gradient-to-br from-mystic-gold/10 to-black/30'
+                      : 'border-mystic-gold/35 bg-black/30'
+                  }`}
+                  onClick={() => setSelectedPack(pack)}
+                >
+                  <div className="mb-3 flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-display text-3xl text-mystic-goldSoft">{pack.minutes} min</p>
+                      <p className="text-lg text-amber-50">R$ {finalPrice.toFixed(2)}</p>
+                    </div>
+                    {pack.isFeatured && (
+                      <span className="rounded-full border border-mystic-gold/70 bg-mystic-gold/20 px-2 py-1 text-[10px] uppercase tracking-wide text-mystic-goldSoft">
+                        Mais escolhido
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2 mt-4">
+                    <div className="flex items-center justify-center gap-2 rounded-lg bg-mystic-gold/10 py-2 text-xs text-mystic-goldSoft">
+                      <WalletCards size={14} />
+                      Selecionar este pacote
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         </GlassCard>
       ) : (
         <div className="grid gap-6">
           <div className="flex justify-start">
             <button 
-              onClick={() => setPaymentMethod(null)}
+              onClick={() => {
+                setSelectedPack(null)
+                setPaymentMethod(null)
+              }}
               className="text-sm text-mystic-goldSoft underline transition hover:text-mystic-gold"
             >
-              ← Voltar para escolha de método
+              ← Voltar para pacotes
             </button>
           </div>
+
+          <GlassCard 
+            title={`Pacote ${selectedPack.minutes} min - R$ ${(selectedPack.promoPrice ?? selectedPack.price).toFixed(2)}`} 
+            subtitle="Escolha o método de pagamento para este pacote."
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <button
+                onClick={() => setPaymentMethod('pix')}
+                className={`flex flex-col items-center gap-4 rounded-xl border p-6 transition ${
+                  paymentMethod === 'pix' ? 'border-mystic-gold bg-mystic-gold/10' : 'border-mystic-gold/30 bg-black/30 hover:bg-black/50'
+                }`}
+              >
+                <div className="rounded-full bg-mystic-gold/10 p-3 text-mystic-gold">
+                  <QrCode size={32} />
+                </div>
+                <div className="text-center">
+                  <h3 className="font-display text-lg text-mystic-goldSoft">Pagar com Pix</h3>
+                  <p className="text-[10px] text-amber-100/60 uppercase">Manual / QR Code</p>
+                </div>
+              </button>
+              <button
+                onClick={() => setPaymentMethod('card')}
+                className={`flex flex-col items-center gap-4 rounded-xl border p-6 transition ${
+                  paymentMethod === 'card' ? 'border-mystic-gold bg-mystic-gold/10' : 'border-mystic-gold/30 bg-black/30 hover:bg-black/50'
+                }`}
+              >
+                <div className="rounded-full bg-mystic-gold/10 p-3 text-mystic-gold">
+                  <CreditCard size={32} />
+                </div>
+                <div className="text-center">
+                  <h3 className="font-display text-lg text-mystic-goldSoft">Cartão de Crédito</h3>
+                  <p className="text-[10px] text-amber-100/60 uppercase">Mercado Pago</p>
+                </div>
+              </button>
+            </div>
+          </GlassCard>
 
           {paymentMethod === 'pix' && (
             <GlassCard title="Pagamento via Pix" subtitle="Escaneie o QR Code ou use o código Copia e Cola.">
               <div className="flex flex-col items-center gap-6">
-                {mpCredentials?.pixQR ? (
+                {pixData ? (
                   <div className="rounded-xl border-4 border-white bg-white p-2">
-                    <img src={mpCredentials.pixQR} alt="QR Code Pix" className="h-48 w-48" />
+                    <QRCodeSVG value={pixData} size={200} />
                   </div>
                 ) : (
                   <div className="flex h-48 w-48 items-center justify-center rounded-xl border border-dashed border-mystic-gold/30 bg-black/20 text-center text-xs text-amber-100/40">
-                    QR Code não configurado pelo administrador.
+                    Erro ao gerar QR Code. Verifique as configurações no admin.
                   </div>
                 )}
                 
@@ -101,12 +183,12 @@ export function RecarregarPage() {
                   <div className="relative">
                     <input
                       readOnly
-                      value={mpCredentials?.pixCopyPaste || 'Código não disponível'}
+                      value={pixData || 'Código não disponível'}
                       className="w-full rounded-lg border border-mystic-gold/35 bg-black/35 py-3 pl-4 pr-12 text-xs text-amber-50 outline-none"
                     />
                     <button
                       onClick={handleCopyPix}
-                      disabled={!mpCredentials?.pixCopyPaste}
+                      disabled={!pixData}
                       className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-mystic-gold transition hover:bg-mystic-gold/10 disabled:opacity-30"
                     >
                       {copied ? <CheckCircle2 size={18} className="text-emerald-400" /> : <Copy size={18} />}
@@ -114,9 +196,16 @@ export function RecarregarPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-mystic-gold/20 bg-mystic-gold/5 p-4 text-center">
-                  <p className="text-xs text-amber-100/80">
-                    Após realizar o pagamento, envie o comprovante para nosso suporte para liberação imediata do saldo.
+                <div className="flex flex-col gap-4 w-full max-w-sm">
+                  <button
+                    onClick={handlePixRequest}
+                    disabled={requesting || !pixData}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 py-3 font-bold text-black transition hover:brightness-110 disabled:opacity-50"
+                  >
+                    {requesting ? <Loader2 className="animate-spin" size={20} /> : 'Já realizei o pagamento'}
+                  </button>
+                  <p className="text-center text-[10px] text-amber-100/50">
+                    O saldo será liberado após a confirmação manual do administrador.
                   </p>
                 </div>
               </div>
@@ -124,47 +213,16 @@ export function RecarregarPage() {
           )}
 
           {paymentMethod === 'card' && (
-            <GlassCard
-              title="Pacotes de Recarga"
-              subtitle="Pagamento processado por Mercado Pago."
-            >
-              <div className="grid gap-4 md:grid-cols-3">
-                {minutePackages.map((pack) => {
-                  const finalPrice = pack.promoPrice ?? pack.price
-
-                  return (
-                    <article
-                      key={pack.id}
-                      className={`rounded-xl border p-4 ${
-                        pack.isFeatured
-                          ? 'border-mystic-gold/70 bg-gradient-to-br from-mystic-gold/10 to-black/30'
-                          : 'border-mystic-gold/35 bg-black/30'
-                      }`}
-                    >
-                      <div className="mb-3 flex items-start justify-between gap-2">
-                        <div>
-                          <p className="font-display text-3xl text-mystic-goldSoft">R$ {finalPrice.toFixed(2)}</p>
-                          <p className="text-xs text-amber-100/60">Crédito em conta</p>
-                        </div>
-                        {pack.isFeatured && (
-                          <span className="rounded-full border border-mystic-gold/70 bg-mystic-gold/20 px-2 py-1 text-[10px] uppercase tracking-wide text-mystic-goldSoft">
-                            Mais escolhido
-                          </span>
-                        )}
-                      </div>
-
-                      <button
-                        onClick={() => rechargePackage(pack)}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-mystic-gold/70 bg-gradient-to-r from-mystic-gold/90 to-amber-500/85 px-4 py-2 text-sm font-medium text-black transition hover:brightness-110"
-                      >
-                        <WalletCards size={16} />
-                        Comprar agora
-                      </button>
-                    </article>
-                  )
-                })}
-              </div>
-            </GlassCard>
+            <div className="flex flex-col items-center py-8">
+              <button
+                onClick={() => rechargePackage(selectedPack)}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-mystic-gold/70 bg-gradient-to-r from-mystic-gold/90 to-amber-500/85 px-12 py-4 font-bold text-black transition hover:brightness-110"
+              >
+                <WalletCards size={20} />
+                Pagar R$ {(selectedPack.promoPrice ?? selectedPack.price).toFixed(2)} com Mercado Pago
+              </button>
+              <p className="mt-4 text-xs text-amber-100/60">Você será redirecionado para o ambiente seguro do Mercado Pago.</p>
+            </div>
           )}
         </div>
       )}

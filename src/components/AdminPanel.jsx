@@ -1,5 +1,36 @@
-import { useMemo, useState } from 'react'
-import { Check, CreditCard, Landmark, Pencil, ShieldBan } from 'lucide-react'
+import { useMemo, useState, useEffect } from 'react'
+import {
+  Activity,
+  AlertCircle,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  CreditCard,
+  Edit2,
+  ExternalLink,
+  Filter,
+  History,
+  Info,
+  LayoutDashboard,
+  MessageSquare,
+  Search,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Star,
+  Trash2,
+  UserCheck,
+  Users,
+  Wallet,
+  X,
+  Plus,
+  Save,
+  CheckCircle2,
+  XCircle,
+  Landmark,
+  Pencil,
+  ShieldBan,
+} from 'lucide-react'
 import { GlassCard } from './GlassCard'
 
 export function AdminPanel({
@@ -21,8 +52,11 @@ export function AdminPanel({
   dailyCredentials,
   onDailyCredentialsChange,
   onSaveCredentials,
+  rechargeRequests,
+  onRechargeAction,
 }) {
-  const [activeTab, setActiveTab] = useState('consultores')
+  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'financeiro' | 'credenciais' | 'recharges'
+  const [searchQuery, setSearchSearchQuery] = useState('')
   const [editingConsultantId, setEditingConsultantId] = useState(null)
   const [editForm, setEditForm] = useState(null)
   const [commissionDraft, setCommissionDraft] = useState(globalCommission?.toString() ?? '0')
@@ -39,13 +73,57 @@ export function AdminPanel({
     minutePackages.find((pack) => pack.isFeatured)?.id ?? null,
   )
   const [credentialsDraft, setCredentialsDraft] = useState({
-    publicKey: mpCredentials?.publicKey ?? '',
-    accessToken: mpCredentials?.accessToken ?? '',
-    webhookSecret: mpCredentials?.webhookSecret ?? '',
-    dailyApiKey: dailyCredentials?.apiKey ?? '',
-    dailyDomain: dailyCredentials?.domain ?? '',
-    dailyRoomName: dailyCredentials?.roomName ?? '',
+    mpPublicKey: '',
+    mpAccessToken: '',
+    mpWebhookSecret: '',
+    dailyApiKey: '',
+    dailyDomain: '',
+    dailyRoomName: '',
+    pixKey: '',
+    pixReceiverName: '',
+    pixReceiverCity: '',
   })
+
+  useEffect(() => {
+    if (mpCredentials || dailyCredentials) {
+      setCredentialsDraft({
+        mpPublicKey: mpCredentials?.mpPublicKey || '',
+        mpAccessToken: mpCredentials?.mpAccessToken || '',
+        mpWebhookSecret: mpCredentials?.mpWebhookSecret || '',
+        dailyApiKey: dailyCredentials?.dailyApiKey || '',
+        dailyDomain: dailyCredentials?.dailyDomain || '',
+        dailyRoomName: dailyCredentials?.dailyRoomName || '',
+        pixKey: mpCredentials?.pixKey || '',
+        pixReceiverName: mpCredentials?.pixReceiverName || '',
+        pixReceiverCity: mpCredentials?.pixReceiverCity || '',
+      })
+    }
+  }, [mpCredentials, dailyCredentials])
+
+  const handleSavePartial = (type) => {
+    let data = {}
+    if (type === 'mp') {
+      data = {
+        mpPublicKey: credentialsDraft.mpPublicKey,
+        mpAccessToken: credentialsDraft.mpAccessToken,
+        mpWebhookSecret: credentialsDraft.mpWebhookSecret,
+      }
+    } else if (type === 'daily') {
+      data = {
+        dailyApiKey: credentialsDraft.dailyApiKey,
+        dailyDomain: credentialsDraft.dailyDomain,
+        dailyRoomName: credentialsDraft.dailyRoomName,
+      }
+    } else if (type === 'pix') {
+      data = {
+        pixKey: credentialsDraft.pixKey,
+        pixReceiverName: credentialsDraft.pixReceiverName,
+        pixReceiverCity: credentialsDraft.pixReceiverCity,
+      }
+    }
+    onMpCredentialsChange(type, data)
+  }
+
   const [credentialsSaving, setCredentialsSaving] = useState(false)
   const [credentialsFeedback, setCredentialsFeedback] = useState('')
 
@@ -244,8 +322,94 @@ export function AdminPanel({
           <Landmark size={14} />
           Credenciais
         </button>
+        <button
+          className={tabButtonClass('recharges')}
+          onClick={() => setActiveTab('recharges')}
+        >
+          <Wallet size={14} />
+          Recargas
+          {rechargeRequests.length > 0 && (
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+              {rechargeRequests.length}
+            </span>
+          )}
+        </button>
       </div>
       <div className="grid gap-5">
+        {activeTab === 'dashboard' && (
+          <div className="grid gap-6">
+            <div className="grid gap-4 md:grid-cols-4">
+              <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Total Faturado</p>
+                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">R$ 0.00</p>
+              </article>
+              <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Comissão Astria</p>
+                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">R$ 0.00</p>
+              </article>
+              <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Sessões</p>
+                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">0</p>
+              </article>
+              <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Consultores</p>
+                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">{consultants.length}</p>
+              </article>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'recharges' && (
+          <section className="grid gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-2xl text-mystic-goldSoft">Aprovação de Saldo</h3>
+              <p className="text-xs text-ethereal-silver/60">Total pendente: {rechargeRequests.length}</p>
+            </div>
+            <div className="grid gap-3">
+              {rechargeRequests.length === 0 ? (
+                <p className="rounded-lg border border-mystic-gold/20 bg-black/30 p-8 text-center text-ethereal-silver/60">
+                  Nenhuma solicitação de recarga pendente.
+                </p>
+              ) : (
+                rechargeRequests.map((req) => (
+                  <div
+                    key={req.id}
+                    className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-mystic-gold/20 bg-black/30 p-4"
+                  >
+                    <div className="grid gap-1">
+                      <p className="font-medium text-amber-50">{req.userName}</p>
+                      <p className="text-xs text-amber-100/60">{req.userEmail}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-display text-xl text-mystic-goldSoft">R$ {Number(req.amount).toFixed(2)}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-amber-100/40">{req.method}</p>
+                    </div>
+                    <div className="text-right text-xs text-amber-100/50">
+                      {new Date(req.createdAt).toLocaleString('pt-BR')}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => onRechargeAction(req.id, 'approved')}
+                        className="flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-400 transition hover:bg-emerald-500/20"
+                      >
+                        <Check size={14} />
+                        Aprovar
+                      </button>
+                      <button
+                        onClick={() => onRechargeAction(req.id, 'rejected')}
+                        className="flex items-center gap-1 rounded-lg border border-red-500/50 bg-red-500/10 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/20"
+                      >
+                        <X size={14} />
+                        Rejeitar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        )}
+
         {activeTab === 'consultores' && (
           <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
             <h3 className="font-display text-xl text-mystic-goldSoft">Pendentes de Aprovação</h3>
@@ -451,114 +615,131 @@ export function AdminPanel({
         )}
 
         {activeTab === 'credenciais' && (
-          <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
-            <h3 className="font-display text-xl text-mystic-goldSoft">Credenciais de Integração</h3>
-            <p className="mt-1 text-xs text-ethereal-silver/70">Mercado Pago, Daily.co e PIX</p>
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
-              <label className="grid gap-2 text-sm text-amber-100/75">
-                Public Key
-                <input
-                  value={credentialsDraft.publicKey}
-                  onChange={(event) =>
-                    setCredentialsDraft((prev) => ({ ...prev, publicKey: event.target.value }))
-                  }
-                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-amber-100/75">
-                Access Token
-                <input
-                  value={credentialsDraft.accessToken}
-                  onChange={(event) =>
-                    setCredentialsDraft((prev) => ({ ...prev, accessToken: event.target.value }))
-                  }
-                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-amber-100/75">
-                Webhook Secret
-                <input
-                  value={credentialsDraft.webhookSecret}
-                  onChange={(event) =>
-                    setCredentialsDraft((prev) => ({ ...prev, webhookSecret: event.target.value }))
-                  }
-                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-amber-100/75">
-                Daily API Key
-                <input
-                  value={credentialsDraft.dailyApiKey}
-                  onChange={(event) =>
-                    setCredentialsDraft((prev) => ({ ...prev, dailyApiKey: event.target.value }))
-                  }
-                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-amber-100/75">
-                Daily Domain
-                <input
-                  value={credentialsDraft.dailyDomain}
-                  onChange={(event) =>
-                    setCredentialsDraft((prev) => ({ ...prev, dailyDomain: event.target.value }))
-                  }
-                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-amber-100/75">
-                Daily Room Name
-                <input
-                  value={credentialsDraft.dailyRoomName}
-                  onChange={(event) =>
-                    setCredentialsDraft((prev) => ({ ...prev, dailyRoomName: event.target.value }))
-                  }
-                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-amber-100/75">
-                Chave PIX
-                <input
-                  value={credentialsDraft.pixKey || ''}
-                  onChange={(event) =>
-                    setCredentialsDraft((prev) => ({ ...prev, pixKey: event.target.value }))
-                  }
-                  placeholder="E-mail, CPF ou Aleatória"
-                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-amber-100/75">
-                Código Copia e Cola PIX
-                <textarea
-                  value={credentialsDraft.pixCopyPaste || ''}
-                  onChange={(event) =>
-                    setCredentialsDraft((prev) => ({ ...prev, pixCopyPaste: event.target.value }))
-                  }
-                  rows={1}
-                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-amber-100/75 md:col-span-2">
-                QR Code PIX (Base64)
-                <textarea
-                  value={credentialsDraft.pixQR || ''}
-                  onChange={(event) =>
-                    setCredentialsDraft((prev) => ({ ...prev, pixQR: event.target.value }))
-                  }
-                  rows={1}
-                  placeholder="data:image/png;base64,..."
-                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                />
-              </label>
-            </div>
-            <button
-              onClick={saveCredentials}
-              disabled={!credentialsDirty || credentialsSaving}
-              className="mt-3 rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200 transition enabled:hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {credentialsSaving ? 'Salvando credenciais...' : 'Salvar credenciais'}
-            </button>
+          <div className="grid gap-6">
+            <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-xl text-mystic-goldSoft">Mercado Pago</h3>
+                  <p className="text-xs text-ethereal-silver/70">Credenciais para pagamentos com cartão.</p>
+                </div>
+                <button
+                  onClick={() => handleSavePartial('mp')}
+                  className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110"
+                >
+                  <Save size={14} />
+                  Salvar MP
+                </button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Public Key
+                  <input
+                    value={credentialsDraft.mpPublicKey}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, mpPublicKey: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Access Token
+                  <input
+                    type="password"
+                    value={credentialsDraft.mpAccessToken}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, mpAccessToken: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-xl text-mystic-goldSoft">Configuração PIX</h3>
+                  <p className="text-xs text-ethereal-silver/70">Dados para geração automática de QR Code.</p>
+                </div>
+                <button
+                  onClick={() => handleSavePartial('pix')}
+                  className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110"
+                >
+                  <Save size={14} />
+                  Salvar PIX
+                </button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Chave PIX
+                  <input
+                    value={credentialsDraft.pixKey}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, pixKey: e.target.value })}
+                    placeholder="Email, CPF ou Celular"
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Nome do Recebedor
+                  <input
+                    value={credentialsDraft.pixReceiverName}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, pixReceiverName: e.target.value })}
+                    placeholder="Nome Completo"
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Cidade do Recebedor
+                  <input
+                    value={credentialsDraft.pixReceiverCity}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, pixReceiverCity: e.target.value })}
+                    placeholder="Ex: Sao Paulo"
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-xl text-mystic-goldSoft">Daily.co (Vídeo)</h3>
+                  <p className="text-xs text-ethereal-silver/70">Configurações das salas de atendimento.</p>
+                </div>
+                <button
+                  onClick={() => handleSavePartial('daily')}
+                  className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110"
+                >
+                  <Save size={14} />
+                  Salvar Daily
+                </button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  API Key
+                  <input
+                    type="password"
+                    value={credentialsDraft.dailyApiKey}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, dailyApiKey: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Domínio
+                  <input
+                    value={credentialsDraft.dailyDomain}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, dailyDomain: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Nome da Sala
+                  <input
+                    value={credentialsDraft.dailyRoomName}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, dailyRoomName: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+              </div>
+            </section>
             {credentialsFeedback && <p className="mt-2 text-xs text-amber-100/80">{credentialsFeedback}</p>}
-          </section>
+          </div>
         )}
       </div>
       {editingConsultantId && editForm && (

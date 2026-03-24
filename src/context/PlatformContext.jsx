@@ -326,31 +326,86 @@ export function PlatformProvider({ children }) {
     })
   }
 
-  const savePlatformCredentials = async (nextMpCredentials, nextDailyCredentials) => {
-    const normalizedMp = {
-      publicKey: nextMpCredentials?.publicKey ?? '',
-      accessToken: nextMpCredentials?.accessToken ?? '',
-      webhookSecret: nextMpCredentials?.webhookSecret ?? '',
-    }
-    const normalizedDaily = {
-      apiKey: nextDailyCredentials?.apiKey ?? '',
-      domain: nextDailyCredentials?.domain ?? 'demo.daily.co',
-      roomName: nextDailyCredentials?.roomName ?? 'hello',
-    }
+  const savePlatformCredentials = async (type, data) => {
     try {
-      const ok = await persistCredentialsOnApi(normalizedMp, normalizedDaily)
-      if (!ok) {
-        setSystemNotice('Não foi possível salvar credenciais no backend.')
-        return false
+      const response = await fetch(buildApiUrl('/api/credentials'), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (response.ok) {
+        // Atualiza o estado local dependendo do tipo
+        if (type === 'mp') setMpCredentialsState((prev) => ({ ...prev, ...data }))
+        if (type === 'daily') setDailyCredentialsState((prev) => ({ ...prev, ...data }))
+        if (type === 'pix') setMpCredentialsState((prev) => ({ ...prev, ...data }))
+        setSystemNotice('Configurações salvas com sucesso.')
+        return { ok: true }
+      } else {
+        const errData = await response.json()
+        setSystemNotice(errData.message || 'Erro ao salvar credenciais.')
+        return { ok: false }
       }
-      mpCredentialsRef.current = normalizedMp
-      dailyCredentialsRef.current = normalizedDaily
-      setMpCredentialsState(normalizedMp)
-      setDailyCredentialsState(normalizedDaily)
-      setSystemNotice('Credenciais salvas com sucesso.')
-      return true
-    } catch {
-      setSystemNotice('Falha de conexão ao salvar credenciais.')
+    } catch (error) {
+      console.error('Erro ao salvar credenciais:', error)
+      setSystemNotice('Erro de conexão ao salvar.')
+      return { ok: false }
+    }
+  }
+
+  const [rechargeRequests, setRechargeRequests] = useState([])
+
+  const fetchPendingRecharges = async () => {
+    try {
+      const response = await fetch(buildApiUrl('/api/recharges/pending'), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setRechargeRequests(data)
+      }
+    } catch (error) {
+      console.error('Erro ao buscar recargas:', error)
+    }
+  }
+
+  const requestRecharge = async (amount, minutes, method) => {
+    try {
+      const response = await fetch(buildApiUrl('/api/recharges/request'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ amount, minutes, method }),
+      })
+      return response.ok
+    } catch (error) {
+      console.error('Erro ao solicitar recarga:', error)
+      return false
+    }
+  }
+
+  const processRechargeAction = async (requestId, action) => {
+    try {
+      const response = await fetch(buildApiUrl(`/api/recharges/${requestId}/action`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action }),
+      })
+      if (response.ok) {
+        fetchPendingRecharges()
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Erro ao processar recarga:', error)
       return false
     }
   }
@@ -1006,6 +1061,11 @@ export function PlatformProvider({ children }) {
     updateConsultantByAdmin,
     updateConsultantAvailability,
     rechargePackage,
+    savePlatformCredentials,
+    rechargeRequests,
+    fetchPendingRecharges,
+    requestRecharge,
+    processRechargeAction,
   }
 
   return <PlatformContext.Provider value={value}>{children}</PlatformContext.Provider>
