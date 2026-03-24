@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { WalletCards, QrCode, CreditCard, Copy, CheckCircle2, Loader2 } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { QRCodeSVG } from 'qrcode.react'
-import { Pix } from 'pix-utils'
+import { QrCodePix } from 'qrcode-pix'
 import { GlassCard } from '../components/GlassCard'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
@@ -20,14 +20,15 @@ export function RecarregarPage() {
     
     try {
       const amount = selectedPack.promoPrice ?? selectedPack.price
-      const pix = Pix.BRCODE({
+      const pix = QrCodePix({
+        version: '01',
         key: mpCredentials.pixKey,
         name: mpCredentials.pixReceiverName || 'Astria Tarot',
         city: mpCredentials.pixReceiverCity || 'SAO PAULO',
-        amount: amount,
-        description: `Recarga Astria - ${selectedPack.minutes} min`,
+        value: amount,
+        message: `Recarga Astria - ${selectedPack.minutes} min`,
       })
-      return pix.getBRCode()
+      return pix.payload()
     } catch (e) {
       console.error('Erro ao gerar PIX:', e)
       return null
