@@ -287,19 +287,25 @@ export function AreaConsultorPage() {
     >
       <GlassCard title="Atendimento do Consultor" subtitle="Visualize e responda cada item enviado pelo cliente.">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <select
-            value={selectedConsultantId}
-            onChange={(event) => {
-              void handleSelectConsultant(event.target.value)
-            }}
-            className="rounded-lg border border-mystic-gold/45 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-          >
-            {consultants.map((consultant) => (
-              <option key={consultant.id} value={consultant.id}>
-                {consultant.name}
-              </option>
-            ))}
-          </select>
+          {isAdmin ? (
+            <select
+              value={selectedConsultantId}
+              onChange={(event) => {
+                void handleSelectConsultant(event.target.value)
+              }}
+              className="rounded-lg border border-mystic-gold/45 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+            >
+              {consultants.map((consultant) => (
+                <option key={consultant.id} value={consultant.id}>
+                  {consultant.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="rounded-lg border border-mystic-gold/45 bg-black/35 px-3 py-2 text-sm text-mystic-goldSoft">
+              {selectedConsultant?.name}
+            </span>
+          )}
           <span className="text-xs text-ethereal-silver/80">
             Pendentes: {pendingRequests.length} • Respondidas: {answeredRequests.length}
           </span>
@@ -336,7 +342,7 @@ export function AreaConsultorPage() {
         <div className="grid gap-3">
           {pendingRequests.length === 0 && (
             <p className="rounded-lg border border-mystic-gold/25 bg-black/30 p-3 text-sm text-ethereal-silver/80">
-              Sem perguntas pendentes para {selectedConsultant?.name ?? 'consultor'}.
+              Você não possui mensagens pendentes.
             </p>
           )}
           {pendingRequests.map((request) => (
@@ -345,38 +351,40 @@ export function AreaConsultorPage() {
                 <p className="text-sm text-amber-50">
                   Cliente: {request.customerName} • Pacote {request.questionCount} perguntas
                 </p>
-                <span className="text-xs text-mystic-goldSoft">Valor: R$ {request.packagePrice.toFixed(2)}</span>
+                <span className="text-xs text-mystic-goldSoft">Comissão estimada: R$ {(request.packagePrice * 0.7).toFixed(2)}</span>
               </div>
-              <div className="grid gap-2">
+              <div className="mt-2 text-xs text-amber-100/70">
+                <p>Nascimento: {request.customerBirthDate || 'Não informado'} • Signo: {request.customerZodiac || 'Não informado'}</p>
+              </div>
+              <div className="mt-4 grid gap-4 border-t border-mystic-gold/20 pt-4">
                 {request.entries.map((entry, index) => (
-                  <div key={entry.id} className="rounded-lg border border-mystic-gold/20 bg-black/35 p-2">
-                    <p className="text-xs text-ethereal-silver/70">Pergunta {index + 1}</p>
-                    {entry.type === 'text' ? (
-                      <p className="text-sm text-ethereal-silver/90">{entry.text}</p>
-                    ) : (
-                      <p className="text-sm text-ethereal-silver/90">
-                        Áudio: {entry.fileName} ({Math.round(entry.durationSeconds)}s)
-                      </p>
-                    )}
+                  <div key={index} className="grid gap-2">
+                    <p className="text-sm text-amber-50">
+                      <span className="font-bold text-mystic-goldSoft">P{index + 1}: </span>
+                      {entry.question}
+                    </p>
+                    <textarea
+                      placeholder={`Digite a resposta para a Pergunta ${index + 1}...`}
+                      value={responseDrafts[request.id]?.[index] ?? ''}
+                      onChange={(event) =>
+                        handleResponseChange(request.id, index, event.target.value)
+                      }
+                      className="min-h-[80px] w-full resize-y rounded-lg border border-mystic-gold/35 bg-black/35 p-3 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                    />
                   </div>
                 ))}
               </div>
-              <textarea
-                rows={3}
-                value={responseDrafts[request.id] ?? ''}
-                onChange={(event) =>
-                  setResponseDrafts((prev) => ({ ...prev, [request.id]: event.target.value }))
-                }
-                placeholder="Responder este atendimento..."
-                className="mt-3 w-full rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-              />
-              <button
-                onClick={() => handleRespond(request.id)}
-                className="mt-2 inline-flex items-center gap-2 rounded-lg border border-mystic-gold/70 bg-mystic-gold/15 px-3 py-2 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/25"
-              >
-                <SendHorizontal size={14} />
-                Enviar resposta e concluir
-              </button>
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => {
+                    void handleSubmitResponse(request.id)
+                  }}
+                  className="flex items-center gap-2 rounded-lg bg-mystic-gold/90 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110"
+                >
+                  <SendHorizontal size={16} />
+                  Enviar Resposta
+                </button>
+              </div>
             </article>
           ))}
         </div>

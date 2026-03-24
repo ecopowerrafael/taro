@@ -66,7 +66,7 @@ export const initializeSchema = async (pool) => {
       email VARCHAR(190) NOT NULL UNIQUE,
       tagline VARCHAR(255) NULL,
       description TEXT NULL,
-      status ENUM('Online', 'Offline', 'Ocupado') NOT NULL DEFAULT 'Offline',
+      status ENUM('Online', 'Offline', 'Ocupado', 'Pendente') NOT NULL DEFAULT 'Pendente',
       photo LONGTEXT NULL,
       pricePerMinute DECIMAL(10,2) NOT NULL DEFAULT 0,
       priceThreeQuestions DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -82,6 +82,11 @@ export const initializeSchema = async (pool) => {
         ON DELETE SET NULL
     )
   `)
+
+  // Garantir que status Pendente seja aceito em bancos já criados
+  try {
+    await pool.query("ALTER TABLE consultants MODIFY COLUMN status ENUM('Online', 'Offline', 'Ocupado', 'Pendente') NOT NULL DEFAULT 'Pendente'")
+  } catch (e) {}
 
   // Garantir que a coluna userId existe em consultants (para bancos já criados)
   try {

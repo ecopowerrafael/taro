@@ -82,7 +82,7 @@ export const createAuthRouter = (pool) => {
           [
             consultantId, name, email, tagline || null, description || null, photo || null,
             pricePerMinute || 0, priceThreeQuestions || 0, priceFiveQuestions || 0,
-            'Offline', createdAt, userId
+            'Pendente', createdAt, userId
           ]
         )
 
