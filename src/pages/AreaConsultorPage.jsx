@@ -205,6 +205,11 @@ export function AreaConsultorPage() {
         return
       }
 
+      // Força a requisição de permissão de notificação no mobile também
+      if ('Notification' in window && Notification.permission !== 'granted') {
+        await Notification.requestPermission()
+      }
+
       await availabilityService.goOnline({
         consultantId: selectedConsultantId,
         consultantName: selectedConsultant.name,
