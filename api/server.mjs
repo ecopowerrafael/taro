@@ -14,15 +14,27 @@ import { createRechargesRouter } from './routes/recharges.mjs'
 
 dotenv.config()
 
+// CAPTURA DE ERROS CRÍTICOS (CRASH LOG)
+process.on('uncaughtException', (err) => {
+  const msg = `[${new Date().toISOString()}] UNCAUGHT EXCEPTION: ${err.message}\n${err.stack}\n\n`
+  fs.appendFileSync('crash.log', msg)
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  const msg = `[${new Date().toISOString()}] UNHANDLED REJECTION: ${reason}\n\n`
+  fs.appendFileSync('crash.log', msg)
+})
+
 const app = express()
 console.log('[API] Servidor iniciando...')
 
 // Tentar criar um arquivo de log de inicialização (debug)
 try {
-  fs.appendFileSync('startup.log', `[${new Date().toISOString()}] Servidor iniciando na porta ${process.env.PORT || 3000}\n`)
+  fs.appendFileSync('startup.log', `[${new Date().toISOString()}] Servidor iniciando (V11-STABLE)\n`)
 } catch (e) {}
 
-// Force restart: 2026-03-24 14:50 (V10)
+// Force restart: 2026-03-24 15:00 (V11)
 const port = Number(process.env.PORT || 3000)
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
