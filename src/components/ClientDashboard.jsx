@@ -59,7 +59,7 @@ export function ClientDashboard({ profile, minutesBalance, dailyHoroscope, onRec
     >
       <div className="grid gap-4 md:grid-cols-2">
         <article className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
-          <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Saldo de minutos</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Saldo atual</p>
           <Motion.p
             key={minutesBalance}
             initial={{ scale: 0.96, opacity: 0.7 }}
@@ -67,7 +67,7 @@ export function ClientDashboard({ profile, minutesBalance, dailyHoroscope, onRec
             transition={{ duration: 0.45 }}
             className="mt-2 font-display text-4xl text-mystic-goldSoft"
           >
-            {animatedBalance.toFixed(2)} min
+            R$ {animatedBalance.toFixed(2)}
           </Motion.p>
         </article>
         <article className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">

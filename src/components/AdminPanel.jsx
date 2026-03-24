@@ -453,7 +453,7 @@ export function AdminPanel({
         {activeTab === 'credenciais' && (
           <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
             <h3 className="font-display text-xl text-mystic-goldSoft">Credenciais de Integração</h3>
-            <p className="mt-1 text-xs text-ethereal-silver/70">Mercado Pago e Daily.co</p>
+            <p className="mt-1 text-xs text-ethereal-silver/70">Mercado Pago, Daily.co e PIX</p>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <label className="grid gap-2 text-sm text-amber-100/75">
                 Public Key
@@ -512,6 +512,40 @@ export function AdminPanel({
                   onChange={(event) =>
                     setCredentialsDraft((prev) => ({ ...prev, dailyRoomName: event.target.value }))
                   }
+                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                />
+              </label>
+              <label className="grid gap-2 text-sm text-amber-100/75">
+                Chave PIX
+                <input
+                  value={credentialsDraft.pixKey || ''}
+                  onChange={(event) =>
+                    setCredentialsDraft((prev) => ({ ...prev, pixKey: event.target.value }))
+                  }
+                  placeholder="E-mail, CPF ou Aleatória"
+                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                />
+              </label>
+              <label className="grid gap-2 text-sm text-amber-100/75">
+                Código Copia e Cola PIX
+                <textarea
+                  value={credentialsDraft.pixCopyPaste || ''}
+                  onChange={(event) =>
+                    setCredentialsDraft((prev) => ({ ...prev, pixCopyPaste: event.target.value }))
+                  }
+                  rows={1}
+                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                />
+              </label>
+              <label className="grid gap-2 text-sm text-amber-100/75 md:col-span-2">
+                QR Code PIX (Base64)
+                <textarea
+                  value={credentialsDraft.pixQR || ''}
+                  onChange={(event) =>
+                    setCredentialsDraft((prev) => ({ ...prev, pixQR: event.target.value }))
+                  }
+                  rows={1}
+                  placeholder="data:image/png;base64,..."
                   className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
                 />
               </label>

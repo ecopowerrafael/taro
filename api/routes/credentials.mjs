@@ -12,71 +12,61 @@ export const createCredentialsRouter = (pool) => {
   router.use(authenticate, authorizeAdmin)
 
   router.get('/', async (_request, response) => {
-    const [rows] = await pool.query(
-      `
-        SELECT
-          mpPublicKey,
-          mpAccessToken,
-          mpWebhookSecret,
-          dailyApiKey,
-          dailyDomain,
-          dailyRoomName
-        FROM app_credentials
-        WHERE id = 1
-        LIMIT 1
-      `,
-    )
-
-    const row = rows[0] ?? {}
-    response.json({
-      mpCredentials: {
-        publicKey: row.mpPublicKey ?? '',
-        accessToken: row.mpAccessToken ?? '',
-        webhookSecret: row.mpWebhookSecret ?? '',
-      },
-      dailyCredentials: {
-        apiKey: row.dailyApiKey ?? '',
-        domain: row.dailyDomain ?? 'demo.daily.co',
-        roomName: row.dailyRoomName ?? 'hello',
-      },
-    })
+    try {
+      const [rows] = await pool.query('SELECT * FROM platform_credentials WHERE id = 1')
+      response.json(rows[0] || {})
+    } catch (error) {
+      console.error('Erro ao buscar credenciais:', error)
+      response.status(500).json({ message: 'Erro ao buscar credenciais.' })
+    }
   })
 
   router.put('/', async (request, response) => {
-    const mpCredentials = request.body?.mpCredentials ?? {}
-    const dailyCredentials = request.body?.dailyCredentials ?? {}
+    const {
+      mpPublicKey,
+      mpAccessToken,
+      mpWebhookSecret,
+      dailyApiKey,
+      dailyDomain,
+      dailyRoomName,
+      pixKey,
+      pixQR,
+      pixCopyPaste
+    } = request.body
 
-    await pool.query(
-      `
-        INSERT INTO app_credentials (
-          id,
-          mpPublicKey,
-          mpAccessToken,
-          mpWebhookSecret,
-          dailyApiKey,
-          dailyDomain,
-          dailyRoomName
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          mpPublicKey = VALUES(mpPublicKey),
-          mpAccessToken = VALUES(mpAccessToken),
-          mpWebhookSecret = VALUES(mpWebhookSecret),
-          dailyApiKey = VALUES(dailyApiKey),
-          dailyDomain = VALUES(dailyDomain),
-          dailyRoomName = VALUES(dailyRoomName)
-      `,
-      [
-        1,
-        normalizeNullableText(mpCredentials.publicKey),
-        normalizeNullableText(mpCredentials.accessToken),
-        normalizeNullableText(mpCredentials.webhookSecret),
-        normalizeNullableText(dailyCredentials.apiKey),
-        normalizeNullableText(dailyCredentials.domain) || 'demo.daily.co',
-        normalizeNullableText(dailyCredentials.roomName) || 'hello',
-      ],
-    )
-
-    response.json({ ok: true })
+    try {
+      await pool.query(
+        `
+          UPDATE platform_credentials
+          SET
+            mpPublicKey = ?,
+            mpAccessToken = ?,
+            mpWebhookSecret = ?,
+            dailyApiKey = ?,
+            dailyDomain = ?,
+            dailyRoomName = ?,
+            pixKey = ?,
+            pixQR = ?,
+            pixCopyPaste = ?
+          WHERE id = 1
+        `,
+        [
+          normalizeNullableText(mpPublicKey),
+          normalizeNullableText(mpAccessToken),
+          normalizeNullableText(mpWebhookSecret),
+          normalizeNullableText(dailyApiKey),
+          normalizeNullableText(dailyDomain),
+          normalizeNullableText(dailyRoomName),
+          normalizeNullableText(pixKey),
+          normalizeNullableText(pixQR),
+          normalizeNullableText(pixCopyPaste),
+        ],
+      )
+      response.json({ message: 'Configurações atualizadas com sucesso.' })
+    } catch (error) {
+      console.error('Erro ao atualizar credenciais:', error)
+      response.status(500).json({ message: 'Erro ao atualizar credenciais.' })
+    }
   })
 
   return router

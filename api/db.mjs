@@ -55,6 +55,10 @@ export const initializeSchema = async (pool) => {
     )
   `)
 
+  // Renomear minutesBalance para balance (Reais) se necessário, 
+  // mas para evitar quebra de compatibilidade imediata, vamos apenas tratar como Reais no código.
+  // No futuro, uma migração de renomeação seria ideal.
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS consultants (
       id VARCHAR(50) PRIMARY KEY,
@@ -160,14 +164,17 @@ export const initializeSchema = async (pool) => {
   `)
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS app_credentials (
-      id TINYINT PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS platform_credentials (
+      id INT PRIMARY KEY,
       mpPublicKey VARCHAR(255) NULL,
-      mpAccessToken TEXT NULL,
-      mpWebhookSecret TEXT NULL,
-      dailyApiKey TEXT NULL,
+      mpAccessToken VARCHAR(255) NULL,
+      mpWebhookSecret VARCHAR(255) NULL,
+      dailyApiKey VARCHAR(255) NULL,
       dailyDomain VARCHAR(255) NULL,
-      dailyRoomName VARCHAR(255) NULL
+      dailyRoomName VARCHAR(255) NULL,
+      pixKey VARCHAR(255) NULL,
+      pixQR LONGTEXT NULL,
+      pixCopyPaste TEXT NULL
     )
   `)
 
@@ -178,7 +185,7 @@ export const initializeSchema = async (pool) => {
   `)
 
   await pool.query(`
-    INSERT IGNORE INTO app_credentials (
+    INSERT IGNORE INTO platform_credentials (
       id,
       mpPublicKey,
       mpAccessToken,
