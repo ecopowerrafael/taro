@@ -16,14 +16,11 @@ const resolveBoolean = (value, fallback) => {
 }
 
 const uploadItems = [
-  { local: 'api/db.mjs', remote: 'db.mjs' },
-  { local: 'api/server.mjs', remote: 'server.js' },
-  { local: 'api/routes', remote: 'routes' },
-  { local: 'api/middleware', remote: 'middleware' },
-  { local: 'dist', remote: 'dist', ignore: ['.htaccess'] },
+  { local: 'api', remote: 'api' },
   { local: 'package.json', remote: 'package.json' },
   { local: 'package-lock.json', remote: 'package-lock.json' },
   { local: '.env', remote: '.env' },
+  { local: 'server.js', remote: 'server.js' },
 ]
 
 const run = async () => {
@@ -42,7 +39,8 @@ const run = async () => {
 
   try {
     console.log(`Conectando ao FTP do Backend (${process.env.BACK_FTP_HOST})...`)
-    const ftpPassword = process.env.BACK_FTP_PASSWORD.trim().replace(/^["']|["']$/g, '')
+    const rawPassword = process.env.BACK_FTP_PASSWORD.trim().replace(/^["']|["']$/g, '')
+    const ftpPassword = `"${rawPassword}"`
     await client.access({
       host: process.env.BACK_FTP_HOST.trim(),
       user: process.env.BACK_FTP_USER.trim(),

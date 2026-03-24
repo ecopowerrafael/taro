@@ -6,14 +6,13 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "node --watch api/server.mjs",
-    "start:backend": "node server.js",
-    "start": "node server.js",
+    "start:backend": "node api/server.mjs",
+    "start": "node api/server.mjs",
     "build:backend": "node -e \"console.log('Backend pronto para deploy')\"",
     "build": "vite build",
-    "deploy:frontend": "npm run build && node scripts/deploy-hostinger-frontend.mjs",
+    "deploy:frontend": "npm run build && node scripts/deploy-hostinger.mjs",
     "deploy:backend": "node scripts/deploy-hostinger-backend.mjs",
-    "deploy:all": "npm run build && node scripts/deploy-hostinger-backend.mjs",
-    "deploy:unified": "npm run build && node scripts/deploy-hostinger-backend.mjs",
+    "deploy:all": "npm run build && node scripts/deploy-hostinger.mjs && node scripts/deploy-hostinger-backend.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

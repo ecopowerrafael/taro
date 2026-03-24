@@ -33,20 +33,22 @@ const run = async () => {
 
   try {
     console.log(`Conectando ao FTP do Frontend (${process.env.FRONT_FTP_HOST})...`)
+    const rawPassword = process.env.FRONT_FTP_PASSWORD.trim().replace(/^["']|["']$/g, '')
+    const ftpPassword = `"${rawPassword}"`
     await client.access({
       host: process.env.FRONT_FTP_HOST.trim(),
       user: process.env.FRONT_FTP_USER.trim(),
-      password: process.env.FRONT_FTP_PASSWORD,
+      password: ftpPassword,
       secure,
     })
 
-    console.log(`Garantindo diretório remoto: ${remoteBaseDir}`)
-    await client.ensureDir(remoteBaseDir)
+    console.log(`Garantindo diretório remoto: ${remoteBaseDir}/dist`)
+    await client.ensureDir(`${remoteBaseDir}/dist`)
     // Usamos o caminho absoluto a partir da raiz para evitar erros de CWD relativo
-    await client.cd(`/${remoteBaseDir}`)
+    await client.cd(`/${remoteBaseDir}/dist`)
 
     if (shouldClean) {
-      console.log(`Limpando diretório remoto: ${remoteBaseDir}`)
+      console.log(`Limpando diretório remoto: ${remoteBaseDir}/dist`)
       await client.clearWorkingDir()
     }
 

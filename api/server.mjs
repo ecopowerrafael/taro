@@ -41,10 +41,14 @@ try {
 const port = Number(process.env.PORT || 3000)
 
 console.log('[API] __dirname:', __dirname)
-const distPath = path.join(__dirname, 'dist')
+const distPath = path.join(__dirname, '..', 'dist')
 console.log('[API] distPath:', distPath)
 
-app.use(cors())
+const corsOptions = {
+  origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
+  credentials: true
+}
+app.use(cors(corsOptions))
 app.use(express.json({ limit: '4mb' }))
 
 // Rota de diagnóstico ULTRA simples para ver se o Node subiu
