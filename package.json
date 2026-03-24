@@ -12,7 +12,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy:hostinger": "npm run build && node scripts/deploy-hostinger.mjs"
+    "deploy:hostinger": "npm run build && node scripts/deploy-hostinger.mjs",
+    "deploy:hostinger:backend": "node scripts/deploy-hostinger-backend.mjs"
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.87.0",
