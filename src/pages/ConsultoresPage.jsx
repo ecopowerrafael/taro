@@ -142,13 +142,6 @@ export function ConsultoresPage() {
         onStatusFilterChange={setStatusFilter}
         onChooseService={handleChooseService}
       />
-      <VideoConsultationRoom
-        roomUrl={roomUrl}
-        selectedConsultant={selectedConsultant}
-        billing={billing}
-        onConnect={connectSession}
-        onDisconnect={disconnectSession}
-      />
       <QuestionFlowModal
         key={`${questionFlow.consultant?.id ?? 'none'}-${questionFlow.questionCount}`}
         isOpen={questionFlow.isOpen}
