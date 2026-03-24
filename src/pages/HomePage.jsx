@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { LockKeyhole, Wallet, Users, Zap, Star, Clock3, ShieldCheck, Sparkles } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
+import { DailyTarotCard } from '../components/DailyTarotCard'
 
 const benefits = [
   {
@@ -179,13 +180,15 @@ export function HomePage() {
                 </Link>
               </div>
             </div>
-            <div className="hidden rounded-2xl border border-mystic-gold/25 bg-black/20 p-6 text-center backdrop-blur-md md:block">
-              <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Conexão Cósmica</p>
-              <p className="mt-4 font-display text-4xl text-mystic-goldSoft">Consultas de Tarot ao vivo</p>
-              <p className="mt-3 text-sm leading-relaxed text-amber-100/80">
-                Sessões com especialistas reais, cobrança transparente por minuto e privacidade total.
-              </p>
-              <div className="mt-6 h-36 rounded-xl border border-mystic-gold/20 bg-gradient-to-br from-mystic-gold/10 via-transparent to-fuchsia-300/10"></div>
+            <div className="hidden flex-col gap-6 md:flex">
+              <div className="rounded-2xl border border-mystic-gold/25 bg-black/20 p-6 text-center backdrop-blur-md">
+                <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Conexão Cósmica</p>
+                <p className="mt-4 font-display text-4xl text-mystic-goldSoft">Consultas de Tarot ao vivo</p>
+                <p className="mt-3 text-sm leading-relaxed text-amber-100/80">
+                  Sessões com especialistas reais, cobrança transparente por minuto e privacidade total.
+                </p>
+              </div>
+              <DailyTarotCard />
             </div>
           </div>
         </header>
