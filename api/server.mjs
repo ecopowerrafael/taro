@@ -196,3 +196,5 @@ app.use((error, _request, response, _next) => {
 app.listen(port, () => {
   console.log(`API Express iniciada na porta ${port}`)
 })
+
+export default app
