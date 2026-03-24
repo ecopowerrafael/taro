@@ -10,40 +10,48 @@ import { usePlatformContext } from '../context/platform-context'
 function generatePixPayload({ key, name, city, amount, description }) {
   const pad = (v) => v.toString().length.toString().padStart(2, '0')
   
-  const sections = {
-    '00': '01', // Payload Format Indicator
-    '01': '11', // Point of Initiation Method (11 = Estático)
-    '26': { // Merchant Account Information
-      '00': 'br.gov.bcb.pix',
-      '01': key.replace(/\s/g, ''),
-      '02': (description || 'Recarga Astria').substring(0, 25)
+  // No JavaScript, a ordem de iteração de objetos com chaves numéricas não é garantida 
+  // da forma que escrevemos. Vamos usar um array de objetos para forçar a ordem EXATA.
+  const sections = [
+    { id: '00', value: '01' }, // Payload Format Indicator
+    { id: '01', value: '11' }, // Point of Initiation Method
+    { 
+      id: '26', 
+      value: [
+        { id: '00', value: 'br.gov.bcb.pix' },
+        { id: '01', value: key.replace(/\s/g, '') },
+        { id: '02', value: (description || 'Recarga Astria').substring(0, 25) }
+      ] 
     },
-    '52': '0000', // Merchant Category Code
-    '53': '986', // Transaction Currency (BRL)
-    '54': amount.toFixed(2), // Transaction Amount
-    '58': 'BR', // Country Code
-    '59': name.substring(0, 25).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase(), // Merchant Name
-    '60': city.substring(0, 15).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase(), // Merchant City
-    '62': { // Additional Data Field Template
-      '05': '***' // Reference Label
+    { id: '52', value: '0000' }, // Merchant Category Code
+    { id: '53', value: '986' }, // Transaction Currency (BRL)
+    { id: '54', value: amount.toFixed(2) }, // Transaction Amount
+    { id: '58', value: 'BR' }, // Country Code
+    { id: '59', value: name.substring(0, 25).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase() }, // Merchant Name
+    { id: '60', value: city.substring(0, 15).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase() }, // Merchant City
+    { 
+      id: '62', 
+      value: [
+        { id: '05', value: '***' } // Reference Label
+      ]
     }
-  }
+  ]
 
   let payload = ''
   
   const build = (id, value) => {
-    if (typeof value === 'object') {
+    if (Array.isArray(value)) {
       let sub = ''
-      Object.entries(value).forEach(([subId, subVal]) => {
-        sub += subId + pad(subVal) + subVal
+      value.forEach((item) => {
+        sub += item.id + pad(item.value) + item.value
       })
       return id + pad(sub) + sub
     }
     return id + pad(value) + value
   }
 
-  Object.entries(sections).forEach(([id, val]) => {
-    payload += build(id, val)
+  sections.forEach((item) => {
+    payload += build(item.id, item.value)
   })
 
   payload += '6304' // CRC ID and length
