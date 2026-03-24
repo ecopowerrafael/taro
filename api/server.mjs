@@ -127,13 +127,14 @@ try {
 
   // Await schema initialization to avoid table not found errors
   console.log('[API] Inicializando schema...')
-  try {
-    await initializeSchema(pool)
-    console.log('[API] Schema inicializado com sucesso.')
-  } catch (error) {
-    databaseConfigError = error.message
-    console.error('[API] Falha crítica ao inicializar schema MySQL:', error.message)
-  }
+  initializeSchema(pool)
+    .then(() => {
+      console.log('[API] Schema inicializado com sucesso.')
+    })
+    .catch((error) => {
+      databaseConfigError = error.message
+      console.error('[API] Falha crítica ao inicializar schema MySQL:', error.message)
+    })
 } catch (error) {
   databaseConfigError = error.message
   console.error('Configuração de banco inválida:', error.message)
@@ -164,9 +165,9 @@ app.get('/api/runtime-info', (_request, response) => {
 })
 
 // Roteamento SPA: Qualquer rota que não comece com /api deve retornar o index.html
-app.get('*', (req, res) => {
+app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
-    return res.status(404).json({ message: 'API Route not found' })
+    return next()
   }
   const indexPath = path.join(distPath, 'index.html')
   if (fs.existsSync(indexPath)) {
