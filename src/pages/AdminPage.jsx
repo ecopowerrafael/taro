@@ -55,4 +55,5 @@ export function AdminPage() {
         onRechargeAction={processRechargeAction}
       />
     </PageShell>
+  )
 }
