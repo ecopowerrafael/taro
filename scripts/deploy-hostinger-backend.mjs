@@ -17,10 +17,10 @@ const resolveBoolean = (value, fallback) => {
 
 const uploadItems = [
   { local: 'api/db.mjs', remote: 'db.mjs' },
-  { local: 'api/server.mjs', remote: 'server.mjs' },
+  { local: 'api/server.mjs', remote: 'server.js' },
   { local: 'api/routes', remote: 'routes' },
   { local: 'api/middleware', remote: 'middleware' },
-  { local: 'dist', remote: 'dist' },
+  { local: 'dist', remote: 'dist', ignore: ['.htaccess'] },
   { local: 'package.json', remote: 'package.json' },
   { local: 'package-lock.json', remote: 'package-lock.json' },
 ]
@@ -58,13 +58,15 @@ const run = async () => {
       await client.clearWorkingDir()
     }
 
-    // Tenta apagar o .htaccess se ele existir, para não dar conflito com o Node.js
+    // NÃO APAGAR .htaccess pois a Hostinger o usa para o Passenger (Node.js)
+    /*
     try {
       await client.remove('.htaccess')
       console.log('.htaccess antigo removido do backend.')
     } catch (e) {
       // Ignora se o arquivo não existir
     }
+    */
 
     for (const item of uploadItems) {
       if (!fs.existsSync(item.local)) {
@@ -75,7 +77,6 @@ const run = async () => {
       console.log(`Enviando ${item.local}...`)
       const stats = fs.statSync(item.local)
       if (stats.isDirectory()) {
-        // Envia o conteúdo da pasta local para a pasta remota
         await client.uploadFromDir(item.local, item.remote)
         continue
       }

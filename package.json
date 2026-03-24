@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "node --watch api/server.mjs",
-    "start:backend": "node api/server.mjs",
-    "start": "node api/server.mjs",
+    "start:backend": "node server.js",
+    "start": "node server.js",
     "build:backend": "node -e \"console.log('Backend pronto para deploy')\"",
     "build": "vite build",
     "deploy:frontend": "npm run build && node scripts/deploy-hostinger-frontend.mjs",
@@ -18,23 +18,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@daily-co/daily-js": "^0.87.0",
     "bcryptjs": "^3.0.3",
-    "canvas-confetti": "^1.9.4",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "framer-motion": "^12.38.0",
     "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.20.0"
+  },
+  "devDependencies": {
+    "@daily-co/daily-js": "^0.87.0",
+    "canvas-confetti": "^1.9.4",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^1.0.1",
-    "mysql2": "^3.20.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.2",
-    "three": "^0.183.2"
-  },
-  "devDependencies": {
+    "three": "^0.183.2",
     "@eslint/js": "^9.39.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

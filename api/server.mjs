@@ -15,16 +15,32 @@ import { createRechargesRouter } from './routes/recharges.mjs'
 dotenv.config()
 
 const app = express()
-// Force restart: 2026-03-24 13:45 (V5)
+console.log('[API] Servidor iniciando...')
+
+// Tentar criar um arquivo de log de inicialização (debug)
+try {
+  fs.appendFileSync('startup.log', `[${new Date().toISOString()}] Servidor iniciando na porta ${process.env.PORT || 3000}\n`)
+} catch (e) {}
+
+// Force restart: 2026-03-24 14:50 (V10)
 const port = Number(process.env.PORT || 3000)
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+console.log('[API] __dirname:', __dirname)
+const distPath = path.join(__dirname, 'dist')
+console.log('[API] distPath:', distPath)
+
 app.use(cors())
 app.use(express.json({ limit: '4mb' }))
 
+// Rota de diagnóstico ULTRA simples para ver se o Node subiu
+app.get('/health-check', (_req, res) => {
+  console.log('[API] Health-check acessado!')
+  res.send('O Servidor Node.js está VIVO e REINICIADO (V9)!')
+})
+
 // Servir arquivos estáticos do Frontend
-const distPath = path.join(__dirname, 'dist')
 app.use(express.static(distPath))
 
 // Middleware para diagnóstico de versão
