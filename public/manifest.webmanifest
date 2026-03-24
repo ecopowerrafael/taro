@@ -1,24 +1,24 @@
 {
-  "name": "Taro Consultas",
-  "short_name": "Taro",
+  "name": "Astria",
+  "short_name": "Astria",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#090812",
   "theme_color": "#C5A059",
-  "description": "Plataforma mística para consultas em vídeo e pacotes de perguntas.",
+  "description": "Encontre Astrologos online, leituras de cartas de tarot e previsões para o futuro",
   "icons": [
     {
-      "src": "/astrologa.png",
+      "src": "/logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "/logoastria.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
 }

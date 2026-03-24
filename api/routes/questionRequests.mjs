@@ -1,0 +1,287 @@
+import { Router } from 'express'
+
+const parseNumber = (value, fallback = 0) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const parseEntries = (entriesValue) => {
+  if (Array.isArray(entriesValue)) {
+    return entriesValue
+  }
+  if (typeof entriesValue === 'string') {
+    try {
+      const parsed = JSON.parse(entriesValue)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
+export const createQuestionRequestsRouter = (pool) => {
+  const router = Router()
+
+  router.get('/', async (_request, response) => {
+    const [rows] = await pool.query(
+      `
+        SELECT
+          id,
+          consultantId,
+          consultantName,
+          customerName,
+          customerEmail,
+          questionCount,
+          packagePrice,
+          entries,
+          status,
+          createdAt,
+          answeredAt,
+          answerSummary,
+          commissionValue,
+          consultantNetValue
+        FROM question_requests
+        ORDER BY createdAt DESC
+      `,
+    )
+
+    response.json(
+      rows.map((row) => ({
+        ...row,
+        entries: parseEntries(row.entries),
+      })),
+    )
+  })
+
+  router.post('/', async (request, response) => {
+    const payload = request.body ?? {}
+    const {
+      id,
+      consultantId,
+      consultantName,
+      customerName,
+      customerEmail,
+      questionCount,
+      packagePrice,
+      entries,
+      createdAt,
+    } = payload
+
+    if (!id || !consultantId || !consultantName || !customerName || !customerEmail) {
+      response.status(400).json({ message: 'Dados obrigatórios ausentes para criar solicitação.' })
+      return
+    }
+
+    const normalizedEntries = Array.isArray(entries) ? entries : []
+    const normalizedCreatedAt = createdAt || new Date().toISOString()
+
+    await pool.query(
+      `
+        INSERT INTO question_requests (
+          id,
+          consultantId,
+          consultantName,
+          customerName,
+          customerEmail,
+          questionCount,
+          packagePrice,
+          entries,
+          status,
+          createdAt,
+          answeredAt,
+          answerSummary,
+          commissionValue,
+          consultantNetValue
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NULL, NULL, 0, 0)
+      `,
+      [
+        id,
+        consultantId,
+        consultantName,
+        customerName,
+        customerEmail,
+        Math.max(1, Math.floor(parseNumber(questionCount, 1))),
+        parseNumber(packagePrice),
+        JSON.stringify(normalizedEntries),
+        new Date(normalizedCreatedAt),
+      ],
+    )
+
+    response.status(201).json({
+      id,
+      consultantId,
+      consultantName,
+      customerName,
+      customerEmail,
+      questionCount: Math.max(1, Math.floor(parseNumber(questionCount, 1))),
+      packagePrice: parseNumber(packagePrice),
+      entries: normalizedEntries,
+      status: 'pending',
+      createdAt: normalizedCreatedAt,
+      answeredAt: null,
+      answerSummary: null,
+      commissionValue: 0,
+      consultantNetValue: 0,
+    })
+  })
+
+  router.patch('/:id/answer', async (request, response) => {
+    const { id } = request.params
+    const { consultantId, answerSummary, commissionRate } = request.body ?? {}
+
+    if (!consultantId || !answerSummary?.trim()) {
+      response.status(400).json({ message: 'consultantId e answerSummary são obrigatórios.' })
+      return
+    }
+
+    const connection = await pool.getConnection()
+    try {
+      await connection.beginTransaction()
+      const [rows] = await connection.query(
+        `SELECT * FROM question_requests WHERE id = ? AND consultantId = ? FOR UPDATE`,
+        [id, consultantId],
+      )
+
+      if (!rows.length) {
+        await connection.rollback()
+        response.status(404).json({ message: 'Solicitação não encontrada.' })
+        return
+      }
+
+      const current = rows[0]
+      if (current.status === 'answered') {
+        await connection.rollback()
+        response.status(409).json({ message: 'Solicitação já respondida.' })
+        return
+      }
+
+      const rate = Math.min(100, Math.max(0, parseNumber(commissionRate, 30)))
+      const packagePrice = parseNumber(current.packagePrice)
+      const commissionValue = Number(((packagePrice * rate) / 100).toFixed(2))
+      const consultantNetValue = Number((packagePrice - commissionValue).toFixed(2))
+      const answeredAtDate = new Date()
+      const txId = `tx_${id}`
+      const txDescription = `Comissão líquida da consulta ${id}`
+
+      await connection.query(
+        `
+          UPDATE question_requests
+          SET
+            status = 'answered',
+            answeredAt = ?,
+            answerSummary = ?,
+            commissionValue = ?,
+            consultantNetValue = ?
+          WHERE id = ?
+        `,
+        [answeredAtDate, answerSummary.trim(), commissionValue, consultantNetValue, id],
+      )
+
+      await connection.query(
+        `
+          INSERT INTO consultant_wallets (consultantId, availableBalance, pixKey)
+          VALUES (?, 0, NULL)
+          ON DUPLICATE KEY UPDATE consultantId = VALUES(consultantId)
+        `,
+        [consultantId],
+      )
+
+      await connection.query(
+        `
+          UPDATE consultant_wallets
+          SET availableBalance = availableBalance + ?
+          WHERE consultantId = ?
+        `,
+        [consultantNetValue, consultantId],
+      )
+
+      await connection.query(
+        `
+          INSERT INTO wallet_transactions (
+            id,
+            consultantId,
+            type,
+            amount,
+            commissionValue,
+            createdAt,
+            description
+          ) VALUES (?, ?, 'credit', ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+            amount = VALUES(amount),
+            commissionValue = VALUES(commissionValue),
+            createdAt = VALUES(createdAt),
+            description = VALUES(description)
+        `,
+        [txId, consultantId, consultantNetValue, commissionValue, answeredAtDate, txDescription],
+      )
+
+      await connection.query(
+        `UPDATE consultants SET realSessions = realSessions + 1 WHERE id = ?`,
+        [consultantId],
+      )
+
+      const [walletRows] = await connection.query(
+        `SELECT consultantId, availableBalance, pixKey FROM consultant_wallets WHERE consultantId = ?`,
+        [consultantId],
+      )
+      const [transactionsRows] = await connection.query(
+        `
+          SELECT id, type, amount, commissionValue, createdAt, description
+          FROM wallet_transactions
+          WHERE consultantId = ?
+          ORDER BY createdAt DESC
+        `,
+        [consultantId],
+      )
+      const [withdrawalsRows] = await connection.query(
+        `
+          SELECT id, amount, createdAt, status
+          FROM wallet_withdrawals
+          WHERE consultantId = ?
+          ORDER BY createdAt DESC
+        `,
+        [consultantId],
+      )
+
+      await connection.commit()
+
+      response.json({
+        request: {
+          ...current,
+          entries: parseEntries(current.entries),
+          status: 'answered',
+          answeredAt: answeredAtDate.toISOString(),
+          answerSummary: answerSummary.trim(),
+          commissionValue,
+          consultantNetValue,
+        },
+        wallet: {
+          consultantId,
+          availableBalance: Number(walletRows[0]?.availableBalance ?? 0),
+          pixKey: walletRows[0]?.pixKey ?? '',
+          transactions: transactionsRows.map((item) => ({
+            ...item,
+            amount: Number(item.amount),
+            commissionValue:
+              item.commissionValue === null || item.commissionValue === undefined
+                ? null
+                : Number(item.commissionValue),
+          })),
+          withdrawals: withdrawalsRows.map((item) => ({
+            ...item,
+            amount: Number(item.amount),
+          })),
+        },
+      })
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
+    }
+  })
+
+  return router
+}

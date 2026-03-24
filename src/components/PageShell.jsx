@@ -16,10 +16,17 @@ export function PageShell({ title, subtitle, children }) {
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6">
         <header className="rounded-xl2 border border-mystic-gold/40 bg-mystic-purple/55 px-6 py-5 shadow-glow backdrop-blur-md">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Taro Mediúnico</p>
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo.png"
+                alt="Astria"
+                className="h-12 w-12 rounded-xl border border-mystic-gold/40 bg-black/30 object-contain p-1"
+              />
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Astria</p>
               <h1 className="font-display text-4xl text-mystic-goldSoft md:text-5xl">{title}</h1>
               {subtitle && <p className="mt-2 text-sm text-amber-100/80">{subtitle}</p>}
+              </div>
             </div>
             <nav className="flex flex-wrap items-center gap-2">
               {mainLinks.map((link) => (

@@ -49,7 +49,7 @@ export function PlatformPage() {
         <header className="rounded-xl2 border border-mystic-gold/40 bg-mystic-purple/55 px-6 py-5 shadow-glow backdrop-blur-md">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Tarot SaaS</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Astria</p>
               <h1 className="font-display text-4xl text-mystic-goldSoft md:text-5xl">
                 Plataforma de Consultas em Tempo Real
               </h1>

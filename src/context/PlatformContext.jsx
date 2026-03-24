@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMockAuth } from '../hooks/useMockAuth'
 import { useBilling } from '../hooks/useBilling'
 import { createRechargePreference } from '../services/mercadoPagoMock'
@@ -103,6 +103,68 @@ const adminDashboardStats = {
   clientsCount: 8,
 }
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
+
+const buildApiUrl = (resource) => {
+  if (!API_BASE_URL) {
+    return resource
+  }
+  const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL
+  const path = resource.startsWith('/') ? resource : `/${resource}`
+  return `${base}${path}`
+}
+
+const normalizeConsultant = (consultant) => ({
+  ...consultant,
+  pricePerMinute: Number(consultant.pricePerMinute) || 0,
+  priceThreeQuestions: Number(consultant.priceThreeQuestions) || 0,
+  priceFiveQuestions: Number(consultant.priceFiveQuestions) || 0,
+  baseConsultations: Number(consultant.baseConsultations) || 0,
+  realSessions: Number(consultant.realSessions) || 0,
+  ratingAverage: Number(consultant.ratingAverage) || 0,
+  commissionOverride:
+    consultant.commissionOverride === null || consultant.commissionOverride === undefined
+      ? null
+      : Number(consultant.commissionOverride) || null,
+})
+
+const normalizeQuestionRequest = (request) => ({
+  ...request,
+  questionCount: Number(request.questionCount) || 0,
+  packagePrice: Number(request.packagePrice) || 0,
+  commissionValue: Number(request.commissionValue) || 0,
+  consultantNetValue: Number(request.consultantNetValue) || 0,
+  entries: Array.isArray(request.entries) ? request.entries : [],
+  answerSummary: request.answerSummary ?? '',
+})
+
+const normalizeWalletState = (walletRows, fallback = {}) => {
+  const next = { ...fallback }
+  walletRows.forEach((wallet) => {
+    next[wallet.consultantId] = {
+      availableBalance: Number(wallet.availableBalance) || 0,
+      pixKey: wallet.pixKey ?? '',
+      transactions: Array.isArray(wallet.transactions)
+        ? wallet.transactions.map((transaction) => ({
+            ...transaction,
+            amount: Number(transaction.amount) || 0,
+            commissionValue:
+              transaction.commissionValue === null || transaction.commissionValue === undefined
+                ? null
+                : Number(transaction.commissionValue) || 0,
+          }))
+        : [],
+      withdrawals: Array.isArray(wallet.withdrawals)
+        ? wallet.withdrawals.map((withdrawal) => ({
+            ...withdrawal,
+            amount: Number(withdrawal.amount) || 0,
+          }))
+        : [],
+    }
+  })
+  return next
+}
+
 export function PlatformProvider({ children }) {
   const { profile, sign, minutesBalance, dailyHoroscope, register, debitMinutes, creditMinutes } =
     useMockAuth()
@@ -127,6 +189,25 @@ export function PlatformProvider({ children }) {
   const [paymentResult, setPaymentResult] = useState(null)
   const [systemNotice, setSystemNotice] = useState('')
 
+  const ensureWalletsForConsultants = (consultantList) => {
+    setConsultantWallets((prev) => {
+      let changed = false
+      const next = { ...prev }
+      consultantList.forEach((consultant) => {
+        if (!next[consultant.id]) {
+          changed = true
+          next[consultant.id] = {
+            availableBalance: 0,
+            pixKey: '',
+            transactions: [],
+            withdrawals: [],
+          }
+        }
+      })
+      return changed ? next : prev
+    })
+  }
+
   const billing = useBilling({
     balanceMinutes: minutesBalance,
     onConsume: debitMinutes,
@@ -140,6 +221,161 @@ export function PlatformProvider({ children }) {
     const roomName = (dailyCredentials.roomName || '').trim() || 'hello'
     return `https://${domain}/${roomName}`
   }, [dailyCredentials.domain, dailyCredentials.roomName])
+
+  const persistConsultant = async (consultant) => {
+    try {
+      await fetch(buildApiUrl(`/api/consultants/${consultant.id}`), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(consultant),
+      })
+    } catch {
+      return
+    }
+  }
+
+  const persistConsultantStatus = async (id, status) => {
+    try {
+      await fetch(buildApiUrl(`/api/consultants/${id}/status`), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      })
+    } catch {
+      return
+    }
+  }
+
+  const createQuestionRequestOnApi = async (request) => {
+    const response = await fetch(buildApiUrl('/api/question-requests'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    })
+    if (!response.ok) {
+      throw new Error('Falha ao registrar solicitação de perguntas no backend.')
+    }
+    const payload = await response.json()
+    return normalizeQuestionRequest(payload)
+  }
+
+  const answerQuestionRequestOnApi = async ({ requestId, consultantId, answerSummary, commissionRate }) => {
+    const response = await fetch(buildApiUrl(`/api/question-requests/${requestId}/answer`), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        consultantId,
+        answerSummary,
+        commissionRate,
+      }),
+    })
+    if (!response.ok) {
+      throw new Error('Falha ao concluir resposta no backend.')
+    }
+    const payload = await response.json()
+    return {
+      request: normalizeQuestionRequest(payload.request),
+      wallet: normalizeWalletState([payload.wallet])[payload.wallet.consultantId],
+    }
+  }
+
+  const savePixKeyOnApi = async ({ consultantId, pixKey }) => {
+    const response = await fetch(buildApiUrl(`/api/wallets/${consultantId}/pix-key`), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ pixKey }),
+    })
+    if (!response.ok) {
+      throw new Error('Falha ao salvar chave PIX no backend.')
+    }
+  }
+
+  const requestWithdrawalOnApi = async ({ consultantId, amount }) => {
+    const response = await fetch(buildApiUrl(`/api/wallets/${consultantId}/withdrawals`), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ amount, status: 'requested' }),
+    })
+    const payload = await response.json()
+    if (!response.ok) {
+      return { ok: false, message: payload.message || 'Falha ao solicitar saque.' }
+    }
+    return {
+      ok: true,
+      message: payload.message || 'Solicitação de saque registrada com sucesso.',
+      wallet: normalizeWalletState([payload.wallet])[payload.wallet.consultantId],
+    }
+  }
+
+  useEffect(() => {
+    const loadConsultants = async () => {
+      try {
+        const response = await fetch(buildApiUrl('/api/consultants'))
+        if (!response.ok) {
+          return
+        }
+        const payload = await response.json()
+        if (!Array.isArray(payload) || payload.length === 0) {
+          return
+        }
+        const normalized = payload.map(normalizeConsultant)
+        setConsultants(normalized)
+        ensureWalletsForConsultants(normalized)
+      } catch {
+        return
+      }
+    }
+    void loadConsultants()
+  }, [])
+
+  useEffect(() => {
+    const loadQuestionRequests = async () => {
+      try {
+        const response = await fetch(buildApiUrl('/api/question-requests'))
+        if (!response.ok) {
+          return
+        }
+        const payload = await response.json()
+        if (!Array.isArray(payload)) {
+          return
+        }
+        setQuestionRequests(payload.map(normalizeQuestionRequest))
+      } catch {
+        return
+      }
+    }
+
+    const loadWallets = async () => {
+      try {
+        const response = await fetch(buildApiUrl('/api/wallets'))
+        if (!response.ok) {
+          return
+        }
+        const payload = await response.json()
+        if (!Array.isArray(payload)) {
+          return
+        }
+        setConsultantWallets((prev) => normalizeWalletState(payload, prev))
+      } catch {
+        return
+      }
+    }
+
+    void loadQuestionRequests()
+    void loadWallets()
+  }, [])
 
   const selectConsultant = (consultant) => {
     setSelectedConsultant(consultant)
@@ -168,12 +404,17 @@ export function PlatformProvider({ children }) {
   }
 
   const approveConsultant = (id) => {
+    let consultantToPersist = null
     setConsultants((prev) => {
       const exists = prev.some((consultant) => consultant.id === id)
       if (exists) {
-        return prev.map((consultant) =>
-          consultant.id === id ? { ...consultant, status: 'Online' } : consultant,
-        )
+        return prev.map((consultant) => {
+          if (consultant.id === id) {
+            consultantToPersist = { ...consultant, status: 'Online' }
+            return consultantToPersist
+          }
+          return consultant
+        })
       }
 
       const pending = pendingConsultants.find((consultant) => consultant.id === id)
@@ -191,6 +432,7 @@ export function PlatformProvider({ children }) {
         ratingAverage: 5,
         commissionOverride: null,
       }
+      consultantToPersist = approvedConsultant
 
       return [approvedConsultant, ...prev]
     })
@@ -210,9 +452,13 @@ export function PlatformProvider({ children }) {
         },
       }
     })
+    if (consultantToPersist) {
+      void persistConsultant(consultantToPersist)
+    }
   }
 
   const blockConsultant = (id) => {
+    void persistConsultantStatus(id, 'Ocupado')
     setConsultants((prev) =>
       prev.map((consultant) => (consultant.id === id ? { ...consultant, status: 'Ocupado' } : consultant)),
     )
@@ -232,16 +478,28 @@ export function PlatformProvider({ children }) {
   }
 
   const updateConsultantByAdmin = (id, updates) => {
+    let updatedConsultant = null
     setConsultants((prev) =>
-      prev.map((consultant) => (consultant.id === id ? { ...consultant, ...updates } : consultant)),
+      prev.map((consultant) => {
+        if (consultant.id === id) {
+          updatedConsultant = normalizeConsultant({ ...consultant, ...updates })
+          return updatedConsultant
+        }
+        return consultant
+      }),
     )
+    if (updatedConsultant) {
+      void persistConsultant(updatedConsultant)
+    }
   }
 
   const updateConsultantAvailability = (id, isOnline) => {
+    const nextStatus = isOnline ? 'Online' : 'Offline'
+    void persistConsultantStatus(id, nextStatus)
     setConsultants((prev) =>
       prev.map((consultant) =>
         consultant.id === id
-          ? { ...consultant, status: isOnline ? 'Online' : 'Offline' }
+          ? { ...consultant, status: nextStatus }
           : consultant,
       ),
     )
@@ -249,11 +507,19 @@ export function PlatformProvider({ children }) {
 
   const updateConsultantBaseConsultations = (id, value) => {
     const normalized = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0
+    let updatedConsultant = null
     setConsultants((prev) =>
-      prev.map((consultant) =>
-        consultant.id === id ? { ...consultant, baseConsultations: normalized } : consultant,
-      ),
+      prev.map((consultant) => {
+        if (consultant.id === id) {
+          updatedConsultant = { ...consultant, baseConsultations: normalized }
+          return updatedConsultant
+        }
+        return consultant
+      }),
     )
+    if (updatedConsultant) {
+      void persistConsultant(updatedConsultant)
+    }
   }
 
   const rechargePackage = async (pack) => {
@@ -281,7 +547,7 @@ export function PlatformProvider({ children }) {
     )
   }
 
-  const submitQuestionConsultation = ({ consultant, questionCount, price, entries }) => {
+  const submitQuestionConsultation = async ({ consultant, questionCount, price, entries }) => {
     const payload = entries.map((entry, index) => ({
       id: `${Date.now()}_${index}`,
       type: entry.type,
@@ -307,14 +573,19 @@ export function PlatformProvider({ children }) {
       consultantNetValue: 0,
     }
 
-    setQuestionRequests((prev) => [request, ...prev])
+    try {
+      const savedRequest = await createQuestionRequestOnApi(request)
+      setQuestionRequests((prev) => [savedRequest, ...prev.filter((item) => item.id !== savedRequest.id)])
+    } catch {
+      setQuestionRequests((prev) => [request, ...prev])
+    }
     debitMinutes(price)
     setSystemNotice(
       `Perguntas enviadas para ${consultant.name}. ${questionCount} pergunta(s) registrada(s) e saldo debitado em ${price.toFixed(2)}.`,
     )
   }
 
-  const respondToQuestionRequest = ({ requestId, consultantId, answerSummary }) => {
+  const respondToQuestionRequest = async ({ requestId, consultantId, answerSummary }) => {
     const request = questionRequests.find((item) => item.id === requestId)
     if (!request || request.status === 'answered') {
       return
@@ -325,6 +596,30 @@ export function PlatformProvider({ children }) {
     const commissionValue = (request.packagePrice * commissionRate) / 100
     const consultantNetValue = request.packagePrice - commissionValue
     const answeredAt = new Date().toISOString()
+
+    try {
+      const result = await answerQuestionRequestOnApi({
+        requestId,
+        consultantId,
+        answerSummary,
+        commissionRate,
+      })
+      setQuestionRequests((prev) =>
+        prev.map((item) => (item.id === requestId ? { ...item, ...result.request } : item)),
+      )
+      setConsultantWallets((prev) => ({
+        ...prev,
+        [consultantId]: result.wallet,
+      }))
+      setConsultants((prev) =>
+        prev.map((item) =>
+          item.id === consultantId ? { ...item, realSessions: (item.realSessions ?? 0) + 1 } : item,
+        ),
+      )
+      return
+    } catch {
+      setSystemNotice('Não foi possível sincronizar a resposta no servidor. Aplicando modo local.')
+    }
 
     setQuestionRequests((prev) =>
       prev.map((item) =>
@@ -378,7 +673,12 @@ export function PlatformProvider({ children }) {
     )
   }
 
-  const setConsultantPixKey = ({ consultantId, pixKey }) => {
+  const setConsultantPixKey = async ({ consultantId, pixKey }) => {
+    try {
+      await savePixKeyOnApi({ consultantId, pixKey })
+    } catch {
+      setSystemNotice('Falha ao sincronizar chave PIX no servidor. Valor salvo localmente.')
+    }
     setConsultantWallets((prev) => {
       const wallet = prev[consultantId] ?? {
         availableBalance: 0,
@@ -397,7 +697,7 @@ export function PlatformProvider({ children }) {
     })
   }
 
-  const requestConsultantWithdrawal = ({ consultantId, amount }) => {
+  const requestConsultantWithdrawal = async ({ consultantId, amount }) => {
     const wallet = consultantWallets[consultantId]
     if (!wallet) {
       return { ok: false, message: 'Carteira do consultor não encontrada.' }
@@ -410,6 +710,22 @@ export function PlatformProvider({ children }) {
     }
     if (amount > wallet.availableBalance) {
       return { ok: false, message: 'Saldo insuficiente para saque.' }
+    }
+
+    try {
+      const apiResult = await requestWithdrawalOnApi({ consultantId, amount })
+      if (apiResult.ok) {
+        setConsultantWallets((prev) => ({
+          ...prev,
+          [consultantId]: apiResult.wallet,
+        }))
+        return { ok: true, message: apiResult.message }
+      }
+      if (apiResult.message) {
+        return apiResult
+      }
+    } catch {
+      setSystemNotice('Falha ao sincronizar saque no servidor. Aplicando modo local.')
     }
 
     const createdAt = new Date().toISOString()

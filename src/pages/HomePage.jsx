@@ -124,7 +124,14 @@ export function HomePage() {
         <header className="rounded-xl2 border border-mystic-gold/50 bg-gradient-to-br from-mystic-purple/70 via-[#1f0f38]/70 to-[#0b0715]/70 px-6 py-8 shadow-glow backdrop-blur-xl">
           <div className="grid items-center gap-6 md:grid-cols-[1.25fr_0.75fr]">
             <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Taro Mediúnico</p>
+              <div className="flex items-center gap-3">
+                <img
+                  src="/logo.png"
+                  alt="Astria"
+                  className="h-11 w-11 rounded-xl border border-mystic-gold/40 bg-black/35 object-contain p-1"
+                />
+                <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Astria</p>
+              </div>
               <h1 className="mt-2 font-display text-5xl leading-tight text-mystic-goldSoft md:text-6xl">
                 Sua primeira resposta está a um clique
               </h1>
@@ -160,7 +167,7 @@ export function HomePage() {
             </div>
             <div className="hidden rounded-2xl border border-mystic-gold/25 bg-black/20 p-6 text-center backdrop-blur-md md:block">
               <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Conexão Cósmica</p>
-              <p className="mt-4 font-display text-4xl text-mystic-goldSoft">Tarot ao Vivo</p>
+              <p className="mt-4 font-display text-4xl text-mystic-goldSoft">Consultas de Tarot ao vivo</p>
               <p className="mt-3 text-sm leading-relaxed text-amber-100/80">
                 Sessões com especialistas reais, cobrança transparente por minuto e privacidade total.
               </p>
@@ -246,7 +253,14 @@ export function HomePage() {
 
         <footer className="rounded-xl2 border border-mystic-gold/30 bg-mystic-purple/45 p-6 shadow-glow backdrop-blur-md">
           <div className="mb-5">
-            <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Taro Mediúnico</p>
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo.png"
+                alt="Astria"
+                className="h-10 w-10 rounded-lg border border-mystic-gold/35 bg-black/30 object-contain p-1"
+              />
+              <p className="text-xs uppercase tracking-[0.25em] text-amber-100/60">Astria</p>
+            </div>
             <p className="mt-2 text-sm text-amber-100/80">
               Conectando você ao universo através dos melhores consultores espirituais.
             </p>
@@ -291,7 +305,7 @@ export function HomePage() {
           </div>
           <div className="mt-6 flex items-center gap-2 border-t border-mystic-gold/20 pt-4 text-xs text-amber-100/70">
             <Star size={14} className="text-mystic-goldSoft" />
-            Taro Mediúnico
+            Astria
           </div>
         </footer>
       </div>
