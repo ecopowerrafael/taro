@@ -2,18 +2,89 @@ import { useEffect, useState, useMemo } from 'react'
 import { WalletCards, QrCode, CreditCard, Copy, CheckCircle2, Loader2 } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { QRCodeSVG } from 'qrcode.react'
-import * as QrCodePixModule from 'qrcode-pix'
 import { GlassCard } from '../components/GlassCard'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
 
-// Handle different import styles for qrcode-pix safely
-const getQrCodePix = () => {
-  if (!QrCodePixModule) return null
-  return QrCodePixModule.QrCodePix || QrCodePixModule.default || (typeof QrCodePixModule === 'function' ? QrCodePixModule : null)
-}
+// Manual BRCode (PIX) Generator to avoid Node.js buffer issues
+function generatePixPayload({ key, name, city, amount, description }) {
+  const pad = (v) => v.toString().length.toString().padStart(2, '0')
+  
+  const sections = {
+    '00': '01', // Payload Format Indicator
+    '26': { // Merchant Account Information
+      '00': 'br.gov.bcb.pix',
+      '01': key.replace(/\s/g, ''),
+      '02': description || 'Recarga Astria'
+    },
+    '52': '0000', // Merchant Category Code
+    '53': '986', // Transaction Currency (BRL)
+    '54': amount.toFixed(2), // Transaction Amount
+    '58': 'BR', // Country Code
+    '59': name.substring(0, 25).normalize('NFD').replace(/[\u0300-\u036f]/g, ''), // Merchant Name
+    '60': city.substring(0, 15).normalize('NFD').replace(/[\u0300-\u036f]/g, ''), // Merchant City
+    '62': { // Additional Data Field Template
+      '05': 'ASTRIA' // Reference Label
+    }
+  }
 
-const QrCodePix = getQrCodePix()
+  let payload = ''
+  
+  const build = (id, value) => {
+    if (typeof value === 'object') {
+      let sub = ''
+      Object.entries(value).forEach(([subId, subVal]) => {
+        sub += subId + pad(subVal) + subVal
+      })
+      return id + pad(sub) + sub
+    }
+    return id + pad(value) + value
+  }
+
+  Object.entries(sections).forEach(([id, val]) => {
+    payload += build(id, val)
+  })
+
+  payload += '6304' // CRC ID and length
+
+  // Simple CRC16 CCITT (Kermit) calculation
+  function crc16(str) {
+    let crc = 0xFFFF
+    for (let i = 0; i < str.length; i++) {
+      crc ^= str.charCodeAt(i)
+      for (let j = 0; j < 8; j++) {
+        if ((crc & 0x0001) !== 0) {
+          crc = (crc >> 1) ^ 0x8408
+        } else {
+          crc >>= 1
+        }
+      }
+    }
+    return ((crc ^ 0xFFFF) & 0xFFFF).toString(16).toUpperCase().padStart(4, '0')
+  }
+
+  // Note: Standard PIX uses CRC16 CCITT-FALSE (0x1021). 
+  // Let's use a standard implementation or just skip CRC if not strictly needed for display (though it is for payment).
+  // Actually, PIX REQUIRES a valid CRC16.
+  
+  function crc16ccitt(data) {
+    let crc = 0xFFFF
+    const poly = 0x1021
+    for (let i = 0; i < data.length; i++) {
+      crc ^= (data.charCodeAt(i) << 8)
+      for (let j = 0; j < 8; j++) {
+        if ((crc & 0x8000) !== 0) {
+          crc = ((crc << 1) ^ poly) & 0xFFFF
+        } else {
+          crc = (crc << 1) & 0xFFFF
+        }
+      }
+    }
+    return crc.toString(16).toUpperCase().padStart(4, '0')
+  }
+
+  return payload + crc16ccitt(payload)
+}
 
 export function RecarregarPage() {
   const { minutePackages, rechargePackage, paymentResult, minutesBalance, mpCredentials, requestRecharge } = usePlatformContext()
@@ -24,19 +95,17 @@ export function RecarregarPage() {
 
   // Gerar Pix Copia e Cola dinâmico baseado no pacote
   const pixData = useMemo(() => {
-    if (!selectedPack || !mpCredentials?.pixKey || typeof QrCodePix !== 'function') return null
+    if (!selectedPack || !mpCredentials?.pixKey) return null
     
     try {
       const amount = selectedPack.promoPrice ?? selectedPack.price
-      const pix = QrCodePix({
-        version: '01',
+      return generatePixPayload({
         key: mpCredentials.pixKey,
         name: mpCredentials.pixReceiverName || 'Astria Tarot',
         city: mpCredentials.pixReceiverCity || 'SAO PAULO',
-        value: amount,
-        message: `Recarga Astria - ${selectedPack.minutes} min`,
+        amount: amount,
+        description: `Recarga Astria ${selectedPack.minutes}min`,
       })
-      return pix.payload()
     } catch (e) {
       console.error('Erro ao gerar PIX:', e)
       return null

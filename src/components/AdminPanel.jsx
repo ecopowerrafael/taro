@@ -87,12 +87,12 @@ export function AdminPanel({
   useEffect(() => {
     if (mpCredentials || dailyCredentials) {
       setCredentialsDraft({
-        mpPublicKey: mpCredentials?.mpPublicKey || '',
-        mpAccessToken: mpCredentials?.mpAccessToken || '',
-        mpWebhookSecret: mpCredentials?.mpWebhookSecret || '',
-        dailyApiKey: dailyCredentials?.dailyApiKey || '',
-        dailyDomain: dailyCredentials?.dailyDomain || '',
-        dailyRoomName: dailyCredentials?.dailyRoomName || '',
+        mpPublicKey: mpCredentials?.publicKey || '',
+        mpAccessToken: mpCredentials?.accessToken || '',
+        mpWebhookSecret: mpCredentials?.webhookSecret || '',
+        dailyApiKey: dailyCredentials?.apiKey || '',
+        dailyDomain: dailyCredentials?.domain || '',
+        dailyRoomName: dailyCredentials?.roomName || '',
         pixKey: mpCredentials?.pixKey || '',
         pixReceiverName: mpCredentials?.pixReceiverName || '',
         pixReceiverCity: mpCredentials?.pixReceiverCity || '',

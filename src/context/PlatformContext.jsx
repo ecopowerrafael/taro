@@ -212,6 +212,9 @@ export function PlatformProvider({ children }) {
     publicKey: '',
     accessToken: '',
     webhookSecret: '',
+    pixKey: '',
+    pixReceiverName: '',
+    pixReceiverCity: '',
   })
   const [dailyCredentials, setDailyCredentialsState] = useState({
     apiKey: '',
@@ -304,9 +307,12 @@ export function PlatformProvider({ children }) {
     setMpCredentialsState((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater
       const normalized = {
-        publicKey: next?.publicKey ?? '',
-        accessToken: next?.accessToken ?? '',
-        webhookSecret: next?.webhookSecret ?? '',
+        publicKey: next?.publicKey ?? next?.mpPublicKey ?? '',
+        accessToken: next?.accessToken ?? next?.mpAccessToken ?? '',
+        webhookSecret: next?.webhookSecret ?? next?.mpWebhookSecret ?? '',
+        pixKey: next?.pixKey ?? '',
+        pixReceiverName: next?.pixReceiverName ?? '',
+        pixReceiverCity: next?.pixReceiverCity ?? '',
       }
       mpCredentialsRef.current = normalized
       return normalized
@@ -317,9 +323,9 @@ export function PlatformProvider({ children }) {
     setDailyCredentialsState((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater
       const normalized = {
-        apiKey: next?.apiKey ?? '',
-        domain: next?.domain ?? 'demo.daily.co',
-        roomName: next?.roomName ?? 'hello',
+        apiKey: next?.apiKey ?? next?.dailyApiKey ?? '',
+        domain: next?.domain ?? next?.dailyDomain ?? 'demo.daily.co',
+        roomName: next?.roomName ?? next?.dailyRoomName ?? 'hello',
       }
       dailyCredentialsRef.current = normalized
       return normalized
@@ -345,12 +351,16 @@ export function PlatformProvider({ children }) {
         setSystemNotice('Configurações salvas com sucesso.')
         return { ok: true }
       } else {
-        const errData = await response.json()
-        setSystemNotice(errData.message || 'Erro ao salvar credenciais.')
+        const errData = await response.json().catch(() => ({ message: 'Resposta inválida do servidor (HTML ou Vazio)' }))
+        const errorMsg = errData.message || 'Erro ao salvar credenciais.'
+        console.error('[PlatformContext] Erro no salvamento:', errData)
+        alert(`Falha no salvamento: ${errorMsg}\n\nDetalhes: ${JSON.stringify(errData, null, 2)}`)
+        setSystemNotice(errorMsg)
         return { ok: false }
       }
     } catch (error) {
-      console.error('Erro ao salvar credenciais:', error)
+      console.error('[PlatformContext] Erro fatal no salvamento:', error)
+      alert(`Erro crítico de conexão ou script:\n${error.message}`)
       setSystemNotice('Erro de conexão ao salvar.')
       return { ok: false }
     }
@@ -546,21 +556,29 @@ export function PlatformProvider({ children }) {
 
   useEffect(() => {
     const loadCredentials = async () => {
+      if (!token) return
       try {
-        const response = await fetch(buildApiUrl('/api/credentials'))
+        const response = await fetch(buildApiUrl('/api/credentials'), {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
         if (!response.ok) {
           return
         }
         const payload = await response.json()
         const mp = {
-          publicKey: payload?.mpCredentials?.publicKey ?? '',
-          accessToken: payload?.mpCredentials?.accessToken ?? '',
-          webhookSecret: payload?.mpCredentials?.webhookSecret ?? '',
+          publicKey: payload?.mpPublicKey ?? '',
+          accessToken: payload?.mpAccessToken ?? '',
+          webhookSecret: payload?.mpWebhookSecret ?? '',
+          pixKey: payload?.pixKey ?? '',
+          pixReceiverName: payload?.pixReceiverName ?? '',
+          pixReceiverCity: payload?.pixReceiverCity ?? '',
         }
         const daily = {
-          apiKey: payload?.dailyCredentials?.apiKey ?? '',
-          domain: payload?.dailyCredentials?.domain ?? 'demo.daily.co',
-          roomName: payload?.dailyCredentials?.roomName ?? 'hello',
+          apiKey: payload?.dailyApiKey ?? '',
+          domain: payload?.dailyDomain ?? 'demo.daily.co',
+          roomName: payload?.dailyRoomName ?? 'hello',
         }
         mpCredentialsRef.current = mp
         dailyCredentialsRef.current = daily
@@ -571,7 +589,7 @@ export function PlatformProvider({ children }) {
       }
     }
     void loadCredentials()
-  }, [])
+  }, [token])
 
   useEffect(() => {
     const loadQuestionRequests = async () => {

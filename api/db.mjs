@@ -178,6 +178,17 @@ export const initializeSchema = async (pool) => {
     )
   `)
 
+  // Garantir colunas de PIX para bancos antigos
+  try {
+    await pool.query('ALTER TABLE platform_credentials ADD COLUMN pixKey VARCHAR(255) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE platform_credentials ADD COLUMN pixReceiverName VARCHAR(120) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE platform_credentials ADD COLUMN pixReceiverCity VARCHAR(120) NULL')
+  } catch (e) {}
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS recharge_requests (
       id VARCHAR(50) PRIMARY KEY,

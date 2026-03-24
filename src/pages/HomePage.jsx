@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { LockKeyhole, Wallet, Users, Zap, Star, Clock3, ShieldCheck, Sparkles } from 'lucide-react'
+import { usePlatformContext } from '../context/platform-context'
 
 const benefits = [
   {
@@ -113,6 +114,8 @@ export function HomePage() {
     { value: '24/7', label: 'Sempre Disponíveis' },
   ]
 
+  const { isAuthenticated } = usePlatformContext()
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-mystic-gradient px-4 py-8 text-amber-50 md:px-8">
       <div className="galaxy-stars"></div>
@@ -136,7 +139,9 @@ export function HomePage() {
                 Sua primeira resposta está a um clique
               </h1>
               <p className="mt-4 max-w-3xl text-lg text-amber-100/85">
-                Cadastre-se agora e encontre o consultor ideal para você.
+                {isAuthenticated 
+                  ? 'Bem-vindo de volta! Explore os consultores disponíveis agora.' 
+                  : 'Cadastre-se agora e encontre o consultor ideal para você.'}
               </p>
               <div className="group mt-5 w-full max-w-sm">
                 <div className="rounded-2xl border border-mystic-gold/80 bg-gradient-to-br from-mystic-gold/25 via-transparent to-mystic-gold/10 p-[2px] shadow-[0_0_30px_rgba(197,160,89,0.25)] transition duration-500 group-hover:scale-[1.01] group-hover:shadow-[0_0_45px_rgba(197,160,89,0.38)]">
@@ -151,12 +156,21 @@ export function HomePage() {
               </div>
 
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  to="/cadastro"
-                  className="rounded-lg border border-mystic-gold/80 bg-gradient-to-r from-mystic-gold/90 to-amber-500/85 px-5 py-3 font-medium text-black shadow-[0_8px_26px_rgba(197,160,89,0.28)] transition hover:-translate-y-0.5 hover:brightness-110"
-                >
-                  Criar Minha Conta
-                </Link>
+                {isAuthenticated ? (
+                  <Link
+                    to="/consultores"
+                    className="rounded-lg border border-mystic-gold/80 bg-gradient-to-r from-mystic-gold/90 to-amber-500/85 px-5 py-3 font-medium text-black shadow-[0_8px_26px_rgba(197,160,89,0.28)] transition hover:-translate-y-0.5 hover:brightness-110"
+                  >
+                    Ver Consultores
+                  </Link>
+                ) : (
+                  <Link
+                    to="/cadastro"
+                    className="rounded-lg border border-mystic-gold/80 bg-gradient-to-r from-mystic-gold/90 to-amber-500/85 px-5 py-3 font-medium text-black shadow-[0_8px_26px_rgba(197,160,89,0.28)] transition hover:-translate-y-0.5 hover:brightness-110"
+                  >
+                    Criar Minha Conta
+                  </Link>
+                )}
                 <Link
                   to="/seja-consultor"
                   className="rounded-lg border border-mystic-gold/60 bg-black/25 px-5 py-3 font-medium text-mystic-goldSoft transition hover:-translate-y-0.5 hover:bg-mystic-gold/10"

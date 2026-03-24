@@ -1,7 +1,7 @@
 {
   "name": "taro",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,11 +10,12 @@
     "start": "node api/server.mjs",
     "build:backend": "node -e \"console.log('Backend pronto para deploy')\"",
     "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "deploy:frontend": "npm run build && node scripts/deploy-hostinger.mjs",
+    "deploy:frontend": "npm run build && node scripts/deploy-hostinger-frontend.mjs",
     "deploy:backend": "node scripts/deploy-hostinger-backend.mjs",
-    "deploy:all": "npm run deploy:frontend && npm run deploy:backend"
+    "deploy:all": "npm run build && node scripts/deploy-hostinger-backend.mjs",
+    "deploy:unified": "npm run build && node scripts/deploy-hostinger-backend.mjs",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.87.0",
@@ -27,7 +28,6 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.0.1",
     "mysql2": "^3.20.0",
-    "qrcode-pix": "^5.0.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

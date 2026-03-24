@@ -16,7 +16,11 @@ const resolveBoolean = (value, fallback) => {
 }
 
 const uploadItems = [
-  { local: 'api', remote: 'api' },
+  { local: 'api/db.mjs', remote: 'db.mjs' },
+  { local: 'api/server.mjs', remote: 'server.mjs' },
+  { local: 'api/routes', remote: 'routes' },
+  { local: 'api/middleware', remote: 'middleware' },
+  { local: 'dist', remote: 'dist' },
   { local: 'package.json', remote: 'package.json' },
   { local: 'package-lock.json', remote: 'package-lock.json' },
 ]
@@ -37,10 +41,11 @@ const run = async () => {
 
   try {
     console.log(`Conectando ao FTP do Backend (${process.env.BACK_FTP_HOST})...`)
+    const ftpPassword = process.env.BACK_FTP_PASSWORD.trim().replace(/^["']|["']$/g, '')
     await client.access({
       host: process.env.BACK_FTP_HOST.trim(),
       user: process.env.BACK_FTP_USER.trim(),
-      password: process.env.BACK_FTP_PASSWORD,
+      password: ftpPassword,
       secure,
     })
 
@@ -78,6 +83,20 @@ const run = async () => {
     }
 
     console.log('Deploy do Backend concluído com sucesso.')
+
+    // Forçar reinício do Node.js via tmp/restart.txt (Passenger)
+    try {
+      await client.ensureDir('tmp')
+      const fsNode = await import('node:fs')
+      const pathNode = await import('node:path')
+      const tempFile = pathNode.join(process.cwd(), 'restart.tmp')
+      fsNode.writeFileSync(tempFile, new Date().toISOString())
+      await client.uploadFrom(tempFile, 'restart.txt')
+      fsNode.unlinkSync(tempFile)
+      console.log('Arquivo tmp/restart.txt criado para forçar reinício do servidor.')
+    } catch (e) {
+      console.log('Não foi possível criar tmp/restart.txt (opcional):', e.message)
+    }
   } finally {
     client.close()
   }
