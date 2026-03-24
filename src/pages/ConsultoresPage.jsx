@@ -24,6 +24,7 @@ export function ConsultoresPage() {
     profile,
     minutesBalance,
     submitQuestionConsultation,
+    token, // Vamos pegar o token direto do context, que já está garantido e atualizado
   } = usePlatformContext()
   const [questionFlow, setQuestionFlow] = useState({
     isOpen: false,
@@ -102,15 +103,14 @@ export function ConsultoresPage() {
     setSystemNotice('Criando sala segura e notificando consultor...')
     
     try {
-      const authToken = localStorage.getItem('astria_auth_token')
-      
-      if (!authToken) {
-        setSystemNotice('Faça login para iniciar uma consulta de vídeo.')
+      // Usar o token do contexto ao invés de buscar do localStorage cru
+      if (!token) {
+        setSystemNotice('Sessão expirada. Faça login para iniciar uma consulta de vídeo.')
         return
       }
 
       // Adicionamos a URL de API base caso seja necessário e removemos aspas do token
-      const cleanToken = authToken.replace(/^"|"$/g, '').trim()
+      const cleanToken = token.replace(/^"|"$/g, '').trim()
       
       const response = await fetch('/api/video-sessions', {
         method: 'POST',
