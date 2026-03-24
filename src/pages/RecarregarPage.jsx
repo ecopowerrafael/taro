@@ -12,10 +12,11 @@ function generatePixPayload({ key, name, city, amount, description }) {
   
   const sections = {
     '00': '01', // Payload Format Indicator
+    '01': '11', // Point of Initiation Method (11 = Estático)
     '26': { // Merchant Account Information
       '00': 'br.gov.bcb.pix',
       '01': key.replace(/\s/g, ''),
-      '02': description.substring(0, 25) || 'Recarga Astria'
+      '02': (description || 'Recarga Astria').substring(0, 25)
     },
     '52': '0000', // Merchant Category Code
     '53': '986', // Transaction Currency (BRL)
@@ -64,6 +65,8 @@ function generatePixPayload({ key, name, city, amount, description }) {
     return hex.padStart(4, '0')
   }
 
+  // Ensure '000201' is at the very beginning of the string manually if needed, 
+  // but our section builder already handles it if '00' is the first key.
   return payload + crc16ccitt(payload)
 }
 
