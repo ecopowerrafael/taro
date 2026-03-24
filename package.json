@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "node --watch api/server.mjs",
+    "start:backend": "node api/server.mjs",
     "start": "node api/server.mjs",
+    "build:backend": "node -e \"console.log('Backend pronto para deploy')\"",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
