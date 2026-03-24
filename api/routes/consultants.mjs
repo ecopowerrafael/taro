@@ -131,7 +131,7 @@ export const createConsultantsRouter = (pool) => {
     const { id } = request.params
     const { status } = request.body ?? {}
 
-    if (!['Online', 'Offline', 'Ocupado'].includes(status)) {
+    if (!['Online', 'Offline', 'Ocupado', 'Pendente'].includes(status)) {
       response.status(400).json({ message: 'status inválido.' })
       return
     }

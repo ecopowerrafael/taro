@@ -34,6 +34,11 @@ export function AreaConsultorPage() {
   const [referenceTimestamp] = useState(() => Date.now())
   const availabilityService = useMemo(() => new ConsultantAvailabilityService(), [])
 
+  const formatInitialCurrency = (val) => {
+    const num = Number(val) || 0
+    return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+
   // Atualizar o consultor selecionado quando o perfil carregar
   useEffect(() => {
     if (userConsultantProfile) {
@@ -44,9 +49,9 @@ export function AreaConsultorPage() {
         tagline: userConsultantProfile.tagline,
         description: userConsultantProfile.description,
         photo: userConsultantProfile.photo ?? '',
-        pricePerMinute: userConsultantProfile.pricePerMinute,
-        priceThreeQuestions: userConsultantProfile.priceThreeQuestions,
-        priceFiveQuestions: userConsultantProfile.priceFiveQuestions,
+        pricePerMinute: formatInitialCurrency(userConsultantProfile.pricePerMinute),
+        priceThreeQuestions: formatInitialCurrency(userConsultantProfile.priceThreeQuestions),
+        priceFiveQuestions: formatInitialCurrency(userConsultantProfile.priceFiveQuestions),
       })
     } else if (isAdmin && consultants.length > 0) {
       // Se for admin mas não tiver perfil de consultor, mostra o primeiro da lista
@@ -156,9 +161,9 @@ export function AreaConsultorPage() {
       tagline: consultant.tagline,
       description: consultant.description,
       photo: consultant.photo ?? '',
-      pricePerMinute: consultant.pricePerMinute,
-      priceThreeQuestions: consultant.priceThreeQuestions,
-      priceFiveQuestions: consultant.priceFiveQuestions,
+      pricePerMinute: formatInitialCurrency(consultant.pricePerMinute),
+      priceThreeQuestions: formatInitialCurrency(consultant.priceThreeQuestions),
+      priceFiveQuestions: formatInitialCurrency(consultant.priceFiveQuestions),
     })
   }
 
@@ -263,6 +268,20 @@ export function AreaConsultorPage() {
     event.target.value = ''
   }
 
+  const handleCurrencyInput = (setter, field) => (event) => {
+    let value = event.target.value.replace(/\D/g, '')
+    if (!value) value = '0'
+    const num = parseInt(value, 10) / 100
+    const formatted = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    setter((prev) => ({ ...prev, [field]: formatted }))
+  }
+
+  const parseCurrency = (value) => {
+    if (typeof value === 'number') return value
+    if (!value) return 0
+    return Number(value.replace(/\./g, '').replace(',', '.'))
+  }
+
   const handleSaveProfile = () => {
     if (!selectedConsultantId || !profileDraft) {
       return
@@ -273,9 +292,9 @@ export function AreaConsultorPage() {
       tagline: profileDraft.tagline.trim(),
       description: profileDraft.description.trim(),
       photo: profileDraft.photo.trim(),
-      pricePerMinute: Number(profileDraft.pricePerMinute) || 0,
-      priceThreeQuestions: Number(profileDraft.priceThreeQuestions) || 0,
-      priceFiveQuestions: Number(profileDraft.priceFiveQuestions) || 0,
+      pricePerMinute: parseCurrency(profileDraft.pricePerMinute),
+      priceThreeQuestions: parseCurrency(profileDraft.priceThreeQuestions),
+      priceFiveQuestions: parseCurrency(profileDraft.priceFiveQuestions),
     })
     setPanelNotice('Perfil do consultor atualizado com sucesso.')
   }
@@ -309,27 +328,25 @@ export function AreaConsultorPage() {
           <span className="text-xs text-ethereal-silver/80">
             Pendentes: {pendingRequests.length} • Respondidas: {answeredRequests.length}
           </span>
-          <span
-            className={`rounded-full border px-2 py-1 text-[11px] ${
-              isSelectedConsultantOnline
-                ? 'border-emerald-400/65 bg-emerald-500/10 text-emerald-300'
-                : 'border-zinc-400/55 bg-zinc-500/10 text-zinc-300'
-            }`}
-          >
-            {isSelectedConsultantOnline ? 'Online' : 'Offline'}
-          </span>
-          <button
-            onClick={() => {
-              void handleToggleAvailability()
-            }}
-            className={`rounded-lg border px-3 py-2 text-xs transition ${
-              isSelectedConsultantOnline
-                ? 'border-red-400/60 bg-red-500/10 text-red-200 hover:bg-red-500/20'
-                : 'border-emerald-400/60 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20'
-            }`}
-          >
-            {isSelectedConsultantOnline ? 'Ficar offline' : 'Ficar online'}
-          </button>
+          <div className="flex items-center gap-3">
+            <span className={`text-xs font-bold ${isSelectedConsultantOnline ? 'text-emerald-400' : 'text-ethereal-silver/60'}`}>
+              {isSelectedConsultantOnline ? 'ONLINE' : 'OFFLINE'}
+            </span>
+            <button
+              onClick={() => {
+                void handleToggleAvailability()
+              }}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-mystic-gold/60 focus:ring-offset-2 focus:ring-offset-black ${
+                isSelectedConsultantOnline ? 'bg-emerald-500' : 'bg-zinc-600'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isSelectedConsultantOnline ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
           <button
             onClick={() => {
               void handleSilenceIncomingAlert()
@@ -456,45 +473,33 @@ export function AreaConsultorPage() {
               Preço por minuto (R$)
               <span className="text-[11px] text-ethereal-silver/65">Valor cobrado no atendimento por vídeo.</span>
               <input
-                type="number"
-                min="1"
-                step="0.5"
+                type="text"
                 value={profileDraft.pricePerMinute}
-                onChange={(event) =>
-                  setProfileDraft((prev) => ({ ...prev, pricePerMinute: event.target.value }))
-                }
+                onChange={handleCurrencyInput(setProfileDraft, 'pricePerMinute')}
                 className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                placeholder="Preço por minuto"
+                placeholder="0,00"
               />
             </label>
             <label className="grid gap-1 text-xs text-amber-100/75">
               Pacote 3 perguntas (R$)
               <span className="text-[11px] text-ethereal-silver/65">Valor fechado para responder 3 perguntas.</span>
               <input
-                type="number"
-                min="1"
-                step="0.5"
+                type="text"
                 value={profileDraft.priceThreeQuestions}
-                onChange={(event) =>
-                  setProfileDraft((prev) => ({ ...prev, priceThreeQuestions: event.target.value }))
-                }
+                onChange={handleCurrencyInput(setProfileDraft, 'priceThreeQuestions')}
                 className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                placeholder="Preço 3 perguntas"
+                placeholder="0,00"
               />
             </label>
             <label className="grid gap-1 text-xs text-amber-100/75 md:col-span-2">
               Pacote 5 perguntas (R$)
               <span className="text-[11px] text-ethereal-silver/65">Valor fechado para responder 5 perguntas.</span>
               <input
-                type="number"
-                min="1"
-                step="0.5"
+                type="text"
                 value={profileDraft.priceFiveQuestions}
-                onChange={(event) =>
-                  setProfileDraft((prev) => ({ ...prev, priceFiveQuestions: event.target.value }))
-                }
+                onChange={handleCurrencyInput(setProfileDraft, 'priceFiveQuestions')}
                 className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                placeholder="Preço 5 perguntas"
+                placeholder="0,00"
               />
             </label>
             <button

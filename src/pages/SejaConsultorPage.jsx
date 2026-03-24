@@ -14,9 +14,9 @@ export function SejaConsultorPage() {
     password: '',
     tagline: '',
     description: '',
-    pricePerMinute: '5.00',
-    priceThreeQuestions: '15.00',
-    priceFiveQuestions: '25.00',
+    pricePerMinute: '5,00',
+    priceThreeQuestions: '15,00',
+    priceFiveQuestions: '25,00',
     profilePhoto: null,
   })
   const [loading, setLoading] = useState(false)
@@ -24,6 +24,20 @@ export function SejaConsultorPage() {
 
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleCurrencyInput = (field) => (event) => {
+    let value = event.target.value.replace(/\D/g, '')
+    if (!value) value = '0'
+    const num = parseInt(value, 10) / 100
+    const formatted = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    updateField(field, formatted)
+  }
+
+  const parseCurrency = (value) => {
+    if (typeof value === 'number') return value
+    if (!value) return 0
+    return Number(value.replace(/\./g, '').replace(',', '.'))
   }
 
   const handleFileChange = (event) => {
@@ -62,9 +76,9 @@ export function SejaConsultorPage() {
     const result = await registerConsultant({
       ...form,
       photo: photoBase64,
-      pricePerMinute: parseFloat(form.pricePerMinute),
-      priceThreeQuestions: parseFloat(form.priceThreeQuestions),
-      priceFiveQuestions: parseFloat(form.priceFiveQuestions),
+      pricePerMinute: parseCurrency(form.pricePerMinute),
+      priceThreeQuestions: parseCurrency(form.priceThreeQuestions),
+      priceFiveQuestions: parseCurrency(form.priceFiveQuestions),
     })
 
     setLoading(false)
@@ -162,39 +176,33 @@ export function SejaConsultorPage() {
           <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
             Preço por Minuto (R$)
             <input
-              type="number"
-              min="1"
-              step="0.5"
+              type="text"
               required
-              placeholder="Definir seu valor por minuto"
+              placeholder="0,00"
               value={form.pricePerMinute}
-              onChange={(event) => updateField('pricePerMinute', event.target.value)}
+              onChange={handleCurrencyInput('pricePerMinute')}
               className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
             />
           </label>
           <label className="grid gap-2 text-sm text-amber-100/80">
             Preço para responder 3 perguntas (R$)
             <input
-              type="number"
-              min="1"
-              step="0.5"
+              type="text"
               required
-              placeholder="Valor do pacote de 3 perguntas"
+              placeholder="0,00"
               value={form.priceThreeQuestions}
-              onChange={(event) => updateField('priceThreeQuestions', event.target.value)}
+              onChange={handleCurrencyInput('priceThreeQuestions')}
               className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
             />
           </label>
           <label className="grid gap-2 text-sm text-amber-100/80">
             Preço para responder 5 perguntas (R$)
             <input
-              type="number"
-              min="1"
-              step="0.5"
+              type="text"
               required
-              placeholder="Valor do pacote de 5 perguntas"
+              placeholder="0,00"
               value={form.priceFiveQuestions}
-              onChange={(event) => updateField('priceFiveQuestions', event.target.value)}
+              onChange={handleCurrencyInput('priceFiveQuestions')}
               className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
             />
           </label>
