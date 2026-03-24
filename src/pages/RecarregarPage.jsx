@@ -15,16 +15,16 @@ function generatePixPayload({ key, name, city, amount, description }) {
     '26': { // Merchant Account Information
       '00': 'br.gov.bcb.pix',
       '01': key.replace(/\s/g, ''),
-      '02': description || 'Recarga Astria'
+      '02': description.substring(0, 25) || 'Recarga Astria'
     },
     '52': '0000', // Merchant Category Code
     '53': '986', // Transaction Currency (BRL)
     '54': amount.toFixed(2), // Transaction Amount
     '58': 'BR', // Country Code
-    '59': name.substring(0, 25).normalize('NFD').replace(/[\u0300-\u036f]/g, ''), // Merchant Name
-    '60': city.substring(0, 15).normalize('NFD').replace(/[\u0300-\u036f]/g, ''), // Merchant City
+    '59': name.substring(0, 25).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase(), // Merchant Name
+    '60': city.substring(0, 15).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase(), // Merchant City
     '62': { // Additional Data Field Template
-      '05': 'ASTRIA' // Reference Label
+      '05': '***' // Reference Label
     }
   }
 
@@ -47,40 +47,21 @@ function generatePixPayload({ key, name, city, amount, description }) {
 
   payload += '6304' // CRC ID and length
 
-  // Simple CRC16 CCITT (Kermit) calculation
-  function crc16(str) {
-    let crc = 0xFFFF
-    for (let i = 0; i < str.length; i++) {
-      crc ^= str.charCodeAt(i)
-      for (let j = 0; j < 8; j++) {
-        if ((crc & 0x0001) !== 0) {
-          crc = (crc >> 1) ^ 0x8408
-        } else {
-          crc >>= 1
-        }
-      }
-    }
-    return ((crc ^ 0xFFFF) & 0xFFFF).toString(16).toUpperCase().padStart(4, '0')
-  }
-
   // Note: Standard PIX uses CRC16 CCITT-FALSE (0x1021). 
-  // Let's use a standard implementation or just skip CRC if not strictly needed for display (though it is for payment).
-  // Actually, PIX REQUIRES a valid CRC16.
-  
   function crc16ccitt(data) {
     let crc = 0xFFFF
-    const poly = 0x1021
     for (let i = 0; i < data.length; i++) {
-      crc ^= (data.charCodeAt(i) << 8)
+      crc ^= data.charCodeAt(i) << 8
       for (let j = 0; j < 8; j++) {
         if ((crc & 0x8000) !== 0) {
-          crc = ((crc << 1) ^ poly) & 0xFFFF
+          crc = (crc << 1) ^ 0x1021
         } else {
-          crc = (crc << 1) & 0xFFFF
+          crc = crc << 1
         }
       }
     }
-    return crc.toString(16).toUpperCase().padStart(4, '0')
+    const hex = (crc & 0xFFFF).toString(16).toUpperCase()
+    return hex.padStart(4, '0')
   }
 
   return payload + crc16ccitt(payload)
