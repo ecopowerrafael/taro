@@ -91,20 +91,26 @@ export function useAuth() {
   }
 
   const registerConsultant = async (consultantData) => {
-    const response = await fetch(buildApiUrl('/api/auth/register-consultant'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(consultantData)
-    })
+    try {
+      const response = await fetch(buildApiUrl('/api/auth/register-consultant'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(consultantData),
+        signal: AbortSignal.timeout(20000) // 20s pois envolve mais tabelas
+      })
 
-    const data = await response.json()
-    if (response.ok) {
-      setToken(data.token)
-      setUser(data.user)
-      localStorage.setItem('taro_token', data.token)
-      return { ok: true }
-    } else {
-      return { ok: false, message: data.message }
+      const data = await response.json()
+      if (response.ok) {
+        setToken(data.token)
+        setUser(data.user)
+        localStorage.setItem('taro_token', data.token)
+        return { ok: true }
+      } else {
+        return { ok: false, message: data.message || 'Erro ao cadastrar consultor.' }
+      }
+    } catch (error) {
+      console.error('Erro no registro de consultor:', error)
+      return { ok: false, message: 'Falha na conexão. O envio da foto pode demorar um pouco mais.' }
     }
   }
 
@@ -115,21 +121,27 @@ export function useAuth() {
   }
 
   const updateProfile = async (updates) => {
-    const response = await fetch(buildApiUrl('/api/auth/profile'), {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(updates)
-    })
+    try {
+      const response = await fetch(buildApiUrl('/api/auth/profile'), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(updates),
+        signal: AbortSignal.timeout(10000)
+      })
 
-    if (response.ok) {
-      await fetchProfile(token)
-      return { ok: true }
-    } else {
-      const data = await response.json()
-      return { ok: false, message: data.message }
+      if (response.ok) {
+        await fetchProfile(token)
+        return { ok: true }
+      } else {
+        const data = await response.json()
+        return { ok: false, message: data.message || 'Erro ao atualizar perfil.' }
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error)
+      return { ok: false, message: 'Falha na conexão com o servidor.' }
     }
   }
 
