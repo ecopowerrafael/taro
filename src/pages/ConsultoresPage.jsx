@@ -102,12 +102,21 @@ export function ConsultoresPage() {
     setSystemNotice('Criando sala segura e notificando consultor...')
     
     try {
-      const token = localStorage.getItem('astria_auth_token')
+      const authToken = localStorage.getItem('astria_auth_token')
+      
+      if (!authToken) {
+        setSystemNotice('Faça login para iniciar uma consulta de vídeo.')
+        return
+      }
+
+      // Adicionamos a URL de API base caso seja necessário e removemos aspas do token
+      const cleanToken = authToken.replace(/^"|"$/g, '').trim()
+      
       const response = await fetch('/api/video-sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Authorization': `Bearer ${cleanToken}`
         },
         body: JSON.stringify({ consultantId })
       })
@@ -124,6 +133,7 @@ export function ConsultoresPage() {
       navigate(`/sala/${data.sessionId}`)
       
     } catch (err) {
+      console.error(err)
       setSystemNotice('Erro de conexão ao tentar iniciar a sala.')
     }
   }
