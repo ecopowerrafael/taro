@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance }) {
+export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, testMode = false }) {
   const [activeSession, setActiveSession] = useState(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [isConnected, setIsConnected] = useState(false)
   const consumedRef = useRef(false)
 
-  const pricePerMinute = activeSession?.pricePerMinute ?? 0
-  const consumedMinutes = elapsedSeconds / 60
+  const pricePerMinute = Number(activeSession?.pricePerMinute ?? 0)
+  const consumedMinutes = Math.floor(elapsedSeconds / 60) // valor computado em minutos inteiros para reduzir flutuação
   const consumedValue = consumedMinutes * pricePerMinute
   const remainingMinutes = Math.max(0, balanceMinutes - consumedMinutes)
 
@@ -28,8 +28,8 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance })
   const startSession = useCallback(
     ({ consultantId, consultantName, pricePerMinute: minutePrice }) => {
       // Garantir que minutePrice é sempre um número válido
-      const validPrice = typeof minutePrice === 'number' && !isNaN(minutePrice) ? minutePrice : 0
-      
+      const validPrice = Number.isFinite(Number(minutePrice)) ? Number(minutePrice) : 0
+
       if (!hasSufficientBalance) {
         onInsufficientBalance?.()
         return false
@@ -53,14 +53,17 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance })
       return undefined
     }
 
+    // Simplificar atualização para teste: 1s em modo normal, 10s em modo teste
+    const intervalMs = testMode ? 10000 : 1000
+
     const interval = window.setInterval(() => {
       setElapsedSeconds((prev) => prev + 1)
-    }, 1000)
+    }, intervalMs)
 
     return () => {
       window.clearInterval(interval)
     }
-  }, [activeSession, isConnected])
+  }, [activeSession, isConnected, testMode])
 
   useEffect(() => {
     if (isConnected && remainingMinutes <= 0) {

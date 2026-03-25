@@ -309,6 +309,7 @@ export function PlatformProvider({ children }) {
     onInsufficientBalance: () => {
       setSystemNotice('Saldo insuficiente. A chamada foi encerrada automaticamente.')
     },
+    testMode: true, // modo simplificado de teste: menos atualizações e cálculo inteiro
   })
 
   const roomUrl = useMemo(() => {

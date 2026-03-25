@@ -393,7 +393,7 @@ export function VideoRoomPage() {
                 {session.isConsultant ? (
                   <span className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/40 px-3 py-2">
                     <Wallet size={16} className="text-mystic-goldSoft" />
-                    Total: R$ {((localElapsedSeconds / 60) * (session.pricePerMinute ?? 0)).toFixed(2)}
+                    Total (provisorio): R$ {Number(billing.consumedValue ?? 0).toFixed(2)}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/40 px-3 py-2">
