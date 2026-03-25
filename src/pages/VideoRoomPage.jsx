@@ -48,14 +48,30 @@ export function VideoRoomPage() {
     return () => window.clearInterval(interval)
   }, [callStartedAt, isCallActive])
 
+  // Debug: Log quando isCallActive muda
+  useEffect(() => {
+    console.log('isCallActive changed to:', isCallActive)
+    if (isCallActive) {
+      console.log('Container ref:', containerRef.current)
+      console.log('Container HTML antes:', containerRef.current?.innerHTML)
+    }
+  }, [isCallActive])
+
   useEffect(() => {
     const fetchSession = async () => {
       try {
+        console.log('Buscando sessão:', sessionId)
         const res = await fetch(`/api/video-sessions/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         const data = await res.json()
-        if (!res.ok) throw new Error(data.message)
+        console.log('Resposta da sessão:', data)
+        
+        if (!res.ok) {
+          console.error('Erro na resposta da API:', data)
+          throw new Error(data.message)
+        }
+        
         setSession(data)
         if (['cancelled', 'rejected'].includes(data.status)) {
           setEndModal({
@@ -68,6 +84,7 @@ export function VideoRoomPage() {
           })
         }
       } catch (err) {
+        console.error('Erro ao carregar a sala:', err)
         setError(err.message || 'Erro ao carregar a sala.')
       } finally {
         setLoading(false)
@@ -94,6 +111,12 @@ export function VideoRoomPage() {
           headers: { Authorization: `Bearer ${token}` }
         })
         const data = await res.json()
+        
+        if (!res.ok) {
+          console.error('Erro no polling de sessão:', data)
+          return
+        }
+        
         setSession(data)
         if (data.status === 'rejected') {
           setEndModal({
@@ -114,15 +137,17 @@ export function VideoRoomPage() {
           return
         }
         if (data.status === 'active' && !isCallActive) {
+          console.log('Status ativo detectado! Iniciando chamada...')
           // Both are ready! O consultor já iniciou!
           setIsCallActive(true) // Libera a div do iframe
           setCallStartedAt(Date.now())
           setTimeout(() => {
+            console.log('Chamando joinCall após detecção de status ativo')
             joinCall(data)
           }, 100)
         }
-      } catch {
-        void 0
+      } catch (e) {
+        console.error('Erro no polling:', e)
       }
     }, 5000)
     return () => clearInterval(interval)
@@ -163,12 +188,14 @@ export function VideoRoomPage() {
 
     if (callFrameRef.current) {
       try {
+        console.log('Reentrado em sala existente...')
         await callFrameRef.current.join({
           url: sessionData.roomUrl,
           token: sessionData.dailyToken,
         })
         setIsCallActive(true)
         setCallStartedAt((prev) => prev ?? Date.now())
+        console.log('Reentry bem-sucedido!')
         return
       } catch (e) {
         console.error('Erro ao reentrar na sala do Daily', e)
@@ -214,10 +241,23 @@ export function VideoRoomPage() {
     
     // Iniciar faturamento se for o cliente
     if (!sessionData.isConsultant) {
-      billing.startSession({
+      console.log('Iniciando faturamento com:', {
         consultantId: sessionData.consultantId,
         consultantName: sessionData.consultantName,
         pricePerMinute: sessionData.pricePerMinute
+      })
+      
+      if (!sessionData.consultantId || !sessionData.consultantName) {
+        console.error('ERRO: Dados do consultor incompletos!', sessionData)
+        setSystemNotice('Erro: Dados da consulta incompletos. Recarregue a página.')
+        setIsCallActive(false)
+        return
+      }
+      
+      billing.startSession({
+        consultantId: sessionData.consultantId,
+        consultantName: sessionData.consultantName,
+        pricePerMinute: sessionData.pricePerMinute || 0
       })
     }
 
@@ -226,15 +266,23 @@ export function VideoRoomPage() {
     })
 
     try {
+      console.log('Tentando fazer join na sala com URL:', sessionData.roomUrl, 'Token:', !!sessionData.dailyToken)
       await callFrame.join({
         url: sessionData.roomUrl,
         token: sessionData.dailyToken // Usado se a sala for privada
       })
+      console.log('Join na sala bem-sucedido!')
       setIsCallActive(true)
       setCallStartedAt((prev) => prev ?? Date.now())
     } catch (e) {
-      console.error('Erro ao entrar na sala do Daily', e)
-      setSystemNotice('Erro ao conectar na sala de vídeo.')
+      console.error('Erro ao entrar na sala do Daily', {
+        error: e,
+        message: e?.message,
+        code: e?.code,
+        roomUrl: sessionData.roomUrl,
+        hasToken: !!sessionData.dailyToken
+      })
+      setSystemNotice(`Erro ao conectar na sala de vídeo: ${e?.message || 'Erro desconhecido'}`)
       setIsCallActive(false)
     }
   }, [billing, sessionId, setSystemNotice, token, handleLeaveCall, waitForContainer])
