@@ -34,6 +34,7 @@ export function AreaConsultorPage() {
   const [profileDraft, setProfileDraft] = useState(null)
   const [pendingVideoSessions, setPendingVideoSessions] = useState([])
   const [rejectModal, setRejectModal] = useState(null)
+  const [confirmResponseModal, setConfirmResponseModal] = useState(null)
 
   // Polling para novas chamadas de v\u00eddeo
   useEffect(() => {
@@ -284,7 +285,7 @@ export function AreaConsultorPage() {
     })
   }
 
-  const handleSubmitResponse = async (requestId) => {
+  const handleSubmitResponse = (requestId) => {
     const request = questionRequests.find((item) => item.id === requestId)
     if (!request) {
       setPanelNotice('Solicitação não encontrada.')
@@ -297,6 +298,14 @@ export function AreaConsultorPage() {
       return
     }
 
+    // Abre modal de confirmação
+    setConfirmResponseModal({ requestId, request, drafts })
+  }
+
+  const handleConfirmAndSendResponse = async () => {
+    if (!confirmResponseModal) return
+
+    const { requestId, request, drafts } = confirmResponseModal
     const filledAnswers = request.entries.map((entry, i) => {
       const answerText = (drafts[i] ?? '').trim()
       return `P${i + 1}: ${answerText || '[Sem resposta]'}`
@@ -311,6 +320,7 @@ export function AreaConsultorPage() {
         answerSummary,
       })
       setResponseDrafts((prev) => ({ ...prev, [requestId]: [] }))
+      setConfirmResponseModal(null)
       setPanelNotice('Resposta enviada e valor líquido creditado na carteira do consultor.')
     } catch (error) {
       console.error('[AreaConsultorPage] Erro ao responder pergunta:', error)
@@ -709,7 +719,110 @@ export function AreaConsultorPage() {
             {panelNotice}
           </p>
         )}
+
+        {/* Botão Instalar App */}
+        <div className="mt-6 rounded-lg border border-mystic-gold/30 bg-black/30 p-4 text-center">
+          <p className="mb-3 text-sm text-amber-100/80">
+            Para melhor receber notificações de novas chamadas instale nosso aplicativo.
+          </p>
+          <button
+            onClick={() => setConfirmResponseModal({ isInstallPrompt: true })}
+            className="rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 px-6 py-2 font-bold text-black transition hover:brightness-110"
+          >
+            Instalar App
+          </button>
+        </div>
       </GlassCard>
+
+      {/* Modal Confirmação Resposta */}
+      {confirmResponseModal && !confirmResponseModal.isInstallPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
+            <h3 className="mb-4 font-display text-2xl text-mystic-goldSoft">Revisar Respostas</h3>
+            <div className="mb-6 grid gap-3 rounded-lg border border-mystic-gold/30 bg-black/30 p-4">
+              {confirmResponseModal.request?.entries.map((entry, index) => {
+                const questionText =
+                  entry.question || entry.text || (entry.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada')
+                const answerText = (confirmResponseModal.drafts[index] ?? '').trim()
+                return (
+                  <div key={index} className="border-b border-mystic-gold/20 pb-3 last:border-b-0">
+                    <p className="mb-2 text-sm text-mystic-goldSoft">
+                      <span className="font-bold">Pergunta {index + 1}:</span> {questionText}
+                    </p>
+                    <p className="mb-2 text-xs text-amber-100/70">
+                      <span className="font-semibold">Sua resposta:</span>
+                    </p>
+                    <p className="rounded bg-black/40 p-2 text-sm text-amber-50 text-left">{answerText || '[Sem resposta]'}</p>
+                  </div>
+                )
+              })}
+            </div>
+            <p className="mb-4 text-xs text-amber-100/60">
+              Se desejar editar, cancele e modifique acima. Clique em Confirmar para enviar.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleConfirmAndSendResponse}
+                className="w-full rounded-lg bg-emerald-600/90 py-3 font-bold text-white transition hover:bg-emerald-500"
+              >
+                Confirmar e Enviar
+              </button>
+              <button
+                onClick={() => setConfirmResponseModal(null)}
+                className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
+              >
+                Voltar e Editar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Instalar App */}
+      {confirmResponseModal?.isInstallPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
+            <h3 className="mb-4 text-center font-display text-2xl text-mystic-goldSoft">
+              Instalar Aplicativo
+            </h3>
+            <p className="mb-6 text-center text-sm text-amber-100/80">
+              Escolha o seu dispositivo para instalar e receber notificações em tempo real:
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  if (/iPhone|iPad|iOS/.test(navigator.userAgent)) {
+                    // iPhone: mostrar instruções PWA ou redirecionar
+                    alert('Toque em Compartilhar > Adicionar à Tela Inicial para instalar o app PWA.')
+                  } else {
+                    alert('A instalação do PWA no iOS é feita através de Compartilhar > Adicionar à Tela Inicial.')
+                  }
+                  setConfirmResponseModal(null)
+                }}
+                className="rounded-lg bg-blue-600/90 py-3 font-bold text-white transition hover:bg-blue-500"
+              >
+                📱 iPhone / iPad
+              </button>
+              <button
+                onClick={() => {
+                  // Android: download APK
+                  window.location.href = '/astria-app.apk'
+                  setConfirmResponseModal(null)
+                }}
+                className="rounded-lg bg-green-600/90 py-3 font-bold text-white transition hover:bg-green-500"
+              >
+                🤖 Android (Baixar APK)
+              </button>
+              <button
+                onClick={() => setConfirmResponseModal(null)}
+                className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
+              >
+                Depois
+              </button>
+            </div>
+          </div>
+        </div>
+      }
 
       {rejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">

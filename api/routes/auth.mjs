@@ -237,5 +237,46 @@ export const createAuthRouter = (pool) => {
     }
   })
 
+  // Debit Minutes (para perguntas/consultas)
+  router.patch('/debit-minutes', async (request, response) => {
+    const authHeader = request.headers.authorization
+    if (!authHeader) {
+      return response.status(401).json({ message: 'Não autorizado.' })
+    }
+
+    const token = authHeader.split(' ')[1]
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET)
+      const { minutes } = request.body
+
+      if (!minutes || minutes <= 0) {
+        return response.status(400).json({ message: 'Quantidade de minutos inválida.' })
+      }
+
+      // Primeiro verifica se tem saldo
+      const [users] = await pool.query('SELECT minutesBalance FROM users WHERE id = ?', [decoded.id])
+      if (!users.length || users[0].minutesBalance < minutes) {
+        return response.status(402).json({ message: 'Saldo insuficiente.' })
+      }
+
+      // Debita
+      await pool.query(
+        'UPDATE users SET minutesBalance = minutesBalance - ? WHERE id = ?',
+        [minutes, decoded.id]
+      )
+
+      const [updated] = await pool.query('SELECT minutesBalance FROM users WHERE id = ?', [decoded.id])
+
+      response.json({ 
+        ok: true, 
+        message: 'Minutos debitados com sucesso.', 
+        minutesBalance: updated[0].minutesBalance 
+      })
+    } catch (error) {
+      console.error('Erro ao debitar minutos:', error)
+      response.status(401).json({ message: 'Token inválido ou erro no servidor.' })
+    }
+  })
+
   return router
 }

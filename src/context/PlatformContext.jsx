@@ -284,9 +284,28 @@ export function PlatformProvider({ children }) {
   }, [profile?.id])
 
   const debitMinutes = async (minutes) => {
-    // In a real app, this would be an API call
-    // For now, let's keep it local but it should ideally sync with DB
-    console.log(`Debitando ${minutes} minutos`)
+    try {
+      const response = await fetch(buildApiUrl('/api/auth/debit-minutes'), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ minutes }),
+      })
+      if (!response.ok) {
+        const error = await response.json()
+        setSystemNotice(error.message || 'Erro ao debitar minutos.')
+        return false
+      }
+      const data = await response.json()
+      // Atualiza perfil com novo saldo
+      return true
+    } catch (error) {
+      console.error('Erro ao debitar minutos:', error)
+      setSystemNotice('Falha de conexão ao debitar minutos.')
+      return false
+    }
   }
 
   const creditMinutes = async (minutes) => {
@@ -888,13 +907,22 @@ export function PlatformProvider({ children }) {
     try {
       const savedRequest = await createQuestionRequestOnApi(request)
       setQuestionRequests((prev) => [savedRequest, ...prev.filter((item) => item.id !== savedRequest.id)])
+      
+      // Debita minutos APÓS sucesso do envio
+      const debitSuccess = await debitMinutes(price)
+      if (debitSuccess) {
+        setSystemNotice(
+          `Perguntas enviadas para ${consultant.name}. ${questionCount} pergunta(s) registrada(s) e saldo debitado de R$ ${price.toFixed(2)}.`,
+        )
+      } else {
+        setSystemNotice(
+          `Perguntas enviadas mas houve erro ao debitar saldo. Contate suporte.`,
+        )
+      }
     } catch {
       setQuestionRequests((prev) => [request, ...prev])
+      setSystemNotice('Erro ao enviar perguntas. Tente novamente.')
     }
-    debitMinutes(price)
-    setSystemNotice(
-      `Perguntas enviadas para ${consultant.name}. ${questionCount} pergunta(s) registrada(s) e saldo debitado em ${price.toFixed(2)}.`,
-    )
   }
 
   const respondToQuestionRequest = async ({ requestId, consultantId, answerSummary }) => {
