@@ -19,9 +19,8 @@ export const createCredentialsRouter = (pool) => {
     })
   })
 
-  router.use(authenticate, authorizeAdmin)
-
-  router.get('/', async (_request, response) => {
+  // GET - Qualquer usuário autenticado pode ler (não precisa ser admin)
+  router.get('/', authenticate, async (_request, response) => {
     try {
       const [rows] = await pool.query('SELECT * FROM platform_credentials WHERE id = 1')
       response.json(rows[0] || {})
@@ -30,6 +29,9 @@ export const createCredentialsRouter = (pool) => {
       response.status(500).json({ message: 'Erro ao buscar credenciais.' })
     }
   })
+
+  // PUT - Apenas admin pode escrever
+  router.use(authenticate, authorizeAdmin)
 
   router.put('/', async (request, response) => {
     try {
