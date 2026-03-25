@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { SendHorizontal, Wallet, Lock, UserPlus, Info } from 'lucide-react'
+import { SendHorizontal, Wallet, Lock, UserPlus, Info, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
@@ -33,6 +33,7 @@ export function AreaConsultorPage() {
   const [responseDrafts, setResponseDrafts] = useState({})
   const [profileDraft, setProfileDraft] = useState(null)
   const [pendingVideoSessions, setPendingVideoSessions] = useState([])
+  const [rejectModal, setRejectModal] = useState(null)
 
   // Polling para novas chamadas de v\u00eddeo
   useEffect(() => {
@@ -62,6 +63,24 @@ export function AreaConsultorPage() {
   const formatInitialCurrency = (val) => {
     const num = Number(val) || 0
     return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+
+  const handleRejectVideoCall = async (sessionId) => {
+    try {
+      const res = await fetch(`/api/video-sessions/${sessionId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'rejected' })
+      })
+      if (res.ok) {
+        setPendingVideoSessions(prev => prev.filter(s => s.id !== sessionId))
+        setRejectModal(null)
+      } else {
+        setPanelNotice('Erro ao rejeitar chamada.')
+      }
+    } catch (e) {
+      setPanelNotice('Erro ao rejeitar chamada.')
+    }
   }
 
   // Atualizar o consultor selecionado quando o perfil carregar
@@ -343,12 +362,20 @@ export function AreaConsultorPage() {
                   <p className="text-sm text-amber-50">Cliente: <strong className="text-mystic-goldSoft">{session.userName}</strong></p>
                   <p className="text-xs text-ethereal-silver/80">Solicitado agora pouco</p>
                 </div>
-                <button
-                  onClick={() => window.open(`/sala/${session.id}`, '_blank')}
-                  className="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110"
-                >
-                  Entrar na Sala
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setRejectModal(session)}
+                    className="flex items-center gap-2 rounded-lg border border-red-400/50 bg-red-500/10 px-3 py-2 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
+                  >
+                    Recusar
+                  </button>
+                  <button
+                    onClick={() => window.open(`/sala/${session.id}`, '_blank')}
+                    className="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110"
+                  >
+                    Entrar na Sala
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -632,6 +659,36 @@ export function AreaConsultorPage() {
           </p>
         )}
       </GlassCard>
+
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
+            <div className="mb-4 flex items-center justify-center text-amber-400">
+              <XCircle size={48} />
+            </div>
+            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">
+              Recusar chamada?
+            </h3>
+            <p className="mb-6 text-center text-amber-100/80">
+              Tem certeza que deseja recusar a chamada de <strong>{rejectModal.userName}</strong>? O cliente será notificado.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => handleRejectVideoCall(rejectModal.id)}
+                className="w-full rounded-lg bg-red-600/90 py-3 font-bold text-white transition hover:bg-red-500"
+              >
+                Sim, recusar
+              </button>
+              <button
+                onClick={() => setRejectModal(null)}
+                className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
+              >
+                Voltar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageShell>
   )
 }
