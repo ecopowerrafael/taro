@@ -21,6 +21,14 @@ export function VideoRoomPage() {
   const callFrameRef = useRef(null)
   const containerRef = useRef(null)
 
+  const waitForContainer = useCallback(async () => {
+    for (let i = 0; i < 40; i += 1) {
+      if (containerRef.current) return containerRef.current
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+    throw new Error('Container do vídeo não ficou pronto a tempo.')
+  }, [])
+
   const formatElapsed = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
     const secs = String(seconds % 60).padStart(2, '0')
@@ -121,7 +129,15 @@ export function VideoRoomPage() {
   }, [session, isCallActive, sessionId, token, joinCall])
 
   const joinCall = useCallback(async (sessionData) => {
-    if (!containerRef.current) return
+    let container = null
+    try {
+      container = await waitForContainer()
+    } catch (err) {
+      console.error(err)
+      setSystemNotice('Erro ao preparar a sala de vídeo. Tente novamente.')
+      setIsCallActive(false)
+      return
+    }
     
     // Marcar sessão como ativa no DB se ainda não estiver
     if (sessionData.status !== 'active') {
@@ -132,7 +148,29 @@ export function VideoRoomPage() {
       })
     }
 
-    const callFrame = DailyIframe.createFrame(containerRef.current, {
+    if (callFrameRef.current) {
+      try {
+        await callFrameRef.current.join({
+          url: sessionData.roomUrl,
+          token: sessionData.dailyToken,
+        })
+        setIsCallActive(true)
+        setCallStartedAt((prev) => prev ?? Date.now())
+        return
+      } catch (e) {
+        console.error('Erro ao reentrar na sala do Daily', e)
+        setSystemNotice('Erro ao conectar na sala de vídeo.')
+        setIsCallActive(false)
+        return
+      }
+    }
+
+    container.innerHTML = ''
+    // Garante que o container tem dimensões antes de criar o iframe
+    container.style.display = 'block'
+    container.style.position = 'relative'
+    
+    const callFrame = DailyIframe.createFrame(container, {
       showLeaveButton: false,
       showPrejoinUI: false,
       iframeStyle: {
@@ -168,8 +206,9 @@ export function VideoRoomPage() {
     } catch (e) {
       console.error('Erro ao entrar na sala do Daily', e)
       setSystemNotice('Erro ao conectar na sala de vídeo.')
+      setIsCallActive(false)
     }
-  }, [billing, sessionId, setSystemNotice, token, handleLeaveCall])
+  }, [billing, sessionId, setSystemNotice, token, handleLeaveCall, waitForContainer])
 
   const handleStartByConsultant = () => {
     // Para o container ser renderizado e a div ficar "block" primeiro,
@@ -258,7 +297,7 @@ export function VideoRoomPage() {
     <PageShell title={`Consulta com ${session.consultantName}`} subtitle="Sessão de Vídeo Privada">
       <div className="mx-auto w-full max-w-4xl">
         <div 
-          className={`relative overflow-hidden rounded-2xl border border-mystic-gold/30 bg-black/50 shadow-[0_0_30px_rgba(197,160,89,0.15)] ${isCallActive ? 'h-[70vh]' : 'h-auto p-8 text-center'}`}
+          className={`relative z-0 overflow-hidden rounded-2xl border border-mystic-gold/30 bg-transparent ${isCallActive ? 'h-[70vh]' : 'h-auto bg-black/50 p-8 text-center'}`}
         >
           {isCallActive && (
             <div className="absolute left-4 top-4 right-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-mystic-gold/30 bg-black/60 px-4 py-3 backdrop-blur-md">
@@ -325,7 +364,7 @@ export function VideoRoomPage() {
           )}
 
           {/* Daily.co Iframe Container */}
-          <div ref={containerRef} className={`h-full w-full min-h-[400px] ${isCallActive ? 'block' : 'hidden'}`} />
+          <div ref={containerRef} className={`relative ${isCallActive ? 'block h-full w-full' : 'hidden'}`} style={{ display: isCallActive ? 'block' : 'none' }} />
           
           {isCallActive && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
