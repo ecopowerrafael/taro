@@ -254,10 +254,14 @@ export function VideoRoomPage() {
         return
       }
       
+      // Garantir que pricePerMinute é sempre um número válido para evitar ReferenceError
+      const safePrice = parseFloat(sessionData.pricePerMinute) || 0
+      console.log('Preço seguro para faturamento:', safePrice)
+      
       billing.startSession({
         consultantId: sessionData.consultantId,
         consultantName: sessionData.consultantName,
-        pricePerMinute: sessionData.pricePerMinute || 0
+        pricePerMinute: safePrice
       })
     }
 

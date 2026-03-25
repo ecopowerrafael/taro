@@ -27,6 +27,9 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance })
 
   const startSession = useCallback(
     ({ consultantId, consultantName, pricePerMinute: minutePrice }) => {
+      // Garantir que minutePrice é sempre um número válido
+      const validPrice = typeof minutePrice === 'number' && !isNaN(minutePrice) ? minutePrice : 0
+      
       if (!hasSufficientBalance) {
         onInsufficientBalance?.()
         return false
@@ -37,7 +40,7 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance })
       setActiveSession({
         consultantId,
         consultantName,
-        pricePerMinute: minutePrice,
+        pricePerMinute: validPrice,
       })
       setIsConnected(true)
       return true
