@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { SendHorizontal, Wallet, Lock, UserPlus, Info, XCircle } from 'lucide-react'
+import { SendHorizontal, Wallet, Lock, UserPlus, Info } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
@@ -8,6 +8,7 @@ import { ConsultantAvailabilityService } from '../services/consultantAvailabilit
 
 export function AreaConsultorPage() {
   const {
+    profile,
     isConsultant,
     isAdmin,
     userConsultantProfile,
@@ -46,8 +47,8 @@ export function AreaConsultorPage() {
           const data = await res.json()
           setPendingVideoSessions(data)
         }
-      } catch {
-        void 0
+      } catch (e) {
+        // ignora
       }
     }
 
@@ -84,6 +85,44 @@ export function AreaConsultorPage() {
   }, [userConsultantProfile, isAdmin, consultants])
 
   const selectedConsultant = consultants.find((consultant) => consultant.id === selectedConsultantId)
+
+  // Renderização condicional para quem não é consultor
+  if (!authLoading && !isConsultant && !isAdmin) {
+    return (
+      <PageShell title="Área do Consultor" subtitle="Painel Restrito">
+        <div className="flex flex-col items-center justify-center py-12">
+          <GlassCard className="max-w-md text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="rounded-full bg-mystic-gold/10 p-6 text-mystic-gold">
+                <Lock size={48} />
+              </div>
+            </div>
+            <h2 className="mb-4 font-display text-3xl text-mystic-goldSoft">Acesso Restrito</h2>
+            <p className="mb-8 text-amber-100/70">
+              Esta área é exclusiva para nossos consultores. Se você é um tarólogo experiente, 
+              venha fazer parte do nosso time!
+            </p>
+            <div className="flex flex-col gap-4">
+              <Link
+                to="/seja-consultor"
+                className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 px-8 py-3 font-bold text-black transition hover:brightness-110"
+              >
+                <UserPlus size={20} />
+                Torne-se um Consultor
+              </Link>
+              <Link
+                to="/"
+                className="text-sm text-amber-100/50 hover:text-mystic-goldSoft transition"
+              >
+                Voltar para a Home
+              </Link>
+            </div>
+          </GlassCard>
+        </div>
+      </PageShell>
+    )
+  }
+
   const isSelectedConsultantOnline = selectedConsultant?.status === 'Online'
   const wallet = consultantWallets[selectedConsultantId] ?? {
     availableBalance: 0,
@@ -122,43 +161,6 @@ export function AreaConsultorPage() {
       void availabilityService.goOffline()
     }
   }, [availabilityService])
-
-  // Renderização condicional para quem não é consultor
-  if (!authLoading && !isConsultant && !isAdmin) {
-    return (
-      <PageShell title="Área do Consultor" subtitle="Painel Restrito">
-        <div className="flex flex-col items-center justify-center py-12">
-          <GlassCard className="max-w-md text-center">
-            <div className="mb-6 flex justify-center">
-              <div className="rounded-full bg-mystic-gold/10 p-6 text-mystic-gold">
-                <Lock size={48} />
-              </div>
-            </div>
-            <h2 className="mb-4 font-display text-3xl text-mystic-goldSoft">Acesso Restrito</h2>
-            <p className="mb-8 text-amber-100/70">
-              Esta área é exclusiva para nossos consultores. Se você é um tarólogo experiente, 
-              venha fazer parte do nosso time!
-            </p>
-            <div className="flex flex-col gap-4">
-              <Link
-                to="/seja-consultor"
-                className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 px-8 py-3 font-bold text-black transition hover:brightness-110"
-              >
-                <UserPlus size={20} />
-                Torne-se um Consultor
-              </Link>
-              <Link
-                to="/"
-                className="text-sm text-amber-100/50 hover:text-mystic-goldSoft transition"
-              >
-                Voltar para a Home
-              </Link>
-            </div>
-          </GlassCard>
-        </div>
-      </PageShell>
-    )
-  }
 
   const handleSelectConsultant = async (consultantId) => {
     // Apenas permitir trocar se for admin
@@ -229,59 +231,24 @@ export function AreaConsultorPage() {
     }
   }
 
-  const handleRejectVideoSession = async (videoSessionId) => {
-    try {
-      await fetch(`/api/video-sessions/${videoSessionId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: 'rejected' }),
-      })
-    } catch {
-      setPanelNotice('Não foi possível recusar a chamada no momento.')
-    } finally {
-      setPendingVideoSessions((prev) => prev.filter((item) => item.id !== videoSessionId))
-      availabilityService.stopIncomingCallAlert()
-      await availabilityService.closeIncomingNotifications()
-      setPanelNotice('Chamada recusada.')
-    }
+  const handleSilenceIncomingAlert = async () => {
+    availabilityService.stopIncomingCallAlert()
+    await availabilityService.closeIncomingNotifications()
+    setPanelNotice('Alerta de chamada silenciado.')
   }
 
-  const handleResponseChange = (requestId, index, value) => {
-    setResponseDrafts((prev) => {
-      const existing = Array.isArray(prev[requestId]) ? prev[requestId] : []
-      const next = [...existing]
-      next[index] = value
-      return { ...prev, [requestId]: next }
-    })
-  }
-
-  const handleSubmitResponse = async (requestId) => {
-    const request = pendingRequests.find((item) => item.id === requestId)
-    if (!request) {
-      setPanelNotice('Solicitação não encontrada.')
+  const handleRespond = (requestId) => {
+    const answerSummary = (responseDrafts[requestId] ?? '').trim()
+    if (!answerSummary) {
+      setPanelNotice('Preencha uma resposta antes de concluir o atendimento.')
       return
     }
-
-    const answers = Array.isArray(responseDrafts[requestId]) ? responseDrafts[requestId] : []
-    const missing = request.entries.some((_, index) => !(answers[index] ?? '').trim())
-    if (missing) {
-      setPanelNotice('Responda todas as perguntas antes de enviar.')
-      return
-    }
-
-    const answerSummary = request.entries
-      .map((entry, index) => `P${index + 1}: ${entry.question}\nR: ${(answers[index] ?? '').trim()}`)
-      .join('\n\n')
-
-    await respondToQuestionRequest({
+    respondToQuestionRequest({
       requestId,
       consultantId: selectedConsultantId,
       answerSummary,
     })
-    setResponseDrafts((prev) => ({ ...prev, [requestId]: [] }))
+    setResponseDrafts((prev) => ({ ...prev, [requestId]: '' }))
     setPanelNotice('Resposta enviada e valor líquido creditado na carteira do consultor.')
   }
 
@@ -376,23 +343,12 @@ export function AreaConsultorPage() {
                   <p className="text-sm text-amber-50">Cliente: <strong className="text-mystic-goldSoft">{session.userName}</strong></p>
                   <p className="text-xs text-ethereal-silver/80">Solicitado agora pouco</p>
                 </div>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    onClick={() => window.open(`/sala/${session.id}`, '_blank')}
-                    className="flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110"
-                  >
-                    Entrar na Sala
-                  </button>
-                  <button
-                    onClick={() => {
-                      void handleRejectVideoSession(session.id)
-                    }}
-                    className="flex items-center justify-center gap-2 rounded-lg border border-red-500/60 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-200 transition hover:bg-red-500/20"
-                  >
-                    <XCircle size={16} />
-                    Recusar
-                  </button>
-                </div>
+                <button
+                  onClick={() => window.open(`/sala/${session.id}`, '_blank')}
+                  className="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110"
+                >
+                  Entrar na Sala
+                </button>
               </article>
             ))}
           </div>

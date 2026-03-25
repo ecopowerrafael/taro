@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { getZodiacSign } from '../utils/zodiac'
 import { useBilling } from '../hooks/useBilling'
+import { createRechargePreference } from '../services/mercadoPagoMock'
 import { PlatformContext } from './platform-context'
 
 const horoscopeBySign = {
@@ -221,8 +222,9 @@ export function PlatformProvider({ children }) {
     roomName: 'hello',
   })
   const [questionRequests, setQuestionRequests] = useState([])
+  const [videoSessions, setVideoSessions] = useState([])
   const [consultantWallets, setConsultantWallets] = useState(initialConsultantWallets)
-  const [paymentResult, _setPaymentResult] = useState(null)
+  const [paymentResult, setPaymentResult] = useState(null)
   const [systemNotice, setSystemNotice] = useState('')
   const mpCredentialsRef = useRef(mpCredentials)
   const dailyCredentialsRef = useRef(dailyCredentials)
@@ -244,9 +246,6 @@ export function PlatformProvider({ children }) {
       const registration = await navigator.serviceWorker.register('/sw.js')
       const publicVapidKeyRes = await fetch('/api/push/public-key')
       const publicVapidKey = await publicVapidKeyRes.text()
-      if (!publicVapidKeyRes.ok || !publicVapidKey.trim()) {
-        return
-      }
 
       // Convert VAPID key to Uint8Array
       const padding = '='.repeat((4 - publicVapidKey.length % 4) % 4)
@@ -273,16 +272,20 @@ export function PlatformProvider({ children }) {
   }
 
   useEffect(() => {
-    // Temporarily disabled push subscription to debug black screen
-    // if (profile?.id) {
-    //   registerPushSubscription(profile.id)
-    // }
+    if (profile?.id) {
+      registerPushSubscription(profile.id)
+    }
   }, [profile?.id])
 
   const debitMinutes = async (minutes) => {
     // In a real app, this would be an API call
     // For now, let's keep it local but it should ideally sync with DB
     console.log(`Debitando ${minutes} minutos`)
+  }
+
+  const creditMinutes = async (minutes) => {
+    // In a real app, this would be an API call
+    console.log(`Creditando ${minutes} minutos`)
   }
 
   const ensureWalletsForConsultants = (consultantList) => {
@@ -310,7 +313,6 @@ export function PlatformProvider({ children }) {
     onInsufficientBalance: () => {
       setSystemNotice('Saldo insuficiente. A chamada foi encerrada automaticamente.')
     },
-    testMode: true, // modo simplificado de teste: menos atualizações e cálculo inteiro
   })
 
   const roomUrl = useMemo(() => {
@@ -326,6 +328,20 @@ export function PlatformProvider({ children }) {
   useEffect(() => {
     dailyCredentialsRef.current = dailyCredentials
   }, [dailyCredentials])
+
+  const persistCredentialsOnApi = async (nextMpCredentials, nextDailyCredentials) => {
+    const response = await fetch(buildApiUrl('/api/credentials'), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        mpCredentials: nextMpCredentials,
+        dailyCredentials: nextDailyCredentials,
+      }),
+    })
+    return response.ok
+  }
 
   const setMpCredentials = (updater) => {
     setMpCredentialsState((prev) => {
@@ -800,11 +816,24 @@ export function PlatformProvider({ children }) {
 
   const rechargePackage = async (pack) => {
     const amount = pack.promoPrice ?? pack.price
-    const ok = await requestRecharge(amount, pack.minutes, 'card')
-    if (ok) {
-      setSystemNotice('Solicitação enviada! Após a confirmação, seu saldo será liberado pelo administrador.')
+    /* 
+    // Removendo o mock do Mercado Pago para teste direto
+    const response = await createRechargePreference({
+      packageId: pack.id,
+      minutes: pack.minutes,
+      amount,
+      customerEmail: profile?.email ?? 'guest@taro.com',
+    })
+    setPaymentResult(response)
+    */
+    
+    // Chamada real para atualizar o saldo no banco de dados
+    const result = await rechargeMinutes(pack.minutes)
+    
+    if (result.ok) {
+      setSystemNotice(`Recarga confirmada: +${pack.minutes} minutos por R$ ${amount.toFixed(2)}.`)
     } else {
-      setSystemNotice('Não foi possível criar a solicitação de recarga.')
+      setSystemNotice(result.message || 'Erro ao processar recarga.')
     }
   }
 
@@ -1091,10 +1120,12 @@ export function PlatformProvider({ children }) {
     updateConsultantByAdmin,
     updateConsultantAvailability,
     rechargePackage,
+    savePlatformCredentials,
     rechargeRequests,
     fetchPendingRecharges,
     requestRecharge,
     processRechargeAction,
+    token,
   }
 
   return <PlatformContext.Provider value={value}>{children}</PlatformContext.Provider>

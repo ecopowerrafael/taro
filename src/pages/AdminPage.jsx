@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { AdminPanel } from '../components/AdminPanel'
+import { GlassCard } from '../components/GlassCard'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
 
@@ -28,7 +29,7 @@ export function AdminPage() {
 
   useEffect(() => {
     fetchPendingRecharges()
-  }, [fetchPendingRecharges])
+  }, [])
 
   return (
     <PageShell title="Painel Administrativo" subtitle="Gestão de consultores, finanças e plataforma.">

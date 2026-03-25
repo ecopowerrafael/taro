@@ -3,6 +3,7 @@ import { AlertTriangle, Wallet, Video } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { ConsultantMarketplace } from '../components/ConsultantMarketplace'
 import { QuestionFlowModal } from '../components/QuestionFlowModal'
+import { VideoConsultationRoom } from '../components/VideoConsultationRoom'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
 
@@ -13,6 +14,11 @@ export function ConsultoresPage() {
     statusFilter,
     setStatusFilter,
     selectConsultant,
+    selectedConsultant,
+    billing,
+    roomUrl,
+    connectSession,
+    disconnectSession,
     systemNotice,
     setSystemNotice,
     profile,
@@ -28,7 +34,7 @@ export function ConsultoresPage() {
   })
 
   // Novos estados para os modais
-  const [insufficientBalanceModal, setInsufficientBalanceModal] = useState({ isOpen: false, minRequiredMinutes: 0 })
+  const [insufficientBalanceModal, setInsufficientBalanceModal] = useState({ isOpen: false, minRequired: 0 })
   const [confirmCallModal, setConfirmCallModal] = useState({ isOpen: false, consultant: null })
 
   const handleChooseService = (consultant, mode) => {
@@ -38,9 +44,9 @@ export function ConsultoresPage() {
         return
       }
 
-      const minRequiredMinutes = 5
-      if (minutesBalance < minRequiredMinutes) {
-        setInsufficientBalanceModal({ isOpen: true, minRequiredMinutes })
+      const minRequired = consultant.pricePerMinute * 5
+      if (minutesBalance < minRequired) {
+        setInsufficientBalanceModal({ isOpen: true, minRequired })
         return
       }
 
@@ -167,7 +173,7 @@ export function ConsultoresPage() {
               Saldo Insuficiente
             </h3>
             <p className="mb-6 text-center text-amber-100/80">
-              Você precisa ter saldo para no mínimo {insufficientBalanceModal.minRequiredMinutes} minutos para iniciar esta chamada de vídeo.
+              Você precisa ter saldo para no mínimo 5 minutos (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para iniciar esta chamada de vídeo.
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -177,7 +183,7 @@ export function ConsultoresPage() {
                 Faça uma recarga
               </button>
               <button
-                onClick={() => setInsufficientBalanceModal({ isOpen: false, minRequiredMinutes: 0 })}
+                onClick={() => setInsufficientBalanceModal({ isOpen: false, minRequired: 0 })}
                 className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
               >
                 Voltar

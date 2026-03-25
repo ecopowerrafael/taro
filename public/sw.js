@@ -24,7 +24,7 @@ self.addEventListener('notificationclick', function(event) {
   const urlToOpen = event.notification.data.url || '/'
   
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
       for (let i = 0; i < clientList.length; i++) {
         let client = clientList[i]
         if (client.url.includes('appastria.online') && 'focus' in client) {
@@ -32,8 +32,8 @@ self.addEventListener('notificationclick', function(event) {
           return client.focus()
         }
       }
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(urlToOpen)
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen)
       }
     })
   )
