@@ -270,7 +270,7 @@ export const createVideoSessionsRouter = (pool) => {
     const { sessionId } = request.params
     const { status } = request.body
 
-    if (!['active', 'finished'].includes(status)) {
+    if (!['active', 'finished', 'cancelled', 'rejected'].includes(status)) {
       return response.status(400).json({ message: 'Status inválido.' })
     }
 
@@ -279,6 +279,7 @@ export const createVideoSessionsRouter = (pool) => {
       await pool.query(`UPDATE video_sessions SET status = ?, ${timeField} = NOW() WHERE id = ?`, [status, sessionId])
       response.json({ ok: true })
     } catch (error) {
+      console.error('Erro ao atualizar status da sessão:', error)
       response.status(500).json({ message: 'Erro ao atualizar status da sessão.' })
     }
   })

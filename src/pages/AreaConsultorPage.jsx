@@ -46,7 +46,26 @@ export function AreaConsultorPage() {
         })
         if (res.ok) {
           const data = await res.json()
-          setPendingVideoSessions(data)
+
+          const now = Date.now()
+          const filtered = await Promise.all(
+            data.map(async (session) => {
+              const createdAt = new Date(session.createdAt).getTime()
+              const ageMs = now - createdAt
+              if (ageMs > 15 * 60 * 1000) {
+                // Remove sessões antigas automaticamente e marca como cancelled
+                await fetch(`/api/video-sessions/${session.id}/status`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ status: 'cancelled' })
+                }).catch(() => {})
+                return null
+              }
+              return session
+            }),
+          )
+
+          setPendingVideoSessions(filtered.filter(Boolean))
         }
       } catch (e) {
         // ignora
