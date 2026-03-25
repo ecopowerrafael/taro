@@ -176,6 +176,32 @@ export function useAuth() {
     }
   }
 
+  const debitMinutes = async (minutes) => {
+    try {
+      const response = await fetch(buildApiUrl('/api/auth/debit-minutes'), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ minutes }),
+        signal: AbortSignal.timeout(10000)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setUser(prev => ({ ...prev, minutesBalance: data.minutesBalance }))
+        return { ok: true, minutesBalance: data.minutesBalance }
+      } else {
+        const data = await response.json()
+        return { ok: false, message: data.message || 'Erro ao debitar minutos.' }
+      }
+    } catch (error) {
+      console.error('Erro ao debitar minutos:', error)
+      return { ok: false, message: 'Falha na conexão com o servidor.' }
+    }
+  }
+
   return {
     user,
     token,
@@ -186,6 +212,7 @@ export function useAuth() {
     logout,
     updateProfile,
     rechargeMinutes,
+    debitMinutes,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
     isConsultant: user?.role === 'consultant'

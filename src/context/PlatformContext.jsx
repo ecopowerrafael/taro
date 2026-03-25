@@ -197,6 +197,8 @@ export function PlatformProvider({ children }) {
     registerConsultant,
     logout,
     updateProfile,
+    rechargeMinutes,
+    debitMinutes: debitMinutesFromAuth,
     isAuthenticated,
     isAdmin,
     isConsultant,
@@ -284,28 +286,12 @@ export function PlatformProvider({ children }) {
   }, [profile?.id])
 
   const debitMinutes = async (minutes) => {
-    try {
-      const response = await fetch(buildApiUrl('/api/auth/debit-minutes'), {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ minutes }),
-      })
-      if (!response.ok) {
-        const error = await response.json()
-        setSystemNotice(error.message || 'Erro ao debitar minutos.')
-        return false
-      }
-      const data = await response.json()
-      // Atualiza perfil com novo saldo
-      return true
-    } catch (error) {
-      console.error('Erro ao debitar minutos:', error)
-      setSystemNotice('Falha de conexão ao debitar minutos.')
+    const result = await debitMinutesFromAuth(minutes)
+    if (!result.ok) {
+      setSystemNotice(result.message || 'Erro ao debitar minutos.')
       return false
     }
+    return true
   }
 
   const creditMinutes = async (minutes) => {
