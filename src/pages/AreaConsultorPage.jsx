@@ -65,6 +65,19 @@ export function AreaConsultorPage() {
     return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
+  const formatRelativeTime = (createdAt) => {
+    if (!createdAt) return 'Solicitado há poucos instantes'
+    const created = new Date(createdAt)
+    const diffMs = Date.now() - created.getTime()
+    const diffSec = Math.floor(diffMs / 1000)
+
+    if (diffSec < 60) return `Solicitado há ${diffSec}s`
+    const diffMin = Math.floor(diffSec / 60)
+    if (diffMin < 60) return `Solicitado há ${diffMin} min`
+    const diffH = Math.floor(diffMin / 60)
+    return `Solicitado há ${diffH} h`
+  }
+
   const handleRejectVideoCall = async (sessionId) => {
     try {
       const res = await fetch(`/api/video-sessions/${sessionId}/status`, {
@@ -360,7 +373,7 @@ export function AreaConsultorPage() {
               <article key={session.id} className="flex items-center justify-between rounded-xl border border-mystic-gold/35 bg-black/30 p-4">
                 <div>
                   <p className="text-sm text-amber-50">Cliente: <strong className="text-mystic-goldSoft">{session.userName}</strong></p>
-                  <p className="text-xs text-ethereal-silver/80">Solicitado agora pouco</p>
+                  <p className="text-xs text-ethereal-silver/80">{formatRelativeTime(session.createdAt)}</p>
                 </div>
                 <div className="flex gap-2">
                   <button
