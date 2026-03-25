@@ -32,7 +32,7 @@ export function PageShell({ title, subtitle, children }) {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-mystic-gradient px-4 py-8 pb-28 text-amber-50 md:px-8 md:pb-8">
-      <StarField />
+      {/* <StarField /> */}
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-6">
         <header className="rounded-xl2 border border-mystic-gold/40 bg-mystic-purple/55 px-6 py-5 shadow-glow backdrop-blur-md">
           <div className="flex flex-wrap items-center justify-between gap-3">

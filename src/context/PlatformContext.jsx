@@ -273,9 +273,10 @@ export function PlatformProvider({ children }) {
   }
 
   useEffect(() => {
-    if (profile?.id) {
-      registerPushSubscription(profile.id)
-    }
+    // Temporarily disabled push subscription to debug black screen
+    // if (profile?.id) {
+    //   registerPushSubscription(profile.id)
+    // }
   }, [profile?.id])
 
   const debitMinutes = async (minutes) => {
