@@ -148,7 +148,13 @@ export const createVideoSessionsRouter = (pool) => {
         })
       }
 
-      response.status(201).json({ sessionId, roomUrl })
+      response.status(201).json({ 
+        sessionId, 
+        roomUrl,
+        consultantId: consultant.id,
+        consultantName: consultant.name,
+        pricePerMinute: consultant.pricePerMinute || 0
+      })
 
     } catch (error) {
       console.error('Erro ao criar sessão de vídeo:', error)
