@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
 import { usePlatformContext } from '../context/platform-context'
-import { ConsultantAvailabilityService } from '../services/consultantAvailabilityService'
+import { notificationService } from '../services/ConsultantNotificationService'
 
 export function AreaConsultorPage() {
   const {
@@ -77,7 +77,6 @@ export function AreaConsultorPage() {
     return () => clearInterval(interval)
   }, [token, isAdmin])
   const [referenceTimestamp] = useState(() => Date.now())
-  const availabilityService = useMemo(() => new ConsultantAvailabilityService(), [])
 
   const formatInitialCurrency = (val) => {
     const num = Number(val) || 0
@@ -209,9 +208,9 @@ export function AreaConsultorPage() {
 
   useEffect(() => {
     return () => {
-      void availabilityService.goOffline()
+      notificationService.disconnect()
     }
-  }, [availabilityService])
+  }, [])
 
   const handleSelectConsultant = async (consultantId) => {
     // Apenas permitir trocar se for admin
@@ -221,7 +220,7 @@ export function AreaConsultorPage() {
     if (previousConsultantId && previousConsultantId !== consultantId) {
       const previousConsultant = consultants.find((item) => item.id === previousConsultantId)
       if (previousConsultant?.status === 'Online') {
-        await availabilityService.goOffline()
+        notificationService.disconnect()
         updateConsultantAvailability(previousConsultantId, false)
       }
     }
@@ -250,57 +249,73 @@ export function AreaConsultorPage() {
 
     try {
       if (isSelectedConsultantOnline) {
-        await availabilityService.goOffline()
+        notificationService.disconnect()
         updateConsultantAvailability(selectedConsultantId, false)
         setPanelNotice('Você ficou offline e não receberá novas chamadas.')
         return
       }
 
-      // Força a requisição de permissão de notificação no mobile também
-      if ('Notification' in window && Notification.permission !== 'granted') {
-        await Notification.requestPermission()
-      }
-
-      await availabilityService.goOnline({
-        consultantId: selectedConsultantId,
-        consultantName: selectedConsultant.name,
-        onIncomingCall: (payload) => {
-          setPanelNotice(
-            `Chamada recebida de ${payload?.callerName ?? 'cliente'}. Toque e notificação ativados.`,
-          )
-        },
-        onError: (message) => {
-          setPanelNotice(message)
-        },
+      notificationService.connect(selectedConsultantId, (data) => {
+        setPanelNotice(
+          `Chamada recebida de ${data?.customerName ?? 'cliente'} (sessão ${data?.sessionId}).`,
+        )
       })
+
       updateConsultantAvailability(selectedConsultantId, true)
-      setPanelNotice('Você ficou online. Wake Lock e escuta de chamadas foram ativados.')
-    } catch {
-      await availabilityService.goOffline()
+      setPanelNotice('Você ficou online. Aguardando chamadas de vídeo.')
+    } catch (error) {
+      notificationService.disconnect()
       updateConsultantAvailability(selectedConsultantId, false)
       setPanelNotice('Não foi possível ativar o modo online no momento.')
+      console.error('[AreaConsultorPage] erro ao alterar disponibilidade:', error)
     }
   }
 
   const handleSilenceIncomingAlert = async () => {
-    availabilityService.stopIncomingCallAlert()
-    await availabilityService.closeIncomingNotifications()
+    notificationService.stopRingtone()
     setPanelNotice('Alerta de chamada silenciado.')
   }
 
-  const handleRespond = (requestId) => {
-    const answerSummary = (responseDrafts[requestId] ?? '').trim()
-    if (!answerSummary) {
-      setPanelNotice('Preencha uma resposta antes de concluir o atendimento.')
+  const handleResponseChange = (requestId, index, value) => {
+    setResponseDrafts((prev) => {
+      const draft = Array.isArray(prev[requestId]) ? [...prev[requestId]] : []
+      draft[index] = value
+      return { ...prev, [requestId]: draft }
+    })
+  }
+
+  const handleSubmitResponse = async (requestId) => {
+    const request = questionRequests.find((item) => item.id === requestId)
+    if (!request) {
+      setPanelNotice('Solicitação não encontrada.')
       return
     }
-    respondToQuestionRequest({
-      requestId,
-      consultantId: selectedConsultantId,
-      answerSummary,
+
+    const drafts = responseDrafts[requestId] ?? []
+    if (!Array.isArray(drafts) || drafts.length === 0) {
+      setPanelNotice('Preencha as respostas antes de concluir o atendimento.')
+      return
+    }
+
+    const filledAnswers = request.entries.map((entry, i) => {
+      const answerText = (drafts[i] ?? '').trim()
+      return `P${i + 1}: ${answerText || '[Sem resposta]'}`
     })
-    setResponseDrafts((prev) => ({ ...prev, [requestId]: '' }))
-    setPanelNotice('Resposta enviada e valor líquido creditado na carteira do consultor.')
+
+    const answerSummary = filledAnswers.join('\n')
+
+    try {
+      await respondToQuestionRequest({
+        requestId,
+        consultantId: selectedConsultantId,
+        answerSummary,
+      })
+      setResponseDrafts((prev) => ({ ...prev, [requestId]: [] }))
+      setPanelNotice('Resposta enviada e valor líquido creditado na carteira do consultor.')
+    } catch (error) {
+      console.error('[AreaConsultorPage] Erro ao responder pergunta:', error)
+      setPanelNotice('Falha ao responder a solicitação. Tente novamente.')
+    }
   }
 
   const handleSavePix = () => {
@@ -476,22 +491,26 @@ export function AreaConsultorPage() {
                 <p>Nascimento: {request.customerBirthDate || 'Não informado'} • Signo: {request.customerZodiac || 'Não informado'}</p>
               </div>
               <div className="mt-4 grid gap-4 border-t border-mystic-gold/20 pt-4">
-                {request.entries.map((entry, index) => (
-                  <div key={index} className="grid gap-2">
-                    <p className="text-sm text-amber-50">
-                      <span className="font-bold text-mystic-goldSoft">P{index + 1}: </span>
-                      {entry.question}
-                    </p>
-                    <textarea
-                      placeholder={`Digite a resposta para a Pergunta ${index + 1}...`}
-                      value={responseDrafts[request.id]?.[index] ?? ''}
-                      onChange={(event) =>
-                        handleResponseChange(request.id, index, event.target.value)
-                      }
-                      className="min-h-[80px] w-full resize-y rounded-lg border border-mystic-gold/35 bg-black/35 p-3 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                    />
-                  </div>
-                ))}
+                {request.entries.map((entry, index) => {
+                  const questionText =
+                    entry.question || entry.text || (entry.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada')
+                  return (
+                    <div key={index} className="grid gap-2">
+                      <p className="text-sm text-amber-50">
+                        <span className="font-bold text-mystic-goldSoft">P{index + 1}: </span>
+                        {questionText}
+                      </p>
+                      <textarea
+                        placeholder={`Digite a resposta para a Pergunta ${index + 1}...`}
+                        value={responseDrafts[request.id]?.[index] ?? ''}
+                        onChange={(event) =>
+                          handleResponseChange(request.id, index, event.target.value)
+                        }
+                        className="min-h-[80px] w-full resize-y rounded-lg border border-mystic-gold/35 bg-black/35 p-3 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                      />
+                    </div>
+                  )
+                })}
               </div>
               <div className="mt-4 flex justify-end">
                 <button

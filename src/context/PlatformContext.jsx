@@ -150,7 +150,13 @@ const normalizeQuestionRequest = (request) => ({
   packagePrice: Number(request.packagePrice) || 0,
   commissionValue: Number(request.commissionValue) || 0,
   consultantNetValue: Number(request.consultantNetValue) || 0,
-  entries: Array.isArray(request.entries) ? request.entries : [],
+  entries: (Array.isArray(request.entries) ? request.entries : []).map((entry) => ({
+    ...entry,
+    question:
+      entry?.question ??
+      entry?.text ??
+      (entry?.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada'),
+  })),
   answerSummary: request.answerSummary ?? '',
 })
 
@@ -854,6 +860,10 @@ export function PlatformProvider({ children }) {
       id: `${Date.now()}_${index}`,
       type: entry.type,
       text: entry.text ?? '',
+      question:
+        entry?.question ??
+        entry?.text ??
+        (entry?.file?.name ? `Áudio: ${entry.file.name}` : ''),
       fileName: entry.file?.name ?? '',
       durationSeconds: entry.durationSeconds ?? 0,
     }))

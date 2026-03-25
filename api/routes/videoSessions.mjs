@@ -24,8 +24,8 @@ export const createVideoSessionsRouter = (pool) => {
       }
       const user = users[0]
 
-      // Obter informações do consultor
-      const [consultants] = await pool.query('SELECT id, name, email FROM consultants WHERE id = ?', [consultantId])
+      // Obter informações do consultor (incluindo userId para push/webpush)
+      const [consultants] = await pool.query('SELECT id, name, email, userId FROM consultants WHERE id = ?', [consultantId])
       if (consultants.length === 0) {
         return response.status(404).json({ message: 'Consultor não encontrado.' })
       }

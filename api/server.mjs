@@ -63,6 +63,13 @@ app.set('webpush', webpush)
 const pushSubscriptions = {}
 app.set('pushSubscriptions', pushSubscriptions)
 
+const initialCorsOptions = {
+  origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
+  credentials: true,
+}
+app.use(cors(initialCorsOptions))
+app.use(express.json({ limit: '4mb' }))
+
 // Rota para salvar a assinatura push
 app.post('/api/push/subscribe', (req, res) => {
   const { subscription, userId } = req.body
@@ -114,13 +121,6 @@ const port = Number(process.env.PORT || 3000)
 console.log('[API] __dirname:', __dirname)
 const distPath = path.join(__dirname, '..', 'dist')
 console.log('[API] distPath:', distPath)
-
-const corsOptions = {
-  origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
-  credentials: true
-}
-app.use(cors(corsOptions))
-app.use(express.json({ limit: '4mb' }))
 
 // Rota de diagnóstico ULTRA simples para ver se o Node subiu
 app.get('/health-check', (_req, res) => {

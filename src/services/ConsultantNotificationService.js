@@ -6,6 +6,7 @@ class ConsultantNotificationService {
     this.audio = null
     this.wakeLock = null
     this.consultantId = null
+    this.onIncomingCall = null
     this.isRinging = false
     this.setupAudio()
   }
@@ -48,10 +49,12 @@ class ConsultantNotificationService {
     return false
   }
 
-  connect(consultantId) {
+  connect(consultantId, onIncomingCall = null) {
     if (this.socket) return
 
     this.consultantId = consultantId
+    this.onIncomingCall = onIncomingCall
+
     // Conecta ao mesmo domínio/porta do servidor atual
     this.socket = io(window.location.origin)
 
@@ -64,10 +67,14 @@ class ConsultantNotificationService {
     this.socket.on('incoming_call', (data) => {
       this.playRingtone()
       this.showNotification(data)
+      if (typeof this.onIncomingCall === 'function') {
+        this.onIncomingCall(data)
+      }
     })
   }
 
   disconnect() {
+    this.onIncomingCall = null
     if (this.socket) {
       this.socket.disconnect()
       this.socket = null
