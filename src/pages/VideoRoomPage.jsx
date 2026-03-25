@@ -14,6 +14,7 @@ export function VideoRoomPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isCallActive, setIsCallActive] = useState(false)
+  const [dailyError, setDailyError] = useState('')
   const [callStartedAt, setCallStartedAt] = useState(null)
   const [localElapsedSeconds, setLocalElapsedSeconds] = useState(0)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
@@ -154,6 +155,7 @@ export function VideoRoomPage() {
   }, [session, isCallActive, sessionId, token, joinCall])
 
   const joinCall = useCallback(async (sessionData) => {
+    setDailyError('')
     console.log('joinCall iniciado com sessionData:', {
       roomUrl: sessionData.roomUrl,
       hasToken: !!sessionData.dailyToken,
@@ -173,6 +175,15 @@ export function VideoRoomPage() {
     if (!sessionData.roomUrl) {
       console.error('Erro: sessionData.roomUrl está vazio!')
       setSystemNotice('URL da sala não foi encontrada.')
+      setDailyError('Parâmetros de sala inválidos')
+      setIsCallActive(false)
+      return
+    }
+
+    if (!DailyIframe || typeof DailyIframe.createFrame !== 'function') {
+      console.error('DailyIframe não disponível:', DailyIframe)
+      setSystemNotice('Erro interno: serviço de vídeo não pôde ser carregado.')
+      setDailyError('Daily.co SDK não inicializado')
       setIsCallActive(false)
       return
     }
@@ -368,6 +379,19 @@ export function VideoRoomPage() {
           <p className="text-red-400">{error}</p>
           <button onClick={() => navigate('/')} className="mt-4 text-mystic-goldSoft underline">
             Voltar ao Início
+          </button>
+        </GlassCard>
+      </PageShell>
+    )
+  }
+
+  if (dailyError) {
+    return (
+      <PageShell title="Sala de Consulta" subtitle="Erro de vídeo">
+        <GlassCard className="text-center">
+          <p className="text-red-400">{dailyError}</p>
+          <button onClick={() => window.location.reload()} className="mt-4 text-mystic-goldSoft underline">
+            Recarregar e tentar de novo
           </button>
         </GlassCard>
       </PageShell>
