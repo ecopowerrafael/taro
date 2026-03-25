@@ -4,7 +4,6 @@ import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
 import { Loader2, Video, PhoneOff, Clock3, Wallet, XCircle } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
-import DailyIframe from '@daily-co/daily-js'
 
 export function VideoRoomPage() {
   const { sessionId } = useParams()
@@ -19,6 +18,7 @@ export function VideoRoomPage() {
   const [localElapsedSeconds, setLocalElapsedSeconds] = useState(0)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [endModal, setEndModal] = useState(null)
+  const dailyModuleRef = useRef(null)
   const callFrameRef = useRef(null)
   const containerRef = useRef(null)
 
@@ -180,14 +180,28 @@ export function VideoRoomPage() {
       return
     }
 
+    if (!dailyModuleRef.current) {
+      try {
+        const module = await import('@daily-co/daily-js')
+        dailyModuleRef.current = module.default || module
+      } catch (e) {
+        console.error('Falha ao importar DailyIframe dinamicamente:', e)
+        setSystemNotice('Erro interno: não foi possível carregar o serviço de vídeo.')
+        setDailyError('Daily.co SDK falhou ao carregar')
+        setIsCallActive(false)
+        return
+      }
+    }
+
+    const DailyIframe = dailyModuleRef.current
     if (!DailyIframe || typeof DailyIframe.createFrame !== 'function') {
-      console.error('DailyIframe não disponível:', DailyIframe)
-      setSystemNotice('Erro interno: serviço de vídeo não pôde ser carregado.')
+      console.error('DailyIframe não disponível após import dinâmico:', DailyIframe)
+      setSystemNotice('Erro interno: serviço de vídeo não pôde ser inicializado.')
       setDailyError('Daily.co SDK não inicializado')
       setIsCallActive(false)
       return
     }
-    
+
     // Marcar sessão como ativa no DB se ainda não estiver
     if (sessionData.status !== 'active') {
       await fetch(`/api/video-sessions/${sessionId}/status`, {

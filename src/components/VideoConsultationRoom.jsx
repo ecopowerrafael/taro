@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import DailyIframe from '@daily-co/daily-js'
+import { useEffect, useRef, useState } from 'react'
 import { Clock3, Video } from 'lucide-react'
 import { GlassCard } from './GlassCard'
 import { TarotCard } from './TarotCard'
@@ -12,6 +11,7 @@ export function VideoConsultationRoom({
   onDisconnect,
 }) {
   const callObjectRef = useRef(null)
+  const [, setDailyError] = useState('')
 
   useEffect(() => {
     if (!billing.isConnected || !roomUrl) {
@@ -19,6 +19,24 @@ export function VideoConsultationRoom({
     }
 
     const connect = async () => {
+      let DailyIframe
+      try {
+        const module = await import('@daily-co/daily-js')
+        DailyIframe = module.default || module
+      } catch (e) {
+        console.error('Falha ao importar DailyIframe dinamicamente:', e)
+        setDailyError('Não foi possível carregar serviço de vídeo Daily.co')
+        onDisconnect()
+        return
+      }
+
+      if (!DailyIframe || typeof DailyIframe.createCallObject !== 'function') {
+        console.error('DailyIframe inválido após import dinâmico:', DailyIframe)
+        setDailyError('SDK da chamada inválido')
+        onDisconnect()
+        return
+      }
+
       const callObject = DailyIframe.createCallObject()
       callObjectRef.current = callObject
       await callObject.join({ url: roomUrl })
