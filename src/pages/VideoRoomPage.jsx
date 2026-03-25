@@ -129,12 +129,25 @@ export function VideoRoomPage() {
   }, [session, isCallActive, sessionId, token, joinCall])
 
   const joinCall = useCallback(async (sessionData) => {
+    console.log('joinCall iniciado com sessionData:', {
+      roomUrl: sessionData.roomUrl,
+      hasToken: !!sessionData.dailyToken,
+      isConsultant: sessionData.isConsultant
+    })
+    
     let container = null
     try {
       container = await waitForContainer()
     } catch (err) {
       console.error(err)
       setSystemNotice('Erro ao preparar a sala de vídeo. Tente novamente.')
+      setIsCallActive(false)
+      return
+    }
+    
+    if (!sessionData.roomUrl) {
+      console.error('Erro: sessionData.roomUrl está vazio!')
+      setSystemNotice('URL da sala não foi encontrada.')
       setIsCallActive(false)
       return
     }
@@ -169,6 +182,22 @@ export function VideoRoomPage() {
     // Garante que o container tem dimensões antes de criar o iframe
     container.style.display = 'block'
     container.style.position = 'relative'
+    container.style.width = '100%'
+    container.style.height = '100%'
+    
+    // Aguarda o browser renderizar o container com as dimensões reais
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve)
+      })
+    })
+    
+    const rect = container.getBoundingClientRect()
+    console.log('Container dimensions:', { width: rect.width, height: rect.height })
+    
+    if (rect.height === 0 || rect.width === 0) {
+      console.warn('Container tem dimensões inválidas! Height:', rect.height, 'Width:', rect.width)
+    }
     
     const callFrame = DailyIframe.createFrame(container, {
       showLeaveButton: false,
@@ -297,8 +326,11 @@ export function VideoRoomPage() {
     <PageShell title={`Consulta com ${session.consultantName}`} subtitle="Sessão de Vídeo Privada">
       <div className="mx-auto w-full max-w-4xl">
         <div 
-          className={`relative z-0 overflow-hidden rounded-2xl border border-mystic-gold/30 bg-transparent ${isCallActive ? 'h-[70vh]' : 'h-auto bg-black/50 p-8 text-center'}`}
-        >
+          className={`relative z-0 overflow-hidden rounded-2xl border border-mystic-gold/30 bg-transparent ${isCallActive ? 'h-[70vh]' : 'h-auto bg-black/50 p-8 text-center'}`}          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: isCallActive ? '70vh' : 'auto'
+          }}        >
           {isCallActive && (
             <div className="absolute left-4 top-4 right-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-mystic-gold/30 bg-black/60 px-4 py-3 backdrop-blur-md">
               <div className="flex items-center gap-3 text-xs text-amber-50">
@@ -364,7 +396,7 @@ export function VideoRoomPage() {
           )}
 
           {/* Daily.co Iframe Container */}
-          <div ref={containerRef} className={`relative ${isCallActive ? 'block h-full w-full' : 'hidden'}`} style={{ display: isCallActive ? 'block' : 'none' }} />
+          <div ref={containerRef} className={`${isCallActive ? 'block h-full w-full' : 'hidden'}`} style={{ display: isCallActive ? 'block' : 'none', flex: 1 }} />
           
           {isCallActive && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
