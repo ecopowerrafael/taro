@@ -132,7 +132,16 @@ export const createAuthRouter = (pool) => {
         return response.status(401).json({ message: 'Credenciais inválidas.' })
       }
 
-      const token = jwt.sign({ id: user.id, role: user.role, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
+      // Se for consultor, buscar consultantId para adicionar ao token
+      let tokenPayload = { id: user.id, role: user.role, email: user.email }
+      if (user.role === 'consultant') {
+        const [consultants] = await pool.query('SELECT id FROM consultants WHERE userId = ?', [user.id])
+        if (consultants.length > 0) {
+          tokenPayload.consultantId = consultants[0].id
+        }
+      }
+
+      const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' })
 
       response.json({
         token,

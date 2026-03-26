@@ -181,9 +181,18 @@ export const createConsultantsRouter = (pool) => {
   router.post('/profile/:id', authenticate, async (request, response) => {
     const { id } = request.params
     
+    console.log('[POST /consultants/profile/:id] Received request:', {
+      id,
+      userIdFromToken: request.user.id,
+      consultantIdFromToken: request.user.consultantId,
+      userRole: request.user.role,
+    })
+
     // Permitir apenas se está editando seu próprio perfil
     // Usar consultantId se disponível (novo sistema), senão comparar id direto (compatibilidade)
     const userIdToCheck = request.user.consultantId || request.user.id
+    console.log('[POST /consultants/profile/:id] Checking:', { userIdToCheck, targetId: id, willAllow: userIdToCheck === id })
+    
     if (userIdToCheck !== id) {
       console.log('[POST /consultants/profile/:id] Access denied - not own profile', {
         userId: request.user.id,
