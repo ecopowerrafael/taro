@@ -217,5 +217,92 @@ export const createWalletsRouter = (pool) => {
     }
   })
 
+  // GET /transactions - Extrato paginado do consultor autenticado
+  router.get('/transactions/statement', async (request, response) => {
+    const consultantId = request.body?.consultantId || request.query?.consultantId
+    const page = Math.max(1, parseInt(request.query?.page || 1))
+    const limit = 10
+    const offset = (page - 1) * limit
+
+    if (!consultantId) {
+      return response.status(400).json({ message: 'consultantId não fornecido' })
+    }
+
+    try {
+      // Buscar transações (créditos do serviço)
+      const [transactions] = await pool.query(
+        `SELECT id, type, amount, commissionValue, createdAt, description
+         FROM wallet_transactions
+         WHERE consultantId = ?
+         ORDER BY createdAt DESC
+         LIMIT ? OFFSET ?`,
+        [consultantId, limit, offset]
+      )
+
+      // Buscar saques
+      const [withdrawals] = await pool.query(
+        `SELECT id, amount, createdAt, status
+         FROM wallet_withdrawals
+         WHERE consultantId = ?
+         ORDER BY createdAt DESC
+         LIMIT ? OFFSET ?`,
+        [consultantId, limit, offset]
+      )
+
+      // Combinar e ordenar por data (mais recentes primeiro)
+      const movements = [
+        ...transactions.map(t => ({
+          id: t.id,
+          type: 'transaction',
+          category: t.type === 'credit' ? 'Entrada' : 'Saída',
+          amount: Number(t.amount),
+          commissionValue: t.commissionValue ? Number(t.commissionValue) : null,
+          createdAt: t.createdAt,
+          description: t.description,
+          status: 'Concluído'
+        })),
+        ...withdrawals.map(w => ({
+          id: w.id,
+          type: 'withdrawal',
+          category: 'Saque',
+          amount: Number(w.amount),
+          commissionValue: null,
+          createdAt: w.createdAt,
+          description: `Saque - Status: ${w.status}`,
+          status: w.status
+        }))
+      ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+      // Buscar total de registros (para calcular total de páginas)
+      const [[{ totalTransactions }]] = await pool.query(
+        `SELECT COUNT(*) as totalTransactions FROM wallet_transactions WHERE consultantId = ?`,
+        [consultantId]
+      )
+      const [[{ totalWithdrawals }]] = await pool.query(
+        `SELECT COUNT(*) as totalWithdrawals FROM wallet_withdrawals WHERE consultantId = ?`,
+        [consultantId]
+      )
+
+      const totalItems = totalTransactions + totalWithdrawals
+      const totalPages = Math.ceil(totalItems / limit)
+
+      response.json({
+        ok: true,
+        movements: movements.slice(0, limit),
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems,
+          itemsPerPage: limit,
+          hasMore: page < totalPages
+        }
+      })
+    } catch (error) {
+      console.error('[wallets /transactions/statement] Erro:', error)
+      response.status(500).json({ message: 'Erro ao buscar extrato.' })
+    }
+  })
+
   return router
 }
+

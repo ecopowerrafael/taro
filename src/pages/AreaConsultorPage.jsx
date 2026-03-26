@@ -3,6 +3,7 @@ import { SendHorizontal, Wallet, Lock, UserPlus, Info, XCircle } from 'lucide-re
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
+import { WalletStatement } from '../components/WalletStatement'
 import { usePlatformContext } from '../context/platform-context'
 import { notificationService } from '../services/ConsultantNotificationService'
 
@@ -719,6 +720,17 @@ export function AreaConsultorPage() {
             {panelNotice}
           </p>
         )}
+
+        {/* Separador e Extrato de Movimentações */}
+        <div className="mt-8 border-t border-mystic-gold/20 pt-6">
+          <h3 className="mb-4 font-display text-lg text-mystic-goldSoft">Extrato de Movimentações</h3>
+          {userConsultantProfile && (
+            <WalletStatement
+              consultantId={userConsultantProfile.id}
+              token={token}
+            />
+          )}
+        </div>
 
         {/* Botão Instalar App */}
         <div className="mt-6 rounded-lg border border-mystic-gold/30 bg-black/30 p-4 text-center">
