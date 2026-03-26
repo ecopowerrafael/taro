@@ -296,9 +296,9 @@ export const createVideoSessionsRouter = (pool) => {
     try {
       await connection.beginTransaction()
 
-      // Obter dados da sessão
+      // Obter dados da sessão com pricePerMinute do consultor
       const [sessions] = await connection.query(
-        `SELECT * FROM video_sessions WHERE id = ? FOR UPDATE`,
+        `SELECT vs.*, c.pricePerMinute FROM video_sessions vs JOIN consultants c ON vs.consultantId = c.id WHERE vs.id = ? FOR UPDATE`,
         [sessionId]
       )
 
@@ -375,7 +375,8 @@ export const createVideoSessionsRouter = (pool) => {
 
         // Criar registro de transação
         const txId = `tx_video_${sessionId}`
-        const txDescription = `Ganho de videoconsulta (${Math.floor(duration / 60)} min à R$ ${session.pricePerMinute}/min). Comissão: ${(commissionRate * 100).toFixed(0)}%`
+        const pricePerMin = Number(session.pricePerMinute) || 0
+        const txDescription = `Ganho de videoconsulta (${Math.floor(duration / 60)} min à R$ ${pricePerMin.toFixed(2)}/min)`
         
         await connection.query(
           `INSERT INTO wallet_transactions (id, consultantId, type, amount, commissionValue, createdAt, description)

@@ -163,7 +163,7 @@ export const createQuestionRequestsRouter = (pool) => {
       const consultantNetValue = Number((packagePrice - commissionValue).toFixed(2))
       const answeredAtDate = new Date()
       const txId = `tx_${id}`
-      const txDescription = `Comissão líquida da consulta ${id}`
+      const txDescription = `Ganho de consulta por perguntas`
 
       await connection.query(
         `

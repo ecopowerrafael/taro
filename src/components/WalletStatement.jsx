@@ -207,11 +207,6 @@ export function WalletStatement({ consultantId, token }) {
                       {movement.category === 'Entrada' ? '+' : '-'}
                       {formatCurrency(movement.amount)}
                     </div>
-                    {movement.commissionValue !== null && (
-                      <p className="mt-1 text-xs text-gray-400">
-                        Plataforma: {formatCurrency(movement.commissionValue)}
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
