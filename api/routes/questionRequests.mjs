@@ -68,8 +68,20 @@ export const createQuestionRequestsRouter = (pool) => {
       createdAt,
     } = payload
 
-    if (!id || !consultantId || !consultantName || !customerName || !customerEmail) {
-      response.status(400).json({ message: 'Dados obrigatórios ausentes para criar solicitação.' })
+    // Validação detalhada
+    const missingFields = []
+    if (!id) missingFields.push('id')
+    if (!consultantId) missingFields.push('consultantId')
+    if (!consultantName) missingFields.push('consultantName')
+    if (!customerName) missingFields.push('customerName')
+    if (!customerEmail) missingFields.push('customerEmail')
+
+    if (missingFields.length > 0) {
+      response.status(400).json({ 
+        message: `Campos obrigatórios ausentes: ${missingFields.join(', ')}`,
+        missingFields,
+        receivedData: { id, consultantId, consultantName, customerName, customerEmail }
+      })
       return
     }
 

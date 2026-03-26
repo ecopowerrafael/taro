@@ -559,7 +559,9 @@ export function PlatformProvider({ children }) {
       body: JSON.stringify(request),
     })
     if (!response.ok) {
-      throw new Error('Falha ao registrar solicitação de perguntas no backend.')
+      const errorData = await response.json().catch(() => ({}))
+      console.error('[createQuestionRequestOnApi] Erro na resposta:', response.status, errorData)
+      throw new Error(errorData.message || `Erro ${response.status}: Falha ao registrar solicitação de perguntas no backend.`)
     }
     const payload = await response.json()
     return normalizeQuestionRequest(payload)
@@ -924,6 +926,17 @@ export function PlatformProvider({ children }) {
   }
 
   const submitQuestionConsultation = async ({ consultant, questionCount, price, entries }) => {
+    // Validação de perfil
+    if (!profile || !profile.email) {
+      setSystemNotice('Erro: Sua conta não tem email válido. Atualize seu perfil e tente novamente.')
+      return
+    }
+
+    if (!consultant || !consultant.id) {
+      setSystemNotice('Erro: Consultor inválido. Por favor, selecione novamente.')
+      return
+    }
+
     const payload = entries.map((entry, index) => ({
       id: `${Date.now()}_${index}`,
       type: entry.type,
@@ -940,8 +953,8 @@ export function PlatformProvider({ children }) {
       id: `req_${consultant.id}_${Date.now()}`,
       consultantId: consultant.id,
       consultantName: consultant.name,
-      customerName: profile?.name ?? 'Cliente',
-      customerEmail: profile?.email ?? 'guest@taro.com',
+      customerName: profile.name || 'Cliente',
+      customerEmail: profile.email,
       questionCount,
       packagePrice: price,
       entries: payload,
@@ -952,6 +965,8 @@ export function PlatformProvider({ children }) {
       commissionValue: 0,
       consultantNetValue: 0,
     }
+
+    console.log('[submitQuestionConsultation] Enviando perguntas:', request)
 
     try {
       const savedRequest = await createQuestionRequestOnApi(request)
@@ -968,9 +983,10 @@ export function PlatformProvider({ children }) {
           `Perguntas enviadas mas houve erro ao debitar saldo. Contate suporte.`,
         )
       }
-    } catch {
+    } catch (error) {
+      console.error('[submitQuestionConsultation] Erro ao enviar perguntas:', error)
       setQuestionRequests((prev) => [request, ...prev])
-      setSystemNotice('Erro ao enviar perguntas. Tente novamente.')
+      setSystemNotice(`Erro ao enviar perguntas: ${error.message || 'Tente novamente.'}`)
     }
   }
 
