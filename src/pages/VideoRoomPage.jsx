@@ -152,41 +152,90 @@ export function VideoRoomPage() {
 
     const callFrame = DailyIframe.createFrame(containerRef.current, {
       showLeaveButton: false,
+      showFullscreenButton: true,
+      showParticipantsButton: true,
       iframeStyle: {
         width: '100%',
         height: '100%',
         border: 'none',
         borderRadius: '12px'
       },
-      // Permitir entrada mesmo sem câmera/microfone
-      audioSource: false,
-      videoSource: false,
-      enableScreenShare: true,
-      disableLocalAudioPreview: true,
-      disableRemoteAudioPreview: true
+      audioSource: {
+        screenAudio: true  // Ativar áudio de compartilhamento de tela
+      },
+      videoSource: true
     })
     
     callFrameRef.current = callFrame
     
-    // Listeners para participantes
+    // ADICIONAR LISTENERS ANTES DE JOIN (crucial!)
+    callFrame.on('joined-meeting', () => {
+      console.log('[VideoRoomPage] ✓ joined-meeting event disparado - entrou na sala com sucesso')
+    })
+    
+    callFrame.on('left-meeting', () => {
+      console.log('[VideoRoomPage] left-meeting event disparado')
+    })
+    
+    callFrame.on('error', (e) => {
+      console.error('[VideoRoomPage] ✗ Daily.co error event:', e)
+    })
+    
+    // Listeners para participantes - ADICIONAR ANTES DE JOIN
     callFrame.on('participant-joined', (event) => {
-      console.log('[VideoRoomPage] participant-joined event:', event.participant)
+      console.log('[VideoRoomPage] ✓ participant-joined event:', {
+        id: event.participant.session_id,
+        name: event.participant.user_name,
+        isLocal: event.participant.local
+      })
     })
     
     callFrame.on('participant-updated', (event) => {
-      console.log('[VideoRoomPage] participant-updated event:', event.participant)
+      console.log('[VideoRoomPage] participant-updated (cam/mic toggle):', {
+        id: event.participant.session_id,
+        name: event.participant.user_name,
+        camera: event.participant.video ? 'on' : 'off',
+        mic: event.participant.audio ? 'on' : 'off'
+      })
     })
     
     callFrame.on('participant-left', (event) => {
-      console.log('[VideoRoomPage] participant-left event:', event.participant)
+      console.log('[VideoRoomPage] participant-left event:', {
+        id: event.participant.session_id,
+        name: event.participant.user_name
+      })
     })
     
     callFrame.on('participants-updated', (event) => {
-      console.log('[VideoRoomPage] participants-updated event:', event)
-      console.log('[VideoRoomPage] Current participants:', Object.keys(event.participants).length)
-      Object.entries(event.participants).forEach(([id, p]) => {
-        console.log(`  - ${id}: ${p.user_name || 'unknown'}`)
+      const participants = event.participants || {}
+      console.log('[VideoRoomPage] ★ participants-updated event: ' + Object.keys(participants).length + ' total')
+      Object.entries(participants).forEach(([id, p]) => {
+        console.log(`  - [${id.substring(0, 8)}] ${p.user_name || 'unknown'} (local: ${p.local}, video: ${p.video}, audio: ${p.audio})`)
       })
+    })
+    
+    callFrame.on('app-message', (event) => {
+      console.log('[VideoRoomPage] app-message:', event)
+    })
+    
+    callFrame.on('active-speaker-change', (event) => {
+      console.log('[VideoRoomPage] active-speaker-change:', event.activeSpeaker?.user_name)
+    })
+    
+    callFrame.on('recording-started', () => {
+      console.log('[VideoRoomPage] recording-started')
+    })
+    
+    callFrame.on('recording-stopped', () => {
+      console.log('[VideoRoomPage] recording-stopped')
+    })
+    
+    callFrame.on('access-state-updated', (event) => {
+      console.log('[VideoRoomPage] access-state-updated:', event)
+    })
+    
+    callFrame.on('network-quality-change', (event) => {
+      console.log('[VideoRoomPage] network-quality-change:', event)
     })
     if (!sessionData.isConsultant) {
       console.log('[VideoRoomPage] Cliente iniciando faturamento. pricePerMinute:', sessionData.pricePerMinute)
@@ -210,38 +259,76 @@ export function VideoRoomPage() {
     })
 
     try {
-      console.log('[VideoRoomPage] Tentando entrar na room:', sessionData.roomUrl)
-      console.log('[VideoRoomPage] Token:', sessionData.dailyToken ? `${sessionData.dailyToken.substring(0, 20)}...` : 'UNDEFINED')
-      console.log('[VideoRoomPage] Is Owner (Consultor):', sessionData.isConsultant)
+      console.log('[VideoRoomPage] ═══════════════════════════════════════')
+      console.log('[VideoRoomPage] Iniciando entrada na room Daily.co')
+      console.log('[VideoRoomPage] Room URL:', sessionData.roomUrl)
+      console.log('[VideoRoomPage] Token válido:', !!sessionData.dailyToken)
+      console.log('[VideoRoomPage] Is Consultant (owner):', sessionData.isConsultant)
+      console.log('[VideoRoomPage] ═══════════════════════════════════════')
       
-      await callFrame.join({
+      // Tentar join
+      const joinResult = await callFrame.join({
         url: sessionData.roomUrl,
         token: sessionData.dailyToken
       })
       
-      // Aguardar um pouco para que os eventos de participants sejam disparat
-      await new Promise(resolve => setTimeout(resolve, 500))
+      console.log('[VideoRoomPage] ✓ Join bem-sucedido')
+      console.log('[VideoRoomPage] Join result:', joinResult)
+      
+      // Esperar um momento para que os eventos sejam disparados
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
       const participants = callFrame.participants()
-      console.log('[VideoRoomPage] Participants after join (após delay):', participants)
-      console.log('[VideoRoomPage] Participant count:', Object.keys(participants).length)
+      console.log('[VideoRoomPage] ★ Participants após 1s:', {
+        count: Object.keys(participants).length,
+        localOnly: Object.keys(participants).length === 1,
+        list: Object.entries(participants).map(([id, p]) => ({
+          id: id.substring(0, 8),
+          name: p.user_name,
+          local: p.local
+        }))
+      })
       
-      // Tentar chamar getStats para diagnóstico
+      // Tentar chamar getStats
       try {
         const stats = callFrame.getStats()
-        console.log('[VideoRoomPage] getStats():', stats)
-      } catch (statsErr) {
-        console.warn('[VideoRoomPage] getStats() indisponível:', statsErr)
+        console.log('[VideoRoomPage] Network stats:', {
+          qualityLevel: stats?.videoReceiveStats?.quality,
+          bandwidth: stats?.stats?.bandwidth
+        })
+      } catch (e) {
+        console.warn('[VideoRoomPage] getStats indisponível:', e.message)
+      }
+      
+      // Obter meeting info
+      try {
+        const meetingInfo = callFrame.meetingState()
+        console.log('[VideoRoomPage] Meeting state:', {
+          status: meetingInfo?.status,
+          participants: meetingInfo?.participants?.length
+        })
+      } catch (e) {
+        console.warn('[VideoRoomPage] meetingState indisponível:', e.message)
       }
       
       setIsCallActive(true)
       setCallStartedAt((prev) => prev ?? Date.now())
     } catch (e) {
-      console.error('[VideoRoomPage] Erro ao entrar na sala do Daily:', e)
-      console.error('[VideoRoomPage] Erro completo:', JSON.stringify(e))
-      console.error('[VideoRoomPage] Error name:', e.name)
-      console.error('[VideoRoomPage] Error message:', e.message)
-      setSystemNotice('Erro ao conectar na sala de vídeo: ' + (e.message || String(e)))
+      console.error('[VideoRoomPage] ✗✗✗ ERRO ao entrar na sala')
+      console.error('[VideoRoomPage] Erro name:', e.name)
+      console.error('[VideoRoomPage] Erro message:', e.message)
+      console.error('[VideoRoomPage] Erro stack:', e.stack)
+      
+      // Se for erro de permissão, informar
+      if (e.message?.includes('token')) {
+        console.error('[VideoRoomPage] ⚠️  PROBLEMA COM TOKEN - verificar geração no backend')
+        setSystemNotice('Erro: Token inválido ou expirado. Tente novamente.')
+      } else if (e.message?.includes('room')) {
+        console.error('[VideoRoomPage] ⚠️  PROBLEMA COM ROOM - verificar se room foi criada corretamente')
+        setSystemNotice('Erro: Sala não encontrada ou inválida.')
+      } else {
+        setSystemNotice('Erro ao conectar: ' + e.message)
+      }
     }
   }
 

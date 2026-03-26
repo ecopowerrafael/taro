@@ -47,6 +47,10 @@ export const createVideoSessionsRouter = (pool) => {
 
       if (apiKey && credentials.dailyDomain) {
         try {
+          console.log('[videoSessions POST] Criando room via Daily.co API')
+          console.log('[videoSessions POST] roomId:', roomId)
+          console.log('[videoSessions POST] dailyDomain:', credentials.dailyDomain)
+          
           const dailyRes = await fetch('https://api.daily.co/v1/rooms', {
             method: 'POST',
             headers: {
@@ -55,25 +59,30 @@ export const createVideoSessionsRouter = (pool) => {
             },
             body: JSON.stringify({
               name: roomId,
-              privacy: 'private', // Privada
+              privacy: 'private',
               properties: {
-                exp: Math.floor(Date.now() / 1000) + 24 * 3600 // Expira em 24h
+                exp: Math.floor(Date.now() / 1000) + 24 * 3600
               }
             })
           })
+          
           if (dailyRes.ok) {
             const dailyData = await dailyRes.json()
             roomUrl = dailyData.url
+            console.log('[videoSessions POST] ✓ Room criada com sucesso. URL:', roomUrl)
           } else {
-            // Fallback
+            const errorData = await dailyRes.json()
+            console.error('[videoSessions POST] ✗ Erro ao criar room:', errorData)
             roomUrl = `https://${credentials.dailyDomain}/${roomId}`
           }
         } catch (e) {
+          console.error('[videoSessions POST] Exception ao criar room:', e.message)
           roomUrl = `https://${credentials.dailyDomain}/${roomId}`
         }
       } else {
         const domain = credentials.dailyDomain || 'demo.daily.co'
         roomUrl = `https://${domain}/${roomId}`
+        console.log('[videoSessions POST] Usando fallback URL:', roomUrl)
       }
 
       // Salvar a sessão no banco
@@ -227,7 +236,12 @@ export const createVideoSessionsRouter = (pool) => {
       if (apiKey) {
         try {
           const roomName = session.roomUrl.split('/').pop()
-          console.log('[videoSessions GET /:sessionId] Gerando token. roomName:', roomName, 'isConsultant:', isConsultant, 'user_name:', isConsultant ? session.consultantName : session.userName)
+          console.log('[videoSessions GET /:sessionId] ═══════════════════════════════════════')
+          console.log('[videoSessions GET /:sessionId] Gerando token Daily.co')
+          console.log('[videoSessions GET /:sessionId] roomName:', roomName)
+          console.log('[videoSessions GET /:sessionId] isConsultant:', isConsultant)
+          console.log('[videoSessions GET /:sessionId] user_name:', isConsultant ? session.consultantName : session.userName)
+          console.log('[videoSessions GET /:sessionId] ═══════════════════════════════════════')
           
           const tokenRes = await fetch('https://api.daily.co/v1/meeting-tokens', {
             method: 'POST',
@@ -240,29 +254,33 @@ export const createVideoSessionsRouter = (pool) => {
                 room_name: roomName,
                 is_owner: isConsultant,
                 user_name: isConsultant ? session.consultantName : session.userName,
-                exp: Math.floor(Date.now() / 1000) + 24 * 3600 // Expira em 24h
+                exp: Math.floor(Date.now() / 1000) + 24 * 3600
               }
             })
           })
+          
           if (tokenRes.ok) {
             const tokenData = await tokenRes.json()
             dailyToken = tokenData.token
-            console.log('[videoSessions GET /:sessionId] Token gerado com sucesso')
+            console.log('[videoSessions GET /:sessionId] ✓ Token gerado com sucesso')
+            console.log('[videoSessions GET /:sessionId] Token length:', tokenData.token?.length)
           } else {
             const errorData = await tokenRes.json()
-            console.error('[videoSessions GET /:sessionId] Erro retornado pela API do Daily ao gerar token:', errorData)
+            console.error('[videoSessions GET /:sessionId] ✗ Erro ao gerar token:', errorData)
           }
         } catch (e) {
-          console.error('[videoSessions GET /:sessionId] Erro ao gerar token do Daily:', e)
+          console.error('[videoSessions GET /:sessionId] ✗ Exception ao gerar token:', e.message)
         }
       } else {
-        console.warn('[videoSessions GET /:sessionId] apiKey vazia ou indefinida. dailyToken será null')
+        console.warn('[videoSessions GET /:sessionId] ⚠️  apiKey vazia - dailyToken será null')
       }
-
-      console.log('[videoSessions GET /:sessionId] Enviando resposta. roomUrl:', session.roomUrl, 'dailyToken:', dailyToken ? `${dailyToken.substring(0, 20)}...` : 'UNDEFINED', 'pricePerMinute:', session.pricePerMinute)
       
-      response.json({
-        ...session,
+      console.log('[videoSessions GET /:sessionId] ═════ RESPOSTA FINAL ═════')
+      console.log('[videoSessions GET /:sessionId] roomUrl:', session.roomUrl)
+      console.log('[videoSessions GET /:sessionId] dailyToken présent:', !!dailyToken)
+      console.log('[videoSessions GET /:sessionId] isConsultant:', isConsultant)
+      console.log('[videoSessions GET /:sessionId] pricePerMinute:', session.pricePerMinute)
+      console.log('[videoSessions GET /:sessionId] ═════════════════════════')
         pricePerMinute: Number(session.pricePerMinute) || 0,
         isConsultant,
         dailyToken
