@@ -150,7 +150,8 @@ export function VideoRoomPage() {
       billing.startSession({
         consultantId: sessionData.consultantId,
         consultantName: sessionData.consultantName,
-        pricePerMinute: sessionData.pricePerMinute
+        pricePerMinute: sessionData.pricePerMinute,
+        isConsultantMode: false
       })
     }
 
@@ -172,17 +173,15 @@ export function VideoRoomPage() {
   }
 
   const handleStartByConsultant = () => {
-    // Para o container ser renderizado e a div ficar "block" primeiro,
-    // precisamos ativar isCallActive ANTES de chamar o joinCall, 
-    // ou usar um setTimeout para o React ter tempo de montar a DOM
     setIsCallActive(true)
     setTimeout(() => {
       if (session) {
-        // Consultor também começa a "contar" faturamento para visualizar ganho
+        // Consultor inicia sem restrição de saldo (ele está ganhando, não debitando)
         billing.startSession({
           consultantId: session.consultantId,
           consultantName: session.consultantName,
-          pricePerMinute: session.pricePerMinute || 0
+          pricePerMinute: session.pricePerMinute || 0,
+          isConsultantMode: true
         })
         joinCall(session)
       }

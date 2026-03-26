@@ -8,29 +8,32 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
 
   const pricePerMinute = Number(activeSession?.pricePerMinute ?? 0)
   const consumedMinutes = Math.floor(elapsedSeconds / 60)
-  const consumedValue = consumedMinutes * pricePerMinute
+  // Charge by fraction of minute, not just complete minutes (e.g., 30s at R$10/min = R$5)
+  const consumedValue = Math.max(0, Math.floor((elapsedSeconds * pricePerMinute) / 60 * 100) / 100)
   const remainingMinutes = Math.max(0, balanceMinutes - consumedValue)
 
   const hasSufficientBalance = balanceMinutes > 0
 
   const stopSession = useCallback(() => {
     setIsConnected(false)
+    const finalValue = Math.max(0, Math.floor((elapsedSeconds * pricePerMinute) / 60 * 100) / 100)
     setActiveSession((session) => {
-      if (session && !consumedRef.current && elapsedSeconds > 0) {
-        onConsume(consumedValue)
+      if (session && !consumedRef.current && finalValue > 0) {
+        onConsume(finalValue)
         consumedRef.current = true
       }
       return null
     })
     setElapsedSeconds(0)
-  }, [consumedValue, elapsedSeconds, onConsume])
+  }, [pricePerMinute, elapsedSeconds, onConsume])
 
   const startSession = useCallback(
-    ({ consultantId, consultantName, pricePerMinute: minutePrice }) => {
+    ({ consultantId, consultantName, pricePerMinute: minutePrice, isConsultantMode = false }) => {
       // Garantir que minutePrice é sempre um número válido
       const validPrice = Number.isFinite(Number(minutePrice)) ? Number(minutePrice) : 0
 
-      if (!hasSufficientBalance) {
+      // Consultores não têm restrição de saldo - eles estão acumulando ganhos
+      if (!isConsultantMode && !hasSufficientBalance) {
         onInsufficientBalance?.()
         return false
       }
