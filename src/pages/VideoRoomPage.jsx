@@ -153,17 +153,14 @@ export function VideoRoomPage() {
     const callFrame = DailyIframe.createFrame(containerRef.current, {
       showLeaveButton: false,
       showFullscreenButton: true,
-      showParticipantsButton: true,
       iframeStyle: {
         width: '100%',
         height: '100%',
         border: 'none',
         borderRadius: '12px'
       },
-      audioSource: {
-        screenAudio: true  // Ativar áudio de compartilhamento de tela
-      },
-      videoSource: true
+      audioSource: false,
+      videoSource: false
     })
     
     callFrameRef.current = callFrame
@@ -237,16 +234,7 @@ export function VideoRoomPage() {
     callFrame.on('network-quality-change', (event) => {
       console.log('[VideoRoomPage] network-quality-change:', event)
     })
-    if (!sessionData.isConsultant) {
-      console.log('[VideoRoomPage] Cliente iniciando faturamento. pricePerMinute:', sessionData.pricePerMinute)
-      billing.startSession({
-        consultantId: sessionData.consultantId,
-        consultantName: sessionData.consultantName,
-        pricePerMinute: sessionData.pricePerMinute,
-        isConsultantMode: false
-      })
-    }
-
+    
     callFrame.on('left-meeting', () => {
       console.log('[VideoRoomPage] Daily.io left-meeting event disparado. isCallActive:', isCallActive)
       // Só chamar handleLeaveCall se realmente estamos em uma chamada
@@ -274,6 +262,15 @@ export function VideoRoomPage() {
       
       console.log('[VideoRoomPage] ✓ Join bem-sucedido')
       console.log('[VideoRoomPage] Join result:', joinResult)
+      
+      // ✅ APENAS AGORA que o join foi bem-sucedido, iniciar o billing
+      console.log('[VideoRoomPage] Iniciando billing após join bem-sucedido. isConsultant:', sessionData.isConsultant)
+      billing.startSession({
+        consultantId: sessionData.consultantId,
+        consultantName: sessionData.consultantName,
+        pricePerMinute: sessionData.pricePerMinute,
+        isConsultantMode: sessionData.isConsultant
+      })
       
       // Esperar um momento para que os eventos sejam disparados
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -329,6 +326,10 @@ export function VideoRoomPage() {
       } else {
         setSystemNotice('Erro ao conectar: ' + e.message)
       }
+      
+      // ❌ Se o join falhou, resetar isCallActive
+      setIsCallActive(false)
+      callAlreadyEndedRef.current = false
     }
   }
 
@@ -348,22 +349,8 @@ export function VideoRoomPage() {
       console.log('[VideoRoomPage] Consultor - dailyToken:', freshSession.dailyToken ? `${freshSession.dailyToken.substring(0, 20)}...` : 'UNDEFINED')
       
       if (freshSession) {
-        const price = Number(freshSession.pricePerMinute) || 0
-        console.log('[VideoRoomPage] Iniciando billing com pricePerMinute:', price)
-        
-        // Iniciar faturamento com dados frescos
-        const started = billing.startSession({
-          consultantId: freshSession.consultantId,
-          consultantName: freshSession.consultantName,
-          pricePerMinute: price,
-          isConsultantMode: true
-        })
-        
-        console.log('[VideoRoomPage] billing.startSession retornou:', started)
-
-        setTimeout(() => {
-          joinCall(freshSession)
-        }, 100)
+        // Chamando joinCall, que agora cuida de iniciar o billing APÓS conexão bem-sucedida
+        joinCall(freshSession)
       }
     } catch (err) {
       console.error('Erro ao iniciar atendimento:', err)
