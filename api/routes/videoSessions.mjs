@@ -317,31 +317,68 @@ export const createVideoSessionsRouter = (pool) => {
         [duration, earnings, sessionId]
       )
 
+      // DÉBITO DO USUÁRIO (consumo da sessão)
+      console.log('[videoSessions /finish] Debitando usuario. userId:', session.userId, 'earnings:', earnings)
+      
+      // Verificar saldo antes de debitar
+      const [userRows] = await connection.query(
+        'SELECT minutesBalance FROM users WHERE id = ?',
+        [session.userId]
+      )
+      
+      if (userRows.length > 0) {
+        const currentBalance = userRows[0].minutesBalance
+        const newBalance = Math.max(0, currentBalance - earnings)
+        
+        // Debitar do usuário
+        await connection.query(
+          'UPDATE users SET minutesBalance = ? WHERE id = ?',
+          [newBalance, session.userId]
+        )
+        
+        console.log('[videoSessions /finish] Usuario debitado. Saldo anterior: R$', currentBalance.toFixed(2), ' Novo saldo: R$', newBalance.toFixed(2))
+      }
+
       // Se houve ganho, criar registro na carteira do consultor
       if (earnings > 0) {
-        console.log('[videoSessions /finish] Processando ganhos para consultor. earnings:', earnings, 'consultantId:', session.consultantId)
+        // Obter dados do consultor (incluindo commissionOverride)
+        const [consultants] = await connection.query(
+          `SELECT id, commissionOverride FROM consultants WHERE id = ?`,
+          [session.consultantId]
+        )
+        
+        let commissionRate = 0.30 // Default 30%
+        if (consultants.length > 0 && consultants[0].commissionOverride !== null && consultants[0].commissionOverride !== undefined) {
+          commissionRate = Math.min(1, Math.max(0, Number(consultants[0].commissionOverride) / 100))
+        }
+        
+        const commissionEarnings = earnings * commissionRate
+        const platformShare = earnings - commissionEarnings
+        
+        console.log('[videoSessions /finish] Processando ganhos para consultor. totalEarnings:', earnings, 'commissionRate:', (commissionRate * 100).toFixed(0) + '%', 'consultantGain:', commissionEarnings.toFixed(2), 'platformShare:', platformShare.toFixed(2), 'consultantId:', session.consultantId)
+        
         // Garantir que a carteira existe
         await connection.query(
           `INSERT INTO consultant_wallets (consultantId, availableBalance, pixKey) VALUES (?, 0, NULL) ON DUPLICATE KEY UPDATE consultantId = VALUES(consultantId)`,
           [session.consultantId]
         )
 
-        // Adicionar saldo à carteira
+        // Adicionar COMISSÃO à carteira (não o valor total)
         await connection.query(
           `UPDATE consultant_wallets SET availableBalance = availableBalance + ? WHERE consultantId = ?`,
-          [earnings, session.consultantId]
+          [commissionEarnings, session.consultantId]
         )
-        console.log('[videoSessions /finish] Carteira do consultor atualizada com R$', earnings)
+        console.log('[videoSessions /finish] Carteira do consultor atualizada com R$', commissionEarnings.toFixed(2))
 
         // Criar registro de transação
         const txId = `tx_video_${sessionId}`
-        const txDescription = `Ganho de videoconsulta (${Math.floor(duration / 60)} min à R$ ${session.pricePerMinute}/min)`
+        const txDescription = `Ganho de videoconsulta (${Math.floor(duration / 60)} min à R$ ${session.pricePerMinute}/min). Comissão: ${(commissionRate * 100).toFixed(0)}%`
         
         await connection.query(
           `INSERT INTO wallet_transactions (id, consultantId, type, amount, commissionValue, createdAt, description)
-           VALUES (?, ?, 'credit', ?, NULL, NOW(), ?)
-           ON DUPLICATE KEY UPDATE amount = VALUES(amount), description = VALUES(description)`,
-          [txId, session.consultantId, earnings, txDescription]
+           VALUES (?, ?, 'credit', ?, ?, NOW(), ?)
+           ON DUPLICATE KEY UPDATE amount = VALUES(amount), commissionValue = VALUES(commissionValue), description = VALUES(description)`,
+          [txId, session.consultantId, commissionEarnings, platformShare, txDescription]
         )
         console.log('[videoSessions /finish] Transação registrada: txId=', txId)
       } else {

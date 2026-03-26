@@ -24,6 +24,7 @@ export function VideoRoomPage() {
   const socketRef = useRef(null)
   const otherUserLeftRef = useRef(false)
   const callAlreadyEndedRef = useRef(false) // Prevenir múltiplas chamadas a handleLeaveCall
+  const savedElapsedSecondsRef = useRef(0) // Salvar elapsedSeconds quando outra pessoa sai
 
   const formatElapsed = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
@@ -59,6 +60,9 @@ export function VideoRoomPage() {
     socketRef.current.on('other_user_left_call', () => {
       console.log('[VideoRoomPage] Socket.io: other_user_left_call disparado')
       otherUserLeftRef.current = true
+      // **CRITICAL**: Salvar elapsedSeconds IMEDIATAMENTE antes de qualquer coisa poder resetá-lo
+      savedElapsedSecondsRef.current = billing.elapsedSeconds
+      console.log('[VideoRoomPage] Socket.io: Salvando elapsedSeconds em ref:', savedElapsedSecondsRef.current)
       setSystemNotice('O outro participante saiu da chamada.')
       // Dar um tempo para o outro lado receber o evento antes de navegar
       setTimeout(() => {
@@ -264,6 +268,10 @@ export function VideoRoomPage() {
     if (billing.elapsedSeconds > 0) {
       durationSeconds = billing.elapsedSeconds
       console.log('[VideoRoomPage] Usando billing.elapsedSeconds:', durationSeconds)
+    } else if (savedElapsedSecondsRef.current > 0) {
+      // Fallback 2: Usar o elapsedSeconds que foi salvo quando other_user_left_call foi disparado
+      durationSeconds = savedElapsedSecondsRef.current
+      console.log('[VideoRoomPage] Usando savedElapsedSecondsRef (capturado no socket.io event):', durationSeconds)
     } else if (callStartedAt) {
       durationSeconds = Math.floor((Date.now() - callStartedAt) / 1000)
       console.log('[VideoRoomPage] Usando wall clock (Date.now() - callStartedAt):', durationSeconds)
