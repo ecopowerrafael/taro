@@ -10,7 +10,7 @@ import DailyIframe from '@daily-co/daily-js'
 export function VideoRoomPage() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
-  const { token, billing, setSystemNotice } = usePlatformContext()
+  const { token, billing, setSystemNotice, profile, updateProfile } = usePlatformContext()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -296,7 +296,7 @@ export function VideoRoomPage() {
 
     // Salvar sessão com duração e earnings
     try {
-      await fetch(`/api/video-sessions/${sessionId}/finish`, {
+      const finishResponse = await fetch(`/api/video-sessions/${sessionId}/finish`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ 
@@ -306,6 +306,17 @@ export function VideoRoomPage() {
           consultantEarnings
         })
       })
+      
+      if (finishResponse.ok) {
+        const finishData = await finishResponse.json()
+        console.log('[VideoRoomPage] Sessão finalizada no backend. newUserBalance:', finishData.newUserBalance)
+        
+        // Atualizar saldo do usuário no contexto
+        if (finishData.newUserBalance !== undefined) {
+          console.log('[VideoRoomPage] Atualizando saldo do usuário para:', finishData.newUserBalance)
+          updateProfile({ minutesBalance: finishData.newUserBalance })
+        }
+      }
     } catch (err) {
       console.error('[VideoRoomPage] Erro ao finalizar sessão:', err)
     }

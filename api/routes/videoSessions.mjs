@@ -348,10 +348,12 @@ export const createVideoSessionsRouter = (pool) => {
           [session.consultantId]
         )
         
-        let commissionRate = 0.30 // Default 30%
+        // 30% para plataforma, 70% para consultor (padrão)
+        let consultantPercentage = 0.70
         if (consultants.length > 0 && consultants[0].commissionOverride !== null && consultants[0].commissionOverride !== undefined) {
-          commissionRate = Math.min(1, Math.max(0, Number(consultants[0].commissionOverride) / 100))
+          consultantPercentage = Math.min(1, Math.max(0, Number(consultants[0].commissionOverride) / 100))
         }
+        const commissionRate = consultantPercentage
         
         const commissionEarnings = earnings * commissionRate
         const platformShare = earnings - commissionEarnings
@@ -386,9 +388,16 @@ export const createVideoSessionsRouter = (pool) => {
         console.log('[videoSessions /finish] earnings = 0, nenhum ganho para processar')
       }
 
+      // Buscar novo saldo do usuário após débito
+      const [updatedUser] = await connection.query(
+        'SELECT minutesBalance FROM users WHERE id = ?',
+        [session.userId]
+      )
+      const newUserBalance = updatedUser.length > 0 ? updatedUser[0].minutesBalance : 0
+
       await connection.commit()
-      console.log('[videoSessions /finish] Sessão finalizada com sucesso. sessionId=', sessionId, 'earnings=', earnings)
-      response.json({ ok: true, earnings })
+      console.log('[videoSessions /finish] Sessão finalizada com sucesso. sessionId=', sessionId, 'earnings=', earnings, 'newUserBalance=', newUserBalance)
+      response.json({ ok: true, earnings, newUserBalance })
 
     } catch (error) {
       await connection.rollback()
