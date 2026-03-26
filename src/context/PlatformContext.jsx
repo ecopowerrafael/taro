@@ -488,9 +488,12 @@ export function PlatformProvider({ children }) {
       const ok = await upsertConsultantOnApi(consultant)
       if (!ok) {
         setSystemNotice('Não foi possível salvar alterações do consultor no backend.')
+        return false
       }
+      return true
     } catch {
       setSystemNotice('Falha de conexão ao salvar dados do consultor.')
+      return false
     }
   }
 
@@ -781,7 +784,7 @@ export function PlatformProvider({ children }) {
     )
   }
 
-  const updateConsultantByAdmin = (id, updates) => {
+  const updateConsultantByAdmin = async (id, updates) => {
     let updatedConsultant = null
     setConsultants((prev) =>
       prev.map((consultant) => {
@@ -793,8 +796,9 @@ export function PlatformProvider({ children }) {
       }),
     )
     if (updatedConsultant) {
-      void persistConsultant(updatedConsultant)
+      return await persistConsultant(updatedConsultant)
     }
+    return false
   }
 
   const updateConsultantAvailability = (id, isOnline) => {

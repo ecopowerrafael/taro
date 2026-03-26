@@ -396,11 +396,11 @@ export function AreaConsultorPage() {
     return Number(value.replace(/\./g, '').replace(',', '.'))
   }
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!selectedConsultantId || !profileDraft) {
       return
     }
-    updateConsultantByAdmin(selectedConsultantId, {
+    const success = await updateConsultantByAdmin(selectedConsultantId, {
       name: profileDraft.name.trim(),
       email: profileDraft.email.trim().toLowerCase(),
       tagline: profileDraft.tagline.trim(),
@@ -410,7 +410,11 @@ export function AreaConsultorPage() {
       priceThreeQuestions: parseCurrency(profileDraft.priceThreeQuestions),
       priceFiveQuestions: parseCurrency(profileDraft.priceFiveQuestions),
     })
-    setPanelNotice('Perfil do consultor atualizado com sucesso.')
+    if (success) {
+      setPanelNotice('Perfil do consultor atualizado com sucesso.')
+    } else {
+      setPanelNotice('Erro ao salvar perfil. Verifique sua conexão e tente novamente.')
+    }
   }
 
   return (
