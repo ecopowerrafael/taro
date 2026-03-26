@@ -1167,6 +1167,43 @@ export function PlatformProvider({ children }) {
     return { ok: true, message: 'Solicitação de saque registrada com sucesso.' }
   }
 
+  const updateWithdrawalStatusOnApi = async ({ consultantId, withdrawalId, newStatus }) => {
+    const response = await fetch(
+      buildApiUrl(`/api/wallets/${consultantId}/withdrawals/${withdrawalId}/status`),
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      },
+    )
+    const payload = await response.json()
+    if (!response.ok) {
+      return { ok: false, message: payload.message || 'Falha ao atualizar saque.' }
+    }
+    return {
+      ok: true,
+      message: payload.message || 'Saque atualizado com sucesso.',
+      wallet: normalizeWalletState([payload.wallet])[payload.wallet.consultantId],
+    }
+  }
+
+  const updateWithdrawalStatus = async ({ consultantId, withdrawalId, newStatus }) => {
+    try {
+      const apiResult = await updateWithdrawalStatusOnApi({ consultantId, withdrawalId, newStatus })
+      if (apiResult.ok) {
+        setConsultantWallets((prev) => ({
+          ...prev,
+          [consultantId]: apiResult.wallet,
+        }))
+        return { ok: true, message: apiResult.message }
+      }
+      return apiResult
+    } catch (error) {
+      console.error('[updateWithdrawalStatus] Error:', error)
+      return { ok: false, message: 'Erro ao atualizar saque.' }
+    }
+  }
+
   const value = {
     profile,
     sign,
@@ -1211,6 +1248,7 @@ export function PlatformProvider({ children }) {
     consultantWallets,
     setConsultantPixKey,
     requestConsultantWithdrawal,
+    updateWithdrawalStatus,
     minWithdrawalAmount: MIN_WITHDRAWAL_AMOUNT,
     adminDashboardStats,
     selectConsultant,

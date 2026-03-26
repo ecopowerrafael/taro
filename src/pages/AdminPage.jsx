@@ -25,6 +25,7 @@ export function AdminPage() {
     rechargeRequests,
     fetchPendingRecharges,
     processRechargeAction,
+    updateWithdrawalStatus,
   } = usePlatformContext()
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export function AdminPage() {
         onDailyCredentialsChange={savePlatformCredentials}
         rechargeRequests={rechargeRequests}
         onRechargeAction={processRechargeAction}
+        updateWithdrawalStatus={updateWithdrawalStatus}
       />
     </PageShell>
   )

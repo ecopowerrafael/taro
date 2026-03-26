@@ -303,6 +303,100 @@ export const createWalletsRouter = (pool) => {
     }
   })
 
+  // PATCH /withdrawals/:withdrawalId/status - Admin marca saque como pago
+  router.patch('/:consultantId/withdrawals/:withdrawalId/status', async (request, response) => {
+    const { consultantId, withdrawalId } = request.params
+    const newStatus = (request.body?.status || 'paid').trim().toLowerCase()
+
+    if (!['requested', 'paid', 'rejected'].includes(newStatus)) {
+      return response.status(400).json({ message: 'Status inválido. Use: requested, paid, rejected' })
+    }
+
+    const connection = await pool.getConnection()
+    try {
+      await connection.beginTransaction()
+
+      // Buscar o saque
+      const [withdrawalRows] = await connection.query(
+        `SELECT id, consultantId, amount, status FROM wallet_withdrawals WHERE id = ? AND consultantId = ?`,
+        [withdrawalId, consultantId]
+      )
+
+      if (!withdrawalRows.length) {
+        await connection.rollback()
+        return response.status(404).json({ message: 'Saque não encontrado.' })
+      }
+
+      const withdrawal = withdrawalRows[0]
+      const oldStatus = withdrawal.status
+
+      // Se for rejected e estava em 'requested', devolve o saldo
+      if (newStatus === 'rejected' && oldStatus === 'requested') {
+        await connection.query(
+          `UPDATE consultant_wallets SET availableBalance = availableBalance + ? WHERE consultantId = ?`,
+          [withdrawal.amount, consultantId]
+        )
+
+        // Adiciona transação de reembolso
+        const refundId = `tx_refund_${withdrawalId}`
+        const now = new Date()
+        await connection.query(
+          `INSERT INTO wallet_transactions (id, consultantId, type, amount, createdAt, description)
+           VALUES (?, ?, 'credit', ?, ?, 'Reembolso de saque rejeitado')`,
+          [refundId, consultantId, withdrawal.amount, now]
+        )
+      }
+
+      // Atualiza status do saque
+      await connection.query(
+        `UPDATE wallet_withdrawals SET status = ? WHERE id = ?`,
+        [newStatus, withdrawalId]
+      )
+
+      // Busca dados atualizados da carteira
+      const [updatedWalletRows] = await connection.query(
+        `SELECT consultantId, availableBalance, pixKey FROM consultant_wallets WHERE consultantId = ?`,
+        [consultantId]
+      )
+      const [transactionsRows] = await connection.query(
+        `SELECT id, type, amount, commissionValue, createdAt, description
+         FROM wallet_transactions WHERE consultantId = ? ORDER BY createdAt DESC`,
+        [consultantId]
+      )
+      const [withdrawalsRows] = await connection.query(
+        `SELECT id, amount, createdAt, status FROM wallet_withdrawals WHERE consultantId = ? ORDER BY createdAt DESC`,
+        [consultantId]
+      )
+
+      await connection.commit()
+
+      response.json({
+        ok: true,
+        message: `Saque marcado como ${newStatus}.`,
+        wallet: {
+          consultantId,
+          availableBalance: Number(updatedWalletRows[0]?.availableBalance ?? 0),
+          pixKey: updatedWalletRows[0]?.pixKey ?? '',
+          transactions: transactionsRows.map((item) => ({
+            ...item,
+            amount: Number(item.amount),
+            commissionValue: item.commissionValue === null ? null : Number(item.commissionValue),
+          })),
+          withdrawals: withdrawalsRows.map((item) => ({
+            ...item,
+            amount: Number(item.amount),
+          })),
+        },
+      })
+    } catch (error) {
+      await connection.rollback()
+      console.error('[wallets PATCH] Erro:', error)
+      response.status(500).json({ message: 'Erro ao atualizar status do saque.' })
+    } finally {
+      connection.release()
+    }
+  })
+
   return router
 }
 

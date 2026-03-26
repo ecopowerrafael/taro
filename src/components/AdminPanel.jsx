@@ -54,11 +54,13 @@ export function AdminPanel({
   onSaveCredentials,
   rechargeRequests,
   onRechargeAction,
+  updateWithdrawalStatus,
 }) {
-  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'financeiro' | 'credenciais' | 'recharges'
+  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'financeiro' | 'credenciais' | 'recharges' | 'saques'
   const [searchQuery, setSearchSearchQuery] = useState('')
   const [editingConsultantId, setEditingConsultantId] = useState(null)
   const [editForm, setEditForm] = useState(null)
+  const [withdrawalModal, setWithdrawalModal] = useState(null) // { consultantId, withdrawalId, status } ou null
   const [commissionDraft, setCommissionDraft] = useState(globalCommission?.toString() ?? '0')
   const [financeDraft, setFinanceDraft] = useState(
     minutePackages.map((pack) => ({
@@ -327,6 +329,48 @@ export function AdminPanel({
 
   const getConsultantPayable = (consultantId) => consultantWallets[consultantId]?.availableBalance ?? 0
 
+  const getPendingWithdrawals = () => {
+    const pending = []
+    Object.entries(consultantWallets).forEach(([consultantId, wallet]) => {
+      if (!wallet.withdrawals) return
+      wallet.withdrawals.forEach((withdrawal) => {
+        if (withdrawal.status === 'requested') {
+          const consultant = consultants.find((c) => c.id === consultantId)
+          pending.push({
+            consultantId,
+            consultantName: consultant?.name ?? 'Desconhecido',
+            ...withdrawal,
+          })
+        }
+      })
+    })
+    return pending.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  }
+
+  const handleApproveWithdrawal = async (consultantId, withdrawalId) => {
+    const result = await updateWithdrawalStatus({
+      consultantId,
+      withdrawalId,
+      newStatus: 'paid',
+    })
+    if (result.ok) {
+      setWithdrawalModal(null)
+    }
+  }
+
+  const handleRejectWithdrawal = async (consultantId, withdrawalId) => {
+    const result = await updateWithdrawalStatus({
+      consultantId,
+      withdrawalId,
+      newStatus: 'rejected',
+    })
+    if (result.ok) {
+      setWithdrawalModal(null)
+    }
+  }
+
+  const totalPendingWithdrawals = getPendingWithdrawals().length
+
   return (
     <GlassCard
       title="Painel Administrativo"
@@ -354,6 +398,18 @@ export function AdminPanel({
           {rechargeRequests.length > 0 && (
             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
               {rechargeRequests.length}
+            </span>
+          )}
+        </button>
+        <button
+          className={tabButtonClass('saques')}
+          onClick={() => setActiveTab('saques')}
+        >
+          <Wallet size={14} />
+          Saques
+          {totalPendingWithdrawals > 0 && (
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] text-white">
+              {totalPendingWithdrawals}
             </span>
           )}
         </button>
@@ -831,6 +887,77 @@ export function AdminPanel({
           </div>
         )}
       </div>
+
+      {activeTab === 'saques' && (
+        <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+          <h3 className="font-display text-xl text-mystic-goldSoft">Solicitações de Saque</h3>
+          <p className="mt-1 text-xs text-amber-100/65">
+            Aprove para fazer o PIX ou rejeite para devolver o saldo ao consultor.
+          </p>
+
+          {totalPendingWithdrawals === 0 ? (
+            <div className="mt-4 rounded-lg border border-emerald-400/30 bg-emerald-500/5 p-4 text-center text-sm text-emerald-200">
+              Nenhuma solicitação de saque pendente.
+            </div>
+          ) : (
+            <div className="mt-4 grid gap-3">
+              {getPendingWithdrawals().map((withdrawal) => (
+                <article
+                  key={withdrawal.id}
+                  className="rounded-lg border border-mystic-gold/30 bg-black/30 p-4"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-amber-50">{withdrawal.consultantName}</p>
+                      <p className="text-[11px] text-ethereal-silver/60">
+                        ID: {withdrawal.id}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-orange-500/20 px-3 py-1 text-xs font-semibold text-orange-200">
+                      Pendente
+                    </span>
+                  </div>
+                  <div className="mb-3 grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-ethereal-silver/60">Valor</p>
+                      <p className="font-semibold text-mystic-goldSoft">
+                        R$ {withdrawal.amount.toFixed(2)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-ethereal-silver/60">Data</p>
+                      <p className="text-[12px] text-amber-100">
+                        {new Date(withdrawal.createdAt).toLocaleDateString('pt-BR')} 
+                        {' '}
+                        {new Date(withdrawal.createdAt).toLocaleTimeString('pt-BR')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() =>
+                        handleApproveWithdrawal(withdrawal.consultantId, withdrawal.id)
+                      }
+                      className="flex-1 rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
+                    >
+                      <CheckCircle2 size={12} className="mb-0.5 inline" /> Concluído
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleRejectWithdrawal(withdrawal.consultantId, withdrawal.id)
+                      }
+                      className="flex-1 rounded-lg border border-red-400/60 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/20"
+                    >
+                      <XCircle size={12} className="mb-0.5 inline" /> Rejeitar
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {editingConsultantId && editForm && (
         <div className="mt-5 rounded-lg border border-mystic-gold/45 bg-black/35 p-4">
           <h4 className="font-display text-xl text-mystic-goldSoft">Editar Consultor</h4>
