@@ -128,6 +128,7 @@ export function HomePage() {
     completedSessions < 1000
       ? String(completedSessions).padStart(3, '0')
       : new Intl.NumberFormat('pt-BR').format(completedSessions)
+  
   const stats = [
     { value: `${activeConsultants}+`, label: 'Consultores Ativos' },
     { value: `${completedSessionsText}+`, label: 'Consultas Realizadas' },
