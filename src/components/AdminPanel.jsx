@@ -299,8 +299,11 @@ export function AdminPanel({
 
   const saveEditConsultant = () => {
     if (!editingConsultantId || !editForm) {
+      console.log('[AdminPanel] Missing data for save:', { editingConsultantId, editForm })
       return
     }
+    console.log('[AdminPanel] Calling onSaveConsultant with id:', editingConsultantId)
+    console.log('[AdminPanel] onSaveConsultant type:', typeof onSaveConsultant)
     onSaveConsultant(editingConsultantId, {
       name: editForm.name.trim(),
       email: editForm.email.trim().toLowerCase(),

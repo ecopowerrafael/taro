@@ -472,6 +472,7 @@ export function PlatformProvider({ children }) {
   }
 
   const upsertConsultantOnApi = async (consultant) => {
+    console.log('[upsertConsultantOnApi] Attempting PUT with token:', !!token, 'token length:', token?.length)
     const response = await fetch(buildApiUrl(`/api/consultants/${consultant.id}`), {
       method: 'PUT',
       headers: {
@@ -480,18 +481,26 @@ export function PlatformProvider({ children }) {
       },
       body: JSON.stringify(consultant),
     })
+    console.log('[upsertConsultantOnApi] Response status:', response.status, 'ok:', response.ok)
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('[upsertConsultantOnApi] Error response:', errorText)
+    }
     return response.ok
   }
 
   const persistConsultant = async (consultant) => {
     try {
+      console.log('[persistConsultant] Starting with consultant:', consultant.id)
       const ok = await upsertConsultantOnApi(consultant)
+      console.log('[persistConsultant] Result:', ok)
       if (!ok) {
         setSystemNotice('Não foi possível salvar alterações do consultor no backend.')
         return false
       }
       return true
-    } catch {
+    } catch (err) {
+      console.error('[persistConsultant] Error:', err)
       setSystemNotice('Falha de conexão ao salvar dados do consultor.')
       return false
     }
@@ -785,35 +794,42 @@ export function PlatformProvider({ children }) {
   }
 
   const updateConsultantByAdmin = (id, updates) => {
+    console.log('[updateConsultantByAdmin] Starting with id:', id)
     let updatedConsultant = null
     setConsultants((prev) =>
       prev.map((consultant) => {
         if (consultant.id === id) {
           updatedConsultant = normalizeConsultant({ ...consultant, ...updates })
+          console.log('[updateConsultantByAdmin] Updated consultant:', updatedConsultant.id)
           return updatedConsultant
         }
         return consultant
       }),
     )
     if (updatedConsultant) {
+      console.log('[updateConsultantByAdmin] Calling persistConsultant')
       void persistConsultant(updatedConsultant)
     }
   }
 
   const persistConsultantWithResult = async (id, updates) => {
+    console.log('[persistConsultantWithResult] Starting with id:', id)
     let updatedConsultant = null
     setConsultants((prev) =>
       prev.map((consultant) => {
         if (consultant.id === id) {
           updatedConsultant = normalizeConsultant({ ...consultant, ...updates })
+          console.log('[persistConsultantWithResult] Updated consultant:', updatedConsultant.id)
           return updatedConsultant
         }
         return consultant
       }),
     )
     if (updatedConsultant) {
+      console.log('[persistConsultantWithResult] Calling persistConsultant')
       return await persistConsultant(updatedConsultant)
     }
+    console.log('[persistConsultantWithResult] No consultant found')
     return false
   }
 
