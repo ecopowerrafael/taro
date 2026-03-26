@@ -279,12 +279,13 @@ export function VideoRoomPage() {
       console.log('[VideoRoomPage] Nenhuma duração disponível (billing.elapsedSeconds=0, callStartedAt=null)')
     }
     
-    // Calcular ganhos do consultor com precisão de segundos (não truncar para minutos)
-    const consultantEarnings = session?.isConsultant 
-      ? (durationSeconds / 60) * (session.pricePerMinute || 0)
-      : 0
+    // Calcular consumo total (para qualquer participante)
+    const totalConsumption = (durationSeconds / 60) * (session?.pricePerMinute || 0)
+    
+    // Backend vai aplicar a comissão. Frontend apenas envia o valor total que o consultor "ganhou"
+    const consultantEarnings = totalConsumption
 
-    console.log('[VideoRoomPage] Chamada finalizada. durationSeconds:', durationSeconds, 'pricePerMinute:', session?.pricePerMinute, 'consultantEarnings:', consultantEarnings.toFixed(2))
+    console.log('[VideoRoomPage] Chamada finalizada. durationSeconds:', durationSeconds, 'pricePerMinute:', session?.pricePerMinute, 'totalConsumption:', totalConsumption.toFixed(2), 'isConsultant:', session?.isConsultant, 'consultantEarnings:', consultantEarnings.toFixed(2))
     console.log('[VideoRoomPage] billing state antes de stopSession:', { isConnected: billing.isConnected, elapsedSeconds: billing.elapsedSeconds, consumedValue: billing.consumedValue })
 
     // Para faturamento (cliente ou consultor)
@@ -301,6 +302,7 @@ export function VideoRoomPage() {
         body: JSON.stringify({ 
           status: 'finished',
           durationSeconds,
+          totalConsumption,
           consultantEarnings
         })
       })

@@ -288,9 +288,9 @@ export const createVideoSessionsRouter = (pool) => {
   // Rota para finalizar sessão com duração e compensação ao consultor
   router.patch('/:sessionId/finish', async (request, response) => {
     const { sessionId } = request.params
-    const { status, durationSeconds, consultantEarnings } = request.body
+    const { status, durationSeconds, totalConsumption, consultantEarnings } = request.body
 
-    console.log('[videoSessions /finish] Recebido: sessionId=', sessionId, 'durationSeconds=', durationSeconds, 'consultantEarnings=', consultantEarnings)
+    console.log('[videoSessions /finish] Recebido: sessionId=', sessionId, 'durationSeconds=', durationSeconds, 'totalConsumption=', totalConsumption, 'consultantEarnings=', consultantEarnings)
 
     const connection = await pool.getConnection()
     try {
@@ -309,6 +309,7 @@ export const createVideoSessionsRouter = (pool) => {
 
       const session = sessions[0]
       const duration = Math.max(0, parseInt(durationSeconds) || 0)
+      const consumption = Math.max(0, parseFloat(totalConsumption) || 0)
       const earnings = Math.max(0, parseFloat(consultantEarnings) || 0)
 
       // Atualizar sessão com duração e ganho
@@ -317,8 +318,8 @@ export const createVideoSessionsRouter = (pool) => {
         [duration, earnings, sessionId]
       )
 
-      // DÉBITO DO USUÁRIO (consumo da sessão)
-      console.log('[videoSessions /finish] Debitando usuario. userId:', session.userId, 'earnings:', earnings)
+      // DÉBITO DO USUÁRIO (consumo total da sessão - aquilo que vai sair da carteira)
+      console.log('[videoSessions /finish] Debitando usuario. userId:', session.userId, 'consumption:', consumption)
       
       // Verificar saldo antes de debitar
       const [userRows] = await connection.query(
@@ -328,7 +329,7 @@ export const createVideoSessionsRouter = (pool) => {
       
       if (userRows.length > 0) {
         const currentBalance = userRows[0].minutesBalance
-        const newBalance = Math.max(0, currentBalance - earnings)
+        const newBalance = Math.max(0, currentBalance - consumption)
         
         // Debitar do usuário
         await connection.query(
