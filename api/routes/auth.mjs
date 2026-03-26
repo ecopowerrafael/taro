@@ -167,14 +167,24 @@ export const createAuthRouter = (pool) => {
       }
 
       const user = users[0]
-      response.json({
+      const response_data = {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
         birthDate: user.birthDate,
         minutesBalance: user.minutesBalance
-      })
+      }
+
+      // Se for consultor, adicionar consultantId
+      if (user.role === 'consultant') {
+        const [consultants] = await pool.query('SELECT id FROM consultants WHERE userId = ?', [user.id])
+        if (consultants.length > 0) {
+          response_data.consultantId = consultants[0].id
+        }
+      }
+
+      response.json(response_data)
     } catch (error) {
       response.status(401).json({ message: 'Token inválido.' })
     }
