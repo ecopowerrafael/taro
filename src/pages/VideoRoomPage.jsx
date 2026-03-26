@@ -305,16 +305,19 @@ export function VideoRoomPage() {
       console.log('[VideoRoomPage] Is Consultant (owner):', sessionData.isConsultant)
       console.log('[VideoRoomPage] ═══════════════════════════════════════')
       
-      // Criar Promise que resolve quando 'joined-meeting' dispara
+      // Criar Promise que resolve quando estiver conectado (verificar estado + eventos)
       const joinPromise = new Promise((resolve, reject) => {
         let joined = false
+        let pollInterval = null
         
-        // Listener para sucesso
+        // Listener para sucesso via evento
         const onJoined = () => {
           if (!joined) {
             joined = true
-            callFrame.off('joined-meeting', onJoined)
-            resolve({ success: true })
+            console.log('[VideoRoomPage] ✓ Evento joined-meeting disparado')
+            clearInterval(pollInterval)
+            cleanup()
+            resolve({ success: true, via: 'event' })
           }
         }
         
@@ -322,14 +325,49 @@ export function VideoRoomPage() {
         const onJoinError = (error) => {
           if (!joined) {
             joined = true
-            callFrame.off('joined-meeting', onJoined)
-            callFrame.off('error', onJoinError)
+            console.log('[VideoRoomPage] ✗ Erro no join:', error)
+            clearInterval(pollInterval)
+            cleanup()
             reject(error)
           }
         }
         
+        // Listener para capturar TODOS os eventos (debugging)
+        const onAnyEvent = (event) => {
+          if (event.action && event.action !== 'noop' && !event.action.includes('stats')) {
+            console.log('[VideoRoomPage] Event disparado:', event.action)
+          }
+        }
+        
+        // Polling: verificar estado chamando callFrame.joined()
+        const pollJoined = () => {
+          try {
+            const isJoined = callFrame.joined()
+            console.log('[VideoRoomPage] Poll state: callFrame.joined() =', isJoined)
+            if (isJoined && !joined) {
+              joined = true
+              console.log('[VideoRoomPage] ✓ Polling detectou: conectado via callFrame.joined()')
+              clearInterval(pollInterval)
+              cleanup()
+              resolve({ success: true, via: 'polling' })
+            }
+          } catch (err) {
+            console.error('[VideoRoomPage] Erro ao checar callFrame.joined():', err)
+          }
+        }
+        
+        const cleanup = () => {
+          callFrame.off('joined-meeting', onJoined)
+          callFrame.off('error', onJoinError)
+          callFrame.off('*', onAnyEvent)
+        }
+        
         callFrame.on('joined-meeting', onJoined)
         callFrame.on('error', onJoinError)
+        callFrame.on('*', onAnyEvent) // Capturar todos os eventos para diagnosticar
+        
+        // Iniciar polling a cada 500ms
+        pollInterval = setInterval(pollJoined, 500)
         
         // Chamar join
         console.log('[VideoRoomPage] 🔄 Chamando callFrame.join()...')
