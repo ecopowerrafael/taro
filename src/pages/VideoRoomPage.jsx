@@ -26,6 +26,7 @@ export function VideoRoomPage() {
   const callAlreadyEndedRef = useRef(false) // Prevenir múltiplas chamadas a handleLeaveCall
   const savedElapsedSecondsRef = useRef(0) // Salvar elapsedSeconds quando outra pessoa sai
   const joinInProgressRef = useRef(false) // Prevenir chamadas simultâneas de joinCall
+  const wakeLockRef = useRef(null) // Screen wake lock para evitar descanso da tela
 
   const formatElapsed = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
@@ -447,6 +448,53 @@ export function VideoRoomPage() {
       
       setIsCallActive(true)
       setCallStartedAt((prev) => prev ?? Date.now())
+      
+      // ═══════════════════════════════════════════════════════════════
+      // 🎥 INICIAR CÂMERA E MICROFONE AUTOMATICAMENTE
+      // ═══════════════════════════════════════════════════════════════
+      await new Promise(resolve => setTimeout(resolve, 500))
+      try {
+        const devices = await callFrame.enumerateDevices()
+        console.log('[VideoRoomPage] Dispositivos disponíveis:', {
+          cameras: devices.videoinput?.length,
+          microphones: devices.audioinput?.length
+        })
+        
+        if (devices.videoinput?.length > 0 && devices.audioinput?.length > 0) {
+          const firstCamera = devices.videoinput[0]
+          const firstMic = devices.audioinput[0]
+          
+          console.log('[VideoRoomPage] 🎥 Iniciando dispositivos:', {
+            camera: firstCamera?.label,
+            mic: firstMic?.label
+          })
+          
+          await callFrame.setInputDevices({
+            videoInput: { deviceId: firstCamera?.deviceId },
+            audioInput: { deviceId: firstMic?.deviceId }
+          })
+          
+          console.log('[VideoRoomPage] ✓ Câmera e microfone iniciados')
+        }
+      } catch (err) {
+        console.warn('[VideoRoomPage] Erro ao iniciar dispositivos:', err.message)
+      }
+      
+      // ═══════════════════════════════════════════════════════════════
+      // 🔒 ATIVAR SCREEN WAKE LOCK (evita descanso da tela)
+      // ═══════════════════════════════════════════════════════════════
+      try {
+        if (navigator.wakeLock) {
+          wakeLockRef.current = await navigator.wakeLock.request('screen')
+          console.log('[VideoRoomPage] ✓ Screen Wake Lock ativado')
+          
+          wakeLockRef.current.addEventListener('release', () => {
+            console.log('[VideoRoomPage] Screen Wake Lock foi liberado')
+          })
+        }
+      } catch (err) {
+        console.warn('[VideoRoomPage] Screen Wake Lock não disponível:', err.message)
+      }
     } catch (e) {
       console.error('[VideoRoomPage] ✗✗✗ ERRO ao entrar na sala')
       console.error('[VideoRoomPage] Erro type:', typeof e)
@@ -514,6 +562,19 @@ export function VideoRoomPage() {
     }
     
     callAlreadyEndedRef.current = true
+    
+    // ═══════════════════════════════════════════════════════════════
+    // 🔓 LIBERAR SCREEN WAKE LOCK
+    // ═══════════════════════════════════════════════════════════════
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release()
+        wakeLockRef.current = null
+        console.log('[VideoRoomPage] ✓ Screen Wake Lock liberado')
+      } catch (err) {
+        console.warn('[VideoRoomPage] Erro ao liberar Screen Wake Lock:', err.message)
+      }
+    }
     
     console.log('[VideoRoomPage] Estado atual:', { isCallActive, callStartedAt, sessionId, billingConnected: billing.isConnected, billingActive: !!billing.activeSession })
     
@@ -618,6 +679,12 @@ export function VideoRoomPage() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      // Liberar Screen Wake Lock ao desmontar
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release().catch(() => {})
+        wakeLockRef.current = null
+      }
+      
       if (callFrameRef.current) {
         callFrameRef.current.leave()
         callFrameRef.current.destroy()
