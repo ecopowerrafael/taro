@@ -25,6 +25,7 @@ export function VideoRoomPage() {
   const otherUserLeftRef = useRef(false)
   const callAlreadyEndedRef = useRef(false) // Prevenir múltiplas chamadas a handleLeaveCall
   const savedElapsedSecondsRef = useRef(0) // Salvar elapsedSeconds quando outra pessoa sai
+  const joinInProgressRef = useRef(false) // Prevenir chamadas simultâneas de joinCall
 
   const formatElapsed = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
@@ -112,6 +113,8 @@ export function VideoRoomPage() {
     if (session.isConsultant) return
 
     const interval = setInterval(async () => {
+      if (joinInProgressRef.current) return // Guard contra chamadas simultâneas
+      
       // In a real prod environment we'd use WebSockets. Here we poll status every 10s
       try {
         const res = await fetch(`/api/video-sessions/${sessionId}`, {
@@ -136,10 +139,20 @@ export function VideoRoomPage() {
   const joinCall = async (sessionData) => {
     console.log('[VideoRoomPage] joinCall chamado com sessionData.isConsultant:', sessionData.isConsultant)
     
+    // Guard contra chamadas simultâneas
+    if (joinInProgressRef.current) {
+      console.warn('[VideoRoomPage] ⚠️  joinCall já em progresso, ignorando chamada duplicada')
+      return
+    }
+    joinInProgressRef.current = true
+    
     // Reset flag SEMPRE para nova entrada
     callAlreadyEndedRef.current = false
     
-    if (!containerRef.current) return
+    if (!containerRef.current) {
+      joinInProgressRef.current = false
+      return
+    }
     
     // Marcar sessão como ativa no DB se ainda não estiver
     if (sessionData.status !== 'active') {
@@ -262,7 +275,7 @@ export function VideoRoomPage() {
       const joinResult = await Promise.race([
         joinPromise,
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Join timeout after 30s')), 30000)
+          setTimeout(() => reject(new Error('Join timeout after 60s')), 60000)
         )
       ])
       
@@ -341,6 +354,9 @@ export function VideoRoomPage() {
       // ❌ Se o join falhou, resetar isCallActive
       setIsCallActive(false)
       callAlreadyEndedRef.current = false
+    } finally {
+      // Sempre resetar o guard, independente de sucesso ou erro
+      joinInProgressRef.current = false
     }
   }
 
