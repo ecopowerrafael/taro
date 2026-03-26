@@ -212,6 +212,34 @@ export function VideoRoomPage() {
     
     callFrameRef.current = callFrame
     
+    // Auto-click no botão Join do Daily para pular a tela de prejoin
+    // Daily renderiza um button com id "haircheck-join" quando está pronto
+    const autoClickJoinButton = () => {
+      const iframeWindow = containerRef.current?.querySelector('iframe')?.contentWindow
+      if (iframeWindow) {
+        try {
+          const joinBtn = iframeWindow.document.getElementById('haircheck-join')
+          if (joinBtn) {
+            console.log('[VideoRoomPage] 🖱️ Auto-clicando botão Join do Daily')
+            joinBtn.click()
+          }
+        } catch (err) {
+          console.log('[VideoRoomPage] Não consegui acessar iframe (CORS provavelmente):', err.message)
+        }
+      }
+    }
+    
+    // Tentar clicar após frame renderizar (loop até conseguir)
+    let clickAttempts = 0
+    const clickInterval = setInterval(() => {
+      clickAttempts++
+      autoClickJoinButton()
+      if (clickAttempts > 15) {
+        // Parar de tentar após 15 tentativas (7.5 segundos)
+        clearInterval(clickInterval)
+      }
+    }, 500)
+    
     // ADICIONAR LISTENERS ANTES DE JOIN (crucial!)
     callFrame.on('joined-meeting', () => {
       console.log('[VideoRoomPage] ✓ joined-meeting event disparado - entrou na sala com sucesso')
@@ -376,10 +404,31 @@ export function VideoRoomPage() {
         callFrame.on('error', onJoinError)
         callFrame.on('*', onAnyEvent) // Capturar todos os eventos para diagnosticar
         
+        // Tentar atualizar input settings para pular prejoin
+        try {
+          callFrame.setInputDevices({
+            audioSource: true,  // Usar audio default
+            videoSource: true  // Usar video default
+          })
+          console.log('[VideoRoomPage] Input devices configurados, tentando pular prejoin')
+        } catch (err) {
+          console.log('[VideoRoomPage] Erro ao setInputDevices (normal):', err.message)
+        }
+        
         // Chamar join
         console.log('[VideoRoomPage] 🔄 Chamando callFrame.join()...')
+        
+        // Preparar URL com parâmetro para pular prejoin UI
+        let joinUrl = sessionData.roomUrl
+        // Adicionar parâmetro para desabilitar prejoin (tenta múltiplos nomes conhecidos)
+        if (!joinUrl.includes('?')) {
+          joinUrl += '?show_prejoin_ui=false'
+        } else {
+          joinUrl += '&show_prejoin_ui=false'
+        }
+        
         callFrame.join({
-          url: sessionData.roomUrl,
+          url: joinUrl,
           token: sessionData.dailyToken
         }).catch(reject)
         
