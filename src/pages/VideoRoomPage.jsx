@@ -23,6 +23,7 @@ export function VideoRoomPage() {
   const containerRef = useRef(null)
   const socketRef = useRef(null)
   const otherUserLeftRef = useRef(false)
+  const callAlreadyEndedRef = useRef(false) // Prevenir múltiplas chamadas a handleLeaveCall
 
   const formatElapsed = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
@@ -56,15 +57,18 @@ export function VideoRoomPage() {
     socketRef.current = io()
     
     socketRef.current.on('other_user_left_call', () => {
+      console.log('[VideoRoomPage] Socket.io: other_user_left_call disparado')
       otherUserLeftRef.current = true
       setSystemNotice('O outro participante saiu da chamada.')
       // Dar um tempo para o outro lado receber o evento antes de navegar
       setTimeout(() => {
+        console.log('[VideoRoomPage] Socket.io: Chamando handleLeaveCall após delay')
         handleLeaveCall()
       }, 500)
     })
 
     return () => {
+      console.log('[VideoRoomPage] Desconectando socket.io')
       if (socketRef.current) {
         socketRef.current.disconnect()
       }
@@ -124,6 +128,13 @@ export function VideoRoomPage() {
   const joinCall = async (sessionData) => {
     console.log('[VideoRoomPage] joinCall chamado com sessionData.isConsultant:', sessionData.isConsultant)
     
+    // Reset flag para evitar dupla execução
+    if (!callAlreadyEndedRef.current) {
+      console.log('[VideoRoomPage] Note: callAlreadyendedRef já estava true, reset não necessário')
+    } else {
+      callAlreadyEndedRef.current = false
+    }
+    
     if (!containerRef.current) return
     
     // Marcar sessão como ativa no DB se ainda não estiver
@@ -149,6 +160,7 @@ export function VideoRoomPage() {
     
     // Iniciar faturamento se for o cliente
     if (!sessionData.isConsultant) {
+      console.log('[VideoRoomPage] Cliente iniciando faturamento. pricePerMinute:', sessionData.pricePerMinute)
       billing.startSession({
         consultantId: sessionData.consultantId,
         consultantName: sessionData.consultantName,
@@ -158,23 +170,33 @@ export function VideoRoomPage() {
     }
 
     callFrame.on('left-meeting', () => {
-      handleLeaveCall()
+      console.log('[VideoRoomPage] Daily.io left-meeting event disparado. isCallActive:', isCallActive)
+      // Só chamar handleLeaveCall se realmente estamos em uma chamada
+      if (isCallActive && !callAlreadyEndedRef.current) {
+        console.log('[VideoRoomPage] Chamando handleLeaveCall do left-meeting event')
+        handleLeaveCall()
+      } else {
+        console.log('[VideoRoomPage] Ignorando left-meeting: isCallActive=', isCallActive, 'callAlreadyEnded=', callAlreadyEndedRef.current)
+      }
     })
 
     try {
+      console.log('[VideoRoomPage] Tentando entrar na room:', sessionData.roomUrl)
       await callFrame.join({
         url: sessionData.roomUrl,
         token: sessionData.dailyToken // Usado se a sala for privada
       })
+      console.log('[VideoRoomPage] Entrou na room com sucesso')
       setIsCallActive(true)
       setCallStartedAt((prev) => prev ?? Date.now())
     } catch (e) {
-      console.error('Erro ao entrar na sala do Daily', e)
+      console.error('[VideoRoomPage] Erro ao entrar na sala do Daily:', e)
       setSystemNotice('Erro ao conectar na sala de vídeo.')
     }
   }
 
   const handleStartByConsultant = async () => {
+    callAlreadyEndedRef.current = false // Reset para nova sessão
     setIsCallActive(true)
     
     try {
@@ -199,7 +221,7 @@ export function VideoRoomPage() {
         })
         
         console.log('[VideoRoomPage] billing.startSession retornou:', started)
-        
+
         setTimeout(() => {
           joinCall(freshSession)
         }, 100)
@@ -208,16 +230,35 @@ export function VideoRoomPage() {
       console.error('Erro ao iniciar atendimento:', err)
       setSystemNotice('Erro ao iniciar atendimento.')
       setIsCallActive(false)
+      callAlreadyEndedRef.current = false
     }
   }
 
   const handleLeaveCall = async () => {
-    console.log('[VideoRoomPage] handleLeaveCall chamado')
+    console.log('[VideoRoomPage] handleLeaveCall chamado. callAlreadyEnded:', callAlreadyEndedRef.current)
+    
+    if (callAlreadyEndedRef.current) {
+      console.log('[VideoRoomPage] handleLeaveCall já foi executado, ignorando chamada duplicada')
+      return
+    }
+    
+    callAlreadyEndedRef.current = true
+    
+    console.log('[VideoRoomPage] Estado atual:', { isCallActive, callStartedAt, sessionId, billingConnected: billing.isConnected, billingActive: !!billing.activeSession })
     
     if (callFrameRef.current) {
-      await callFrameRef.current.leave()
-      callFrameRef.current.destroy()
+      console.log('[VideoRoomPage] Limpando Daily.io frame')
+      try {
+        await callFrameRef.current.leave()
+      } catch (e) {
+        console.error('[VideoRoomPage] Erro ao sair da room:', e)
+      }
+      if (callFrameRef.current) {
+        callFrameRef.current.destroy()
+      }
       callFrameRef.current = null
+    } else {
+      console.log('[VideoRoomPage] callFrameRef.current é null, pulando limpeza do Daily')
     }
     
     // Calcular duração e ganho do consultor
@@ -227,11 +268,14 @@ export function VideoRoomPage() {
       ? durationMinutes * (session.pricePerMinute || 0)
       : 0
 
-    console.log('[VideoRoomPage] Chamada finalizada. durationSeconds:', durationSeconds, 'billing.isConnected:', billing.isConnected)
+    console.log('[VideoRoomPage] Chamada finalizada. durationSeconds:', durationSeconds, 'durationMinutes:', durationMinutes, 'consultantEarnings:', consultantEarnings)
+    console.log('[VideoRoomPage] billing state antes de stopSession:', { isConnected: billing.isConnected, elapsedSeconds: billing.elapsedSeconds, consumedValue: billing.consumedValue })
 
     // Para faturamento (cliente ou consultor)
     console.log('[VideoRoomPage] Chamando billing.stopSession()')
     billing.stopSession()
+    
+    console.log('[VideoRoomPage] billing state após stopSession:', { isConnected: billing.isConnected, elapsedSeconds: billing.elapsedSeconds })
 
     // Salvar sessão com duração e earnings
     try {
@@ -245,7 +289,7 @@ export function VideoRoomPage() {
         })
       })
     } catch (err) {
-      console.error('Erro ao finalizar sessão:', err)
+      console.error('[VideoRoomPage] Erro ao finalizar sessão:', err)
     }
 
     // Emitir evento para o outro participante também sair

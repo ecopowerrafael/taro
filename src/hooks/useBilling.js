@@ -5,6 +5,7 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [isConnected, setIsConnected] = useState(false)
   const consumedRef = useRef(false)
+  const stopCalledRef = useRef(false) // Prevenir múltiplas chamadas
 
   const pricePerMinute = Number(activeSession?.pricePerMinute ?? 1) // Default 1 real/min se não especificado
   const consumedMinutes = Math.floor(elapsedSeconds / 60)
@@ -14,7 +15,14 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
   const hasSufficientBalance = balanceMinutes > 0
 
   const stopSession = useCallback(() => {
-    console.log('[useBilling] stopSession chamado')
+    console.log('[useBilling] stopSession chamado. stopCalledRef.current:', stopCalledRef.current)
+    
+    // Prevent calling stop multiple times
+    if (stopCalledRef.current) {
+      console.log('[useBilling] stopSession já foi chamado, ignorando chamada duplicada')
+      return
+    }
+
     setIsConnected(false)
     setActiveSession((session) => {
       if (session && !consumedRef.current) {
@@ -36,6 +44,7 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
       return null
     })
     setElapsedSeconds(0)
+    stopCalledRef.current = true
   }, [onConsume])
 
   const startSession = useCallback(
@@ -67,8 +76,22 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
     [hasSufficientBalance, onInsufficientBalance],
   )
 
+  const intervalRef = useRef(null)
+  const activeSessionRef = useRef(activeSession)
+
+  // Manter ref em sync com state
+  useEffect(() => {
+    activeSessionRef.current = activeSession
+  }, [activeSession])
+
   useEffect(() => {
     if (!isConnected || !activeSession) {
+      console.log('[useBilling] Intervalo effect: isConnected=', isConnected, 'activeSession=', activeSession)
+      if (intervalRef.current) {
+        console.log('[useBilling] Limpando intervalo anterior')
+        window.clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
       return undefined
     }
 
@@ -76,8 +99,11 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
 
     // Simplificar atualização para teste: 1s em modo normal, 10s em modo teste
     const intervalMs = testMode ? 10000 : 1000
+    let callCount = 0
 
-    const interval = window.setInterval(() => {
+    intervalRef.current = window.setInterval(() => {
+      callCount++
+      console.log(`[useBilling] Intervalo callback #${callCount} disparado (intervalMs=${intervalMs})`)
       setElapsedSeconds((prev) => {
         const next = prev + 1
         console.log(`[useBilling] elapsedSeconds: ${prev} -> ${next}`)
@@ -85,11 +111,16 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
       })
     }, intervalMs)
 
+    console.log(`[useBilling] Intervalo criado com ID:`, intervalRef.current, 'intervalo:', intervalMs, 'ms')
+
     return () => {
-      console.log('[useBilling] Limpando intervalo')
-      window.clearInterval(interval)
+      console.log('[useBilling] Cleanup: Limpando intervalo ID:', intervalRef.current, 'foi disparado', callCount, 'vezes')
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
     }
-  }, [activeSession, isConnected, testMode])
+  }, [isConnected, testMode])
 
   useEffect(() => {
     if (isConnected && remainingMinutes <= 0) {
