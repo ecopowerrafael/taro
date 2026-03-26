@@ -172,8 +172,6 @@ export function VideoRoomPage() {
         border: 'none',
         borderRadius: '12px'
       },
-      audioSource: false,
-      videoSource: false,
       userName: profile?.name || sessionData.consultantName || 'Usuário'
     })
     
