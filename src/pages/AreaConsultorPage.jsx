@@ -404,6 +404,10 @@ export function AreaConsultorPage() {
     }
     try {
       console.log('[handleSaveProfile] Starting save with:', { selectedConsultantId, persistConsultantWithResult })
+      // Este é auto-edição se o consultor está editando seu próprio perfil
+      const isSelfEdit = selectedConsultantId === userConsultantProfile?.id
+      console.log('[handleSaveProfile] Is self edit:', isSelfEdit)
+      
       const success = await persistConsultantWithResult(selectedConsultantId, {
         name: profileDraft.name.trim(),
         email: profileDraft.email.trim().toLowerCase(),
@@ -413,7 +417,7 @@ export function AreaConsultorPage() {
         pricePerMinute: parseCurrency(profileDraft.pricePerMinute),
         priceThreeQuestions: parseCurrency(profileDraft.priceThreeQuestions),
         priceFiveQuestions: parseCurrency(profileDraft.priceFiveQuestions),
-      })
+      }, isSelfEdit)
       console.log('[handleSaveProfile] Result:', success)
       if (success) {
         setPanelNotice('Perfil do consultor atualizado com sucesso.')

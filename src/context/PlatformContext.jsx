@@ -471,14 +471,19 @@ export function PlatformProvider({ children }) {
     }
   }
 
-  const upsertConsultantOnApi = async (consultant) => {
-    console.log('[upsertConsultantOnApi] Attempting PUT with token:', !!token, 'token length:', token?.length)
+  const upsertConsultantOnApi = async (consultant, isSelfEdit = false) => {
+    console.log('[upsertConsultantOnApi] Attempting PUT with token:', !!token, 'token length:', token?.length, 'isSelfEdit:', isSelfEdit)
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    }
+    // Se for auto-edição de consultor, adiciona header para indicar ao backend
+    if (isSelfEdit) {
+      headers['X-Self-Edit'] = 'true'
+    }
     const response = await fetch(buildApiUrl(`/api/consultants/${consultant.id}`), {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers,
       body: JSON.stringify(consultant),
     })
     console.log('[upsertConsultantOnApi] Response status:', response.status, 'ok:', response.ok)
@@ -489,10 +494,10 @@ export function PlatformProvider({ children }) {
     return response.ok
   }
 
-  const persistConsultant = async (consultant) => {
+  const persistConsultant = async (consultant, isSelfEdit = false) => {
     try {
-      console.log('[persistConsultant] Starting with consultant:', consultant.id)
-      const ok = await upsertConsultantOnApi(consultant)
+      console.log('[persistConsultant] Starting with consultant:', consultant.id, 'isSelfEdit:', isSelfEdit)
+      const ok = await upsertConsultantOnApi(consultant, isSelfEdit)
       console.log('[persistConsultant] Result:', ok)
       if (!ok) {
         setSystemNotice('Não foi possível salvar alterações do consultor no backend.')
@@ -812,8 +817,8 @@ export function PlatformProvider({ children }) {
     }
   }
 
-  const persistConsultantWithResult = async (id, updates) => {
-    console.log('[persistConsultantWithResult] Starting with id:', id)
+  const persistConsultantWithResult = async (id, updates, isSelfEdit = false) => {
+    console.log('[persistConsultantWithResult] Starting with id:', id, 'isSelfEdit:', isSelfEdit)
     let updatedConsultant = null
     setConsultants((prev) =>
       prev.map((consultant) => {
@@ -827,7 +832,7 @@ export function PlatformProvider({ children }) {
     )
     if (updatedConsultant) {
       console.log('[persistConsultantWithResult] Calling persistConsultant')
-      return await persistConsultant(updatedConsultant)
+      return await persistConsultant(updatedConsultant, isSelfEdit)
     }
     console.log('[persistConsultantWithResult] No consultant found')
     return false
