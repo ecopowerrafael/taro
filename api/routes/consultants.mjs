@@ -41,11 +41,24 @@ export const createConsultantsRouter = (pool) => {
     const isSelfEdit = request.user.id === id
     const isSelfEditHeader = request.headers['x-self-edit'] === 'true'
 
+    console.log('[PUT /consultants/:id] Request details:', {
+      id,
+      userId: request.user.id,
+      userRole: request.user.role,
+      isAdmin,
+      isSelfEdit,
+      isSelfEditHeader,
+      headers: Object.keys(request.headers),
+    })
+
     // Permitir: admin OU (self-edit com header de confirmação)
     if (!isAdmin && (!isSelfEdit || !isSelfEditHeader)) {
+      console.log('[PUT /consultants/:id] Access denied - isAdmin:', isAdmin, 'isSelfEdit:', isSelfEdit, 'isSelfEditHeader:', isSelfEditHeader)
       response.status(403).json({ message: 'Acesso restrito a administradores.' })
       return
     }
+
+    console.log('[PUT /consultants/:id] Access allowed - proceeding with update')
 
     const {
       name,
