@@ -177,6 +177,106 @@ export const createConsultantsRouter = (pool) => {
     response.json({ ok: true })
   })
 
+  // Endpoint para consultor editar seu próprio perfil (sem exigir admin)
+  router.post('/profile/:id', authenticate, async (request, response) => {
+    const { id } = request.params
+    
+    // Permitir apenas se está editando seu próprio perfil
+    if (request.user.id !== id) {
+      console.log('[POST /consultants/profile/:id] Access denied - not own profile', {
+        userId: request.user.id,
+        targetId: id,
+      })
+      response.status(403).json({ message: 'Você só pode editar seu próprio perfil.' })
+      return
+    }
+
+    console.log('[POST /consultants/profile/:id] Self-edit allowed for:', id)
+
+    const {
+      name,
+      email,
+      tagline,
+      description,
+      photo,
+      pricePerMinute,
+      priceThreeQuestions,
+      priceFiveQuestions,
+    } = request.body ?? {}
+
+    if (!name || !email) {
+      response.status(400).json({ message: 'name e email são obrigatórios.' })
+      return
+    }
+
+    // Consultor NÃO pode editar estes campos - buscar valores atuais
+    const [existing] = await pool.query(
+      'SELECT status, baseConsultations, realSessions, ratingAverage, commissionOverride, createdAt FROM consultants WHERE id = ?',
+      [id],
+    )
+    const existingData = existing && existing.length > 0 ? existing[0] : null
+
+    await pool.query(
+      `
+        INSERT INTO consultants (
+          id,
+          name,
+          email,
+          tagline,
+          description,
+          status,
+          photo,
+          pricePerMinute,
+          priceThreeQuestions,
+          priceFiveQuestions,
+          baseConsultations,
+          realSessions,
+          ratingAverage,
+          commissionOverride,
+          createdAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          name = VALUES(name),
+          email = VALUES(email),
+          tagline = VALUES(tagline),
+          description = VALUES(description),
+          photo = VALUES(photo),
+          pricePerMinute = VALUES(pricePerMinute),
+          priceThreeQuestions = VALUES(priceThreeQuestions),
+          priceFiveQuestions = VALUES(priceFiveQuestions)
+      `,
+      [
+        id,
+        name,
+        email,
+        tagline || null,
+        description || null,
+        existingData?.status || 'Offline',
+        photo || null,
+        parseNumber(pricePerMinute),
+        parseNumber(priceThreeQuestions),
+        parseNumber(priceFiveQuestions),
+        existingData?.baseConsultations || 0,
+        existingData?.realSessions || 0,
+        existingData?.ratingAverage || 0,
+        existingData?.commissionOverride || null,
+        existingData?.createdAt || null,
+      ],
+    )
+
+    await pool.query(
+      `
+        INSERT INTO consultant_wallets (consultantId, availableBalance, pixKey)
+        VALUES (?, 0, NULL)
+        ON DUPLICATE KEY UPDATE consultantId = VALUES(consultantId)
+      `,
+      [id],
+    )
+
+    console.log('[POST /consultants/profile/:id] Profile updated successfully')
+    response.json({ ok: true })
+  })
+
   router.patch('/:id/status', authenticate, async (request, response) => {
     const { id } = request.params
     const { status } = request.body ?? {}

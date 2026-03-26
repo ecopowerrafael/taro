@@ -472,15 +472,32 @@ export function PlatformProvider({ children }) {
   }
 
   const upsertConsultantOnApi = async (consultant, isSelfEdit = false) => {
-    console.log('[upsertConsultantOnApi] Attempting PUT with token:', !!token, 'token length:', token?.length, 'isSelfEdit:', isSelfEdit)
+    console.log('[upsertConsultantOnApi] Attempting with isSelfEdit:', isSelfEdit, 'consultant:', consultant.id)
+    
+    // Se for auto-edição, usar endpoint POST /consultants/profile/:id
+    if (isSelfEdit) {
+      console.log('[upsertConsultantOnApi] Using POST /profile endpoint for self-edit')
+      const response = await fetch(buildApiUrl(`/api/consultants/profile/${consultant.id}`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(consultant),
+      })
+      console.log('[upsertConsultantOnApi] POST Response status:', response.status, 'ok:', response.ok)
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('[upsertConsultantOnApi] POST Error response:', errorText)
+      }
+      return response.ok
+    }
+
+    // Para admin, usar PUT tradicional
+    console.log('[upsertConsultantOnApi] Using PUT endpoint for admin')
     const headers = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
-    }
-    // Se for auto-edição de consultor, adiciona header para indicar ao backend
-    if (isSelfEdit) {
-      headers['X-Self-Edit'] = 'true'
-      console.log('[upsertConsultantOnApi] Added X-Self-Edit header: true')
     }
     console.log('[upsertConsultantOnApi] Headers being sent:', Object.keys(headers))
     console.log('[upsertConsultantOnApi] Consultant ID:', consultant.id)
@@ -490,10 +507,10 @@ export function PlatformProvider({ children }) {
       headers,
       body: JSON.stringify(consultant),
     })
-    console.log('[upsertConsultantOnApi] Response status:', response.status, 'ok:', response.ok)
+    console.log('[upsertConsultantOnApi] PUT Response status:', response.status, 'ok:', response.ok)
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('[upsertConsultantOnApi] Error response:', errorText)
+      console.error('[upsertConsultantOnApi] PUT Error response:', errorText)
     }
     return response.ok
   }
