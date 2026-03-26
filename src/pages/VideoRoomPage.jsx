@@ -153,6 +153,24 @@ export function VideoRoomPage() {
       joinInProgressRef.current = false
       return
     }
+
+    // 🔴 DESTRUIR FRAME ANTERIOR ANTES DE CRIAR NOVO (evita Duplicate DailyIframe error)
+    if (callFrameRef.current) {
+      console.log('[VideoRoomPage] 🗑️  Destruindo callFrame anterior')
+      try {
+        await callFrameRef.current.leave().catch(() => {})
+        callFrameRef.current.destroy()
+      } catch (e) {
+        console.warn('[VideoRoomPage] Erro ao destruir frame anterior:', e.message)
+      }
+      callFrameRef.current = null
+      // Limpar o container para evitar conflitos
+      if (containerRef.current) {
+        containerRef.current.innerHTML = ''
+      }
+      // Dar tempo ao DOM atualizar
+      await new Promise(resolve => setTimeout(resolve, 300))
+    }
     
     // Marcar sessão como ativa no DB se ainda não estiver
     if (sessionData.status !== 'active') {
@@ -291,7 +309,7 @@ export function VideoRoomPage() {
       const joinResult = await Promise.race([
         joinPromise,
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Join timeout after 60s')), 60000)
+          setTimeout(() => reject(new Error('Join timeout after 90s')), 90000)
         )
       ])
       
@@ -362,7 +380,7 @@ export function VideoRoomPage() {
         setSystemNotice('Erro: Sala não encontrada ou inválida.')
       } else if (e?.message?.includes('timeout')) {
         console.error('[VideoRoomPage] ⚠️  TIMEOUT ao conectar - servidor Daily.co pode estar lento')
-        setSystemNotice('Timeout ao conectar à sala. Tente novamente.')
+        setSystemNotice('Timeout ao conectar à sala. Verifique sua conexão e tente novamente.')
       } else {
         setSystemNotice('Erro ao conectar: ' + (e?.message || 'Erro desconhecido'))
       }
