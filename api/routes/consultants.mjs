@@ -35,8 +35,18 @@ export const createConsultantsRouter = (pool) => {
     response.json(rows)
   })
 
-  router.put('/:id', authenticate, authorizeAdmin, async (request, response) => {
+  router.put('/:id', authenticate, async (request, response) => {
     const { id } = request.params
+    const isAdmin = request.user.role === 'admin'
+    const isSelfEdit = request.user.id === id
+    const isSelfEditHeader = request.headers['x-self-edit'] === 'true'
+
+    // Permitir: admin OU (self-edit com header de confirmação)
+    if (!isAdmin && (!isSelfEdit || !isSelfEditHeader)) {
+      response.status(403).json({ message: 'Acesso restrito a administradores.' })
+      return
+    }
+
     const {
       name,
       email,
@@ -57,6 +67,33 @@ export const createConsultantsRouter = (pool) => {
     if (!name || !email) {
       response.status(400).json({ message: 'name e email são obrigatórios.' })
       return
+    }
+
+    // Se for consultor editando a si mesmo, não permitir editar certos campos
+    let finalStatus = status
+    let finalBaseConsultations = baseConsultations
+    let finalRealSessions = realSessions
+    let finalRatingAverage = ratingAverage
+    let finalCommissionOverride = commissionOverride
+
+    if (isSelfEdit && !isAdmin) {
+      // Consultor não pode editar estes campos - manter os valores existentes
+      // Buscar valores atuais do banco para não sobrescrever
+      const [existing] = await pool.query('SELECT status, baseConsultations, realSessions, ratingAverage, commissionOverride FROM consultants WHERE id = ?', [id])
+      if (existing && existing.length > 0) {
+        finalStatus = existing[0].status
+        finalBaseConsultations = existing[0].baseConsultations
+        finalRealSessions = existing[0].realSessions
+        finalRatingAverage = existing[0].ratingAverage
+        finalCommissionOverride = existing[0].commissionOverride
+      } else {
+        // Se não existe, usar defaults
+        finalStatus = 'Offline'
+        finalBaseConsultations = 0
+        finalRealSessions = 0
+        finalRatingAverage = 0
+        finalCommissionOverride = null
+      }
     }
 
     await pool.query(
@@ -100,17 +137,17 @@ export const createConsultantsRouter = (pool) => {
         email,
         tagline || null,
         description || null,
-        ['Online', 'Offline', 'Ocupado'].includes(status) ? status : 'Offline',
+        ['Online', 'Offline', 'Ocupado'].includes(finalStatus) ? finalStatus : 'Offline',
         photo || null,
         parseNumber(pricePerMinute),
         parseNumber(priceThreeQuestions),
         parseNumber(priceFiveQuestions),
-        Math.max(0, Math.floor(parseNumber(baseConsultations))),
-        Math.max(0, Math.floor(parseNumber(realSessions))),
-        parseNumber(ratingAverage),
-        commissionOverride === null || commissionOverride === undefined || commissionOverride === ''
+        Math.max(0, Math.floor(parseNumber(finalBaseConsultations))),
+        Math.max(0, Math.floor(parseNumber(finalRealSessions))),
+        parseNumber(finalRatingAverage),
+        finalCommissionOverride === null || finalCommissionOverride === undefined || finalCommissionOverride === ''
           ? null
-          : parseNumber(commissionOverride),
+          : parseNumber(finalCommissionOverride),
         createdAt || null,
       ],
     )
