@@ -27,6 +27,7 @@ export function VideoRoomPage() {
   const savedElapsedSecondsRef = useRef(0) // Salvar elapsedSeconds quando outra pessoa sai
   const joinInProgressRef = useRef(false) // Prevenir chamadas simultâneas de joinCall
   const wakeLockRef = useRef(null) // Screen wake lock para evitar descanso da tela
+  const resizeHandlerRef = useRef(null) // Handler de resize para layout PIP
 
   const formatElapsed = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
@@ -214,13 +215,77 @@ export function VideoRoomPage() {
       containerRef.current.innerHTML = '<div id="daily-video-container" style="width: 100%; height: 100%; background: #000; border-radius: 12px;"></div>'
     }
     
-    // Renderizar container HTML para vídeos
+    // Renderizar container HTML para vídeos com layout PIP
     if (containerRef.current) {
-      containerRef.current.innerHTML = '<div id="daily-video-container" style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; height: 100%; background: #000; border-radius: 12px; padding: 12px; overflow: auto;"></div>'
+      containerRef.current.innerHTML = `
+        <div id="daily-video-container" style="
+          position: relative;
+          width: 100%;
+          height: 100%;
+          background: #000;
+          border-radius: 12px;
+          overflow: hidden;
+        ">
+          <style>
+            @media (max-width: 768px) {
+              /* Mobile: Layout PIP */
+              #daily-video-container {
+                display: flex;
+                align-items: stretch;
+                justify-content: center;
+              }
+              
+              /* Vídeo remoto: fullscreen */
+              #daily-video-container [data-participant-type="remote"] {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1;
+              }
+              
+              /* Vídeo local: PIP corner */
+              #daily-video-container [data-participant-type="local"] {
+                position: absolute;
+                bottom: 16px;
+                right: 16px;
+                width: 120px;
+                aspect-ratio: 9/16;
+                z-index: 10;
+                border: 3px solid rgba(255, 255, 255, 0.3);
+                border-radius: 8px;
+              }
+              
+              /* Esconder todos os outros containers */
+              #daily-video-container > div:not([data-participant-type]) {
+                display: none;
+              }
+            }
+            
+            @media (min-width: 769px) {
+              /* Desktop: Layout lado-a-lado */
+              #daily-video-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                padding: 12px;
+                overflow: auto;
+              }
+              
+              /* Todos os vídeos: grid */
+              #daily-video-container > div {
+                flex: 1 1 calc(50% - 6px);
+                min-width: 280px;
+              }
+            }
+          </style>
+        </div>
+      `
     }
     
     // Função para criar container de vídeo para um participante
-    const createVideoContainer = (participantId) => {
+    const createVideoContainer = (participantId, isLocal = false) => {
       const container = document.getElementById('daily-video-container')
       if (!container) return
       
@@ -230,7 +295,15 @@ export function VideoRoomPage() {
       
       const videoContainer = document.createElement('div')
       videoContainer.id = `video-container-${participantId}`
-      videoContainer.style.cssText = 'position: relative; width: 48%; aspect-ratio: 16/9; background: #111; border-radius: 8px; overflow: hidden;'
+      videoContainer.setAttribute('data-participant-type', isLocal ? 'local' : 'remote')
+      
+      if (window.innerWidth > 768) {
+        // Desktop: grid layout
+        videoContainer.style.cssText = 'position: relative; width: 48%; aspect-ratio: 16/9; background: #111; border-radius: 8px; overflow: hidden;'
+      } else {
+        // Mobile: será posicionado por CSS media query
+        videoContainer.style.cssText = 'position: relative; background: #111; border-radius: 8px; overflow: hidden;'
+      }
       
       const video = document.createElement('video')
       video.className = 'video-element'
@@ -240,7 +313,7 @@ export function VideoRoomPage() {
       
       videoContainer.appendChild(video)
       container.appendChild(videoContainer)
-      console.log('[VideoRoomPage] ✓ Video container criado para:', participantId)
+      console.log('[VideoRoomPage] ✓ Video container criado para:', participantId, 'isLocal:', isLocal)
     }
     
     // Função para criar elemento de áudio para participante remoto
@@ -290,9 +363,9 @@ export function VideoRoomPage() {
       
       console.log(`[VideoRoomPage] ${isLocal ? 'Local' : 'Remote'} participant updated: ${participant.user_name}`)
       
-      // Criar containers se não existirem
+      // Criar containers se não existirem (passando isLocal)
       if (!document.getElementById(`video-container-${participantId}`)) {
-        createVideoContainer(participantId)
+        createVideoContainer(participantId, isLocal)
       }
       if (!isLocal && !document.getElementById(`audio-${participantId}`)) {
         createAudioElement(participantId)
@@ -512,6 +585,19 @@ export function VideoRoomPage() {
       setCallStartedAt((prev) => prev ?? Date.now())
       
       // ═══════════════════════════════════════════════════════════════
+      // 📱 ADICIONAR LISTENER DE RESIZE PARA LAYOUT PIP
+      // ═══════════════════════════════════════════════════════════════
+      resizeHandlerRef.current = () => {
+        const container = document.getElementById('daily-video-container')
+        if (container) {
+          console.log('[VideoRoomPage] Window resized:', window.innerWidth, 'x', window.innerHeight)
+          // CSS media queries vão se adaptar automaticamente
+        }
+      }
+      window.addEventListener('resize', resizeHandlerRef.current)
+      console.log('[VideoRoomPage] ✓ Listener de resize adicionado para layout PIP')
+      
+      // ═══════════════════════════════════════════════════════════════
       // 🎥 ATIVAR CÂMERA E MICROFONE
       // ═══════════════════════════════════════════════════════════════
       try {
@@ -622,7 +708,7 @@ export function VideoRoomPage() {
     callAlreadyEndedRef.current = true
     
     // ═══════════════════════════════════════════════════════════════
-    // 🔓 LIBERAR SCREEN WAKE LOCK
+    // 🔓 LIBERAR SCREEN WAKE LOCK E REMOVER LISTENERS
     // ═══════════════════════════════════════════════════════════════
     if (wakeLockRef.current) {
       try {
@@ -632,6 +718,13 @@ export function VideoRoomPage() {
       } catch (err) {
         console.warn('[VideoRoomPage] Erro ao liberar Screen Wake Lock:', err.message)
       }
+    }
+    
+    // Remover listener de resize
+    if (resizeHandlerRef.current) {
+      window.removeEventListener('resize', resizeHandlerRef.current)
+      resizeHandlerRef.current = null
+      console.log('[VideoRoomPage] ✓ Listener de resize removido')
     }
     
     console.log('[VideoRoomPage] Estado atual:', { isCallActive, callStartedAt, sessionId, billingConnected: billing.isConnected, billingActive: !!billing.activeSession })
@@ -737,6 +830,12 @@ export function VideoRoomPage() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      // Remover listener de resize
+      if (resizeHandlerRef.current) {
+        window.removeEventListener('resize', resizeHandlerRef.current)
+        resizeHandlerRef.current = null
+      }
+      
       // Liberar Screen Wake Lock ao desmontar
       if (wakeLockRef.current) {
         wakeLockRef.current.release().catch(() => {})
