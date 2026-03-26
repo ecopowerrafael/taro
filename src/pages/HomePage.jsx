@@ -318,8 +318,8 @@ export function HomePage() {
         {/* PROFESSIONALS SECTION */}
         <section className="container mx-auto px-6 md:px-12 mb-32">
           <div className="rounded-2xl glass-panel border border-mystic-purple-light/20 p-12">
-            <h2 className="font-playfair text-4xl text-white mb-4 flex items-center gap-3">
-              Transforme seu Dom em <span className="text-gradient-gold italic">Carreira</span>
+            <h2 className="font-playfair text-4xl text-white mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <span>Transforme seu Dom em</span> <span className="text-gradient-gold italic">Carreira</span>
             </h2>
             <p className="text-mystic-purple-light max-w-2xl mb-12">
               Horários flexíveis, pagamentos semanais via PIX e suporte total ao profissional. Junte-se a nossa elite de consultores.

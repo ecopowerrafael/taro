@@ -348,13 +348,13 @@ export function AreaConsultorPage() {
     setPanelNotice('Chave PIX salva com sucesso.')
   }
 
-  const handleRequestWithdrawal = () => {
+  const handleRequestWithdrawal = async () => {
     const amount = Number(withdrawAmount)
     if (!amount || amount <= 0) {
       setPanelNotice('Informe um valor de saque válido.')
       return
     }
-    const result = requestConsultantWithdrawal({ consultantId: selectedConsultantId, amount })
+    const result = await requestConsultantWithdrawal({ consultantId: selectedConsultantId, amount })
     setPanelNotice(result.message)
     if (result.ok) {
       setWithdrawAmount('')
