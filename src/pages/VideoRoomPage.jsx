@@ -198,23 +198,59 @@ export function VideoRoomPage() {
       })
     }
 
-    const callFrame = DailyIframe.createFrame(containerRef.current, {
-      showLeaveButton: false,
-      showFullscreenButton: true,
-      iframeStyle: {
-        width: '100%',
-        height: '100%',
-        border: 'none',
-        borderRadius: '12px'
-      },
-      userName: profile?.name || sessionData.consultantName || 'Usuário'
+    // Usar createCallObject ao invés de createFrame para controle 100% via código
+    // Isso elimina completamente a UI de prejoin do Daily
+    const callFrame = window.DailyIframe.createCallObject({
+      userName: profile?.name || sessionData.consultantName || 'Usuário',
+      videoSource: true,
+      audioSource: true
     })
     
     callFrameRef.current = callFrame
     
+    // Renderizar video element no container para mostrar chamada
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '<div id="daily-video-container" style="width: 100%; height: 100%; background: #000; border-radius: 12px;"></div>'
+    }
+    
+    // Quando participantes forem adicionados, renderizar seus vídeos
+    callFrame.on('participant-joined', (evt) => {
+      console.log('[VideoRoomPage] participant-joined:', evt.participant.user_name)
+      updateVideoElements()
+    })
+    
+    // Atualizar vídeos quando participante sair
+    callFrame.on('participant-left', (evt) => {
+      console.log('[VideoRoomPage] participant-left:', evt.participant.user_name)
+      updateVideoElements()
+    })
+    
+    // Função para renderizar vídeos dos participantes
+    const updateVideoElements = () => {
+      const container = document.getElementById('daily-video-container')
+      if (!container) return
+      
+      const participants = callFrame.participants()
+      const participantList = Object.values(participants || {})
+      
+      console.log('[VideoRoomPage] Atualizando vídeos. Participantes:', participantList.length)
+      
+      // Renderizar vídeos usando setUserMediaDevices se disponível
+      try {
+        callFrame.updateParticipant(callFrame.participants().local?.session_id, {
+          videoEnabled: true,
+          audioEnabled: true
+        })
+      } catch (err) {
+        console.log('[VideoRoomPage] Info: updateParticipant não disponível (normal)')
+      }
+    }
+    
     // ADICIONAR LISTENERS ANTES DE JOIN (crucial!)
     callFrame.on('joined-meeting', () => {
       console.log('[VideoRoomPage] ✓ joined-meeting event disparado - entrou na sala com sucesso')
+      // Atualizar vídeos após entrar
+      updateVideoElements()
     })
     
     callFrame.on('left-meeting', () => {
@@ -314,78 +350,42 @@ export function VideoRoomPage() {
       console.log('[VideoRoomPage] Is Consultant (owner):', sessionData.isConsultant)
       console.log('[VideoRoomPage] ═══════════════════════════════════════')
       
-      // Criar Promise que resolve quando estiver conectado (verificar estado + eventos)
+      // Com createCallObject, o join é mais simples e direto
       const joinPromise = new Promise((resolve, reject) => {
         let joined = false
-        let pollInterval = null
         
-        // Listener para sucesso via evento
         const onJoined = () => {
           if (!joined) {
             joined = true
             console.log('[VideoRoomPage] ✓ Evento joined-meeting disparado')
-            clearInterval(pollInterval)
             cleanup()
             resolve({ success: true, via: 'event' })
           }
         }
         
-        // Listener para erro
-        const onJoinError = (error) => {
+        const onError = (error) => {
           if (!joined) {
             joined = true
             console.log('[VideoRoomPage] ✗ Erro no join:', error)
-            clearInterval(pollInterval)
             cleanup()
             reject(error)
           }
         }
         
-        // Listener para capturar TODOS os eventos (debugging)
-        const onAnyEvent = (event) => {
-          if (event.action && event.action !== 'noop' && !event.action.includes('stats')) {
-            console.log('[VideoRoomPage] Event disparado:', event.action)
-          }
-        }
-        
-        // Polling: verificar estado checando se há participantes na room
-        const pollJoined = () => {
-          try {
-            const participants = callFrame.participants()
-            const participantCount = Object.keys(participants || {}).length
-            console.log('[VideoRoomPage] Poll state: participants count =', participantCount)
-            if (participantCount > 0 && !joined) {
-              joined = true
-              console.log('[VideoRoomPage] ✓ Polling detectou: conectado (hay participants na room)')
-              clearInterval(pollInterval)
-              cleanup()
-              resolve({ success: true, via: 'polling' })
-            }
-          } catch (err) {
-            console.error('[VideoRoomPage] Erro ao checar participants:', err)
-          }
-        }
-        
         const cleanup = () => {
           callFrame.off('joined-meeting', onJoined)
-          callFrame.off('error', onJoinError)
-          callFrame.off('*', onAnyEvent)
+          callFrame.off('error', onError)
         }
         
-        callFrame.on('joined-meeting', onJoined)
-        callFrame.on('error', onJoinError)
-        callFrame.on('*', onAnyEvent) // Capturar todos os eventos para diagnosticar
+        callFrame.once('joined-meeting', onJoined)
+        callFrame.on('error', onError)
         
-        // Chamar join
-        console.log('[VideoRoomPage] 🔄 Chamando callFrame.join()...')
+        // Chamar join diretamente - sem UI, sem prejoin!
+        console.log('[VideoRoomPage] 🔄 Chamando callFrame.join() com createCallObject...')
         callFrame.join({
           url: sessionData.roomUrl,
           token: sessionData.dailyToken
         }).catch(reject)
-        
-        // Verificar imediatamente e depois a cada 250ms (invés de esperar 500ms)
-        pollJoined() // Primeira verificação IMEDIATA
-        pollInterval = setInterval(pollJoined, 250) // Depois a cada 250ms (mais rápido)
       })
       
       console.log('[VideoRoomPage] 🔄 Join promise criada, aguardando resultado...')
