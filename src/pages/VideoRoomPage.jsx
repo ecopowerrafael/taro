@@ -99,7 +99,7 @@ export function VideoRoomPage() {
         handleLeaveCall()
       }, 500)
     })
-  }, [billing, handleLeaveCall])
+  }, [billing])
 
   // Entrar na sala de chamada após conexão socket.io
   useEffect(() => {
