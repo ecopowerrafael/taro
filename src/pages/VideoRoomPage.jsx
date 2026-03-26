@@ -58,6 +58,14 @@ export function VideoRoomPage() {
     }
   }, [sessionId, token])
 
+  // ✅ AUTO-JOIN para Consultor - ingressar automaticamente na sala
+  useEffect(() => {
+    if (session && session.isConsultant && !isCallActive && !joinInProgressRef.current) {
+      console.log('[VideoRoomPage] Auto-iniciando para consultor')
+      handleStartByConsultant()
+    }
+  }, [session?.isConsultant, isCallActive])
+
   // Setup Socket.io para sincronizar encerramento de chamada
   useEffect(() => {
     socketRef.current = io()
@@ -638,19 +646,10 @@ export function VideoRoomPage() {
               </h2>
               <p className="max-w-md text-amber-100/70">
                 {session.isConsultant 
-                  ? 'O cliente está esperando. Clique no botão abaixo para iniciar a videochamada.'
+                  ? 'Entrando na sala automaticamente...'
                   : 'Sua sala já foi criada e o consultor foi notificado por e-mail e painel. Aguarde que estamos chamando o Consultor para lhe atender.'}
               </p>
               
-              {session.isConsultant && (
-                <button
-                  onClick={handleStartByConsultant}
-                  className="mt-8 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 px-8 py-3 font-bold text-black transition hover:brightness-110"
-                >
-                  Iniciar Atendimento
-                </button>
-              )}
-
               {!session.isConsultant && (
                 <button
                   onClick={() => setShowCancelConfirm(true)}
