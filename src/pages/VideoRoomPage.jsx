@@ -271,12 +271,12 @@ export function VideoRoomPage() {
       console.log('[VideoRoomPage] Nenhuma duração disponível (billing.elapsedSeconds=0, callStartedAt=null)')
     }
     
-    const durationMinutes = Math.max(0, Math.floor(durationSeconds / 60))
+    // Calcular ganhos do consultor com precisão de segundos (não truncar para minutos)
     const consultantEarnings = session?.isConsultant 
-      ? durationMinutes * (session.pricePerMinute || 0)
+      ? (durationSeconds / 60) * (session.pricePerMinute || 0)
       : 0
 
-    console.log('[VideoRoomPage] Chamada finalizada. durationSeconds:', durationSeconds, 'durationMinutes:', durationMinutes, 'consultantEarnings:', consultantEarnings)
+    console.log('[VideoRoomPage] Chamada finalizada. durationSeconds:', durationSeconds, 'pricePerMinute:', session?.pricePerMinute, 'consultantEarnings:', consultantEarnings.toFixed(2))
     console.log('[VideoRoomPage] billing state antes de stopSession:', { isConnected: billing.isConnected, elapsedSeconds: billing.elapsedSeconds, consumedValue: billing.consumedValue })
 
     // Para faturamento (cliente ou consultor)
