@@ -285,13 +285,17 @@ export const createVideoSessionsRouter = (pool) => {
       
       console.log('[videoSessions GET /:sessionId] ═════ RESPOSTA FINAL ═════')
       console.log('[videoSessions GET /:sessionId] roomUrl:', session.roomUrl)
+      console.log('[videoSessions GET /:sessionId] status:', session.status)
       console.log('[videoSessions GET /:sessionId] dailyToken présent:', !!dailyToken)
       console.log('[videoSessions GET /:sessionId] isConsultant:', isConsultant)
       console.log('[videoSessions GET /:sessionId] pricePerMinute:', session.pricePerMinute)
       console.log('[videoSessions GET /:sessionId] ═════════════════════════')
       response.status(200).json({
+        status: session.status,
         roomUrl: session.roomUrl,
         pricePerMinute: Number(session.pricePerMinute) || 0,
+        consultantId: session.consultantId,
+        consultantName: session.consultantName,
         isConsultant,
         dailyToken
       })

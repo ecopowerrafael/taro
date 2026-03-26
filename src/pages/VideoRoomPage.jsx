@@ -171,7 +171,14 @@ export function VideoRoomPage() {
     })
     
     callFrame.on('left-meeting', () => {
-      console.log('[VideoRoomPage] left-meeting event disparado')
+      console.log('[VideoRoomPage] Daily.io left-meeting event disparado. isCallActive:', isCallActive)
+      // Só chamar handleLeaveCall se realmente estamos em uma chamada
+      if (isCallActive && !callAlreadyEndedRef.current) {
+        console.log('[VideoRoomPage] Chamando handleLeaveCall do left-meeting event')
+        handleLeaveCall()
+      } else {
+        console.log('[VideoRoomPage] Ignorando left-meeting: isCallActive=', isCallActive, 'callAlreadyEnded=', callAlreadyEndedRef.current)
+      }
     })
     
     callFrame.on('error', (e) => {
@@ -234,17 +241,6 @@ export function VideoRoomPage() {
     callFrame.on('network-quality-change', (event) => {
       console.log('[VideoRoomPage] network-quality-change:', event)
     })
-    
-    callFrame.on('left-meeting', () => {
-      console.log('[VideoRoomPage] Daily.io left-meeting event disparado. isCallActive:', isCallActive)
-      // Só chamar handleLeaveCall se realmente estamos em uma chamada
-      if (isCallActive && !callAlreadyEndedRef.current) {
-        console.log('[VideoRoomPage] Chamando handleLeaveCall do left-meeting event')
-        handleLeaveCall()
-      } else {
-        console.log('[VideoRoomPage] Ignorando left-meeting: isCallActive=', isCallActive, 'callAlreadyEnded=', callAlreadyEndedRef.current)
-      }
-    })
 
     try {
       console.log('[VideoRoomPage] ═══════════════════════════════════════')
@@ -254,11 +250,21 @@ export function VideoRoomPage() {
       console.log('[VideoRoomPage] Is Consultant (owner):', sessionData.isConsultant)
       console.log('[VideoRoomPage] ═══════════════════════════════════════')
       
-      // Tentar join
-      const joinResult = await callFrame.join({
+      // Tentar join com timeout
+      console.log('[VideoRoomPage] 🔄 Chamando callFrame.join()...')
+      const joinPromise = callFrame.join({
         url: sessionData.roomUrl,
         token: sessionData.dailyToken
       })
+      
+      console.log('[VideoRoomPage] 🔄 Join promise criada, aguardando resultado...')
+      
+      const joinResult = await Promise.race([
+        joinPromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Join timeout after 30s')), 30000)
+        )
+      ])
       
       console.log('[VideoRoomPage] ✓ Join bem-sucedido')
       console.log('[VideoRoomPage] Join result:', joinResult)
@@ -312,19 +318,24 @@ export function VideoRoomPage() {
       setCallStartedAt((prev) => prev ?? Date.now())
     } catch (e) {
       console.error('[VideoRoomPage] ✗✗✗ ERRO ao entrar na sala')
-      console.error('[VideoRoomPage] Erro name:', e.name)
-      console.error('[VideoRoomPage] Erro message:', e.message)
-      console.error('[VideoRoomPage] Erro stack:', e.stack)
+      console.error('[VideoRoomPage] Erro type:', typeof e)
+      console.error('[VideoRoomPage] Erro name:', e?.name)
+      console.error('[VideoRoomPage] Erro message:', e?.message)
+      console.error('[VideoRoomPage] Erro toString:', e?.toString())
+      console.error('[VideoRoomPage] Erro stack:', e?.stack)
       
       // Se for erro de permissão, informar
-      if (e.message?.includes('token')) {
+      if (e?.message?.includes('token')) {
         console.error('[VideoRoomPage] ⚠️  PROBLEMA COM TOKEN - verificar geração no backend')
         setSystemNotice('Erro: Token inválido ou expirado. Tente novamente.')
-      } else if (e.message?.includes('room')) {
+      } else if (e?.message?.includes('room')) {
         console.error('[VideoRoomPage] ⚠️  PROBLEMA COM ROOM - verificar se room foi criada corretamente')
         setSystemNotice('Erro: Sala não encontrada ou inválida.')
+      } else if (e?.message?.includes('timeout')) {
+        console.error('[VideoRoomPage] ⚠️  TIMEOUT ao conectar - servidor Daily.co pode estar lento')
+        setSystemNotice('Timeout ao conectar à sala. Tente novamente.')
       } else {
-        setSystemNotice('Erro ao conectar: ' + e.message)
+        setSystemNotice('Erro ao conectar: ' + (e?.message || 'Erro desconhecido'))
       }
       
       // ❌ Se o join falhou, resetar isCallActive
