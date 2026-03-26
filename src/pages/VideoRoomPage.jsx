@@ -151,18 +151,43 @@ export function VideoRoomPage() {
     }
 
     const callFrame = DailyIframe.createFrame(containerRef.current, {
-      showLeaveButton: false, // Nós gerenciamos o botão de sair
+      showLeaveButton: false,
       iframeStyle: {
         width: '100%',
         height: '100%',
         border: 'none',
         borderRadius: '12px'
-      }
+      },
+      // Permitir entrada mesmo sem câmera/microfone
+      audioSource: false,
+      videoSource: false,
+      enableScreenShare: true,
+      disableLocalAudioPreview: true,
+      disableRemoteAudioPreview: true
     })
     
     callFrameRef.current = callFrame
     
-    // Iniciar faturamento se for o cliente
+    // Listeners para participantes
+    callFrame.on('participant-joined', (event) => {
+      console.log('[VideoRoomPage] participant-joined event:', event.participant)
+    })
+    
+    callFrame.on('participant-updated', (event) => {
+      console.log('[VideoRoomPage] participant-updated event:', event.participant)
+    })
+    
+    callFrame.on('participant-left', (event) => {
+      console.log('[VideoRoomPage] participant-left event:', event.participant)
+    })
+    
+    callFrame.on('participants-updated', (event) => {
+      console.log('[VideoRoomPage] participants-updated event:', event)
+      console.log('[VideoRoomPage] Current participants:', Object.keys(event.participants).length)
+      Object.entries(event.participants).forEach(([id, p]) => {
+        console.log(`  - ${id}: ${p.user_name || 'unknown'}`)
+      })
+    })
     if (!sessionData.isConsultant) {
       console.log('[VideoRoomPage] Cliente iniciando faturamento. pricePerMinute:', sessionData.pricePerMinute)
       billing.startSession({
@@ -194,19 +219,28 @@ export function VideoRoomPage() {
         token: sessionData.dailyToken
       })
       
-      console.log('[VideoRoomPage] Entrou na room com sucesso')
-      console.log('[VideoRoomPage] Participants after join:', callFrame.participants())
+      // Aguardar um pouco para que os eventos de participants sejam disparat
+      await new Promise(resolve => setTimeout(resolve, 500))
       
-      // Listener para mudanças de participantes
-      callFrame.on('participants-updated', (event) => {
-        console.log('[VideoRoomPage] participants-updated event:', event.participants)
-      })
+      const participants = callFrame.participants()
+      console.log('[VideoRoomPage] Participants after join (após delay):', participants)
+      console.log('[VideoRoomPage] Participant count:', Object.keys(participants).length)
+      
+      // Tentar chamar getStats para diagnóstico
+      try {
+        const stats = callFrame.getStats()
+        console.log('[VideoRoomPage] getStats():', stats)
+      } catch (statsErr) {
+        console.warn('[VideoRoomPage] getStats() indisponível:', statsErr)
+      }
       
       setIsCallActive(true)
       setCallStartedAt((prev) => prev ?? Date.now())
     } catch (e) {
       console.error('[VideoRoomPage] Erro ao entrar na sala do Daily:', e)
       console.error('[VideoRoomPage] Erro completo:', JSON.stringify(e))
+      console.error('[VideoRoomPage] Error name:', e.name)
+      console.error('[VideoRoomPage] Error message:', e.message)
       setSystemNotice('Erro ao conectar na sala de vídeo: ' + (e.message || String(e)))
     }
   }
