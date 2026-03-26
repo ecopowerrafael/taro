@@ -14,12 +14,13 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
 
   const hasSufficientBalance = balanceMinutes > 0
 
-  const stopSession = useCallback(() => {
-    console.log('[useBilling] stopSession chamado. stopCalledRef.current:', stopCalledRef.current)
+  const stopSession = useCallback((reason = 'unknown') => {
+    console.log('[useBilling] stopSession chamado. reason:', reason, 'stopCalledRef.current:', stopCalledRef.current)
+    console.trace('[useBilling] stopSession stack trace')
     
     // Prevent calling stop multiple times
     if (stopCalledRef.current) {
-      console.log('[useBilling] stopSession já foi chamado, ignorando chamada duplicada')
+      console.log('[useBilling] stopSession já foi chamado, ignorando chamada duplicada. reason:', reason)
       return
     }
 

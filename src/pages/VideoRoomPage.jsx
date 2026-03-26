@@ -128,12 +128,8 @@ export function VideoRoomPage() {
   const joinCall = async (sessionData) => {
     console.log('[VideoRoomPage] joinCall chamado com sessionData.isConsultant:', sessionData.isConsultant)
     
-    // Reset flag para evitar dupla execução
-    if (!callAlreadyEndedRef.current) {
-      console.log('[VideoRoomPage] Note: callAlreadyendedRef já estava true, reset não necessário')
-    } else {
-      callAlreadyEndedRef.current = false
-    }
+    // Reset flag SEMPRE para nova entrada
+    callAlreadyEndedRef.current = false
     
     if (!containerRef.current) return
     
@@ -273,7 +269,7 @@ export function VideoRoomPage() {
 
     // Para faturamento (cliente ou consultor)
     console.log('[VideoRoomPage] Chamando billing.stopSession()')
-    billing.stopSession()
+    billing.stopSession('handleLeaveCall')
     
     console.log('[VideoRoomPage] billing state após stopSession:', { isConnected: billing.isConnected, elapsedSeconds: billing.elapsedSeconds })
 
@@ -322,11 +318,9 @@ export function VideoRoomPage() {
         callFrameRef.current.leave()
         callFrameRef.current.destroy()
       }
-      if (isCallActive) {
-        billing.stopSession()
-      }
+      // NÃO chamar billing.stopSession() aqui - deve ser explícito em handleLeaveCall
     }
-  }, [isCallActive, billing])
+  }, [])
 
   if (loading) {
     return (
