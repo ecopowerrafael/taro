@@ -128,8 +128,24 @@ export function PerfilPage() {
                         Pacote: {answer.questionCount} pergunta(s) • R$ {answer.packagePrice.toFixed(2)}
                       </p>
                       {expandedAnswerId === answer.id ? (
-                        <div className="mt-3 rounded-lg bg-black/50 p-3 border border-mystic-gold/20">
-                          <p className="text-xs text-amber-50 whitespace-pre-wrap">{answer.answerSummary}</p>
+                        <div className="mt-3 space-y-3">
+                          {/* Mostra as perguntas */}
+                          {Array.isArray(answer.entries) && answer.entries.length > 0 && (
+                            <div className="rounded-lg bg-black/50 p-3 border border-mystic-gold/20 space-y-2">
+                              <p className="text-xs font-semibold text-mystic-goldSoft mb-2">Suas perguntas:</p>
+                              {answer.entries.map((entry, idx) => (
+                                <div key={entry.id || idx} className="text-xs text-amber-100/80 pb-2 border-b border-mystic-gold/15 last:border-b-0">
+                                  <span className="text-mystic-gold font-semibold">P{idx + 1}:</span>{' '}
+                                  <span className="text-amber-50">{entry.question || entry.text || 'Pergunta não especificada'}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {/* Mostra a resposta */}
+                          <div className="rounded-lg bg-black/50 p-3 border border-mystic-gold/20">
+                            <p className="text-xs font-semibold text-mystic-goldSoft mb-2">Resposta do(a) {answer.consultantName}:</p>
+                            <p className="text-xs text-amber-50 whitespace-pre-wrap">{answer.answerSummary}</p>
+                          </div>
                         </div>
                       ) : (
                         <p className="text-xs text-amber-50 line-clamp-2 italic">
