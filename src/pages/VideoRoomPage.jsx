@@ -218,69 +218,78 @@ export function VideoRoomPage() {
     // Renderizar container HTML para vídeos com layout PIP
     if (containerRef.current) {
       containerRef.current.innerHTML = `
-        <div id="daily-video-container" style="
-          position: relative;
-          width: 100%;
-          height: 100%;
-          background: #000;
-          border-radius: 12px;
-          overflow: hidden;
-        ">
-          <style>
-            @media (max-width: 768px) {
-              /* Mobile: Layout PIP */
-              #daily-video-container {
-                display: flex;
-                align-items: stretch;
-                justify-content: center;
-              }
-              
-              /* Vídeo remoto: fullscreen */
-              #daily-video-container [data-participant-type="remote"] {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 1;
-              }
-              
-              /* Vídeo local: PIP corner */
-              #daily-video-container [data-participant-type="local"] {
-                position: absolute;
-                bottom: 16px;
-                right: 16px;
-                width: 120px;
-                aspect-ratio: 9/16;
-                z-index: 10;
-                border: 3px solid rgba(255, 255, 255, 0.3);
-                border-radius: 8px;
-              }
-              
-              /* Esconder todos os outros containers */
-              #daily-video-container > div:not([data-participant-type]) {
-                display: none;
-              }
+        <style>
+          #daily-video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+          }
+          
+          /* Desktop: Layout flexbox lado-a-lado */
+          @media (min-width: 769px) {
+            #daily-video-container {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 12px;
+              padding: 12px;
+              overflow: auto;
+              align-content: flex-start;
             }
             
-            @media (min-width: 769px) {
-              /* Desktop: Layout lado-a-lado */
-              #daily-video-container {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 12px;
-                padding: 12px;
-                overflow: auto;
-              }
-              
-              /* Todos os vídeos: grid */
-              #daily-video-container > div {
-                flex: 1 1 calc(50% - 6px);
-                min-width: 280px;
-              }
+            #daily-video-container > div {
+              position: relative !important;
+              top: auto !important;
+              left: auto !important;
+              bottom: auto !important;
+              right: auto !important;
+              width: calc(50% - 6px);
+              height: auto;
+              aspect-ratio: 16/9;
+              flex: 0 0 calc(50% - 6px);
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             }
-          </style>
-        </div>
+          }
+          
+          /* Mobile: Layout PIP */
+          @media (max-width: 768px) {
+            #daily-video-container {
+              display: block;
+            }
+            
+            #daily-video-container > div {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+            }
+            
+            /* Remoto: fullscreen (z-index 1) */
+            #daily-video-container [data-participant-type="remote"] {
+              z-index: 1;
+            }
+            
+            /* Local: PIP corner (z-index 10) */
+            #daily-video-container [data-participant-type="local"] {
+              width: 120px !important;
+              height: 160px !important;
+              bottom: 16px !important;
+              right: 16px !important;
+              top: auto !important;
+              left: auto !important;
+              z-index: 10;
+              border: 3px solid rgba(255, 255, 255, 0.3);
+              border-radius: 8px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            }
+          }
+        </style>
+        <div id="daily-video-container"></div>
       `
     }
     
@@ -296,24 +305,17 @@ export function VideoRoomPage() {
       const videoContainer = document.createElement('div')
       videoContainer.id = `video-container-${participantId}`
       videoContainer.setAttribute('data-participant-type', isLocal ? 'local' : 'remote')
-      
-      if (window.innerWidth > 768) {
-        // Desktop: grid layout
-        videoContainer.style.cssText = 'position: relative; width: 48%; aspect-ratio: 16/9; background: #111; border-radius: 8px; overflow: hidden;'
-      } else {
-        // Mobile: será posicionado por CSS media query
-        videoContainer.style.cssText = 'position: relative; background: #111; border-radius: 8px; overflow: hidden;'
-      }
+      // Sem estilos inline - CSS media queries vão gerenciar tudo
       
       const video = document.createElement('video')
       video.className = 'video-element'
       video.autoplay = true
-      video.muted = true // O local é sempre muted
+      video.muted = true
       video.style.cssText = 'width: 100%; height: 100%; object-fit: cover;'
       
       videoContainer.appendChild(video)
       container.appendChild(videoContainer)
-      console.log('[VideoRoomPage] ✓ Video container criado para:', participantId, 'isLocal:', isLocal)
+      console.log('[VideoRoomPage] ✓ Video container criado:', participantId, '| isLocal:', isLocal)
     }
     
     // Função para criar elemento de áudio para participante remoto
