@@ -69,7 +69,23 @@ export function VideoRoomPage() {
   // Setup Socket.io para sincronizar encerramento de chamada
   useEffect(() => {
     socketRef.current = io()
+
+    return () => {
+      console.log('[VideoRoomPage] Desconectando socket.io')
+      if (socketRef.current) {
+        socketRef.current.disconnect()
+      }
+    }
+  }, [])
+
+  // Atualizar listener do socket.io quando billing mudar (para capturar elapsedSeconds correto)
+  useEffect(() => {
+    if (!socketRef.current) return
     
+    // Remover listener antigo
+    socketRef.current.off('other_user_left_call')
+    
+    // Adicionar listener novo com billing atualizado
     socketRef.current.on('other_user_left_call', () => {
       console.log('[VideoRoomPage] Socket.io: other_user_left_call disparado')
       otherUserLeftRef.current = true
@@ -83,14 +99,7 @@ export function VideoRoomPage() {
         handleLeaveCall()
       }, 500)
     })
-
-    return () => {
-      console.log('[VideoRoomPage] Desconectando socket.io')
-      if (socketRef.current) {
-        socketRef.current.disconnect()
-      }
-    }
-  }, [])
+  }, [billing, handleLeaveCall])
 
   // Entrar na sala de chamada após conexão socket.io
   useEffect(() => {
