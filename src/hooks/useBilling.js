@@ -6,26 +6,25 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
   const [isConnected, setIsConnected] = useState(false)
   const consumedRef = useRef(false)
 
-  const pricePerMinute = Number(activeSession?.pricePerMinute ?? 0)
+  const pricePerMinute = Number(activeSession?.pricePerMinute ?? 1) // Default 1 real/min se não especificado
   const consumedMinutes = Math.floor(elapsedSeconds / 60)
-  // Charge by fraction of minute, not just complete minutes (e.g., 30s at R$10/min = R$5)
-  const consumedValue = Math.max(0, Math.floor((elapsedSeconds * pricePerMinute) / 60 * 100) / 100)
+  const consumedValue = consumedMinutes * pricePerMinute
   const remainingMinutes = Math.max(0, balanceMinutes - consumedValue)
 
   const hasSufficientBalance = balanceMinutes > 0
 
   const stopSession = useCallback(() => {
     setIsConnected(false)
-    const finalValue = Math.max(0, Math.floor((elapsedSeconds * pricePerMinute) / 60 * 100) / 100)
     setActiveSession((session) => {
-      if (session && !consumedRef.current && finalValue > 0) {
-        onConsume(finalValue)
+      if (session && !consumedRef.current && consumedMinutes > 0) {
+        // Debita: (minutos completos) × (valor por minuto do consultor)
+        onConsume(consumedMinutes * pricePerMinute)
         consumedRef.current = true
       }
       return null
     })
     setElapsedSeconds(0)
-  }, [pricePerMinute, elapsedSeconds, onConsume])
+  }, [consumedMinutes, pricePerMinute, onConsume])
 
   const startSession = useCallback(
     ({ consultantId, consultantName, pricePerMinute: minutePrice, isConsultantMode = false }) => {

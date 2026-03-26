@@ -256,6 +256,7 @@ export const createVideoSessionsRouter = (pool) => {
 
       response.json({
         ...session,
+        pricePerMinute: Number(session.pricePerMinute) || 0,
         isConsultant,
         dailyToken
       })
