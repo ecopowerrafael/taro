@@ -40,6 +40,10 @@ export function VideoRoomPage() {
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.message)
+        console.log('[VideoRoomPage] fetchSession - roomUrl:', data.roomUrl)
+        console.log('[VideoRoomPage] fetchSession - dailyToken:', data.dailyToken ? `${data.dailyToken.substring(0, 20)}...` : 'UNDEFINED')
+        console.log('[VideoRoomPage] fetchSession - isConsultant:', data.isConsultant)
+        console.log('[VideoRoomPage] fetchSession - pricePerMinute:', data.pricePerMinute)
         setSession(data)
       } catch (err) {
         setError(err.message || 'Erro ao carregar a sala.')
@@ -182,16 +186,28 @@ export function VideoRoomPage() {
 
     try {
       console.log('[VideoRoomPage] Tentando entrar na room:', sessionData.roomUrl)
+      console.log('[VideoRoomPage] Token:', sessionData.dailyToken ? `${sessionData.dailyToken.substring(0, 20)}...` : 'UNDEFINED')
+      console.log('[VideoRoomPage] Is Owner (Consultor):', sessionData.isConsultant)
+      
       await callFrame.join({
         url: sessionData.roomUrl,
-        token: sessionData.dailyToken // Usado se a sala for privada
+        token: sessionData.dailyToken
       })
+      
       console.log('[VideoRoomPage] Entrou na room com sucesso')
+      console.log('[VideoRoomPage] Participants after join:', callFrame.participants())
+      
+      // Listener para mudanças de participantes
+      callFrame.on('participants-updated', (event) => {
+        console.log('[VideoRoomPage] participants-updated event:', event.participants)
+      })
+      
       setIsCallActive(true)
       setCallStartedAt((prev) => prev ?? Date.now())
     } catch (e) {
       console.error('[VideoRoomPage] Erro ao entrar na sala do Daily:', e)
-      setSystemNotice('Erro ao conectar na sala de vídeo.')
+      console.error('[VideoRoomPage] Erro completo:', JSON.stringify(e))
+      setSystemNotice('Erro ao conectar na sala de vídeo: ' + (e.message || String(e)))
     }
   }
 
@@ -207,6 +223,8 @@ export function VideoRoomPage() {
       const freshSession = await res.json()
       
       console.log('[VideoRoomPage] Consultor iniciando. freshSession:', freshSession)
+      console.log('[VideoRoomPage] Consultor - roomUrl:', freshSession.roomUrl)
+      console.log('[VideoRoomPage] Consultor - dailyToken:', freshSession.dailyToken ? `${freshSession.dailyToken.substring(0, 20)}...` : 'UNDEFINED')
       
       if (freshSession) {
         const price = Number(freshSession.pricePerMinute) || 0
