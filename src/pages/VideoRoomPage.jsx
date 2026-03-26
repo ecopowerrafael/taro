@@ -184,6 +184,9 @@ export function VideoRoomPage() {
     
     callFrame.on('left-meeting', () => {
       console.log('[VideoRoomPage] Daily.io left-meeting event disparado. isCallActive:', isCallActive)
+      console.log('[VideoRoomPage] left-meeting reason: user or system disconnect')
+      const participants = callFrame?.participants?.() || {}
+      console.log('[VideoRoomPage] Participants at left-meeting time:', Object.keys(participants).length)
       // Só chamar handleLeaveCall se realmente estamos em uma chamada
       if (isCallActive && !callAlreadyEndedRef.current) {
         console.log('[VideoRoomPage] Chamando handleLeaveCall do left-meeting event')
@@ -195,6 +198,20 @@ export function VideoRoomPage() {
     
     callFrame.on('error', (e) => {
       console.error('[VideoRoomPage] ✗ Daily.co error event:', e)
+      console.error('[VideoRoomPage] Error details:', {
+        type: e?.type,
+        message: e?.message,
+        reason: e?.reason,
+        full: JSON.stringify(e)
+      })
+    })
+    
+    callFrame.on('meeting-state-updated', (event) => {
+      console.log('[VideoRoomPage] meeting-state-updated:', {
+        status: event?.data?.status,
+        callState: event?.data?.callState,
+        participants: event?.data?.participants?.length
+      })
     })
     
     // Listeners para participantes - ADICIONAR ANTES DE JOIN
