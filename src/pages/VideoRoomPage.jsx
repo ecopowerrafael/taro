@@ -257,15 +257,26 @@ export function VideoRoomPage() {
       console.log('[VideoRoomPage] callFrameRef.current é null, pulando limpeza do Daily')
     }
     
-    // Usar tempo real acumulado do billing (não apenas wall clock)
-    const actualElapsedSeconds = billing.elapsedSeconds || Math.floor((Date.now() - callStartedAt) / 1000)
-    const durationSeconds = actualElapsedSeconds
+    // Usar tempo real acumulado do billing (prioridade 1)
+    // Se billing.elapsedSeconds for 0 mas tivermos callStartedAt válido, calcular diferença
+    let durationSeconds = 0
+    
+    if (billing.elapsedSeconds > 0) {
+      durationSeconds = billing.elapsedSeconds
+      console.log('[VideoRoomPage] Usando billing.elapsedSeconds:', durationSeconds)
+    } else if (callStartedAt) {
+      durationSeconds = Math.floor((Date.now() - callStartedAt) / 1000)
+      console.log('[VideoRoomPage] Usando wall clock (Date.now() - callStartedAt):', durationSeconds)
+    } else {
+      console.log('[VideoRoomPage] Nenhuma duração disponível (billing.elapsedSeconds=0, callStartedAt=null)')
+    }
+    
     const durationMinutes = Math.max(0, Math.floor(durationSeconds / 60))
     const consultantEarnings = session?.isConsultant 
       ? durationMinutes * (session.pricePerMinute || 0)
       : 0
 
-    console.log('[VideoRoomPage] Chamada finalizada. billing.elapsedSeconds:', billing.elapsedSeconds, 'durationSeconds:', durationSeconds, 'durationMinutes:', durationMinutes, 'consultantEarnings:', consultantEarnings)
+    console.log('[VideoRoomPage] Chamada finalizada. durationSeconds:', durationSeconds, 'durationMinutes:', durationMinutes, 'consultantEarnings:', consultantEarnings)
     console.log('[VideoRoomPage] billing state antes de stopSession:', { isConnected: billing.isConnected, elapsedSeconds: billing.elapsedSeconds, consumedValue: billing.consumedValue })
 
     // Para faturamento (cliente ou consultor)

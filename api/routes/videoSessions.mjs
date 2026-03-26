@@ -290,6 +290,8 @@ export const createVideoSessionsRouter = (pool) => {
     const { sessionId } = request.params
     const { status, durationSeconds, consultantEarnings } = request.body
 
+    console.log('[videoSessions /finish] Recebido: sessionId=', sessionId, 'durationSeconds=', durationSeconds, 'consultantEarnings=', consultantEarnings)
+
     const connection = await pool.getConnection()
     try {
       await connection.beginTransaction()
@@ -317,6 +319,7 @@ export const createVideoSessionsRouter = (pool) => {
 
       // Se houve ganho, criar registro na carteira do consultor
       if (earnings > 0) {
+        console.log('[videoSessions /finish] Processando ganhos para consultor. earnings:', earnings, 'consultantId:', session.consultantId)
         // Garantir que a carteira existe
         await connection.query(
           `INSERT INTO consultant_wallets (consultantId, availableBalance, pixKey) VALUES (?, 0, NULL) ON DUPLICATE KEY UPDATE consultantId = VALUES(consultantId)`,
@@ -328,6 +331,7 @@ export const createVideoSessionsRouter = (pool) => {
           `UPDATE consultant_wallets SET availableBalance = availableBalance + ? WHERE consultantId = ?`,
           [earnings, session.consultantId]
         )
+        console.log('[videoSessions /finish] Carteira do consultor atualizada com R$', earnings)
 
         // Criar registro de transação
         const txId = `tx_video_${sessionId}`
@@ -339,9 +343,13 @@ export const createVideoSessionsRouter = (pool) => {
            ON DUPLICATE KEY UPDATE amount = VALUES(amount), description = VALUES(description)`,
           [txId, session.consultantId, earnings, txDescription]
         )
+        console.log('[videoSessions /finish] Transação registrada: txId=', txId)
+      } else {
+        console.log('[videoSessions /finish] earnings = 0, nenhum ganho para processar')
       }
 
       await connection.commit()
+      console.log('[videoSessions /finish] Sessão finalizada com sucesso. sessionId=', sessionId, 'earnings=', earnings)
       response.json({ ok: true, earnings })
 
     } catch (error) {
