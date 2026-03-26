@@ -296,9 +296,9 @@ export const createVideoSessionsRouter = (pool) => {
     try {
       await connection.beginTransaction()
 
-      // Obter dados da sessão com pricePerMinute do consultor
+      // Obter dados da sessão
       const [sessions] = await connection.query(
-        `SELECT vs.*, c.pricePerMinute FROM video_sessions vs JOIN consultants c ON vs.consultantId = c.id WHERE vs.id = ? FOR UPDATE`,
+        `SELECT vs.id, vs.userId, vs.consultantId, vs.status, vs.roomUrl, vs.createdAt, vs.startedAt, vs.finishedAt, vs.durationSeconds, vs.consultantEarnings FROM video_sessions vs WHERE vs.id = ? FOR UPDATE`,
         [sessionId]
       )
 
@@ -308,6 +308,14 @@ export const createVideoSessionsRouter = (pool) => {
       }
 
       const session = sessions[0]
+      
+      // Buscar pricePerMinute do consultor
+      const [consultantRows] = await connection.query(
+        `SELECT pricePerMinute FROM consultants WHERE id = ?`,
+        [session.consultantId]
+      )
+      const pricePerMinute = consultantRows.length > 0 ? Number(consultantRows[0].pricePerMinute) || 0 : 0
+      
       const duration = Math.max(0, parseInt(durationSeconds) || 0)
       const consumption = Math.max(0, parseFloat(totalConsumption) || 0)
       const earnings = Math.max(0, parseFloat(consultantEarnings) || 0)
@@ -375,8 +383,7 @@ export const createVideoSessionsRouter = (pool) => {
 
         // Criar registro de transação
         const txId = `tx_video_${sessionId}`
-        const pricePerMin = Number(session.pricePerMinute) || 0
-        const txDescription = `Ganho de videoconsulta (${Math.floor(duration / 60)} min à R$ ${pricePerMin.toFixed(2)}/min)`
+        const txDescription = `Ganho de videoconsulta (${Math.floor(duration / 60)} min à R$ ${pricePerMinute.toFixed(2)}/min)`
         
         await connection.query(
           `INSERT INTO wallet_transactions (id, consultantId, type, amount, commissionValue, createdAt, description)
