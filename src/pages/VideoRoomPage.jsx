@@ -4,6 +4,7 @@ import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
 import { Loader2, Video, PhoneOff, Clock3, Wallet, XCircle } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
+import { io } from 'socket.io-client'
 import DailyIframe from '@daily-co/daily-js'
 
 export function VideoRoomPage() {
@@ -20,6 +21,8 @@ export function VideoRoomPage() {
   const [endModal, setEndModal] = useState(null)
   const callFrameRef = useRef(null)
   const containerRef = useRef(null)
+  const socketRef = useRef(null)
+  const otherUserLeftRef = useRef(false)
 
   const formatElapsed = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
@@ -47,6 +50,33 @@ export function VideoRoomPage() {
       fetchSession()
     }
   }, [sessionId, token])
+
+  // Setup Socket.io para sincronizar encerramento de chamada
+  useEffect(() => {
+    socketRef.current = io()
+    
+    socketRef.current.on('other_user_left_call', () => {
+      otherUserLeftRef.current = true
+      setSystemNotice('O outro participante saiu da chamada.')
+      // Dar um tempo para o outro lado receber o evento antes de navegar
+      setTimeout(() => {
+        handleLeaveCall()
+      }, 500)
+    })
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect()
+      }
+    }
+  }, [])
+
+  // Entrar na sala de chamada após conexão socket.io
+  useEffect(() => {
+    if (isCallActive && socketRef.current && sessionId) {
+      socketRef.current.emit('join_call_room', { sessionId })
+    }
+  }, [isCallActive, sessionId])
 
   useEffect(() => {
     if (!callStartedAt || !isCallActive) {
@@ -148,6 +178,12 @@ export function VideoRoomPage() {
     setIsCallActive(true)
     setTimeout(() => {
       if (session) {
+        // Consultor também começa a "contar" faturamento para visualizar ganho
+        billing.startSession({
+          consultantId: session.consultantId,
+          consultantName: session.consultantName,
+          pricePerMinute: session.pricePerMinute || 0
+        })
         joinCall(session)
       }
     }, 100)
@@ -160,15 +196,35 @@ export function VideoRoomPage() {
       callFrameRef.current = null
     }
     
-    if (!session?.isConsultant) {
-      billing.stopSession()
+    // Calcular duração e ganho do consultor
+    const durationSeconds = callStartedAt ? Math.floor((Date.now() - callStartedAt) / 1000) : 0
+    const durationMinutes = Math.max(0, Math.floor(durationSeconds / 60))
+    const consultantEarnings = session?.isConsultant 
+      ? durationMinutes * (session.pricePerMinute || 0)
+      : 0
+
+    // Para faturamento (cliente ou consultor)
+    billing.stopSession()
+
+    // Salvar sessão com duração e earnings
+    try {
+      await fetch(`/api/video-sessions/${sessionId}/finish`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ 
+          status: 'finished',
+          durationSeconds,
+          consultantEarnings
+        })
+      })
+    } catch (err) {
+      console.error('Erro ao finalizar sessão:', err)
     }
 
-    await fetch(`/api/video-sessions/${sessionId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status: 'finished' })
-    })
+    // Emitir evento para o outro participante também sair
+    if (socketRef.current && !otherUserLeftRef.current) {
+      socketRef.current.emit('user_leaving_call', { sessionId })
+    }
 
     navigate(session?.isConsultant ? '/area-consultor' : '/consultores')
     setSystemNotice('Chamada encerrada com sucesso.')
@@ -195,11 +251,11 @@ export function VideoRoomPage() {
         callFrameRef.current.leave()
         callFrameRef.current.destroy()
       }
-      if (isCallActive && !session?.isConsultant) {
+      if (isCallActive) {
         billing.stopSession()
       }
     }
-  }, [isCallActive, session])
+  }, [isCallActive, billing])
 
   if (loading) {
     return (

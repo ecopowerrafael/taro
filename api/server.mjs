@@ -103,6 +103,19 @@ io.on('connection', (socket) => {
     console.log(`[Socket] Consultor ${consultantId} conectou e entrou na sala.`)
   })
 
+  // Sincronizar encerramento de videochamada entre usuário e consultor
+  socket.on('user_leaving_call', ({ sessionId }) => {
+    // Broadcast para todos os clientes sobre esse sessionId saindo
+    io.to(`call_${sessionId}`).emit('other_user_left_call')
+    console.log(`[Socket] Usuário saiu da chamada ${sessionId}`)
+  })
+
+  // Ao conectar, cliente pode entrar em sala de chamada específica
+  socket.on('join_call_room', ({ sessionId }) => {
+    socket.join(`call_${sessionId}`)
+    console.log(`[Socket] Cliente entrou na sala de chamada ${sessionId}`)
+  })
+
   socket.on('disconnect', () => {
     // console.log('[Socket] Cliente desconectado')
   })

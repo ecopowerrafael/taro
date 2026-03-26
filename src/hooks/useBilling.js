@@ -7,9 +7,9 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
   const consumedRef = useRef(false)
 
   const pricePerMinute = Number(activeSession?.pricePerMinute ?? 0)
-  const consumedMinutes = Math.floor(elapsedSeconds / 60) // valor computado em minutos inteiros para reduzir flutuação
+  const consumedMinutes = Math.floor(elapsedSeconds / 60)
   const consumedValue = consumedMinutes * pricePerMinute
-  const remainingMinutes = Math.max(0, balanceMinutes - consumedMinutes)
+  const remainingMinutes = Math.max(0, balanceMinutes - consumedValue)
 
   const hasSufficientBalance = balanceMinutes > 0
 
@@ -17,13 +17,13 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
     setIsConnected(false)
     setActiveSession((session) => {
       if (session && !consumedRef.current && elapsedSeconds > 0) {
-        onConsume(consumedMinutes)
+        onConsume(consumedValue)
         consumedRef.current = true
       }
       return null
     })
     setElapsedSeconds(0)
-  }, [consumedMinutes, elapsedSeconds, onConsume])
+  }, [consumedValue, elapsedSeconds, onConsume])
 
   const startSession = useCallback(
     ({ consultantId, consultantName, pricePerMinute: minutePrice }) => {

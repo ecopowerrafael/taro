@@ -214,7 +214,7 @@ export function PlatformProvider({ children }) {
   const [pendingConsultants, setPendingConsultants] = useState(initialPendingConsultants)
   const [statusFilter, setStatusFilter] = useState('Todos')
   const [selectedConsultant, setSelectedConsultant] = useState(null)
-  const [globalCommission, setGlobalCommission] = useState(20)
+  const [globalCommission, setGlobalCommission] = useState(30)
   const [minutePackages, setMinutePackages] = useState(initialMinutePackages)
   const [mpCredentials, setMpCredentialsState] = useState({
     publicKey: '',

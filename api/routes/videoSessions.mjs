@@ -284,5 +284,73 @@ export const createVideoSessionsRouter = (pool) => {
     }
   })
 
+  // Rota para finalizar sessão com duração e compensação ao consultor
+  router.patch('/:sessionId/finish', async (request, response) => {
+    const { sessionId } = request.params
+    const { status, durationSeconds, consultantEarnings } = request.body
+
+    const connection = await pool.getConnection()
+    try {
+      await connection.beginTransaction()
+
+      // Obter dados da sessão
+      const [sessions] = await connection.query(
+        `SELECT * FROM video_sessions WHERE id = ? FOR UPDATE`,
+        [sessionId]
+      )
+
+      if (!sessions.length) {
+        await connection.rollback()
+        return response.status(404).json({ message: 'Sessão não encontrada.' })
+      }
+
+      const session = sessions[0]
+      const duration = Math.max(0, parseInt(durationSeconds) || 0)
+      const earnings = Math.max(0, parseFloat(consultantEarnings) || 0)
+
+      // Atualizar sessão com duração e ganho
+      await connection.query(
+        `UPDATE video_sessions SET status = 'finished', finishedAt = NOW(), durationSeconds = ?, consultantEarnings = ? WHERE id = ?`,
+        [duration, earnings, sessionId]
+      )
+
+      // Se houve ganho, criar registro na carteira do consultor
+      if (earnings > 0) {
+        // Garantir que a carteira existe
+        await connection.query(
+          `INSERT INTO consultant_wallets (consultantId, availableBalance, pixKey) VALUES (?, 0, NULL) ON DUPLICATE KEY UPDATE consultantId = VALUES(consultantId)`,
+          [session.consultantId]
+        )
+
+        // Adicionar saldo à carteira
+        await connection.query(
+          `UPDATE consultant_wallets SET availableBalance = availableBalance + ? WHERE consultantId = ?`,
+          [earnings, session.consultantId]
+        )
+
+        // Criar registro de transação
+        const txId = `tx_video_${sessionId}`
+        const txDescription = `Ganho de videoconsulta (${Math.floor(duration / 60)} min à R$ ${session.pricePerMinute}/min)`
+        
+        await connection.query(
+          `INSERT INTO wallet_transactions (id, consultantId, type, amount, commissionValue, createdAt, description)
+           VALUES (?, ?, 'credit', ?, NULL, NOW(), ?)
+           ON DUPLICATE KEY UPDATE amount = VALUES(amount), description = VALUES(description)`,
+          [txId, session.consultantId, earnings, txDescription]
+        )
+      }
+
+      await connection.commit()
+      response.json({ ok: true, earnings })
+
+    } catch (error) {
+      await connection.rollback()
+      console.error('Erro ao finalizar sessão de vídeo:', error)
+      response.status(500).json({ message: 'Erro ao finalizar sessão.' })
+    } finally {
+      connection.release()
+    }
+  })
+
   return router
 }

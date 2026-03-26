@@ -200,15 +200,25 @@ export const initializeSchema = async (pool) => {
       id VARCHAR(50) PRIMARY KEY,
       userId VARCHAR(50) NOT NULL,
       consultantId VARCHAR(50) NOT NULL,
-      status ENUM('waiting', 'active', 'finished') NOT NULL DEFAULT 'waiting',
+      status ENUM('waiting', 'active', 'finished', 'cancelled') NOT NULL DEFAULT 'waiting',
       roomUrl VARCHAR(255) NULL,
       createdAt DATETIME NOT NULL,
       startedAt DATETIME NULL,
       finishedAt DATETIME NULL,
+      durationSeconds INT NOT NULL DEFAULT 0,
+      consultantEarnings DECIMAL(10,2) NOT NULL DEFAULT 0,
       CONSTRAINT fk_vs_user FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
       CONSTRAINT fk_vs_consultant FOREIGN KEY (consultantId) REFERENCES consultants(id) ON DELETE CASCADE
     )
   `)
+
+  // Adicionar colunas de duração e earnings se não existirem (para bancos antigos)
+  try {
+    await pool.query('ALTER TABLE video_sessions ADD COLUMN durationSeconds INT NOT NULL DEFAULT 0')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE video_sessions ADD COLUMN consultantEarnings DECIMAL(10,2) NOT NULL DEFAULT 0')
+  } catch (e) {}
 
   // Garantir colunas de PIX para bancos antigos
   try {
