@@ -199,9 +199,7 @@ export function VideoRoomPage() {
         borderRadius: '12px'
       },
       userName: profile?.name || sessionData.consultantName || 'Usuário',
-      properties: {
-        enable_prejoin_ui: false  // ✅ Pular tela de Hair Check - permite auto-join direto
-      }
+      enable_prejoin_ui: false  // ✅ Pular tela de Hair Check - permite auto-join direto
     })
     
     callFrameRef.current = callFrame
