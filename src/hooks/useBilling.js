@@ -14,28 +14,45 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
   const hasSufficientBalance = balanceMinutes > 0
 
   const stopSession = useCallback(() => {
+    console.log('[useBilling] stopSession chamado')
     setIsConnected(false)
     setActiveSession((session) => {
-      if (session && !consumedRef.current && consumedMinutes > 0) {
-        // Debita: (minutos completos) × (valor por minuto do consultor)
-        onConsume(consumedMinutes * pricePerMinute)
-        consumedRef.current = true
+      if (session && !consumedRef.current) {
+        setElapsedSeconds((currentSeconds) => {
+          const finalMinutes = Math.floor(currentSeconds / 60)
+          const finalPrice = Number(session.pricePerMinute ?? 1)
+          const finalValue = finalMinutes * finalPrice
+          
+          console.log('[useBilling] stopSession calculando: currentSeconds=', currentSeconds, 'finalMinutes=', finalMinutes, 'finalPrice=', finalPrice, 'finalValue=', finalValue)
+          
+          if (finalValue > 0) {
+            console.log('[useBilling] Chamando onConsume com:', finalValue)
+            onConsume(finalValue)
+            consumedRef.current = true
+          }
+          return currentSeconds
+        })
       }
       return null
     })
     setElapsedSeconds(0)
-  }, [consumedMinutes, pricePerMinute, onConsume])
+  }, [onConsume])
 
   const startSession = useCallback(
     ({ consultantId, consultantName, pricePerMinute: minutePrice, isConsultantMode = false }) => {
       // Garantir que minutePrice é sempre um número válido
       const validPrice = Number.isFinite(Number(minutePrice)) ? Number(minutePrice) : 0
 
+      console.log('[useBilling] startSession chamado. minutePrice:', minutePrice, 'validPrice:', validPrice, 'isConsultantMode:', isConsultantMode, 'hasSufficientBalance:', hasSufficientBalance, 'balanceMinutes:', balanceMinutes)
+
       // Consultores não têm restrição de saldo - eles estão acumulando ganhos
       if (!isConsultantMode && !hasSufficientBalance) {
+        console.log('[useBilling] Saldo insuficiente!')
         onInsufficientBalance?.()
         return false
       }
+
+      console.log('[useBilling] Iniciando sessão com pricePerMinute:', validPrice)
 
       consumedRef.current = false
       setElapsedSeconds(0)
@@ -55,14 +72,21 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
       return undefined
     }
 
+    console.log('[useBilling] Iniciando intervalo. activeSession:', activeSession, 'pricePerMinute:', activeSession.pricePerMinute)
+
     // Simplificar atualização para teste: 1s em modo normal, 10s em modo teste
     const intervalMs = testMode ? 10000 : 1000
 
     const interval = window.setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1)
+      setElapsedSeconds((prev) => {
+        const next = prev + 1
+        console.log(`[useBilling] elapsedSeconds: ${prev} -> ${next}`)
+        return next
+      })
     }, intervalMs)
 
     return () => {
+      console.log('[useBilling] Limpando intervalo')
       window.clearInterval(interval)
     }
   }, [activeSession, isConnected, testMode])

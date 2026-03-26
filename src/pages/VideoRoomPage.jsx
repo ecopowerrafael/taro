@@ -122,6 +122,8 @@ export function VideoRoomPage() {
   }, [session, isCallActive, sessionId, token])
 
   const joinCall = async (sessionData) => {
+    console.log('[VideoRoomPage] joinCall chamado com sessionData.isConsultant:', sessionData.isConsultant)
+    
     if (!containerRef.current) return
     
     // Marcar sessão como ativa no DB se ainda não estiver
@@ -182,14 +184,21 @@ export function VideoRoomPage() {
       })
       const freshSession = await res.json()
       
+      console.log('[VideoRoomPage] Consultor iniciando. freshSession:', freshSession)
+      
       if (freshSession) {
+        const price = Number(freshSession.pricePerMinute) || 0
+        console.log('[VideoRoomPage] Iniciando billing com pricePerMinute:', price)
+        
         // Iniciar faturamento com dados frescos
-        billing.startSession({
+        const started = billing.startSession({
           consultantId: freshSession.consultantId,
           consultantName: freshSession.consultantName,
-          pricePerMinute: Number(freshSession.pricePerMinute) || 0,
+          pricePerMinute: price,
           isConsultantMode: true
         })
+        
+        console.log('[VideoRoomPage] billing.startSession retornou:', started)
         
         setTimeout(() => {
           joinCall(freshSession)
@@ -203,6 +212,8 @@ export function VideoRoomPage() {
   }
 
   const handleLeaveCall = async () => {
+    console.log('[VideoRoomPage] handleLeaveCall chamado')
+    
     if (callFrameRef.current) {
       await callFrameRef.current.leave()
       callFrameRef.current.destroy()
@@ -216,7 +227,10 @@ export function VideoRoomPage() {
       ? durationMinutes * (session.pricePerMinute || 0)
       : 0
 
+    console.log('[VideoRoomPage] Chamada finalizada. durationSeconds:', durationSeconds, 'billing.isConnected:', billing.isConnected)
+
     // Para faturamento (cliente ou consultor)
+    console.log('[VideoRoomPage] Chamando billing.stopSession()')
     billing.stopSession()
 
     // Salvar sessão com duração e earnings
