@@ -71,8 +71,12 @@ export const createVideoSessionsRouter = (pool) => {
             roomUrl = dailyData.url
             console.log('[videoSessions POST] ✓ Room criada com sucesso. URL:', roomUrl)
           } else {
-            const errorData = await dailyRes.json()
-            console.error('[videoSessions POST] ✗ Erro ao criar room:', errorData)
+            try {
+              const errorData = await dailyRes.json()
+              console.error('[videoSessions POST] ✗ Erro ao criar room:', errorData)
+            } catch (e) {
+              console.error('[videoSessions POST] ✗ Erro ao criar room (não-JSON):', dailyRes.status, dailyRes.statusText)
+            }
             roomUrl = `https://${credentials.dailyDomain}/${roomId}`
           }
         } catch (e) {
@@ -265,8 +269,12 @@ export const createVideoSessionsRouter = (pool) => {
             console.log('[videoSessions GET /:sessionId] ✓ Token gerado com sucesso')
             console.log('[videoSessions GET /:sessionId] Token length:', tokenData.token?.length)
           } else {
-            const errorData = await tokenRes.json()
-            console.error('[videoSessions GET /:sessionId] ✗ Erro ao gerar token:', errorData)
+            try {
+              const errorData = await tokenRes.json()
+              console.error('[videoSessions GET /:sessionId] ✗ Erro ao gerar token:', errorData)
+            } catch (e) {
+              console.error('[videoSessions GET /:sessionId] ✗ Erro ao gerar token (não-JSON):', tokenRes.status, tokenRes.statusText)
+            }
           }
         } catch (e) {
           console.error('[videoSessions GET /:sessionId] ✗ Exception ao gerar token:', e.message)
