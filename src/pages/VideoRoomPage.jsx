@@ -207,8 +207,7 @@ export function VideoRoomPage() {
         border: 'none',
         borderRadius: '12px'
       },
-      userName: profile?.name || sessionData.consultantName || 'Usuário',
-      enable_prejoin_ui: false  // ✅ Pular tela de Hair Check - permite auto-join direto
+      userName: profile?.name || sessionData.consultantName || 'Usuário'
     })
     
     callFrameRef.current = callFrame
