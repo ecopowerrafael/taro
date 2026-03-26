@@ -1166,7 +1166,6 @@ export function PlatformProvider({ children }) {
     persistConsultantWithResult,
     updateConsultantAvailability,
     rechargePackage,
-    savePlatformCredentials,
     rechargeRequests,
     fetchPendingRecharges,
     requestRecharge,
