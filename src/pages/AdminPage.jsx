@@ -46,7 +46,7 @@ export function AdminPage() {
         onGlobalCommissionChange={setGlobalCommission}
         onApprove={approveConsultant}
         onBlock={rejectConsultant}
-        onSaveConsultant={upsertConsultant}
+        onSaveConsultant={updateConsultantByAdmin}
         mpCredentials={mpCredentials}
         onMpCredentialsChange={savePlatformCredentials}
         dailyCredentials={dailyCredentials}
