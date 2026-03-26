@@ -227,6 +227,8 @@ export const createVideoSessionsRouter = (pool) => {
       if (apiKey) {
         try {
           const roomName = session.roomUrl.split('/').pop()
+          console.log('[videoSessions GET /:sessionId] Gerando token. roomName:', roomName, 'isConsultant:', isConsultant, 'user_name:', isConsultant ? session.consultantName : session.userName)
+          
           const tokenRes = await fetch('https://api.daily.co/v1/meeting-tokens', {
             method: 'POST',
             headers: {
@@ -245,15 +247,20 @@ export const createVideoSessionsRouter = (pool) => {
           if (tokenRes.ok) {
             const tokenData = await tokenRes.json()
             dailyToken = tokenData.token
+            console.log('[videoSessions GET /:sessionId] Token gerado com sucesso')
           } else {
             const errorData = await tokenRes.json()
-            console.error('Erro retornado pela API do Daily ao gerar token:', errorData)
+            console.error('[videoSessions GET /:sessionId] Erro retornado pela API do Daily ao gerar token:', errorData)
           }
         } catch (e) {
-          console.error('Erro ao gerar token do Daily:', e)
+          console.error('[videoSessions GET /:sessionId] Erro ao gerar token do Daily:', e)
         }
+      } else {
+        console.warn('[videoSessions GET /:sessionId] apiKey vazia ou indefinida. dailyToken será null')
       }
 
+      console.log('[videoSessions GET /:sessionId] Enviando resposta. roomUrl:', session.roomUrl, 'dailyToken:', dailyToken ? `${dailyToken.substring(0, 20)}...` : 'UNDEFINED', 'pricePerMinute:', session.pricePerMinute)
+      
       response.json({
         ...session,
         pricePerMinute: Number(session.pricePerMinute) || 0,
