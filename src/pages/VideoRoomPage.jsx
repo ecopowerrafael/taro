@@ -339,20 +339,21 @@ export function VideoRoomPage() {
           }
         }
         
-        // Polling: verificar estado chamando callFrame.joined()
+        // Polling: verificar estado checando se há participantes na room
         const pollJoined = () => {
           try {
-            const isJoined = callFrame.joined()
-            console.log('[VideoRoomPage] Poll state: callFrame.joined() =', isJoined)
-            if (isJoined && !joined) {
+            const participants = callFrame.participants()
+            const participantCount = Object.keys(participants || {}).length
+            console.log('[VideoRoomPage] Poll state: participants count =', participantCount)
+            if (participantCount > 0 && !joined) {
               joined = true
-              console.log('[VideoRoomPage] ✓ Polling detectou: conectado via callFrame.joined()')
+              console.log('[VideoRoomPage] ✓ Polling detectou: conectado (hay participants na room)')
               clearInterval(pollInterval)
               cleanup()
               resolve({ success: true, via: 'polling' })
             }
           } catch (err) {
-            console.error('[VideoRoomPage] Erro ao checar callFrame.joined():', err)
+            console.error('[VideoRoomPage] Erro ao checar participants:', err)
           }
         }
         
