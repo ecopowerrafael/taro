@@ -703,7 +703,7 @@ export function PlatformProvider({ children }) {
   }
 
   const disconnectSession = () => {
-    billing.stopSession()
+    billing.stopSession('disconnectSession')
   }
 
   const approveConsultant = (id) => {

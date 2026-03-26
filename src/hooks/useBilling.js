@@ -70,6 +70,7 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
         consultantId,
         consultantName,
         pricePerMinute: validPrice,
+        isConsultantMode, // Armazenar modo para verificação nos efeitos
       })
       setIsConnected(true)
       return true
@@ -124,16 +125,18 @@ export function useBilling({ balanceMinutes, onConsume, onInsufficientBalance, t
   }, [isConnected, testMode])
 
   useEffect(() => {
-    if (isConnected && remainingMinutes <= 0) {
+    if (isConnected && remainingMinutes <= 0 && !activeSession?.isConsultantMode) {
+      console.log('[useBilling] Saldo insuficiente detectado, chamando onInsufficientBalance')
       onInsufficientBalance?.()
       const timeout = window.setTimeout(() => {
-        stopSession()
+        console.log('[useBilling] Auto-stopping session devido a saldo insuficiente')
+        stopSession('insufficient_balance')
       }, 0)
 
       return () => window.clearTimeout(timeout)
     }
     return undefined
-  }, [isConnected, remainingMinutes, onInsufficientBalance, stopSession])
+  }, [isConnected, remainingMinutes, activeSession?.isConsultantMode, onInsufficientBalance, stopSession])
 
   const formattedElapsed = useMemo(() => {
     const minutes = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0')
