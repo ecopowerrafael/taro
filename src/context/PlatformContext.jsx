@@ -784,7 +784,23 @@ export function PlatformProvider({ children }) {
     )
   }
 
-  const updateConsultantByAdmin = async (id, updates) => {
+  const updateConsultantByAdmin = (id, updates) => {
+    let updatedConsultant = null
+    setConsultants((prev) =>
+      prev.map((consultant) => {
+        if (consultant.id === id) {
+          updatedConsultant = normalizeConsultant({ ...consultant, ...updates })
+          return updatedConsultant
+        }
+        return consultant
+      }),
+    )
+    if (updatedConsultant) {
+      void persistConsultant(updatedConsultant)
+    }
+  }
+
+  const persistConsultantWithResult = async (id, updates) => {
     let updatedConsultant = null
     setConsultants((prev) =>
       prev.map((consultant) => {
@@ -1147,6 +1163,7 @@ export function PlatformProvider({ children }) {
     blockConsultant,
     editConsultant,
     updateConsultantByAdmin,
+    persistConsultantWithResult,
     updateConsultantAvailability,
     rechargePackage,
     savePlatformCredentials,

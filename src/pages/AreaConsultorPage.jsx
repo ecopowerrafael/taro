@@ -15,6 +15,7 @@ export function AreaConsultorPage() {
     userConsultantProfile,
     consultants,
     updateConsultantByAdmin,
+    persistConsultantWithResult,
     questionRequests,
     respondToQuestionRequest,
     consultantWallets,
@@ -400,7 +401,7 @@ export function AreaConsultorPage() {
     if (!selectedConsultantId || !profileDraft) {
       return
     }
-    const success = await updateConsultantByAdmin(selectedConsultantId, {
+    const success = await persistConsultantWithResult(selectedConsultantId, {
       name: profileDraft.name.trim(),
       email: profileDraft.email.trim().toLowerCase(),
       tagline: profileDraft.tagline.trim(),
