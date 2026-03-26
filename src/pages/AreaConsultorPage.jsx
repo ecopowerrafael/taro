@@ -31,8 +31,7 @@ export function AreaConsultorPage() {
   const [gainFilter, setGainFilter] = useState('total')
   const [pixDraft, setPixDraft] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
-  const [panelNotice, setPanelNotice] = useState('')
-  const [responseDrafts, setResponseDrafts] = useState({})
+  const [panelNotice, setPanelNotice] = useState('')  const [profileNotice, setProfileNotice] = useState('')  const [responseDrafts, setResponseDrafts] = useState({})
   const [profileDraft, setProfileDraft] = useState(null)
   const [pendingVideoSessions, setPendingVideoSessions] = useState([])
   const [rejectModal, setRejectModal] = useState(null)
@@ -420,13 +419,13 @@ export function AreaConsultorPage() {
       }, isSelfEdit)
       console.log('[handleSaveProfile] Result:', success)
       if (success) {
-        setPanelNotice('Perfil do consultor atualizado com sucesso.')
+        setProfileNotice('Perfil do consultor atualizado com sucesso.')
       } else {
-        setPanelNotice('Erro ao salvar perfil. Verifique sua conexão e tente novamente.')
+        setProfileNotice('Erro ao salvar perfil. Verifique sua conexão e tente novamente.')
       }
     } catch (err) {
       console.error('[handleSaveProfile] Error:', err)
-      setPanelNotice('Erro ao salvar perfil: ' + err.message)
+      setProfileNotice('Erro ao salvar perfil: ' + err.message)
     }
   }
 
@@ -678,8 +677,11 @@ export function AreaConsultorPage() {
               className="rounded-lg border border-mystic-gold/70 bg-mystic-gold/15 px-3 py-2 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/25 md:col-span-2"
             >
               Salvar perfil
-            </button>
-          </div>
+            </button>            {profileNotice && (
+              <p className="mt-3 rounded-lg border border-amber-400/35 bg-amber-500/10 px-3 py-2 text-xs text-amber-200 md:col-span-2">
+                {profileNotice}
+              </p>
+            )}          </div>
         )}
         </GlassCard>
       )}
