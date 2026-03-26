@@ -835,86 +835,124 @@ export function AdminPanel({
         <div className="mt-5 rounded-lg border border-mystic-gold/45 bg-black/35 p-4">
           <h4 className="font-display text-xl text-mystic-goldSoft">Editar Consultor</h4>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <input
-              value={editForm.name ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, name: event.target.value }))}
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-              placeholder="Nome"
-            />
-            <input
-              value={editForm.email ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, email: event.target.value }))}
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-              placeholder="E-mail"
-            />
-            <input
-              value={editForm.tagline ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, tagline: event.target.value }))}
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2 md:col-span-2"
-              placeholder="Tagline"
-            />
-            <input
-              type="number"
-              min="1"
-              step="0.5"
-              value={editForm.pricePerMinute}
-              onChange={(event) =>
-                setEditForm((prev) => ({ ...prev, pricePerMinute: event.target.value }))
-              }
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-              placeholder="Preço/min"
-            />
-            <input
-              type="number"
-              min="1"
-              step="0.5"
-              value={editForm.priceThreeQuestions}
-              onChange={(event) =>
-                setEditForm((prev) => ({ ...prev, priceThreeQuestions: event.target.value }))
-              }
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-              placeholder="3 perguntas"
-            />
-            <input
-              type="number"
-              min="1"
-              step="0.5"
-              value={editForm.priceFiveQuestions}
-              onChange={(event) =>
-                setEditForm((prev) => ({ ...prev, priceFiveQuestions: event.target.value }))
-              }
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-              placeholder="5 perguntas"
-            />
-            <input
-              type="number"
-              min="0"
-              step="0.1"
-              value={editForm.ratingAverage}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, ratingAverage: event.target.value }))}
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-              placeholder="Média"
-            />
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={editForm.commissionOverride ?? ''}
-              onChange={(event) =>
-                setEditForm((prev) => ({ ...prev, commissionOverride: event.target.value }))
-              }
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-              placeholder="Comissão override %"
-            />
-            <select
-              value={editForm.status ?? 'Online'}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, status: event.target.value }))}
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2 md:col-span-2"
-            >
-              <option>Online</option>
-              <option>Ocupado</option>
-              <option>Offline</option>
-            </select>
+            <label className="flex flex-col gap-1 md:col-span-1">
+              <span className="text-xs font-semibold text-amber-100">Nome Completo</span>
+              <span className="text-[11px] text-ethereal-silver/65">Nome do consultor que aparece na plataforma</span>
+              <input
+                value={editForm.name ?? ''}
+                onChange={(event) => setEditForm((prev) => ({ ...prev, name: event.target.value }))}
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                placeholder="Nome"
+              />
+            </label>
+            <label className="flex flex-col gap-1 md:col-span-1">
+              <span className="text-xs font-semibold text-amber-100">E-mail</span>
+              <span className="text-[11px] text-ethereal-silver/65">E-mail de contato da conta</span>
+              <input
+                value={editForm.email ?? ''}
+                onChange={(event) => setEditForm((prev) => ({ ...prev, email: event.target.value }))}
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                placeholder="E-mail"
+              />
+            </label>
+            <label className="flex flex-col gap-1 md:col-span-2">
+              <span className="text-xs font-semibold text-amber-100">Tagline</span>
+              <span className="text-[11px] text-ethereal-silver/65">Descrição breve que aparece junto ao nome (ex: "Taróloga especialista em amor")</span>
+              <input
+                value={editForm.tagline ?? ''}
+                onChange={(event) => setEditForm((prev) => ({ ...prev, tagline: event.target.value }))}
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                placeholder="Tagline"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-amber-100">Preço por Minuto (R$)</span>
+              <span className="text-[11px] text-ethereal-silver/65">Valor cobrado por minuto na chamada de vídeo</span>
+              <input
+                type="number"
+                min="1"
+                step="0.5"
+                value={editForm.pricePerMinute}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, pricePerMinute: event.target.value }))
+                }
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                placeholder="Preço/min"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-amber-100">Pacote 3 Perguntas (R$)</span>
+              <span className="text-[11px] text-ethereal-silver/65">Preço fixo para responder 3 perguntas</span>
+              <input
+                type="number"
+                min="1"
+                step="0.5"
+                value={editForm.priceThreeQuestions}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, priceThreeQuestions: event.target.value }))
+                }
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                placeholder="3 perguntas"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-amber-100">Pacote 5 Perguntas (R$)</span>
+              <span className="text-[11px] text-ethereal-silver/65">Preço fixo para responder 5 perguntas</span>
+              <input
+                type="number"
+                min="1"
+                step="0.5"
+                value={editForm.priceFiveQuestions}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, priceFiveQuestions: event.target.value }))
+                }
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                placeholder="5 perguntas"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-amber-100">Avaliação Média</span>
+              <span className="text-[11px] text-ethereal-silver/65">Classificação média do consultor (0-5 estrelas)</span>
+              <input
+                type="number"
+                min="0"
+                max="5"
+                step="0.1"
+                value={editForm.ratingAverage}
+                onChange={(event) => setEditForm((prev) => ({ ...prev, ratingAverage: event.target.value }))}
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                placeholder="Média"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-amber-100">Comissão Override (%)</span>
+              <span className="text-[11px] text-ethereal-silver/65">Percentual customizado (deixar em branco para usar global)</span>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={editForm.commissionOverride ?? ''}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, commissionOverride: event.target.value }))
+                }
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                placeholder="Comissão override %"
+              />
+            </label>
+            <label className="flex flex-col gap-1 md:col-span-2">
+              <span className="text-xs font-semibold text-amber-100">Status</span>
+              <span className="text-[11px] text-ethereal-silver/65">Estado atual do consultor na plataforma</span>
+              <select
+                value={editForm.status ?? 'Online'}
+                onChange={(event) => setEditForm((prev) => ({ ...prev, status: event.target.value }))}
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+              >
+                <option>Online</option>
+                <option>Ocupado</option>
+                <option>Offline</option>
+              </select>
+            </label>
           </div>
           <div className="mt-3 flex gap-2">
             <button
