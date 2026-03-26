@@ -1170,7 +1170,16 @@ export function PlatformProvider({ children }) {
     fetchPendingRecharges,
     requestRecharge,
     processRechargeAction,
-    token,
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    // Verify all functions are valid
+    const invalidFuncs = Object.entries(value).filter(
+      ([key, val]) => typeof val === 'undefined' || val === null
+    )
+    if (invalidFuncs.length > 0) {
+      console.warn('[PlatformContext] Invalid context values:', invalidFuncs.map(([k]) => k))
+    }
   }
 
   return <PlatformContext.Provider value={value}>{children}</PlatformContext.Provider>

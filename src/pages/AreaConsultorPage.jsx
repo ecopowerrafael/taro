@@ -399,22 +399,30 @@ export function AreaConsultorPage() {
 
   const handleSaveProfile = async () => {
     if (!selectedConsultantId || !profileDraft) {
+      console.log('[handleSaveProfile] Missing data:', { selectedConsultantId, profileDraft })
       return
     }
-    const success = await persistConsultantWithResult(selectedConsultantId, {
-      name: profileDraft.name.trim(),
-      email: profileDraft.email.trim().toLowerCase(),
-      tagline: profileDraft.tagline.trim(),
-      description: profileDraft.description.trim(),
-      photo: profileDraft.photo.trim(),
-      pricePerMinute: parseCurrency(profileDraft.pricePerMinute),
-      priceThreeQuestions: parseCurrency(profileDraft.priceThreeQuestions),
-      priceFiveQuestions: parseCurrency(profileDraft.priceFiveQuestions),
-    })
-    if (success) {
-      setPanelNotice('Perfil do consultor atualizado com sucesso.')
-    } else {
-      setPanelNotice('Erro ao salvar perfil. Verifique sua conexão e tente novamente.')
+    try {
+      console.log('[handleSaveProfile] Starting save with:', { selectedConsultantId, persistConsultantWithResult })
+      const success = await persistConsultantWithResult(selectedConsultantId, {
+        name: profileDraft.name.trim(),
+        email: profileDraft.email.trim().toLowerCase(),
+        tagline: profileDraft.tagline.trim(),
+        description: profileDraft.description.trim(),
+        photo: profileDraft.photo.trim(),
+        pricePerMinute: parseCurrency(profileDraft.pricePerMinute),
+        priceThreeQuestions: parseCurrency(profileDraft.priceThreeQuestions),
+        priceFiveQuestions: parseCurrency(profileDraft.priceFiveQuestions),
+      })
+      console.log('[handleSaveProfile] Result:', success)
+      if (success) {
+        setPanelNotice('Perfil do consultor atualizado com sucesso.')
+      } else {
+        setPanelNotice('Erro ao salvar perfil. Verifique sua conexão e tente novamente.')
+      }
+    } catch (err) {
+      console.error('[handleSaveProfile] Error:', err)
+      setPanelNotice('Erro ao salvar perfil: ' + err.message)
     }
   }
 
