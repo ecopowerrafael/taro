@@ -18,7 +18,7 @@ export function AdminPage() {
     setGlobalCommission,
     approveConsultant,
     rejectConsultant,
-    upsertConsultant,
+    updateConsultantByAdmin,
     mpCredentials,
     savePlatformCredentials,
     dailyCredentials,
