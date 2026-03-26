@@ -36,6 +36,7 @@ export function AreaConsultorPage() {
   const [pendingVideoSessions, setPendingVideoSessions] = useState([])
   const [rejectModal, setRejectModal] = useState(null)
   const [confirmResponseModal, setConfirmResponseModal] = useState(null)
+  const [pendingStatusModal, setPendingStatusModal] = useState(false)
 
   // Polling para novas chamadas de v\u00eddeo
   useEffect(() => {
@@ -249,6 +250,12 @@ export function AreaConsultorPage() {
       return
     }
 
+    // Verificar se consultor está pendente
+    if (selectedConsultant.status === 'pending' || selectedConsultant.status === 'Pendente') {
+      setPendingStatusModal(true)
+      return
+    }
+
     try {
       if (isSelectedConsultantOnline) {
         notificationService.disconnect()
@@ -440,50 +447,62 @@ export function AreaConsultorPage() {
         </GlassCard>
       )}
 
-      <GlassCard title="Atendimento de Perguntas" subtitle="Visualize e responda cada item enviado pelo cliente.">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          {isAdmin ? (
-            <select
-              value={selectedConsultantId}
-              onChange={(event) => {
-                void handleSelectConsultant(event.target.value)
-              }}
-              className="rounded-lg border border-mystic-gold/45 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-            >
-              {consultants.map((consultant) => (
-                <option key={consultant.id} value={consultant.id}>
-                  {consultant.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <span className="rounded-lg border border-mystic-gold/45 bg-black/35 px-3 py-2 text-sm text-mystic-goldSoft">
-              {selectedConsultant?.name}
-            </span>
-          )}
-          <span className="text-xs text-ethereal-silver/80">
-            Pendentes: {pendingRequests.length} • Respondidas: {answeredRequests.length}
-          </span>
-          <div className="flex items-center gap-3">
-            <span className={`text-xs font-bold ${isSelectedConsultantOnline ? 'text-emerald-400' : 'text-ethereal-silver/60'}`}>
-              {isSelectedConsultantOnline ? 'ONLINE' : 'OFFLINE'}
-            </span>
-            <button
-              onClick={() => {
-                void handleToggleAvailability()
-              }}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-mystic-gold/60 focus:ring-offset-2 focus:ring-offset-black ${
-                isSelectedConsultantOnline ? 'bg-emerald-500' : 'bg-zinc-600'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isSelectedConsultantOnline ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
+      {/* Aviso se consultor está pendente */}
+      {!isAdmin && selectedConsultant && (selectedConsultant.status === 'pending' || selectedConsultant.status === 'Pendente') && (
+        <GlassCard title="Cadastro em Análise" subtitle="Seu cadastro está sendo revisado.">
+          <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-center">
+            <p className="mb-3 text-sm text-amber-100">Seu cadastro está pendente de aprovação.</p>
+            <p className="text-xs text-amber-100/70">Você poderá responder perguntas e fazer atendimentos assim que seu cadastro for aprovado pela equipe.</p>
           </div>
-        </div>
+        </GlassCard>
+      )}
+
+      {/* Atendimento de Perguntas - Oculto se consultor pendente */}
+      {(isAdmin || !selectedConsultant || (selectedConsultant.status !== 'pending' && selectedConsultant.status !== 'Pendente')) && (
+        <GlassCard title="Atendimento de Perguntas" subtitle="Visualize e responda cada item enviado pelo cliente.">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {isAdmin ? (
+              <select
+                value={selectedConsultantId}
+                onChange={(event) => {
+                  void handleSelectConsultant(event.target.value)
+                }}
+                className="rounded-lg border border-mystic-gold/45 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+              >
+                {consultants.map((consultant) => (
+                  <option key={consultant.id} value={consultant.id}>
+                    {consultant.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="rounded-lg border border-mystic-gold/45 bg-black/35 px-3 py-2 text-sm text-mystic-goldSoft">
+                {selectedConsultant?.name}
+              </span>
+            )}
+            <span className="text-xs text-ethereal-silver/80">
+              Pendentes: {pendingRequests.length} • Respondidas: {answeredRequests.length}
+            </span>
+            <div className="flex items-center gap-3">
+              <span className={`text-xs font-bold ${isSelectedConsultantOnline ? 'text-emerald-400' : 'text-ethereal-silver/60'}`}>
+                {isSelectedConsultantOnline ? 'ONLINE' : 'OFFLINE'}
+              </span>
+              <button
+                onClick={() => {
+                  void handleToggleAvailability()
+                }}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-mystic-gold/60 focus:ring-offset-2 focus:ring-offset-black ${
+                  isSelectedConsultantOnline ? 'bg-emerald-500' : 'bg-zinc-600'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isSelectedConsultantOnline ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
         <div className="grid gap-3">
           {pendingRequests.length === 0 && (
             <p className="rounded-lg border border-mystic-gold/25 bg-black/30 p-3 text-sm text-ethereal-silver/80">
@@ -537,9 +556,12 @@ export function AreaConsultorPage() {
             </article>
           ))}
         </div>
-      </GlassCard>
+        </GlassCard>
+      )}
 
-      <GlassCard title="Editar Meu Perfil" subtitle="Atualize dados públicos e preços do seu atendimento.">
+      {/* Editar Meu Perfil - Oculto se consultor pendente */}
+      {(isAdmin || !selectedConsultant || (selectedConsultant.status !== 'pending' && selectedConsultant.status !== 'Pendente')) && (
+        <GlassCard title="Editar Meu Perfil" subtitle="Atualize dados públicos e preços do seu atendimento.">
         {profileDraft && (
           <div className="grid gap-3 md:grid-cols-2">
             <label className="grid gap-1 text-xs text-amber-100/75 md:col-span-2">
@@ -642,7 +664,8 @@ export function AreaConsultorPage() {
             </button>
           </div>
         )}
-      </GlassCard>
+        </GlassCard>
+      )}
 
       <GlassCard title="Carteira do Consultor" subtitle="Controle de ganhos, PIX e solicitação de saque.">
         <div className="grid gap-4 md:grid-cols-2">
@@ -862,6 +885,29 @@ export function AreaConsultorPage() {
                 Voltar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Status Pendente */}
+      {pendingStatusModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
+            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">
+              Cadastro Pendente
+            </h3>
+            <p className="mb-6 text-center text-sm text-amber-100/80">
+              Seu cadastro está pendente de aprovação pela equipe.
+            </p>
+            <p className="mb-6 text-center text-xs text-amber-100/70">
+              Você poderá fazer atendimentos assim que seu cadastro for analisado e aprovado.
+            </p>
+            <button
+              onClick={() => setPendingStatusModal(false)}
+              className="w-full rounded-lg bg-mystic-gold/90 px-4 py-3 font-bold text-black transition hover:brightness-110"
+            >
+              Entendi
+            </button>
           </div>
         </div>
       )}

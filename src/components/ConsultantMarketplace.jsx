@@ -22,8 +22,8 @@ export function ConsultantMarketplace({
   const filteredConsultants = useMemo(() => {
     let result =
       statusFilter === 'Todos'
-        ? consultants
-        : consultants.filter((consultant) => consultant.status === statusFilter)
+        ? consultants.filter(c => c.status !== 'pending' && c.status !== 'Pendente')
+        : consultants.filter((consultant) => consultant.status === statusFilter && consultant.status !== 'pending' && consultant.status !== 'Pendente')
 
     if (sortOrder === 'asc') {
       result = [...result].sort((a, b) => a.pricePerMinute - b.pricePerMinute)
