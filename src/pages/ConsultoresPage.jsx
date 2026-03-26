@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle, Wallet, Video } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { ConsultantMarketplace } from '../components/ConsultantMarketplace'
+import { ConsultantMarketplaceNew } from '../components/ConsultantMarketplaceNew'
 import { QuestionFlowModal } from '../components/QuestionFlowModal'
 import { VideoConsultationRoom } from '../components/VideoConsultationRoom'
 import { PageShell } from '../components/PageShell'
@@ -146,7 +146,7 @@ export function ConsultoresPage() {
           {systemNotice}
         </div>
       )}
-      <ConsultantMarketplace
+      <ConsultantMarketplaceNew
         consultants={consultants}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
