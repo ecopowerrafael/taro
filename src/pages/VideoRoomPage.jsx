@@ -200,7 +200,7 @@ export function VideoRoomPage() {
 
     // Usar createCallObject ao invés de createFrame para controle 100% via código
     // Isso elimina completamente a UI de prejoin do Daily
-    const callFrame = window.DailyIframe.createCallObject({
+    const callFrame = DailyIframe.createCallObject({
       userName: profile?.name || sessionData.consultantName || 'Usuário',
       videoSource: true,
       audioSource: true
