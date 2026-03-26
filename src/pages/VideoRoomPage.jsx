@@ -173,7 +173,8 @@ export function VideoRoomPage() {
         borderRadius: '12px'
       },
       audioSource: false,
-      videoSource: false
+      videoSource: false,
+      userName: profile?.name || sessionData.consultantName || 'Usuário'
     })
     
     callFrameRef.current = callFrame
