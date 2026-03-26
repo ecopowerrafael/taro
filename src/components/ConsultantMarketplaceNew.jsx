@@ -180,46 +180,41 @@ export function ConsultantMarketplaceNew({
 
             {/* Pricing Section */}
             <div className="relative z-10 pt-4 border-t border-mystic-purple-light/20 mt-auto">
-              <div className="grid grid-cols-3 gap-2 mb-4 text-[11px]">
-                <div className="text-center">
-                  <div className="text-mystic-gold font-playfair font-bold">
-                    R$ {consultant.pricePerMinute.toFixed(0)}
-                  </div>
-                  <div className="text-mystic-purple-light/60 text-[9px]">/min</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-mystic-gold font-playfair font-bold">
-                    R$ {consultant.priceThreeQuestions.toFixed(0)}
-                  </div>
-                  <div className="text-mystic-purple-light/60 text-[9px]">3 Perguntas</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-mystic-gold font-playfair font-bold">
-                    R$ {consultant.priceFiveQuestions.toFixed(0)}
-                  </div>
-                  <div className="text-mystic-purple-light/60 text-[9px]">5 Perguntas</div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onChooseService && onChooseService(consultant)
-                  }}
-                  className="flex-1 py-2 rounded-lg bg-gradient-to-r from-mystic-gold to-mystic-gold-light text-mystic-black font-bold tracking-wide text-xs uppercase hover:shadow-gold-glow transition-shadow"
-                >
-                  Agendar
-                </button>
-                <button 
-                  className="p-2 rounded-lg bg-mystic-purple-dark hover:bg-mystic-gold text-mystic-purple-light hover:text-mystic-black transition-colors"
-                  title="Ver Perfil"
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
-              </div>
+              <div className="flex flex-col gap-3">
+                {/* Destaque: Chamada ao Vivo */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onChooseService && onChooseService(consultant, 'video')
+                }}
+                className="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 text-white font-bold tracking-wide text-sm uppercase hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-shadow"
+              >
+                Vídeo • R$ {consultant.pricePerMinute.toFixed(2)}/min
+              </button>
+              
+              {/* 3 Perguntas */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onChooseService && onChooseService(consultant, '3-questions')
+                }}
+                className="w-full py-2 rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 hover:bg-mystic-gold/20 text-mystic-gold font-bold text-xs uppercase transition-colors"
+              >
+                3 Pergs • R$ {consultant.priceThreeQuestions.toFixed(0)}
+              </button>
+              
+              {/* 5 Perguntas */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onChooseService && onChooseService(consultant, '5-questions')
+                }}
+                className="w-full py-2 rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 hover:bg-mystic-gold/20 text-mystic-gold font-bold text-xs uppercase transition-colors"
+              >
+                5 Pergs • R$ {consultant.priceFiveQuestions.toFixed(0)}
+              </button>
             </div>
+          </div>
 
           </div>
         ))}

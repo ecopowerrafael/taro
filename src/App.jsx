@@ -15,6 +15,12 @@ import { TermosPage } from './pages/TermosPage'
 import { PrivacidadePage } from './pages/PrivacidadePage'
 import { RecarregarPage } from './pages/RecarregarPage'
 import { VideoRoomPage } from './pages/VideoRoomPage'
+import { MagiasPage } from './pages/MagiasPage'
+import { ComoFuncionaPage } from './pages/ComoFuncionaPage'
+import { SuportePage } from './pages/SuportePage'
+import { BlogPage } from './pages/BlogPage'
+import { AjudaPage } from './pages/AjudaPage'
+import { ContatoPage } from './pages/ContatoPage'
 import { PageTransition } from './components/PageTransition'
 import { MobileBottomNav } from './components/MobileBottomNav'
 
@@ -75,6 +81,12 @@ function App() {
           />
           <Route path="/termos" element={wrapWithTransition(<TermosPage />)} />
           <Route path="/privacidade" element={wrapWithTransition(<PrivacidadePage />)} />
+          <Route path="/magias" element={wrapWithTransition(<MagiasPage />)} />
+          <Route path="/como-funciona" element={wrapWithTransition(<ComoFuncionaPage />)} />
+          <Route path="/suporte" element={wrapWithTransition(<SuportePage />)} />
+          <Route path="/blog" element={wrapWithTransition(<BlogPage />)} />
+          <Route path="/ajuda" element={wrapWithTransition(<AjudaPage />)} />
+          <Route path="/contato" element={wrapWithTransition(<ContatoPage />)} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>

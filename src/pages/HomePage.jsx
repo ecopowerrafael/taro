@@ -158,20 +158,28 @@ export function HomePage() {
           
           {/* Logo */}
           <div className="flex items-center gap-2 group cursor-pointer">
-            <Moon className="w-8 h-8 text-mystic-gold group-hover:rotate-12 transition-transform duration-500" />
+            <img src="/logoastria.png" alt="Astria" className="w-8 h-8" />
             <span className="font-playfair text-2xl font-bold tracking-wider text-white">
-              Astria<span className="text-mystic-gold">Tarot</span>
+              Astria
             </span>
           </div>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            {['Consultores', 'Serviços', 'Como Funciona', 'Para Profissionais'].map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="text-sm uppercase tracking-widest text-mystic-purple-light hover:text-mystic-gold transition-colors duration-300 relative group">
-                {item}
-                <span className="absolute -bottom-2 left-0 w-0 h-px bg-mystic-gold transition-all duration-300 group-hover:w-full"></span>
-              </a>
-            ))}
+            {['Consultores', 'Serviços', 'Como Funciona', 'Para Profissionais'].map((item) => {
+              const links = {
+                'Consultores': '/consultores',
+                'Serviços': '/magias',
+                'Como Funciona': '/como-funciona',
+                'Para Profissionais': '/seja-consultor'
+              }
+              return (
+                <a key={item} href={links[item]} className="text-sm uppercase tracking-widest text-mystic-purple-light hover:text-mystic-gold transition-colors duration-300 relative group">
+                  {item}
+                  <span className="absolute -bottom-2 left-0 w-0 h-px bg-mystic-gold transition-all duration-300 group-hover:w-full"></span>
+                </a>
+              )
+            })}
           </nav>
 
           {/* Actions */}
@@ -198,11 +206,19 @@ export function HomePage() {
 
       {/* MOBILE MENU OVERLAY */}
       <div className={`fixed inset-0 z-40 bg-mystic-black/95 backdrop-blur-xl transition-all duration-500 md:hidden flex flex-col items-center justify-center gap-8 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        {['Consultores', 'Serviços', 'Como Funciona', 'Para Profissionais'].map((item) => (
-          <a key={item} href={`#${item.toLowerCase()}`} className="font-playfair text-3xl text-white hover:text-gradient-gold transition-colors" onClick={() => setMobileMenuOpen(false)}>
-            {item}
-          </a>
-        ))}
+        {['Consultores', 'Serviços', 'Como Funciona', 'Para Profissionais'].map((item) => {
+          const links = {
+            'Consultores': '/consultores',
+            'Serviços': '/magias',
+            'Como Funciona': '/como-funciona',
+            'Para Profissionais': '/seja-consultor'
+          }
+          return (
+            <a key={item} href={links[item]} className="font-playfair text-3xl text-white hover:text-gradient-gold transition-colors" onClick={() => setMobileMenuOpen(false)}>
+              {item}
+            </a>
+          )
+        })}
         <Link to={isAuthenticated ? '/consultores' : '/cadastro'} className="mt-8 rounded-full px-10 py-4 border border-mystic-gold text-gradient-gold font-bold tracking-widest uppercase">
           {isAuthenticated ? 'Ver Consultores' : 'Entrar / Agendar'}
         </Link>
@@ -342,8 +358,8 @@ export function HomePage() {
             {/* Brand */}
             <div className="col-span-1 lg:col-span-1">
               <div className="flex items-center gap-2 mb-6">
-                <Moon className="w-8 h-8 text-mystic-gold" />
-                <span className="font-playfair text-3xl font-bold text-white">Astria<span className="text-mystic-gold">Tarot</span></span>
+                <img src="/logoastria.png" alt="Astria" className="w-8 h-8" />
+                <span className="font-playfair text-3xl font-bold text-white">Astria</span>
               </div>
               <p className="text-mystic-purple-light text-sm leading-relaxed mb-6">
                 A ponte entre o seu momento atual e o destino que o universo preparou para você.
@@ -354,13 +370,21 @@ export function HomePage() {
             <div>
               <h4 className="font-playfair text-lg text-white mb-6">Plataforma</h4>
               <ul className="space-y-4">
-                {['Consultores', 'Serviços', 'Como Funciona', 'Blog'].map((link, i) => (
-                  <li key={i}>
-                    <a href="#" className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors flex items-center gap-2">
-                      <span className="w-1 h-1 rounded-full bg-mystic-gold/50" /> {link}
-                    </a>
-                  </li>
-                ))}
+                {['Consultores', 'Serviços', 'Como Funciona', 'Blog'].map((link, i) => {
+                  const paths = {
+                    'Consultores': '/consultores',
+                    'Serviços': '/magias',
+                    'Como Funciona': '/como-funciona',
+                    'Blog': '/blog'
+                  }
+                  return (
+                    <li key={i}>
+                      <a href={paths[link]} className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors flex items-center gap-2">
+                        <span className="w-1 h-1 rounded-full bg-mystic-gold/50" /> {link}
+                      </a>
+                    </li>
+                  )
+                })}
               </ul>
             </div>
 
@@ -368,10 +392,14 @@ export function HomePage() {
             <div>
               <h4 className="font-playfair text-lg text-white mb-6">Para Consultores</h4>
               <ul className="space-y-4">
-                {['Seja Consultor', 'Área do Consultor', 'Suporte'].map((link, i) => (
+                {[
+                  { name: 'Seja Consultor', path: '/seja-consultor' },
+                  { name: 'Área do Consultor', path: '/area-consultor' },
+                  { name: 'Suporte', path: '/suporte' }
+                ].map((link, i) => (
                   <li key={i}>
-                    <a href="#" className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors">
-                      {link}
+                    <a href={link.path} className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors">
+                      {link.name}
                     </a>
                   </li>
                 ))}
@@ -382,10 +410,15 @@ export function HomePage() {
             <div>
               <h4 className="font-playfair text-lg text-white mb-6">Legal</h4>
               <ul className="space-y-4">
-                {['Termos de Uso', 'Privacidade', 'Central de Ajuda', 'Contato'].map((link, i) => (
+                {[
+                  { name: 'Termos de Uso', path: '/termos' },
+                  { name: 'Privacidade', path: '/privacidade' },
+                  { name: 'Central de Ajuda', path: '/ajuda' },
+                  { name: 'Contato', path: '/contato' }
+                ].map((link, i) => (
                   <li key={i}>
-                    <a href="#" className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors">
-                      {link}
+                    <a href={link.path} className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors">
+                      {link.name}
                     </a>
                   </li>
                 ))}
