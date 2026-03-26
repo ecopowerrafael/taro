@@ -214,44 +214,151 @@ export function VideoRoomPage() {
       containerRef.current.innerHTML = '<div id="daily-video-container" style="width: 100%; height: 100%; background: #000; border-radius: 12px;"></div>'
     }
     
-    // Quando participantes forem adicionados, renderizar seus vídeos
-    callFrame.on('participant-joined', (evt) => {
-      console.log('[VideoRoomPage] participant-joined:', evt.participant.user_name)
-      updateVideoElements()
-    })
+    // Renderizar container HTML para vídeos
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '<div id="daily-video-container" style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; height: 100%; background: #000; border-radius: 12px; padding: 12px; overflow: auto;"></div>'
+    }
     
-    // Atualizar vídeos quando participante sair
-    callFrame.on('participant-left', (evt) => {
-      console.log('[VideoRoomPage] participant-left:', evt.participant.user_name)
-      updateVideoElements()
-    })
-    
-    // Função para renderizar vídeos dos participantes
-    const updateVideoElements = () => {
+    // Função para criar container de vídeo para um participante
+    const createVideoContainer = (participantId) => {
       const container = document.getElementById('daily-video-container')
       if (!container) return
       
-      const participants = callFrame.participants()
-      const participantList = Object.values(participants || {})
+      if (document.getElementById(`video-container-${participantId}`)) {
+        return // Já existe
+      }
       
-      console.log('[VideoRoomPage] Atualizando vídeos. Participantes:', participantList.length)
+      const videoContainer = document.createElement('div')
+      videoContainer.id = `video-container-${participantId}`
+      videoContainer.style.cssText = 'position: relative; width: 48%; aspect-ratio: 16/9; background: #111; border-radius: 8px; overflow: hidden;'
       
-      // Renderizar vídeos usando setUserMediaDevices se disponível
-      try {
-        callFrame.updateParticipant(callFrame.participants().local?.session_id, {
-          videoEnabled: true,
-          audioEnabled: true
-        })
-      } catch (err) {
-        console.log('[VideoRoomPage] Info: updateParticipant não disponível (normal)')
+      const video = document.createElement('video')
+      video.className = 'video-element'
+      video.autoplay = true
+      video.muted = true // O local é sempre muted
+      video.style.cssText = 'width: 100%; height: 100%; object-fit: cover;'
+      
+      videoContainer.appendChild(video)
+      container.appendChild(videoContainer)
+      console.log('[VideoRoomPage] ✓ Video container criado para:', participantId)
+    }
+    
+    // Função para criar elemento de áudio para participante remoto
+    const createAudioElement = (participantId) => {
+      if (document.getElementById(`audio-${participantId}`)) {
+        return
+      }
+      
+      const audio = document.createElement('audio')
+      audio.id = `audio-${participantId}`
+      audio.autoplay = true
+      document.body.appendChild(audio)
+      console.log('[VideoRoomPage] ✓ Audio element criado para:', participantId)
+    }
+    
+    // Função para anexar track ao elemento
+    const attachTrack = (trackType, track, participantId) => {
+      const selector = trackType === 'video'
+        ? `#video-container-${participantId} video.video-element`
+        : `#audio-${participantId}`
+      
+      const element = trackType === 'video'
+        ? document.querySelector(selector)
+        : document.getElementById(`audio-${participantId}`)
+      
+      if (!element) {
+        console.warn(`[VideoRoomPage] ⚠️ ${trackType} element não encontrado para ${participantId}`)
+        return
+      }
+      
+      // Verificar se já tem o track
+      const existingTracks = element.srcObject?.getTracks()
+      const needsUpdate = !existingTracks?.includes(track.persistentTrack)
+      
+      if (needsUpdate) {
+        element.srcObject = new MediaStream([track.persistentTrack])
+        console.log(`[VideoRoomPage] ✓ ${trackType} track anexado para ${participantId}`)
       }
     }
+    
+    // Handler para participant-joined e participant-updated
+    const handleParticipantJoinedOrUpdated = (event) => {
+      const { participant } = event
+      const participantId = participant.session_id
+      const isLocal = participant.local
+      const tracks = participant.tracks
+      
+      console.log(`[VideoRoomPage] ${isLocal ? 'Local' : 'Remote'} participant updated: ${participant.user_name}`)
+      
+      // Criar containers se não existirem
+      if (!document.getElementById(`video-container-${participantId}`)) {
+        createVideoContainer(participantId)
+      }
+      if (!isLocal && !document.getElementById(`audio-${participantId}`)) {
+        createAudioElement(participantId)
+      }
+      
+      // Processar cada tipo de track
+      Object.entries(tracks).forEach(([trackType, trackInfo]) => {
+        if (trackInfo.persistentTrack) {
+          // Track disponível - anexar
+          attachTrack(trackType, trackInfo, participantId)
+        } else {
+          // Track não disponível - remover elemento se existir
+          const elementId = `${trackType}-${participantId}`
+          const element = document.getElementById(elementId)
+          if (element) {
+            element.srcObject = null
+            element.remove()
+            console.log(`[VideoRoomPage] Track ${trackType} removido para ${participantId}`)
+          }
+        }
+      })
+    }
+    
+    // Quando participantes forem adicionados ou atualizados
+    callFrame.on('participant-joined', (evt) => {
+      console.log('[VideoRoomPage] ✓ participant-joined:', evt.participant.user_name)
+      handleParticipantJoinedOrUpdated(evt)
+    })
+    
+    callFrame.on('participant-updated', (evt) => {
+      console.log('[VideoRoomPage] participant-updated:', evt.participant.user_name)
+      handleParticipantJoinedOrUpdated(evt)
+    })
+    
+    // Quando participante sair
+    callFrame.on('participant-left', (evt) => {
+      const { participant } = evt
+      const participantId = participant.session_id
+      
+      console.log('[VideoRoomPage] participant-left:', participant.user_name)
+      
+      // Remover containers
+      const videoContainer = document.getElementById(`video-container-${participantId}`)
+      if (videoContainer) {
+        const video = videoContainer.querySelector('video')
+        if (video) {
+          video.srcObject = null
+        }
+        videoContainer.remove()
+      }
+      
+      const audio = document.getElementById(`audio-${participantId}`)
+      if (audio) {
+        audio.srcObject = null
+        audio.remove()
+      }
+    })
     
     // ADICIONAR LISTENERS ANTES DE JOIN (crucial!)
     callFrame.on('joined-meeting', () => {
       console.log('[VideoRoomPage] ✓ joined-meeting event disparado - entrou na sala com sucesso')
-      // Atualizar vídeos após entrar
-      updateVideoElements()
+      // Processar participantes existentes
+      const participants = callFrame.participants()
+      Object.entries(participants).forEach(([sessionId, participant]) => {
+        handleParticipantJoinedOrUpdated({ participant })
+      })
     })
     
     callFrame.on('left-meeting', () => {
@@ -286,31 +393,7 @@ export function VideoRoomPage() {
       })
     })
     
-    // Listeners para participantes - ADICIONAR ANTES DE JOIN
-    callFrame.on('participant-joined', (event) => {
-      console.log('[VideoRoomPage] ✓ participant-joined event:', {
-        id: event.participant.session_id,
-        name: event.participant.user_name,
-        isLocal: event.participant.local
-      })
-    })
-    
-    callFrame.on('participant-updated', (event) => {
-      console.log('[VideoRoomPage] participant-updated (cam/mic toggle):', {
-        id: event.participant.session_id,
-        name: event.participant.user_name,
-        camera: event.participant.video ? 'on' : 'off',
-        mic: event.participant.audio ? 'on' : 'off'
-      })
-    })
-    
-    callFrame.on('participant-left', (event) => {
-      console.log('[VideoRoomPage] participant-left event:', {
-        id: event.participant.session_id,
-        name: event.participant.user_name
-      })
-    })
-    
+    // Listeners adicionais para logging/monitoramento
     callFrame.on('participants-updated', (event) => {
       const participants = event.participants || {}
       console.log('[VideoRoomPage] ★ participants-updated event: ' + Object.keys(participants).length + ' total')
@@ -411,73 +494,48 @@ export function VideoRoomPage() {
       })
       
       // Esperar um momento para que os eventos sejam disparados
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 500))
       
       const participants = callFrame.participants()
-      console.log('[VideoRoomPage] ★ Participants após 1s:', {
+      console.log('[VideoRoomPage] ★ Participants após 0.5s:', {
         count: Object.keys(participants).length,
-        localOnly: Object.keys(participants).length === 1,
         list: Object.entries(participants).map(([id, p]) => ({
           id: id.substring(0, 8),
           name: p.user_name,
-          local: p.local
+          local: p.local,
+          videoTrack: !!p.tracks.video?.persistentTrack,
+          audioTrack: !!p.tracks.audio?.persistentTrack
         }))
       })
-      
-      // Tentar chamar getStats
-      try {
-        const stats = callFrame.getStats()
-        console.log('[VideoRoomPage] Network stats:', {
-          qualityLevel: stats?.videoReceiveStats?.quality,
-          bandwidth: stats?.stats?.bandwidth
-        })
-      } catch (e) {
-        console.warn('[VideoRoomPage] getStats indisponível:', e.message)
-      }
-      
-      // Obter meeting info
-      try {
-        const meetingInfo = callFrame.meetingState()
-        console.log('[VideoRoomPage] Meeting state:', {
-          status: meetingInfo?.status,
-          participants: meetingInfo?.participants?.length
-        })
-      } catch (e) {
-        console.warn('[VideoRoomPage] meetingState indisponível:', e.message)
-      }
       
       setIsCallActive(true)
       setCallStartedAt((prev) => prev ?? Date.now())
       
       // ═══════════════════════════════════════════════════════════════
-      // 🎥 INICIAR CÂMERA E MICROFONE AUTOMATICAMENTE
+      // 🎥 ATIVAR CÂMERA E MICROFONE
       // ═══════════════════════════════════════════════════════════════
-      await new Promise(resolve => setTimeout(resolve, 500))
       try {
-        const devices = await callFrame.enumerateDevices()
-        console.log('[VideoRoomPage] Dispositivos disponíveis:', {
-          cameras: devices.videoinput?.length,
-          microphones: devices.audioinput?.length
+        const hasVideo = callFrame.localVideo()
+        const hasAudio = callFrame.localAudio()
+        
+        console.log('[VideoRoomPage] 🎥 Estado dos dispositivos locais:', {
+          video: hasVideo,
+          audio: hasAudio
         })
         
-        if (devices.videoinput?.length > 0 && devices.audioinput?.length > 0) {
-          const firstCamera = devices.videoinput[0]
-          const firstMic = devices.audioinput[0]
-          
-          console.log('[VideoRoomPage] 🎥 Iniciando dispositivos:', {
-            camera: firstCamera?.label,
-            mic: firstMic?.label
-          })
-          
-          await callFrame.setInputDevices({
-            videoInput: { deviceId: firstCamera?.deviceId },
-            audioInput: { deviceId: firstMic?.deviceId }
-          })
-          
-          console.log('[VideoRoomPage] ✓ Câmera e microfone iniciados')
+        // Se não estiverem habilitados, habilitar
+        if (!hasVideo) {
+          console.log('[VideoRoomPage] ▶️  Habilitando vídeo local')
+          await callFrame.setLocalVideo(true)
         }
+        if (!hasAudio) {
+          console.log('[VideoRoomPage] 🔊 Habilitando áudio local')
+          await callFrame.setLocalAudio(true)
+        }
+        
+        console.log('[VideoRoomPage] ✓ Câmera e Microfone habilitados')
       } catch (err) {
-        console.warn('[VideoRoomPage] Erro ao iniciar dispositivos:', err.message)
+        console.warn('[VideoRoomPage] ⚠️  Erro ao habilitar dispositivos:', err.message)
       }
       
       // ═══════════════════════════════════════════════════════════════
