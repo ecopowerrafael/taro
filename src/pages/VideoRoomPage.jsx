@@ -172,20 +172,34 @@ export function VideoRoomPage() {
     }
   }
 
-  const handleStartByConsultant = () => {
+  const handleStartByConsultant = async () => {
     setIsCallActive(true)
-    setTimeout(() => {
-      if (session) {
-        // Consultor inicia sem restrição de saldo (ele está ganhando, não debitando)
+    
+    try {
+      // Refetch session para garantir dados atualizados, especialmente pricePerMinute
+      const res = await fetch(`/api/video-sessions/${sessionId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const freshSession = await res.json()
+      
+      if (freshSession) {
+        // Iniciar faturamento com dados frescos
         billing.startSession({
-          consultantId: session.consultantId,
-          consultantName: session.consultantName,
-          pricePerMinute: session.pricePerMinute || 0,
+          consultantId: freshSession.consultantId,
+          consultantName: freshSession.consultantName,
+          pricePerMinute: Number(freshSession.pricePerMinute) || 0,
           isConsultantMode: true
         })
-        joinCall(session)
+        
+        setTimeout(() => {
+          joinCall(freshSession)
+        }, 100)
       }
-    }, 100)
+    } catch (err) {
+      console.error('Erro ao iniciar atendimento:', err)
+      setSystemNotice('Erro ao iniciar atendimento.')
+      setIsCallActive(false)
+    }
   }
 
   const handleLeaveCall = async () => {
