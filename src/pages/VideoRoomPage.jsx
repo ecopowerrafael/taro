@@ -376,15 +376,16 @@ export function VideoRoomPage() {
         callFrame.on('error', onJoinError)
         callFrame.on('*', onAnyEvent) // Capturar todos os eventos para diagnosticar
         
-        // Iniciar polling a cada 500ms
-        pollInterval = setInterval(pollJoined, 500)
-        
         // Chamar join
         console.log('[VideoRoomPage] 🔄 Chamando callFrame.join()...')
         callFrame.join({
           url: sessionData.roomUrl,
           token: sessionData.dailyToken
         }).catch(reject)
+        
+        // Verificar imediatamente e depois a cada 250ms (invés de esperar 500ms)
+        pollJoined() // Primeira verificação IMEDIATA
+        pollInterval = setInterval(pollJoined, 250) // Depois a cada 250ms (mais rápido)
       })
       
       console.log('[VideoRoomPage] 🔄 Join promise criada, aguardando resultado...')
