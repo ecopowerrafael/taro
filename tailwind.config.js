@@ -29,7 +29,8 @@ export default {
       },
       fontFamily: {
         display: ['"Cormorant Garamond"', 'serif'],
-        body: ['Inter', 'system-ui', 'sans-serif'],
+        body: ['Noto Sans', 'Inter', 'system-ui', 'sans-serif'],
+        text: ['Noto Sans', 'system-ui', 'sans-serif'],
       },
     },
   },

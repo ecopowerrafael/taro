@@ -109,7 +109,7 @@ export function ConsultantMarketplace({
                 className="h-16 w-16 rounded-full border-2 border-mystic-gold/80 object-cover"
               />
               <div className="flex-1">
-                <h3 className="font-display text-2xl text-mystic-goldSoft">{consultant.name}</h3>
+                <h3 className="font-text font-bold text-xl text-mystic-goldSoft">{consultant.name}</h3>
                 <p className="text-sm text-amber-50/85">{consultant.tagline}</p>
               </div>
               <span

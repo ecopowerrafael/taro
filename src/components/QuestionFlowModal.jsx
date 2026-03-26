@@ -105,7 +105,7 @@ export function QuestionFlowModal({
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-ethereal-silver/65">Envio de Perguntas</p>
-            <h3 className="font-display text-3xl text-stardust-gold">{consultant.name}</h3>
+            <h3 className="font-text font-bold text-3xl text-stardust-gold">{consultant.name}</h3>
             <p className="text-sm text-ethereal-silver/80">
               Pacote de {questionCount} perguntas • Débito {price.toFixed(2)}
             </p>

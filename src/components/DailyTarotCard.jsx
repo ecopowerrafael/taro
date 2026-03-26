@@ -86,7 +86,7 @@ export function DailyTarotCard() {
         {/* Verso da carta (Face revelada com a mensagem) */}
         <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-xl border border-mystic-gold/60 bg-gradient-to-b from-[#1f0f38] to-[#0b0715] p-5 shadow-[0_0_20px_rgba(197,160,89,0.2)] overflow-y-auto custom-scrollbar">
           <div className="flex flex-col h-full justify-center text-center">
-            <h4 className="font-display text-2xl text-mystic-goldSoft mb-2">{dailyCard.name}</h4>
+            <h4 className="font-text font-bold text-xl text-mystic-goldSoft mb-2">{dailyCard.name}</h4>
             <div className="h-[1px] w-12 bg-mystic-gold/50 mx-auto mb-3"></div>
             <p className="text-sm text-amber-100/90 leading-relaxed italic">
               "{dailyCard.message}"
