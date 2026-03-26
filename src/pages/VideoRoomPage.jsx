@@ -297,11 +297,38 @@ export function VideoRoomPage() {
       console.log('[VideoRoomPage] Is Consultant (owner):', sessionData.isConsultant)
       console.log('[VideoRoomPage] ═══════════════════════════════════════')
       
-      // Tentar join com timeout
-      console.log('[VideoRoomPage] 🔄 Chamando callFrame.join()...')
-      const joinPromise = callFrame.join({
-        url: sessionData.roomUrl,
-        token: sessionData.dailyToken
+      // Criar Promise que resolve quando 'joined-meeting' dispara
+      const joinPromise = new Promise((resolve, reject) => {
+        let joined = false
+        
+        // Listener para sucesso
+        const onJoined = () => {
+          if (!joined) {
+            joined = true
+            callFrame.off('joined-meeting', onJoined)
+            resolve({ success: true })
+          }
+        }
+        
+        // Listener para erro
+        const onJoinError = (error) => {
+          if (!joined) {
+            joined = true
+            callFrame.off('joined-meeting', onJoined)
+            callFrame.off('error', onJoinError)
+            reject(error)
+          }
+        }
+        
+        callFrame.on('joined-meeting', onJoined)
+        callFrame.on('error', onJoinError)
+        
+        // Chamar join
+        console.log('[VideoRoomPage] 🔄 Chamando callFrame.join()...')
+        callFrame.join({
+          url: sessionData.roomUrl,
+          token: sessionData.dailyToken
+        }).catch(reject)
       })
       
       console.log('[VideoRoomPage] 🔄 Join promise criada, aguardando resultado...')
