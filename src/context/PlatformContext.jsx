@@ -480,7 +480,11 @@ export function PlatformProvider({ children }) {
     // Se for auto-edição de consultor, adiciona header para indicar ao backend
     if (isSelfEdit) {
       headers['X-Self-Edit'] = 'true'
+      console.log('[upsertConsultantOnApi] Added X-Self-Edit header: true')
     }
+    console.log('[upsertConsultantOnApi] Headers being sent:', Object.keys(headers))
+    console.log('[upsertConsultantOnApi] Consultant ID:', consultant.id)
+    
     const response = await fetch(buildApiUrl(`/api/consultants/${consultant.id}`), {
       method: 'PUT',
       headers,
