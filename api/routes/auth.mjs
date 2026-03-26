@@ -94,7 +94,7 @@ export const createAuthRouter = (pool) => {
 
         await connection.commit()
         
-        const token = jwt.sign({ id: userId, role: 'consultant', email }, JWT_SECRET, { expiresIn: '7d' })
+        const token = jwt.sign({ id: userId, consultantId, role: 'consultant', email }, JWT_SECRET, { expiresIn: '7d' })
 
         response.status(201).json({
           token,

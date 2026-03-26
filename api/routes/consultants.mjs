@@ -182,9 +182,12 @@ export const createConsultantsRouter = (pool) => {
     const { id } = request.params
     
     // Permitir apenas se está editando seu próprio perfil
-    if (request.user.id !== id) {
+    // Usar consultantId se disponível (novo sistema), senão comparar id direto (compatibilidade)
+    const userIdToCheck = request.user.consultantId || request.user.id
+    if (userIdToCheck !== id) {
       console.log('[POST /consultants/profile/:id] Access denied - not own profile', {
         userId: request.user.id,
+        consultantId: request.user.consultantId,
         targetId: id,
       })
       response.status(403).json({ message: 'Você só pode editar seu próprio perfil.' })
