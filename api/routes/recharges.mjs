@@ -14,21 +14,45 @@ const normalizePackage = (row) => ({
   sortOrder: Number(row.sortOrder) || 0,
 })
 
-// Inicializar Stripe apenas se a chave estiver disponível
+// Inicializar Stripe usando .env como fallback e credenciais salvas no banco como fonte principal.
 let stripe = null
-const initializeStripe = () => {
-  if (!stripe) {
-    if (process.env.STRIPE_SECRET_KEY) {
-      try {
-        stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-        console.log('[Stripe] Inicializado com sucesso')
-      } catch (error) {
-        console.error('[Stripe] Erro ao inicializar:', error.message)
-      }
-    } else {
-      console.warn('[Stripe] STRIPE_SECRET_KEY não encontrada no ambiente')
+let activeStripeSecretKey = null
+
+const resolveStripeSecretKey = async (pool) => {
+  const envKey = (process.env.STRIPE_SECRET_KEY || '').trim()
+  if (envKey) {
+    return envKey
+  }
+
+  try {
+    const [rows] = await pool.query('SELECT stripeSecretKey FROM platform_credentials WHERE id = 1 LIMIT 1')
+    return (rows?.[0]?.stripeSecretKey || '').trim()
+  } catch (error) {
+    console.error('[Stripe] Erro ao buscar stripeSecretKey no banco:', error.message)
+    return ''
+  }
+}
+
+const initializeStripe = async (pool) => {
+  const secretKey = await resolveStripeSecretKey(pool)
+
+  if (!secretKey) {
+    console.warn('[Stripe] Nenhuma stripeSecretKey encontrada no ambiente ou banco de dados')
+    return null
+  }
+
+  if (!stripe || activeStripeSecretKey !== secretKey) {
+    try {
+      stripe = new Stripe(secretKey)
+      activeStripeSecretKey = secretKey
+      console.log('[Stripe] Inicializado com sucesso')
+    } catch (error) {
+      stripe = null
+      activeStripeSecretKey = null
+      console.error('[Stripe] Erro ao inicializar:', error.message)
     }
   }
+
   return stripe
 }
 
@@ -229,7 +253,7 @@ export const createRechargesRouter = (pool) => {
     }
 
     // Inicializar Stripe e validar chave Secret
-    const stripeInstance = initializeStripe()
+    const stripeInstance = await initializeStripe(pool)
     if (!stripeInstance) {
       return response.status(500).json({ message: 'Stripe não está configurado no servidor.' })
     }
@@ -280,7 +304,7 @@ export const createRechargesRouter = (pool) => {
       return response.status(400).json({ message: 'Webhook não configurado' })
     }
 
-    const stripeInstance = initializeStripe()
+    const stripeInstance = await initializeStripe(pool)
     if (!stripeInstance) {
       return response.status(500).json({ message: 'Stripe não está configurado' })
     }
