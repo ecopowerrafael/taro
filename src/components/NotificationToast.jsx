@@ -16,17 +16,25 @@ export function NotificationToast ({ notifications, onClose }) {
         return
       }
 
-      const oscillator = audioContext.createOscillator()
-      const gainNode = audioContext.createGain()
-      oscillator.type = 'triangle'
-      oscillator.frequency.setValueAtTime(880, audioContext.currentTime)
-      gainNode.gain.setValueAtTime(0.001, audioContext.currentTime)
-      gainNode.gain.exponentialRampToValueAtTime(0.06, audioContext.currentTime + 0.02)
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25)
-      oscillator.connect(gainNode)
-      gainNode.connect(audioContext.destination)
-      oscillator.start()
-      oscillator.stop(audioContext.currentTime + 0.25)
+      const startAt = audioContext.currentTime
+      const tones = [
+        { frequency: 988, duration: 0.12, delay: 0 },
+        { frequency: 1174, duration: 0.14, delay: 0.16 },
+      ]
+
+      tones.forEach(({ frequency, duration, delay }) => {
+        const oscillator = audioContext.createOscillator()
+        const gainNode = audioContext.createGain()
+        oscillator.type = 'square'
+        oscillator.frequency.setValueAtTime(frequency, startAt + delay)
+        gainNode.gain.setValueAtTime(0.001, startAt + delay)
+        gainNode.gain.exponentialRampToValueAtTime(0.12, startAt + delay + 0.02)
+        gainNode.gain.exponentialRampToValueAtTime(0.001, startAt + delay + duration)
+        oscillator.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+        oscillator.start(startAt + delay)
+        oscillator.stop(startAt + delay + duration)
+      })
     } catch (error) {
       console.warn('Não foi possível tocar beep alternativo:', error)
     }

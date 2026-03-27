@@ -93,27 +93,35 @@ class ConsultantNotificationService {
 
     const playBeep = () => {
       try {
-        const oscillator = this.audioContext.createOscillator()
-        const gainNode = this.audioContext.createGain()
+        const startAt = this.audioContext.currentTime
+        const steps = [
+          { frequency: 1046, duration: 0.16, delay: 0 },
+          { frequency: 1318, duration: 0.18, delay: 0.2 },
+        ]
 
-        oscillator.type = 'sine'
-        oscillator.frequency.setValueAtTime(880, this.audioContext.currentTime)
-        gainNode.gain.setValueAtTime(0.001, this.audioContext.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(0.08, this.audioContext.currentTime + 0.02)
-        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.35)
+        steps.forEach(({ frequency, duration, delay }) => {
+          const oscillator = this.audioContext.createOscillator()
+          const gainNode = this.audioContext.createGain()
 
-        oscillator.connect(gainNode)
-        gainNode.connect(this.audioContext.destination)
+          oscillator.type = 'square'
+          oscillator.frequency.setValueAtTime(frequency, startAt + delay)
+          gainNode.gain.setValueAtTime(0.001, startAt + delay)
+          gainNode.gain.exponentialRampToValueAtTime(0.16, startAt + delay + 0.02)
+          gainNode.gain.exponentialRampToValueAtTime(0.001, startAt + delay + duration)
 
-        oscillator.start()
-        oscillator.stop(this.audioContext.currentTime + 0.35)
+          oscillator.connect(gainNode)
+          gainNode.connect(this.audioContext.destination)
+
+          oscillator.start(startAt + delay)
+          oscillator.stop(startAt + delay + duration)
+        })
       } catch (error) {
         console.warn('[ConsultantNotificationService] Falha no beep alternativo:', error)
       }
     }
 
     playBeep()
-    this.fallbackToneInterval = window.setInterval(playBeep, 1200)
+    this.fallbackToneInterval = window.setInterval(playBeep, 900)
   }
 
   async requestWakeLock() {
