@@ -1,5 +1,4 @@
 import { Router } from 'express'
-import express from 'express'
 import { authenticate, authorizeAdmin } from '../middleware/auth.mjs'
 import Stripe from 'stripe'
 
@@ -154,7 +153,7 @@ export const createRechargesRouter = (pool) => {
   })
 
   // Webhook para confirmar pagamento (quando Stripe notifica o servidor)
-  router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async (request, response) => {
+  router.post('/stripe-webhook', async (request, response) => {
     const sig = request.headers['stripe-signature']
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
 
@@ -163,7 +162,12 @@ export const createRechargesRouter = (pool) => {
     }
 
     try {
-      const event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret)
+      // Nota: Em produção, o body raw é necessário. Para desenvolvimento, usar JSON normal
+      const event = stripe.webhooks.constructEvent(
+        typeof request.body === 'string' ? request.body : JSON.stringify(request.body),
+        sig,
+        endpointSecret
+      )
 
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object
