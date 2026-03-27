@@ -602,22 +602,28 @@ export function AreaConsultorPage() {
     setPanelNotice('A instalação do app foi cancelada.')
   }
 
-  const handleRefreshPushStatus = async () => {
+  const handleRefreshPushStatus = async ({ silent = false } = {}) => {
     setPushDebugLoading(true)
-    setPushDebugActionResult({ type: 'status', message: 'Consultando status no backend...' })
+    if (!silent) {
+      setPushDebugActionResult({ type: 'status', message: 'Consultando status no backend...' })
+    }
     const result = await getMyPushStatus()
     setPushDebugLoading(false)
     if (!result?.ok) {
-      setPushDebugActionResult({ type: 'status', ok: false, message: result?.message || 'Falha ao consultar status.' })
+      if (!silent) {
+        setPushDebugActionResult({ type: 'status', ok: false, message: result?.message || 'Falha ao consultar status.' })
+      }
       setPanelNotice(result?.message || 'Não foi possível consultar o status do push.')
       return
     }
     setPushDebugStatus(result)
-    setPushDebugActionResult({
-      type: 'status',
-      ok: true,
-      message: `Status consultado: ${result.activeSubscriptions} ativa(s) de ${result.totalSubscriptions}.`,
-    })
+    if (!silent) {
+      setPushDebugActionResult({
+        type: 'status',
+        ok: true,
+        message: `Status consultado: ${result.activeSubscriptions} ativa(s) de ${result.totalSubscriptions}.`,
+      })
+    }
     setPanelNotice(
       `Push status: ${result.activeSubscriptions} subscription(s) ativa(s) de ${result.totalSubscriptions}.`,
     )
@@ -639,7 +645,7 @@ export function AreaConsultorPage() {
       message: `Subscription regravada com sucesso. Endpoint: ${result.endpoint ? `${result.endpoint.slice(0, 48)}...` : 'ok'}`,
     })
     setPanelNotice('Subscription push registrada novamente neste dispositivo.')
-    await handleRefreshPushStatus()
+    await handleRefreshPushStatus({ silent: true })
   }
 
   const handleSendPushTest = async () => {
@@ -662,7 +668,7 @@ export function AreaConsultorPage() {
     setPanelNotice(
       `Teste push disparado. ${result.successCount || 0} entrega(s) ok em ${result.totalSubscriptions || 0} subscription(s).`,
     )
-    await handleRefreshPushStatus()
+    await handleRefreshPushStatus({ silent: true })
   }
 
   const renderPendingRequestsList = () => (
