@@ -164,7 +164,13 @@ const normalizeMinutePackage = (pack) => ({
   ...pack,
   minutes: Number(pack.minutes) || 0,
   price: Number(pack.price) || 0,
-  promoPrice: pack.promoPrice === null || pack.promoPrice === undefined || pack.promoPrice === '' ? null : Number(pack.promoPrice) || 0,
+  promoPrice:
+    pack.promoPrice === null ||
+    pack.promoPrice === undefined ||
+    pack.promoPrice === '' ||
+    Number(pack.promoPrice) <= 0
+      ? null
+      : Number(pack.promoPrice),
   isFeatured: Boolean(pack.isFeatured),
 })
 

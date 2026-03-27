@@ -6,7 +6,10 @@ const normalizePackage = (row) => ({
   ...row,
   minutes: Number(row.minutes) || 0,
   price: Number(row.price) || 0,
-  promoPrice: row.promoPrice === null || row.promoPrice === undefined ? null : Number(row.promoPrice) || 0,
+  promoPrice:
+    row.promoPrice === null || row.promoPrice === undefined || Number(row.promoPrice) <= 0
+      ? null
+      : Number(row.promoPrice),
   isFeatured: Boolean(row.isFeatured),
   sortOrder: Number(row.sortOrder) || 0,
 })
@@ -57,7 +60,13 @@ export const createRechargesRouter = (pool) => {
       id: String(pack.id || '').trim(),
       minutes: Number(pack.minutes),
       price: Number(pack.price),
-      promoPrice: pack.promoPrice === '' || pack.promoPrice === undefined ? null : Number(pack.promoPrice),
+      promoPrice:
+        pack.promoPrice === '' ||
+        pack.promoPrice === undefined ||
+        pack.promoPrice === null ||
+        Number(pack.promoPrice) <= 0
+          ? null
+          : Number(pack.promoPrice),
       isFeatured: Boolean(pack.isFeatured),
       sortOrder: index + 1,
     }))
