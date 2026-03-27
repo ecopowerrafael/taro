@@ -10,6 +10,7 @@
     "start": "node server.js",
     "build:backend": "node -e \"console.log('Backend pronto para deploy')\"",
     "build:ui": "vite build",
+    "generate:vapid": "node scripts/generate-vapid.mjs",
     "postinstall": "npm run build:ui",
     "deploy:frontend": "npm run build:ui && node scripts/deploy-hostinger.mjs",
     "deploy:backend": "node scripts/deploy-hostinger-backend.mjs",

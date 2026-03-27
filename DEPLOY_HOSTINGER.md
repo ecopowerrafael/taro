@@ -33,7 +33,7 @@ STRIPE_PUBLIC_KEY=pk_live_seu_public_key (ou pk_test_xxx para teste)
 STRIPE_SECRET_KEY=sk_live_seu_secret_key (ou sk_test_xxx para teste)
 STRIPE_WEBHOOK_SECRET=whsec_seu_webhook_secret
 
-# Web Push (VAPID Keys) - Manter os valores padrão ou gerar novos
+# Web Push (VAPID Keys) - obrigatório gerar um par VÁLIDO P-256
 VAPID_PUBLIC_KEY=seu_public_key
 VAPID_PRIVATE_KEY=seu_private_key
 
@@ -48,6 +48,22 @@ NODE_ENV=production
 cd /home/seu_usuario/public_html
 node -c api/server.mjs
 ```
+
+### Gerar chaves VAPID válidas
+
+No projeto local, rode:
+
+```bash
+npm run generate:vapid
+```
+
+Copie a saída e configure `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY` no `.env` do Hostinger.
+
+Importante:
+
+1. Não use valores de fallback ou placeholders.
+2. Se as chaves não forem P-256 válidas, o FCM responde com `403: VAPID public key must be on the P-256 curve`.
+3. Depois de alterar as chaves, reinicie o Node.js e regrave a subscription no PWA.
 
 Isso vai validar a sintaxe e verificar se consegue carregar todos os módulos.
 

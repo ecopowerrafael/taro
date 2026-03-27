@@ -24,16 +24,21 @@ const __dirname = path.dirname(__filename)
 dotenv.config({ path: path.join(__dirname, '.env') })
 
 // Configuração Web Push (VAPID Keys)
-// Em produção, isso deve vir do .env
 const vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuB-5b-YnB32Y5o9f-4Z8K-M4Y',
-  privateKey: process.env.VAPID_PRIVATE_KEY || 'k7-p8KxPqLzXwJ-5c7Z_wN2x9m8yB_uF6oJ_bK7L9hY'
+  publicKey: (process.env.VAPID_PUBLIC_KEY || '').trim(),
+  privateKey: (process.env.VAPID_PRIVATE_KEY || '').trim(),
 }
-webpush.setVapidDetails(
-  'mailto:contato@appastria.online',
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-)
+const pushEnabled = Boolean(vapidKeys.publicKey && vapidKeys.privateKey)
+
+if (pushEnabled) {
+  webpush.setVapidDetails(
+    'mailto:contato@appastria.online',
+    vapidKeys.publicKey,
+    vapidKeys.privateKey,
+  )
+} else {
+  console.warn('[push] Web Push desativado: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY não configuradas no ambiente.')
+}
 
 // CAPTURA DE ERROS CRÍTICOS (CRASH LOG)
 process.on('uncaughtException', (err) => {
@@ -59,6 +64,7 @@ const io = new Server(httpServer, {
 // Adiciona o socket.io e o webpush ao app para serem acessados nas rotas
 app.set('io', io)
 app.set('webpush', webpush)
+app.set('pushEnabled', pushEnabled)
 
 const initialCorsOptions = {
   origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
@@ -69,6 +75,9 @@ app.use(express.json({ limit: '4mb' }))
 
 // Rota para retornar a Public Key do VAPID para o frontend
 app.get('/api/push/public-key', (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).send('Web Push desativado no servidor.')
+  }
   res.send(vapidKeys.publicKey)
 })
 
@@ -194,6 +203,10 @@ try {
   console.log('[API] Router /video-sessions carregado.')
 
   app.post('/api/push/subscribe', authenticate, async (req, res) => {
+    if (!pushEnabled) {
+      return res.status(503).json({ error: 'Web Push desativado no servidor.' })
+    }
+
     const { subscription, userId } = req.body ?? {}
 
     if (!subscription || !userId) {
@@ -233,7 +246,7 @@ try {
       res.json({
         ok: true,
         userId: req.user.id,
-        vapidConfigured: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
+        vapidConfigured: pushEnabled,
         totalSubscriptions: rows.length,
         activeSubscriptions: rows.filter((row) => Number(row.isActive) === 1).length,
         subscriptions: rows.map((row) => ({
@@ -248,6 +261,10 @@ try {
   })
 
   app.post('/api/push/me/test', authenticate, async (req, res) => {
+    if (!pushEnabled) {
+      return res.status(503).json({ ok: false, message: 'Web Push desativado no servidor. Configure VAPID no .env.' })
+    }
+
     try {
       const result = await sendPushToUsers({
         pool,
@@ -275,6 +292,10 @@ try {
   })
 
   app.post('/api/push/admin/broadcast', authenticate, authorizeAdmin, async (req, res) => {
+    if (!pushEnabled) {
+      return res.status(503).json({ message: 'Web Push desativado no servidor. Configure VAPID no .env.' })
+    }
+
     const { title, body, url, targetRole = 'all' } = req.body ?? {}
 
     if (!title?.trim() || !body?.trim()) {
