@@ -132,11 +132,16 @@ export const initializeSchema = async (pool) => {
       consultantId VARCHAR(50) PRIMARY KEY,
       availableBalance DECIMAL(10,2) NOT NULL DEFAULT 0,
       pixKey VARCHAR(255) NULL,
+      pixBeneficiaryName VARCHAR(160) NULL,
       CONSTRAINT fk_wallet_consultant
         FOREIGN KEY (consultantId) REFERENCES consultants(id)
         ON DELETE CASCADE
     )
   `)
+
+  try {
+    await pool.query('ALTER TABLE consultant_wallets ADD COLUMN pixBeneficiaryName VARCHAR(160) NULL')
+  } catch (e) {}
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS wallet_transactions (
@@ -161,12 +166,21 @@ export const initializeSchema = async (pool) => {
       amount DECIMAL(10,2) NOT NULL DEFAULT 0,
       createdAt DATETIME NOT NULL,
       status VARCHAR(30) NOT NULL,
+      pixKey VARCHAR(255) NULL,
+      pixBeneficiaryName VARCHAR(160) NULL,
       INDEX idx_wallet_wd_consultant_date (consultantId, createdAt),
       CONSTRAINT fk_wallet_wd_consultant
         FOREIGN KEY (consultantId) REFERENCES consultants(id)
         ON DELETE CASCADE
     )
   `)
+
+  try {
+    await pool.query('ALTER TABLE wallet_withdrawals ADD COLUMN pixKey VARCHAR(255) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE wallet_withdrawals ADD COLUMN pixBeneficiaryName VARCHAR(160) NULL')
+  } catch (e) {}
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS platform_credentials (

@@ -12,7 +12,7 @@ export const createWalletsRouter = (pool) => {
 
   router.get('/', async (_request, response) => {
     const [walletRows] = await pool.query(
-      `SELECT consultantId, availableBalance, pixKey FROM consultant_wallets`,
+      `SELECT consultantId, availableBalance, pixKey, pixBeneficiaryName FROM consultant_wallets`,
     )
     const [transactionsRows] = await pool.query(
       `
@@ -23,7 +23,7 @@ export const createWalletsRouter = (pool) => {
     )
     const [withdrawalsRows] = await pool.query(
       `
-        SELECT id, consultantId, amount, createdAt, status
+        SELECT id, consultantId, amount, createdAt, status, pixKey, pixBeneficiaryName
         FROM wallet_withdrawals
         ORDER BY createdAt DESC
       `,
@@ -60,6 +60,7 @@ export const createWalletsRouter = (pool) => {
         consultantId: wallet.consultantId,
         availableBalance: Number(wallet.availableBalance),
         pixKey: wallet.pixKey ?? '',
+        pixBeneficiaryName: wallet.pixBeneficiaryName ?? '',
         transactions: transactionsByConsultant.get(wallet.consultantId) ?? [],
         withdrawals: withdrawalsByConsultant.get(wallet.consultantId) ?? [],
       })),
@@ -69,17 +70,22 @@ export const createWalletsRouter = (pool) => {
   router.put('/:consultantId/pix-key', async (request, response) => {
     const { consultantId } = request.params
     const pixKey = (request.body?.pixKey || '').trim()
+    const pixBeneficiaryName = (request.body?.pixBeneficiaryName || '').trim()
+
+    if (!pixKey || !pixBeneficiaryName) {
+      return response.status(400).json({ message: 'Informe a chave Pix e o nome do beneficiário.' })
+    }
 
     await pool.query(
       `
-        INSERT INTO consultant_wallets (consultantId, availableBalance, pixKey)
-        VALUES (?, 0, ?)
-        ON DUPLICATE KEY UPDATE pixKey = VALUES(pixKey)
+        INSERT INTO consultant_wallets (consultantId, availableBalance, pixKey, pixBeneficiaryName)
+        VALUES (?, 0, ?, ?)
+        ON DUPLICATE KEY UPDATE pixKey = VALUES(pixKey), pixBeneficiaryName = VALUES(pixBeneficiaryName)
       `,
-      [consultantId, pixKey || null],
+      [consultantId, pixKey, pixBeneficiaryName],
     )
 
-    response.json({ ok: true, pixKey })
+    response.json({ ok: true, pixKey, pixBeneficiaryName })
   })
 
   router.post('/:consultantId/withdrawals', async (request, response) => {
@@ -99,8 +105,8 @@ export const createWalletsRouter = (pool) => {
       await connection.beginTransaction()
       await connection.query(
         `
-          INSERT INTO consultant_wallets (consultantId, availableBalance, pixKey)
-          VALUES (?, 0, NULL)
+          INSERT INTO consultant_wallets (consultantId, availableBalance, pixKey, pixBeneficiaryName)
+          VALUES (?, 0, NULL, NULL)
           ON DUPLICATE KEY UPDATE consultantId = VALUES(consultantId)
         `,
         [consultantId],
@@ -108,7 +114,7 @@ export const createWalletsRouter = (pool) => {
 
       const [walletRows] = await connection.query(
         `
-          SELECT consultantId, availableBalance, pixKey
+          SELECT consultantId, availableBalance, pixKey, pixBeneficiaryName
           FROM consultant_wallets
           WHERE consultantId = ?
           FOR UPDATE
@@ -120,6 +126,11 @@ export const createWalletsRouter = (pool) => {
       if (!wallet?.pixKey) {
         await connection.rollback()
         response.status(400).json({ message: 'Cadastre uma chave PIX antes de solicitar saque.' })
+        return
+      }
+      if (!wallet?.pixBeneficiaryName) {
+        await connection.rollback()
+        response.status(400).json({ message: 'Cadastre o nome do beneficiário antes de solicitar saque.' })
         return
       }
       if (amount > availableBalance) {
@@ -143,10 +154,10 @@ export const createWalletsRouter = (pool) => {
 
       await connection.query(
         `
-          INSERT INTO wallet_withdrawals (id, consultantId, amount, createdAt, status)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO wallet_withdrawals (id, consultantId, amount, createdAt, status, pixKey, pixBeneficiaryName)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
         `,
-        [withdrawalId, consultantId, amount, now, status],
+        [withdrawalId, consultantId, amount, now, status, wallet.pixKey, wallet.pixBeneficiaryName],
       )
 
       await connection.query(
@@ -165,7 +176,7 @@ export const createWalletsRouter = (pool) => {
       )
 
       const [updatedWalletRows] = await connection.query(
-        `SELECT consultantId, availableBalance, pixKey FROM consultant_wallets WHERE consultantId = ?`,
+        `SELECT consultantId, availableBalance, pixKey, pixBeneficiaryName FROM consultant_wallets WHERE consultantId = ?`,
         [consultantId],
       )
       const [transactionsRows] = await connection.query(
@@ -179,7 +190,7 @@ export const createWalletsRouter = (pool) => {
       )
       const [withdrawalsRows] = await connection.query(
         `
-          SELECT id, amount, createdAt, status
+          SELECT id, amount, createdAt, status, pixKey, pixBeneficiaryName
           FROM wallet_withdrawals
           WHERE consultantId = ?
           ORDER BY createdAt DESC
@@ -195,6 +206,7 @@ export const createWalletsRouter = (pool) => {
           consultantId,
           availableBalance: Number(updatedWalletRows[0]?.availableBalance ?? 0),
           pixKey: updatedWalletRows[0]?.pixKey ?? '',
+          pixBeneficiaryName: updatedWalletRows[0]?.pixBeneficiaryName ?? '',
           transactions: transactionsRows.map((item) => ({
             ...item,
             amount: Number(item.amount),

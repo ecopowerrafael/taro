@@ -30,6 +30,7 @@ export function AreaConsultorPage() {
   const [selectedConsultantId, setSelectedConsultantId] = useState('')
   const [gainFilter, setGainFilter] = useState('total')
   const [pixDraft, setPixDraft] = useState('')
+  const [pixBeneficiaryDraft, setPixBeneficiaryDraft] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [panelNotice, setPanelNotice] = useState('')
   const [profileNotice, setProfileNotice] = useState('')
@@ -182,6 +183,7 @@ export function AreaConsultorPage() {
   const wallet = consultantWallets[selectedConsultantId] ?? {
     availableBalance: 0,
     pixKey: '',
+    pixBeneficiaryName: '',
     transactions: [],
     withdrawals: [],
   }
@@ -343,9 +345,18 @@ export function AreaConsultorPage() {
       setPanelNotice('Informe uma chave PIX válida.')
       return
     }
-    setConsultantPixKey({ consultantId: selectedConsultantId, pixKey: pixDraft.trim() })
+    if (!pixBeneficiaryDraft.trim()) {
+      setPanelNotice('Informe o nome do beneficiário da chave PIX.')
+      return
+    }
+    setConsultantPixKey({
+      consultantId: selectedConsultantId,
+      pixKey: pixDraft.trim(),
+      pixBeneficiaryName: pixBeneficiaryDraft.trim(),
+    })
     setPixDraft('')
-    setPanelNotice('Chave PIX salva com sucesso.')
+    setPixBeneficiaryDraft('')
+    setPanelNotice('Chave PIX e beneficiário salvos com sucesso.')
   }
 
   const handleRequestWithdrawal = async () => {
@@ -711,12 +722,23 @@ export function AreaConsultorPage() {
               placeholder={wallet.pixKey ? `Atual: ${wallet.pixKey}` : 'Digite a chave PIX'}
               className="mt-2 w-full rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
             />
+            <input
+              value={pixBeneficiaryDraft}
+              onChange={(event) => setPixBeneficiaryDraft(event.target.value)}
+              placeholder={wallet.pixBeneficiaryName ? `Beneficiário atual: ${wallet.pixBeneficiaryName}` : 'Nome do beneficiário'}
+              className="mt-2 w-full rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+            />
             <button
               onClick={handleSavePix}
               className="mt-2 rounded-lg border border-mystic-gold/60 px-3 py-2 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/10"
             >
-              Salvar chave PIX
+              Salvar chave Pix e beneficiário
             </button>
+            {(wallet.pixKey || wallet.pixBeneficiaryName) && (
+              <p className="mt-2 text-[11px] text-amber-100/60">
+                Chave atual: {wallet.pixKey || 'não informada'} | Beneficiário: {wallet.pixBeneficiaryName || 'não informado'}
+              </p>
+            )}
           </div>
 
           <div className="rounded-xl border border-mystic-gold/30 bg-black/30 p-4">

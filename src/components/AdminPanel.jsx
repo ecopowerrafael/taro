@@ -1076,6 +1076,14 @@ export function AdminPanel({
                         {new Date(withdrawal.createdAt).toLocaleTimeString('pt-BR')}
                       </p>
                     </div>
+                    <div className="col-span-2">
+                      <p className="text-[10px] uppercase tracking-widest text-ethereal-silver/60">Chave Pix</p>
+                      <p className="text-[12px] break-all text-amber-100">{withdrawal.pixKey || 'Não informada'}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-[10px] uppercase tracking-widest text-ethereal-silver/60">Beneficiário</p>
+                      <p className="text-[12px] text-amber-100">{withdrawal.pixBeneficiaryName || 'Não informado'}</p>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button

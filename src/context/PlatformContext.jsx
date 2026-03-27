@@ -99,6 +99,7 @@ const initialConsultantWallets = initialConsultants.reduce((acc, consultant) => 
   acc[consultant.id] = {
     availableBalance: 0,
     pixKey: '',
+    pixBeneficiaryName: '',
     transactions: [],
     withdrawals: [],
   }
@@ -180,6 +181,7 @@ const normalizeWalletState = (walletRows, fallback = {}) => {
     next[wallet.consultantId] = {
       availableBalance: Number(wallet.availableBalance) || 0,
       pixKey: wallet.pixKey ?? '',
+      pixBeneficiaryName: wallet.pixBeneficiaryName ?? '',
       transactions: Array.isArray(wallet.transactions)
         ? wallet.transactions.map((transaction) => ({
             ...transaction,
@@ -637,16 +639,17 @@ export function PlatformProvider({ children }) {
     }
   }
 
-  const savePixKeyOnApi = async ({ consultantId, pixKey }) => {
+  const savePixKeyOnApi = async ({ consultantId, pixKey, pixBeneficiaryName }) => {
     const response = await fetch(buildApiUrl(`/api/wallets/${consultantId}/pix-key`), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ pixKey }),
+      body: JSON.stringify({ pixKey, pixBeneficiaryName }),
     })
     if (!response.ok) {
-      throw new Error('Falha ao salvar chave PIX no backend.')
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Falha ao salvar chave PIX no backend.')
     }
   }
 
@@ -1185,16 +1188,17 @@ export function PlatformProvider({ children }) {
     )
   }
 
-  const setConsultantPixKey = async ({ consultantId, pixKey }) => {
+  const setConsultantPixKey = async ({ consultantId, pixKey, pixBeneficiaryName }) => {
     try {
-      await savePixKeyOnApi({ consultantId, pixKey })
-    } catch {
-      setSystemNotice('Falha ao sincronizar chave PIX no servidor. Valor salvo localmente.')
+      await savePixKeyOnApi({ consultantId, pixKey, pixBeneficiaryName })
+    } catch (error) {
+      setSystemNotice(error.message || 'Falha ao sincronizar chave PIX no servidor. Valor salvo localmente.')
     }
     setConsultantWallets((prev) => {
       const wallet = prev[consultantId] ?? {
         availableBalance: 0,
         pixKey: '',
+        pixBeneficiaryName: '',
         transactions: [],
         withdrawals: [],
       }
@@ -1204,6 +1208,7 @@ export function PlatformProvider({ children }) {
         [consultantId]: {
           ...wallet,
           pixKey,
+          pixBeneficiaryName,
         },
       }
     })
@@ -1216,6 +1221,9 @@ export function PlatformProvider({ children }) {
     }
     if (!wallet.pixKey) {
       return { ok: false, message: 'Cadastre uma chave PIX antes de solicitar saque.' }
+    }
+    if (!wallet.pixBeneficiaryName) {
+      return { ok: false, message: 'Cadastre o nome do beneficiário antes de solicitar saque.' }
     }
     if (amount < MIN_WITHDRAWAL_AMOUNT) {
       return { ok: false, message: `Saque mínimo: R$ ${MIN_WITHDRAWAL_AMOUNT.toFixed(2)}.` }
@@ -1254,6 +1262,8 @@ export function PlatformProvider({ children }) {
               amount,
               createdAt,
               status: 'requested',
+              pixKey: current.pixKey,
+              pixBeneficiaryName: current.pixBeneficiaryName,
             },
             ...current.withdrawals,
           ],
