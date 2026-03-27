@@ -32,6 +32,13 @@ export const createVideoSessionsRouter = (pool) => {
         return response.status(404).json({ message: 'Consultor não encontrado.' })
       }
       const consultant = consultants[0]
+      let consultantUserId = consultant.userId || null
+
+      // Fallback para contas legadas sem userId vinculado no consultor.
+      if (!consultantUserId && consultant.email) {
+        const [consultantUsers] = await pool.query('SELECT id FROM users WHERE email = ? LIMIT 1', [consultant.email])
+        consultantUserId = consultantUsers[0]?.id || null
+      }
 
       // Obter credenciais do Daily.co e SMTP
       const [creds] = await pool.query('SELECT dailyApiKey, dailyDomain, smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom FROM platform_credentials WHERE id = 1')
@@ -150,8 +157,8 @@ export const createVideoSessionsRouter = (pool) => {
       // Envia notificação Web Push se o consultor tiver assinatura
       const pushSubscriptions = request.app.get('pushSubscriptions')
       const webpush = request.app.get('webpush')
-      if (pushSubscriptions && webpush && pushSubscriptions[consultant.userId]) {
-        const subs = pushSubscriptions[consultant.userId]
+      if (pushSubscriptions && webpush && consultantUserId && pushSubscriptions[consultantUserId]) {
+        const subs = pushSubscriptions[consultantUserId]
         const payload = JSON.stringify({
           title: 'Nova Chamada de Vídeo',
           body: `O cliente ${user.name} está aguardando na sala!`,
@@ -160,6 +167,12 @@ export const createVideoSessionsRouter = (pool) => {
         
         subs.forEach(sub => {
           webpush.sendNotification(sub, payload).catch(e => console.error('Erro no webpush:', e))
+        })
+      } else {
+        console.warn('[videoSessions POST] Push não enviado: subscription ausente para consultor', {
+          consultantId,
+          consultantEmail: consultant.email,
+          consultantUserId,
         })
       }
 
@@ -174,9 +187,13 @@ export const createVideoSessionsRouter = (pool) => {
   // Buscar sessões de vídeo pendentes para um consultor
   router.get('/pending', async (request, response) => {
     const userId = request.user.id
+    const userEmail = request.user.email
     try {
-      // Pega o ID de consultor do usuário logado
-      const [cRows] = await pool.query('SELECT id FROM consultants WHERE userId = ?', [userId])
+      // Pega o ID de consultor do usuário logado (com fallback por email para contas legadas).
+      const [cRows] = await pool.query(
+        'SELECT id FROM consultants WHERE userId = ? OR email = ? ORDER BY userId = ? DESC LIMIT 1',
+        [userId, userEmail || '', userId],
+      )
       if (cRows.length === 0) {
         return response.json([])
       }
@@ -200,6 +217,7 @@ export const createVideoSessionsRouter = (pool) => {
   router.get('/:sessionId', async (request, response) => {
     const { sessionId } = request.params
     const userId = request.user.id
+    const userEmail = request.user.email
     
     try {
       const [sessions] = await pool.query(`
@@ -219,11 +237,14 @@ export const createVideoSessionsRouter = (pool) => {
       // Verifica se o usuário atual é o cliente ou o consultor da sala
       // Como o consultor também tem uma conta de user, precisamos verificar pelo user.id ou consultor.userId
       // Vamos buscar o userId atrelado ao consultantId
-      const [cRows] = await pool.query('SELECT userId FROM consultants WHERE id = ?', [session.consultantId])
+      const [cRows] = await pool.query('SELECT userId, email FROM consultants WHERE id = ?', [session.consultantId])
       const consultantUserId = cRows[0]?.userId
+      const consultantEmail = cRows[0]?.email
 
       const isCustomer = session.userId === userId
-      const isConsultant = consultantUserId === userId
+      const isConsultant =
+        consultantUserId === userId ||
+        Boolean(consultantEmail && userEmail && consultantEmail.toLowerCase() === userEmail.toLowerCase())
 
       if (!isCustomer && !isConsultant) {
         return response.status(403).json({ message: 'Acesso negado a esta sala.' })

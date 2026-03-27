@@ -290,8 +290,24 @@ export function PlatformProvider({ children }) {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
 
     try {
+      if (!('Notification' in window)) {
+        return
+      }
+
+      let permission = Notification.permission
+      if (permission === 'default') {
+        permission = await Notification.requestPermission()
+      }
+
+      if (permission !== 'granted') {
+        return
+      }
+
       const registration = await navigator.serviceWorker.register('/sw.js')
       const publicVapidKeyRes = await fetch('/api/push/public-key')
+      if (!publicVapidKeyRes.ok) {
+        throw new Error('Não foi possível obter a chave pública de push.')
+      }
       const publicVapidKey = await publicVapidKeyRes.text()
 
       // Convert VAPID key to Uint8Array
@@ -303,10 +319,13 @@ export function PlatformProvider({ children }) {
         outputArray[i] = rawData.charCodeAt(i)
       }
 
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: outputArray
-      })
+      let subscription = await registration.pushManager.getSubscription()
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: outputArray,
+        })
+      }
 
       await fetch('/api/push/subscribe', {
         method: 'POST',
