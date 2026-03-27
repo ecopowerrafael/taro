@@ -273,6 +273,8 @@ export function PlatformProvider({ children }) {
   const [paymentResult, setPaymentResult] = useState(null)
   const [systemNotice, setSystemNotice] = useState('')
   const [inAppNotifications, setInAppNotifications] = useState([])
+  const [notificationHistory, setNotificationHistory] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
   const notificationCounterRef = useRef(0)
   const mpCredentialsRef = useRef(mpCredentials)
   const dailyCredentialsRef = useRef(dailyCredentials)
@@ -384,6 +386,87 @@ export function PlatformProvider({ children }) {
     setInAppNotifications((prev) => prev.filter((n) => n.id !== id))
   }
 
+  // Persistência de notificações em localStorage
+  const saveNotificationsToStorage = (notifications) => {
+    try {
+      const key = `taro_notifications_${profile?.id}`
+      localStorage.setItem(key, JSON.stringify(notifications))
+    } catch (err) {
+      console.warn('[PlatformContext] Erro ao salvar notificações:', err)
+    }
+  }
+
+  const loadNotificationsFromStorage = () => {
+    try {
+      const key = `taro_notifications_${profile?.id}`
+      const stored = localStorage.getItem(key)
+      return stored ? JSON.parse(stored) : []
+    } catch (err) {
+      console.warn('[PlatformContext] Erro ao carregar notificações:', err)
+      return []
+    }
+  }
+
+  // Marcar notificação como lida/não lida
+  const markNotificationAsRead = (id) => {
+    setNotificationHistory((prev) => {
+      const updated = prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      saveNotificationsToStorage(updated)
+      
+      // Atualiza unread count
+      const newUnreadCount = updated.filter((n) => !n.read).length
+      setUnreadCount(newUnreadCount)
+      
+      return updated
+    })
+  }
+
+  const markAllNotificationsAsRead = () => {
+    setNotificationHistory((prev) => {
+      const updated = prev.map((n) => ({ ...n, read: true }))
+      saveNotificationsToStorage(updated)
+      setUnreadCount(0)
+      return updated
+    })
+  }
+
+  // Adicionar ao histórico
+  const addToNotificationHistory = (notification) => {
+    const historyEntry = {
+      id: notification.id,
+      title: notification.title,
+      message: notification.message,
+      icon: notification.icon || 'message',
+      contactName: notification.contactName,
+      createdAt: new Date().toISOString(),
+      read: false,
+      type: notification.type || 'info', // 'call', 'question', 'info'
+    }
+
+    setNotificationHistory((prev) => {
+      const updated = [historyEntry, ...prev].slice(0, 100) // Manter últimas 100
+      saveNotificationsToStorage(updated)
+      setUnreadCount((c) => c + 1)
+      return updated
+    })
+  }
+
+  const clearNotificationHistory = () => {
+    setNotificationHistory([])
+    setUnreadCount(0)
+    saveNotificationsToStorage([])
+  }
+
+  // Carregar notificações ao montar componente
+  useEffect(() => {
+    if (profile?.id) {
+      const loaded = loadNotificationsFromStorage()
+      setNotificationHistory(loaded)
+      const unread = loaded.filter((n) => !n.read).length
+      setUnreadCount(unread)
+    }
+  }, [profile?.id])
+
   const debitMinutes = async (minutes) => {
     const result = await debitMinutesFromAuth(minutes)
     if (!result.ok) {
@@ -458,12 +541,13 @@ export function PlatformProvider({ children }) {
         // Handler para chamada recebida
         const handleIncomingCall = (data) => {
           const callerName = data.callerName || data.caller?.name || 'Cliente'
-          addInAppNotification({
+          const notification = {
             id: `call-${data.sessionId}`,
             title: '📞 Chamada Recebida',
             message: `${callerName} está aguardando uma vídeo consulta com você.`,
             icon: 'phone',
             contactName: callerName,
+            type: 'call',
             autoCloseMs: 0, // Não auto-fechar
             actions: [
               {
@@ -480,18 +564,21 @@ export function PlatformProvider({ children }) {
                 primary: false,
               },
             ],
-          })
+          }
+          addInAppNotification(notification)
+          addToNotificationHistory(notification)
         }
 
         // Handler para pergunta recebida
         const handleNewQuestion = (data) => {
           const questionCount = Number(data.questionCount) || 1
-          addInAppNotification({
+          const notification = {
             id: `question-${data.requestId}`,
             title: `❓ ${questionCount} Pergunta${questionCount > 1 ? 's' : ''} Recebida${questionCount > 1 ? 's' : ''}`,
             message: data.preview || `Você recebeu uma consulta de perguntas para responder.`,
             icon: 'message',
             contactName: data.clientName || 'Cliente',
+            type: 'question',
             autoCloseMs: 10000,
             actions: [
               {
@@ -503,7 +590,9 @@ export function PlatformProvider({ children }) {
                 },
               },
             ],
-          })
+          }
+          addInAppNotification(notification)
+          addToNotificationHistory(notification)
         }
 
         // Monitora conexão do socket
@@ -524,7 +613,27 @@ export function PlatformProvider({ children }) {
     }
 
     setupSocketListener()
-  }, [isConsultant, userConsultantProfile, addInAppNotification])
+  }, [isConsultant, userConsultantProfile, addInAppNotification, addToNotificationHistory])
+
+  // Monitor window blur/focus para marcar notificações ao voltar
+  useEffect(() => {
+    const handleFocus = () => {
+      // Quando volta para a aba, poderia sincronizar com backend se necessário
+      console.log('[PlatformContext] Janela voltou ao foco')
+    }
+
+    const handleBlur = () => {
+      console.log('[PlatformContext] Janela perdeu foco, notificações podem não ser visíveis')
+    }
+
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('blur', handleBlur)
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', handleBlur)
+    }
+  }, [])
 
   const persistCredentialsOnApi = async (nextMpCredentials, nextDailyCredentials) => {
     const response = await fetch(buildApiUrl('/api/credentials'), {
@@ -1634,6 +1743,12 @@ export function PlatformProvider({ children }) {
     inAppNotifications,
     addInAppNotification,
     removeInAppNotification,
+    notificationHistory,
+    unreadCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    addToNotificationHistory,
+    clearNotificationHistory,
     ensurePushSubscription,
     billing,
     roomUrl,

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
 import { WalletStatement } from '../components/WalletStatement'
+import { NotificationBadge } from '../components/NotificationBadge'
 import { usePlatformContext } from '../context/platform-context'
 import { notificationService } from '../services/ConsultantNotificationService'
 import { canPromptPwaInstall, promptPwaInstall } from '../services/pwaService'
@@ -570,6 +571,11 @@ export function AreaConsultorPage() {
       title="Área do Consultor"
       subtitle="Atendimentos de perguntas, vídeo e carteira do consultor."
     >
+      {/* Notification Badge */}
+      <div className="mb-6 flex justify-end">
+        <NotificationBadge className="bg-white/10 hover:bg-white/20" />
+      </div>
+
       {pendingVideoSessions.length > 0 && !isAdmin && (
         <GlassCard title="Chamadas de Vídeo Pendentes" subtitle="Clientes aguardando você entrar na sala.">
           <div className="grid gap-3">
