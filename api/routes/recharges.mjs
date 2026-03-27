@@ -195,14 +195,14 @@ export const createRechargesRouter = (pool) => {
         const paymentIntent = event.data.object
         const { userId, packageId, minutes } = paymentIntent.metadata
 
-        // Marcar como 'pending' ao invés de 'approved' para exigir aprovação manual do admin
-        // Isso mantém o fluxo consistente com PIX (não adiciona saldo automaticamente)
+        // Marcar como 'approved' mas NÃO adicionar minutos ainda
+        // Os minutos serão adicionados apenas quando o frontend confirmar via API dedicada
         await pool.query(
-          `UPDATE recharge_requests SET status = 'pending', updatedAt = ? WHERE id = ?`,
+          `UPDATE recharge_requests SET status = 'approved', updatedAt = ? WHERE id = ?`,
           [new Date(), `stripe_${paymentIntent.id}`]
         )
 
-        console.log('[Stripe] Pagamento confirmado e pendente de aprovação:', paymentIntent.id)
+        console.log('[Stripe Webhook] Pagamento confirmado, aguardando confirmação do frontend:', paymentIntent.id)
       } else if (event.type === 'payment_intent.payment_failed') {
         const paymentIntent = event.data.object
 
@@ -212,13 +212,71 @@ export const createRechargesRouter = (pool) => {
           [new Date(), `stripe_${paymentIntent.id}`]
         )
 
-        console.log('[Stripe] Pagamento falhou:', paymentIntent.id)
+        console.log('[Stripe Webhook] Pagamento falhou:', paymentIntent.id)
       }
 
       response.json({ received: true })
     } catch (error) {
       console.error('[Stripe Webhook] Erro:', error)
       response.status(400).json({ message: 'Erro ao processar webhook' })
+    }
+  })
+
+  // Rota para confirmar pagamento Stripe e adicionar minutos
+  // O frontend chama isso APÓS receber sucesso do Stripe
+  router.post('/stripe-confirm/:paymentIntentId', authenticate, async (request, response) => {
+    try {
+      const { paymentIntentId } = request.params
+      const userId = request.user.id
+
+      // Buscar o recharge request associado ao payment intent
+      const [rechargeRequests] = await pool.query(
+        'SELECT * FROM recharge_requests WHERE id = ? AND userId = ?',
+        [`stripe_${paymentIntentId}`, userId]
+      )
+
+      if (!rechargeRequests || rechargeRequests.length === 0) {
+        return response.status(404).json({ message: 'Pagamento não encontrado' })
+      }
+
+      const rechargeRequest = rechargeRequests[0]
+
+      // Verificar se já foi creditado
+      if (rechargeRequest.status === 'approved') {
+        // Já foi processado, apenas adiciona os minutos se ainda não foi feito
+        const [userCheck] = await pool.query(
+          'SELECT minutesBalance FROM users WHERE id = ?',
+          [userId]
+        )
+        
+        if (userCheck && userCheck.length > 0) {
+          const previousBalance = userCheck[0].minutesBalance
+          
+          // Marcar como 'completed' para indicar que os minutos foram creditados
+          await pool.query(
+            'UPDATE recharge_requests SET status = ?, updatedAt = ? WHERE id = ?',
+            ['completed', new Date(), `stripe_${paymentIntentId}`]
+          )
+
+          // Adicionar minutos ao usuário
+          await pool.query(
+            'UPDATE users SET minutesBalance = minutesBalance + ? WHERE id = ?',
+            [rechargeRequest.minutes, userId]
+          )
+
+          console.log(`[Stripe Confirm] Minutos creditados para usuário ${userId}: +${rechargeRequest.minutes}`)
+          response.json({
+            ok: true,
+            message: 'Minutos adicionados com sucesso',
+            minutesAdded: rechargeRequest.minutes,
+          })
+        }
+      } else {
+        return response.status(400).json({ message: 'Pagamento não foi aprovado' })
+      }
+    } catch (error) {
+      console.error('[Stripe Confirm] Erro:', error)
+      response.status(500).json({ message: 'Erro ao confirmar pagamento' })
     }
   })
 

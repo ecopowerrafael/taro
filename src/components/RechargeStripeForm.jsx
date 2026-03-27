@@ -59,11 +59,33 @@ function StripeCheckoutForm({ packageData, onSuccess, onError }) {
         setErrorMessage(error.message || 'Erro ao processar pagamento')
         onError?.(error.message)
       } else if (paymentIntent.status === 'succeeded') {
-        onSuccess?.({
-          amount: packageData.promoPrice ?? packageData.price,
-          minutes: packageData.minutes,
-          paymentIntentId: paymentIntent.id,
-        })
+        // Confirmar no backend que o pagamento foi aprovado e creditar minutos
+        try {
+          const confirmResponse = await fetch(`/api/recharges/stripe-confirm/${paymentIntent.id}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          })
+
+          if (confirmResponse.ok) {
+            const confirmResult = await confirmResponse.json()
+            onSuccess?.({
+              amount: packageData.promoPrice ?? packageData.price,
+              minutes: packageData.minutes,
+              paymentIntentId: paymentIntent.id,
+              ...confirmResult,
+            })
+          } else {
+            const errorData = await confirmResponse.json()
+            throw new Error(errorData.message || 'Erro ao confirmar pagamento')
+          }
+        } catch (confirmError) {
+          console.error('[StripeCheckoutForm] Erro ao confirmar:', confirmError)
+          setErrorMessage(confirmError.message || 'Erro ao confirmar pagamento')
+          onError?.(confirmError.message)
+        }
       }
     } catch (error) {
       console.error('[StripeCheckoutForm] Error:', error)
