@@ -321,9 +321,10 @@ export const createConsultantsRouter = (pool) => {
     }
     const consultant = rows[0]
     const [reviews] = await pool.query(
-      `SELECT cr.id, cr.rating, cr.comment, cr.sessionType, cr.createdAt, u.name as userName
+      `SELECT cr.id, cr.rating, cr.comment, cr.sessionType, cr.createdAt,
+              COALESCE(cr.displayName, u.name) as userName
        FROM consultant_reviews cr
-       JOIN users u ON cr.userId = u.id
+       LEFT JOIN users u ON cr.userId = u.id
        WHERE cr.consultantId = ?
        ORDER BY cr.createdAt DESC
        LIMIT 50`,
@@ -382,6 +383,101 @@ export const createConsultantsRouter = (pool) => {
       [referenceId, userId],
     )
     response.json({ reviewed: rows.length > 0 })
+  })
+
+  // POST /reviews/admin-mock — criar avaliação mock (admin only)
+  router.post('/reviews/admin-mock', authenticate, authorizeAdmin, async (request, response) => {
+    const { consultantId, displayName, sessionType = 'video', rating, comment } = request.body ?? {}
+    if (!consultantId || !displayName?.trim() || !rating) {
+      return response.status(400).json({ message: 'consultantId, displayName e rating são obrigatórios.' })
+    }
+    const numRating = Math.min(5, Math.max(1, Math.floor(Number(rating))))
+    const type = ['video', 'question'].includes(sessionType) ? sessionType : 'video'
+    const reviewId = `rev_mock_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+    // referenceId único para cada mock (não vinculado a uma sessão real)
+    const referenceId = `mock_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`
+
+    await pool.query(
+      `INSERT INTO consultant_reviews (id, consultantId, userId, displayName, sessionType, referenceId, rating, comment, createdAt)
+       VALUES (?, ?, NULL, ?, ?, ?, ?, ?, NOW())`,
+      [reviewId, consultantId, displayName.trim(), type, referenceId, numRating, comment?.trim() || null],
+    )
+
+    // Recalcular média
+    const [[avgRow]] = await pool.query(
+      'SELECT AVG(rating) as avg FROM consultant_reviews WHERE consultantId = ?',
+      [consultantId],
+    )
+    const newAvg = Number(Number(avgRow.avg || 0).toFixed(2))
+    await pool.query('UPDATE consultants SET ratingAverage = ? WHERE id = ?', [newAvg, consultantId])
+
+    response.status(201).json({ ok: true, reviewId, newRatingAverage: newAvg })
+  })
+
+  // POST /reviews/bulk-mock — gerar 5 avaliações mock para todos os consultores (admin only)
+  router.post('/reviews/bulk-mock', authenticate, authorizeAdmin, async (request, response) => {
+    const MOCK_NAMES = [
+      'Mariana S.', 'Lucas F.', 'Camila R.', 'Rafael M.', 'Fernanda L.',
+      'Pedro H.', 'Juliana C.', 'Bruno T.', 'Ana Paula V.', 'Rodrigo A.',
+      'Beatriz N.', 'Gustavo W.', 'Larissa P.', 'Felipe O.', 'Natália E.',
+      'André B.', 'Thais K.', 'Leonardo D.', 'Isabela G.', 'Vinicius Q.',
+    ]
+
+    const MOCK_REVIEWS = [
+      { rating: 5, comment: 'Incrível! A clareza da leitura me deixou sem palavras. Cada carta foi interpretada com uma precisão que parecia que ela conhecia minha vida há anos. Recomendo demais.' },
+      { rating: 5, comment: 'Consultei com muitas expectativas e saí ainda mais impressionada. A assertividade nas respostas foi cirúrgica — tocou em pontos que eu nem havia mencionado. Uma leitura verdadeiramente transformadora.' },
+      { rating: 5, comment: 'Alta precisão nas previsões. Tudo que foi dito sobre a situação profissional que eu estava vivendo bateu certeiro. Voltarei sem dúvidas para acompanhar o desenrolar.' },
+      { rating: 5, comment: 'Linguagem clara, objetiva e ao mesmo tempo muito sensível. Senti que fui realmente ouvida e vista através das cartas. Melhor investimento que fiz em anos.' },
+      { rating: 4, comment: 'Leitura muito boa com bastante clareza. Alguns pontos ainda precisavam de aprofundamento, mas no geral fiquei satisfeita com a precisão do diagnóstico energético.' },
+      { rating: 5, comment: 'Surpreendente! A consultora captou nuances que eu jamais esperava. O tarot nunca fez tanto sentido para mim quanto nessa sessão. 100% recomendada.' },
+      { rating: 4, comment: 'Boa leitura com pontos muito acertados. A clareza na comunicação é um diferencial claro — não deixou espaço para dúvidas na interpretação.' },
+      { rating: 5, comment: 'Fui cético a princípio, mas a leitura me convenceu completamente. As conexões que foram feitas entre minha situação atual e os arcanos jamais poderia ter inventado.' },
+      { rating: 5, comment: 'Uma leitura profunda e extremamente assertiva. Conseguiu identificar bloqueios emocionais que nem eu sabia que existiam. Saí com clareza e um direcionamento real.' },
+      { rating: 4, comment: 'Muito satisfeita com a leitura! A interpretação foi clara e rica em detalhes. Gostaria de uma sessão mais longa para explorar mais os aspectos de relacionamento.' },
+      { rating: 5, comment: 'Precisão incrível. Cada arcano revelado encaixou perfeitamente na realidade que estou vivendo. A forma de transmitir as mensagens é gentil, firme e muito precisa.' },
+      { rating: 5, comment: 'Melhor consulta de tarot que já tive. O nível de detalhamento na leitura e a atenção aos simbolismos de cada carta fez toda a diferença. Já agendei nova sessão.' },
+      { rating: 3, comment: 'A leitura foi boa, com momentos de clareza real. Alguns pontos ficaram um pouco genéricos, mas no geral foi uma experiência positiva e reveladora.' },
+      { rating: 5, comment: 'Assertividade absurda! Descreveu com exatidão uma situação que eu estava passando sem que eu desse nenhuma pista. O tarot nas mãos certas é realmente poderoso.' },
+      { rating: 4, comment: 'Impressionante a capacidade de conectar os símbolos do tarot à realidade cotidiana. Saí da consulta com respostas claras para perguntas que me perturbavam há meses.' },
+    ]
+
+    const [consultantRows] = await pool.query('SELECT id FROM consultants WHERE status != ?', ['Pendente'])
+    const inserted = []
+
+    for (const consultant of consultantRows) {
+      // Criar 5 avaliações por consultor
+      const shuffledReviews = [...MOCK_REVIEWS].sort(() => Math.random() - 0.5).slice(0, 5)
+      const shuffledNames = [...MOCK_NAMES].sort(() => Math.random() - 0.5)
+
+      for (let i = 0; i < 5; i++) {
+        const review = shuffledReviews[i]
+        const displayName = shuffledNames[i]
+        const type = Math.random() > 0.4 ? 'video' : 'question'
+        const reviewId = `rev_mock_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`
+        const referenceId = `mock_bulk_${consultant.id}_${i}_${Math.random().toString(36).substr(2, 6)}`
+
+        // Data aleatória nos últimos 90 dias para parecer orgânico
+        const daysAgo = Math.floor(Math.random() * 90)
+        const createdAt = new Date(Date.now() - daysAgo * 24 * 3600 * 1000)
+
+        await pool.query(
+          `INSERT IGNORE INTO consultant_reviews (id, consultantId, userId, displayName, sessionType, referenceId, rating, comment, createdAt)
+           VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?)`,
+          [reviewId, consultant.id, displayName, type, referenceId, review.rating, review.comment, createdAt],
+        )
+        inserted.push({ consultantId: consultant.id, displayName, rating: review.rating })
+      }
+
+      // Recalcular média
+      const [[avgRow]] = await pool.query(
+        'SELECT AVG(rating) as avg FROM consultant_reviews WHERE consultantId = ?',
+        [consultant.id],
+      )
+      const newAvg = Number(Number(avgRow.avg || 0).toFixed(2))
+      await pool.query('UPDATE consultants SET ratingAverage = ? WHERE id = ?', [newAvg, consultant.id])
+    }
+
+    response.json({ ok: true, inserted: inserted.length, consultants: consultantRows.length })
   })
 
   return router

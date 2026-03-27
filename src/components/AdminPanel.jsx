@@ -12,6 +12,7 @@ import {
   History,
   Info,
   LayoutDashboard,
+  Loader2,
   MessageSquare,
   Search,
   Settings,
@@ -63,6 +64,7 @@ export function AdminPanel({
   onUpdateAdminUser,
   adminDashboardStats,
   onRefreshAdminDashboard,
+  token,
 }) {
   const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'usuarios' | 'financeiro' | 'credenciais' | 'recharges' | 'saques'
   const [searchQuery, setSearchSearchQuery] = useState('')
@@ -215,6 +217,13 @@ export function AdminPanel({
   const [userEditDraft, setUserEditDraft] = useState(null)
   const [userEditSaving, setUserEditSaving] = useState(false)
   const [userEditFeedback, setUserEditFeedback] = useState('')
+
+  // Estados para criação de avaliação mock
+  const [mockReviewForm, setMockReviewForm] = useState({ consultantId: '', displayName: '', sessionType: 'video', rating: 5, comment: '' })
+  const [mockReviewSaving, setMockReviewSaving] = useState(false)
+  const [mockReviewFeedback, setMockReviewFeedback] = useState('')
+  const [bulkMockSaving, setBulkMockSaving] = useState(false)
+  const [bulkMockFeedback, setBulkMockFeedback] = useState('')
 
   const tabButtonClass = (tabId) =>
     `inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition ${
@@ -460,6 +469,52 @@ export function AdminPanel({
     if (result.ok) {
       setWithdrawalModal(null)
     }
+  }
+
+  const saveMockReview = async () => {
+    if (!mockReviewForm.consultantId || !mockReviewForm.displayName.trim()) {
+      setMockReviewFeedback('Selecione um consultor e informe o nome do avaliador.')
+      return
+    }
+    setMockReviewSaving(true)
+    setMockReviewFeedback('')
+    try {
+      const res = await fetch('/api/consultants/reviews/admin-mock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(mockReviewForm),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMockReviewFeedback(`✓ Avaliação adicionada! Nova média: ${data.newRatingAverage?.toFixed(2)}`)
+        setMockReviewForm(f => ({ ...f, displayName: '', comment: '' }))
+      } else {
+        setMockReviewFeedback(data.message || 'Erro ao salvar avaliação.')
+      }
+    } catch {
+      setMockReviewFeedback('Erro de conexão.')
+    }
+    setMockReviewSaving(false)
+  }
+
+  const runBulkMock = async () => {
+    setBulkMockSaving(true)
+    setBulkMockFeedback('')
+    try {
+      const res = await fetch('/api/consultants/reviews/bulk-mock', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setBulkMockFeedback(`✓ ${data.inserted} avaliações geradas para ${data.consultants} consultor(es).`)
+      } else {
+        setBulkMockFeedback(data.message || 'Erro ao gerar avaliações.')
+      }
+    } catch {
+      setBulkMockFeedback('Erro de conexão.')
+    }
+    setBulkMockSaving(false)
   }
 
   const totalPendingWithdrawals = getPendingWithdrawals().length
@@ -1044,7 +1099,120 @@ export function AdminPanel({
           </section>
         )}
 
-        {activeTab === 'financeiro' && (
+        {activeTab === 'consultores' && (
+          <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+            <h3 className="font-display text-xl text-mystic-goldSoft">Avaliações Mock</h3>
+            <p className="mt-1 mb-4 text-xs text-amber-100/65">
+              Crie avaliações de aparência real para os consultores ou gere automaticamente para todos de uma vez.
+            </p>
+
+            {/* Geração em massa */}
+            <div className="mb-6 rounded-lg border border-mystic-gold/20 bg-black/30 p-4">
+              <p className="mb-3 text-sm font-semibold text-amber-50">Geração automática (5 por consultor)</p>
+              <p className="mb-4 text-xs text-amber-100/60">
+                Insere 5 avaliações com nomes, notas e comentários realistas sobre clareza e assertividade em leitura de tarot para cada consultor aprovado.
+              </p>
+              <button
+                onClick={runBulkMock}
+                disabled={bulkMockSaving}
+                className="inline-flex items-center gap-2 rounded-lg border border-violet-400/60 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-200 transition enabled:hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {bulkMockSaving ? <Loader2 size={14} className="animate-spin" /> : <Star size={14} />}
+                {bulkMockSaving ? 'Gerando...' : 'Gerar para todos os consultores'}
+              </button>
+              {bulkMockFeedback && (
+                <p className={`mt-3 text-xs ${bulkMockFeedback.startsWith('✓') ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {bulkMockFeedback}
+                </p>
+              )}
+            </div>
+
+            {/* Formulário manual */}
+            <div className="rounded-lg border border-mystic-gold/20 bg-black/30 p-4">
+              <p className="mb-4 text-sm font-semibold text-amber-50">Adicionar avaliação manual</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-1 text-xs text-amber-100/70">
+                  Consultor
+                  <select
+                    value={mockReviewForm.consultantId}
+                    onChange={e => setMockReviewForm(f => ({ ...f, consultantId: e.target.value }))}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/50"
+                  >
+                    <option value="">— selecione —</option>
+                    {consultants.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-1 text-xs text-amber-100/70">
+                  Nome do avaliador
+                  <input
+                    type="text"
+                    placeholder="Ex: Mariana S."
+                    value={mockReviewForm.displayName}
+                    onChange={e => setMockReviewForm(f => ({ ...f, displayName: e.target.value }))}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 placeholder-amber-100/30 outline-none focus:ring-2 focus:ring-mystic-gold/50"
+                  />
+                </label>
+                <label className="grid gap-1 text-xs text-amber-100/70">
+                  Tipo de consulta
+                  <select
+                    value={mockReviewForm.sessionType}
+                    onChange={e => setMockReviewForm(f => ({ ...f, sessionType: e.target.value }))}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/50"
+                  >
+                    <option value="video">Vídeo</option>
+                    <option value="question">Perguntas</option>
+                  </select>
+                </label>
+                <label className="grid gap-1 text-xs text-amber-100/70">
+                  Nota (1–5 estrelas)
+                  <div className="flex items-center gap-1">
+                    {[1,2,3,4,5].map(star => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setMockReviewForm(f => ({ ...f, rating: star }))}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <Star
+                          size={24}
+                          className={star <= mockReviewForm.rating ? 'fill-stardust-gold text-stardust-gold' : 'text-zinc-600'}
+                        />
+                      </button>
+                    ))}
+                    <span className="ml-2 text-sm text-amber-100/70">{mockReviewForm.rating} estrelas</span>
+                  </div>
+                </label>
+              </div>
+              <label className="mt-4 grid gap-1 text-xs text-amber-100/70">
+                Comentário
+                <textarea
+                  rows={3}
+                  maxLength={500}
+                  value={mockReviewForm.comment}
+                  onChange={e => setMockReviewForm(f => ({ ...f, comment: e.target.value }))}
+                  placeholder="Comentário realista sobre a leitura de tarot..."
+                  className="resize-none rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 placeholder-amber-100/30 outline-none focus:ring-2 focus:ring-mystic-gold/50"
+                />
+                <span className="text-right text-amber-100/40">{mockReviewForm.comment.length}/500</span>
+              </label>
+              <button
+                onClick={saveMockReview}
+                disabled={mockReviewSaving}
+                className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-4 py-2 text-xs font-medium text-emerald-200 transition enabled:hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {mockReviewSaving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+                {mockReviewSaving ? 'Salvando...' : 'Adicionar avaliação'}
+              </button>
+              {mockReviewFeedback && (
+                <p className={`mt-3 text-xs ${mockReviewFeedback.startsWith('✓') ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {mockReviewFeedback}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
           <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
             <h3 className="font-display text-xl text-mystic-goldSoft">Pacotes de Recarga</h3>
             <p className="mt-1 text-xs text-amber-100/65">

@@ -33,6 +33,7 @@ export function AdminPage() {
     updateAdminUser,
     adminDashboardStats,
     fetchAdminDashboardStats,
+    token,
   } = usePlatformContext()
 
   useEffect(() => {
@@ -72,6 +73,7 @@ export function AdminPage() {
         onUpdateAdminUser={updateAdminUser}
         adminDashboardStats={adminDashboardStats}
         onRefreshAdminDashboard={fetchAdminDashboardStats}
+        token={token}
       />
     </PageShell>
   )
