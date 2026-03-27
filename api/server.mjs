@@ -15,6 +15,8 @@ import { createAuthRouter } from './routes/auth.mjs'
 import { createRechargesRouter } from './routes/recharges.mjs'
 import { createVideoSessionsRouter } from './routes/videoSessions.mjs'
 import webpush from 'web-push'
+import { authenticate, authorizeAdmin } from './middleware/auth.mjs'
+import { getUserIdsByRole, savePushSubscription, sendPushToUsers } from './push.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -58,37 +60,12 @@ const io = new Server(httpServer, {
 app.set('io', io)
 app.set('webpush', webpush)
 
-// Variável global para armazenar as assinaturas push em memória
-// Em produção real, o ideal é salvar isso no banco de dados!
-const pushSubscriptions = {}
-app.set('pushSubscriptions', pushSubscriptions)
-
 const initialCorsOptions = {
   origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
   credentials: true,
 }
 app.use(cors(initialCorsOptions))
 app.use(express.json({ limit: '4mb' }))
-
-// Rota para salvar a assinatura push
-app.post('/api/push/subscribe', (req, res) => {
-  const { subscription, userId } = req.body
-  if (!subscription || !userId) {
-    return res.status(400).json({ error: 'Faltam dados de assinatura ou usuário' })
-  }
-  
-  if (!pushSubscriptions[userId]) {
-    pushSubscriptions[userId] = []
-  }
-  
-  // Evitar duplicatas (simplificado)
-  const exists = pushSubscriptions[userId].find(s => s.endpoint === subscription.endpoint)
-  if (!exists) {
-    pushSubscriptions[userId].push(subscription)
-  }
-  
-  res.status(201).json({ success: true })
-})
 
 // Rota para retornar a Public Key do VAPID para o frontend
 app.get('/api/push/public-key', (req, res) => {
@@ -215,6 +192,64 @@ try {
   
   app.use('/api/video-sessions', createVideoSessionsRouter(pool))
   console.log('[API] Router /video-sessions carregado.')
+
+  app.post('/api/push/subscribe', authenticate, async (req, res) => {
+    const { subscription, userId } = req.body ?? {}
+
+    if (!subscription || !userId) {
+      return res.status(400).json({ error: 'Faltam dados de assinatura ou usuário' })
+    }
+
+    if (req.user.id !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Usuário não autorizado a registrar essa assinatura' })
+    }
+
+    try {
+      await savePushSubscription({
+        pool,
+        userId,
+        subscription,
+        userAgent: req.get('user-agent') || null,
+      })
+      res.status(201).json({ success: true })
+    } catch (error) {
+      console.error('[push subscribe] erro:', error)
+      res.status(500).json({ error: 'Não foi possível salvar a assinatura push.' })
+    }
+  })
+
+  app.post('/api/push/admin/broadcast', authenticate, authorizeAdmin, async (req, res) => {
+    const { title, body, url, targetRole = 'all' } = req.body ?? {}
+
+    if (!title?.trim() || !body?.trim()) {
+      return res.status(400).json({ message: 'title e body são obrigatórios.' })
+    }
+
+    try {
+      const userIds = await getUserIdsByRole({ pool, targetRole })
+      const result = await sendPushToUsers({
+        pool,
+        webpush,
+        userIds,
+        payload: {
+          title: title.trim(),
+          body: body.trim(),
+          url: url?.trim() || '/',
+          type: 'admin_broadcast',
+        },
+      })
+
+      res.json({
+        ok: true,
+        targetRole,
+        recipients: userIds.length,
+        ...result,
+      })
+    } catch (error) {
+      console.error('[admin broadcast push] erro:', error)
+      res.status(500).json({ message: 'Erro ao enviar notificação push em massa.' })
+    }
+  })
 
   // Await schema initialization to avoid table not found errors
   console.log('[API] Inicializando schema...')

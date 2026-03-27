@@ -233,6 +233,28 @@ export const initializeSchema = async (pool) => {
     )
   `)
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      userId VARCHAR(50) NOT NULL,
+      endpoint TEXT NOT NULL,
+      p256dh VARCHAR(255) NOT NULL,
+      auth VARCHAR(255) NOT NULL,
+      userAgent VARCHAR(255) NULL,
+      isActive TINYINT(1) NOT NULL DEFAULT 1,
+      failureCount INT NOT NULL DEFAULT 0,
+      lastSuccessAt DATETIME NULL,
+      lastFailureAt DATETIME NULL,
+      createdAt DATETIME NOT NULL,
+      updatedAt DATETIME NOT NULL,
+      UNIQUE KEY uniq_push_subscription_endpoint (endpoint(255)),
+      INDEX idx_push_subscriptions_user_active (userId, isActive),
+      CONSTRAINT fk_push_subscription_user
+        FOREIGN KEY (userId) REFERENCES users(id)
+        ON DELETE CASCADE
+    )
+  `)
+
   // Adicionar colunas de duração e earnings se não existirem (para bancos antigos)
   try {
     await pool.query('ALTER TABLE video_sessions ADD COLUMN durationSeconds INT NOT NULL DEFAULT 0')

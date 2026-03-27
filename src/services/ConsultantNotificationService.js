@@ -21,8 +21,39 @@ class ConsultantNotificationService {
     this.wakeLock = null
     this.consultantId = null
     this.onIncomingCall = null
+    this.listeners = {
+      incoming_call: new Set(),
+      new_question: new Set(),
+    }
     this.isRinging = false
     this.setupAudio()
+  }
+
+  on(eventName, handler) {
+    if (!this.listeners[eventName] || typeof handler !== 'function') {
+      return
+    }
+    this.listeners[eventName].add(handler)
+  }
+
+  off(eventName, handler) {
+    if (!this.listeners[eventName] || typeof handler !== 'function') {
+      return
+    }
+    this.listeners[eventName].delete(handler)
+  }
+
+  emit(eventName, payload) {
+    if (!this.listeners[eventName]) {
+      return
+    }
+    this.listeners[eventName].forEach((handler) => {
+      try {
+        handler(payload)
+      } catch (error) {
+        console.error(`[ConsultantNotificationService] erro no listener ${eventName}:`, error)
+      }
+    })
   }
 
   setupAudio() {
@@ -80,9 +111,14 @@ class ConsultantNotificationService {
     this.socket.on('incoming_call', (data) => {
       this.playRingtone()
       this.showNotification(data)
+      this.emit('incoming_call', data)
       if (typeof this.onIncomingCall === 'function') {
         this.onIncomingCall(data)
       }
+    })
+
+    this.socket.on('new_question', (data) => {
+      this.emit('new_question', data)
     })
   }
 

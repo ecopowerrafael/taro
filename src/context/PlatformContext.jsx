@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { getZodiacSign } from '../utils/zodiac'
 import { useBilling } from '../hooks/useBilling'
 import { createRechargePreference } from '../services/mercadoPagoMock'
+import { notificationService } from '../services/ConsultantNotificationService'
 import { PlatformContext } from './platform-context'
 
 const horoscopeBySign = {
@@ -292,6 +293,7 @@ export function PlatformProvider({ children }) {
   // Registra Service Worker e Push Subscription.
   const registerPushSubscription = async (userId) => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    if (!token) return
 
     try {
       if (!('Notification' in window)) {
@@ -334,7 +336,10 @@ export function PlatformProvider({ children }) {
       await fetch(buildApiUrl('/api/push/subscribe'), {
         method: 'POST',
         body: JSON.stringify({ subscription, userId }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        }
       })
     } catch (e) {
       console.error('Erro ao registrar Push:', e)
@@ -342,10 +347,10 @@ export function PlatformProvider({ children }) {
   }
 
   useEffect(() => {
-    if (profile?.id) {
+    if (profile?.id && token) {
       registerPushSubscription(profile.id)
     }
-  }, [profile?.id])
+  }, [profile?.id, token])
 
   const ensurePushSubscription = async () => {
     if (!profile?.id) {
@@ -531,88 +536,68 @@ export function PlatformProvider({ children }) {
     if (!isConsultant || !userConsultantProfile) {
       return
     }
-
-    // Importa dinâmicamente para evitar circular dependencies
-    const setupSocketListener = async () => {
-      try {
-        const { ConsultantNotificationService } = await import('../services/ConsultantNotificationService')
-        const notificationService = new ConsultantNotificationService()
-
-        // Handler para chamada recebida
-        const handleIncomingCall = (data) => {
-          const callerName = data.callerName || data.caller?.name || 'Cliente'
-          const notification = {
-            id: `call-${data.sessionId}`,
-            title: '📞 Chamada Recebida',
-            message: `${callerName} está aguardando uma vídeo consulta com você.`,
-            icon: 'phone',
-            contactName: callerName,
-            type: 'call',
-            autoCloseMs: 0, // Não auto-fechar
-            actions: [
-              {
-                id: 'answer',
-                label: 'Responder',
-                primary: true,
-                onClick: () => {
-                  window.location.href = `/video-room/${data.sessionId}`
-                },
-              },
-              {
-                id: 'dismiss',
-                label: 'Ignorar',
-                primary: false,
-              },
-            ],
-          }
-          addInAppNotification(notification)
-          addToNotificationHistory(notification)
-        }
-
-        // Handler para pergunta recebida
-        const handleNewQuestion = (data) => {
-          const questionCount = Number(data.questionCount) || 1
-          const notification = {
-            id: `question-${data.requestId}`,
-            title: `❓ ${questionCount} Pergunta${questionCount > 1 ? 's' : ''} Recebida${questionCount > 1 ? 's' : ''}`,
-            message: data.preview || `Você recebeu uma consulta de perguntas para responder.`,
-            icon: 'message',
-            contactName: data.clientName || 'Cliente',
-            type: 'question',
-            autoCloseMs: 10000,
-            actions: [
-              {
-                id: 'answer',
-                label: 'Responder Agora',
-                primary: true,
-                onClick: () => {
-                  window.location.href = '/area-consultor?tab=questions'
-                },
-              },
-            ],
-          }
-          addInAppNotification(notification)
-          addToNotificationHistory(notification)
-        }
-
-        // Monitora conexão do socket
-        if (notificationService.socket) {
-          notificationService.socket.on('incoming_call', handleIncomingCall)
-          notificationService.socket.on('new_question', handleNewQuestion)
-        }
-
-        return () => {
-          if (notificationService.socket) {
-            notificationService.socket.off('incoming_call', handleIncomingCall)
-            notificationService.socket.off('new_question', handleNewQuestion)
-          }
-        }
-      } catch (err) {
-        console.error('[PlatformContext] Erro ao setup socket listeners:', err)
+    const handleIncomingCall = (data) => {
+      const callerName = data.customerName || data.callerName || data.caller?.name || 'Cliente'
+      const notification = {
+        id: `call-${data.sessionId}`,
+        title: '📞 Chamada Recebida',
+        message: `${callerName} está aguardando uma vídeo consulta com você.`,
+        icon: 'phone',
+        contactName: callerName,
+        type: 'call',
+        autoCloseMs: 0,
+        actions: [
+          {
+            id: 'answer',
+            label: 'Responder',
+            primary: true,
+            onClick: () => {
+              window.location.href = `/sala/${data.sessionId}`
+            },
+          },
+          {
+            id: 'dismiss',
+            label: 'Ignorar',
+            primary: false,
+          },
+        ],
       }
+      addInAppNotification(notification)
+      addToNotificationHistory(notification)
     }
 
-    setupSocketListener()
+    const handleNewQuestion = (data) => {
+      const questionCount = Number(data.questionCount) || 1
+      const notification = {
+        id: `question-${data.requestId}`,
+        title: `❓ ${questionCount} Pergunta${questionCount > 1 ? 's' : ''} Recebida${questionCount > 1 ? 's' : ''}`,
+        message: data.preview || 'Você recebeu uma consulta de perguntas para responder.',
+        icon: 'message',
+        contactName: data.clientName || 'Cliente',
+        type: 'question',
+        autoCloseMs: 10000,
+        actions: [
+          {
+            id: 'answer',
+            label: 'Responder Agora',
+            primary: true,
+            onClick: () => {
+              window.location.href = '/area-consultor?tab=questions'
+            },
+          },
+        ],
+      }
+      addInAppNotification(notification)
+      addToNotificationHistory(notification)
+    }
+
+    notificationService.on('incoming_call', handleIncomingCall)
+    notificationService.on('new_question', handleNewQuestion)
+
+    return () => {
+      notificationService.off('incoming_call', handleIncomingCall)
+      notificationService.off('new_question', handleNewQuestion)
+    }
   }, [isConsultant, userConsultantProfile, addInAppNotification, addToNotificationHistory])
 
   // Monitor window blur/focus para marcar notificações ao voltar
@@ -822,6 +807,29 @@ export function PlatformProvider({ children }) {
       )
     } catch (error) {
       console.error('[fetchAdminUsers] Erro ao buscar usuários:', error)
+    }
+  }
+
+  const sendAdminPushBroadcast = async ({ title, body, url, targetRole = 'all' }) => {
+    try {
+      const response = await fetch(buildApiUrl('/api/push/admin/broadcast'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, body, url, targetRole }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao enviar broadcast push.' }
+      }
+
+      return { ok: true, ...payload }
+    } catch (error) {
+      console.error('[sendAdminPushBroadcast] Erro ao enviar broadcast:', error)
+      return { ok: false, message: 'Erro de conexão ao enviar broadcast push.' }
     }
   }
 
@@ -1791,6 +1799,7 @@ export function PlatformProvider({ children }) {
     processRechargeAction,
     adminUsers,
     fetchAdminUsers,
+    sendAdminPushBroadcast,
     updateAdminUser,
     fetchAdminDashboardStats,
   }

@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { sendPushToUsers } from '../push.mjs'
 
 const parseNumber = (value, fallback = 0) => {
   const parsed = Number(value)
@@ -120,6 +121,48 @@ export const createQuestionRequestsRouter = (pool) => {
         new Date(normalizedCreatedAt),
       ],
     )
+
+    try {
+      const [consultants] = await pool.query(
+        'SELECT id, email, userId FROM consultants WHERE id = ? LIMIT 1',
+        [consultantId],
+      )
+      const consultant = consultants[0]
+      let consultantUserId = consultant?.userId || null
+
+      if (!consultantUserId && consultant?.email) {
+        const [consultantUsers] = await pool.query('SELECT id FROM users WHERE email = ? LIMIT 1', [consultant.email])
+        consultantUserId = consultantUsers[0]?.id || null
+      }
+
+      const io = request.app.get('io')
+      if (io) {
+        io.to(`consultant_${consultantId}`).emit('new_question', {
+          requestId: id,
+          consultantId,
+          clientName: customerName,
+          questionCount: Math.max(1, Math.floor(parseNumber(questionCount, 1))),
+          preview: normalizedEntries[0]?.question || normalizedEntries[0]?.text || 'Nova consulta por perguntas recebida.',
+        })
+      }
+
+      const webpush = request.app.get('webpush')
+      if (webpush && consultantUserId) {
+        await sendPushToUsers({
+          pool,
+          webpush,
+          userIds: [consultantUserId],
+          payload: {
+            title: 'Nova Consulta por Perguntas',
+            body: `${customerName} enviou ${Math.max(1, Math.floor(parseNumber(questionCount, 1)))} pergunta(s) para você.`,
+            url: 'https://appastria.online/area-consultor?tab=questions',
+            type: 'new_question',
+          },
+        })
+      }
+    } catch (notificationError) {
+      console.error('[questionRequests POST] erro ao notificar consultor:', notificationError)
+    }
 
     response.status(201).json({
       id,

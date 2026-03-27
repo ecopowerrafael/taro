@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { authenticate } from '../middleware/auth.mjs'
 import nodemailer from 'nodemailer'
 import crypto from 'crypto'
+import { sendPushToUsers } from '../push.mjs'
 
 export const createVideoSessionsRouter = (pool) => {
   const router = Router()
@@ -154,20 +155,29 @@ export const createVideoSessionsRouter = (pool) => {
         })
       }
 
-      // Envia notificação Web Push se o consultor tiver assinatura
-      const pushSubscriptions = request.app.get('pushSubscriptions')
       const webpush = request.app.get('webpush')
-      if (pushSubscriptions && webpush && consultantUserId && pushSubscriptions[consultantUserId]) {
-        const subs = pushSubscriptions[consultantUserId]
-        const payload = JSON.stringify({
+      if (webpush && consultantUserId) {
+        const payload = {
           title: 'Nova Chamada de Vídeo',
           body: `O cliente ${user.name} está aguardando na sala!`,
-          url: `https://appastria.online/sala/${sessionId}`
+          url: `https://appastria.online/sala/${sessionId}`,
+          type: 'incoming_call',
+        }
+
+        const pushResult = await sendPushToUsers({
+          pool,
+          webpush,
+          userIds: [consultantUserId],
+          payload,
         })
-        
-        subs.forEach(sub => {
-          webpush.sendNotification(sub, payload).catch(e => console.error('Erro no webpush:', e))
-        })
+
+        if (!pushResult.totalSubscriptions) {
+          console.warn('[videoSessions POST] Nenhuma subscription ativa para consultor', {
+            consultantId,
+            consultantEmail: consultant.email,
+            consultantUserId,
+          })
+        }
       } else {
         console.warn('[videoSessions POST] Push não enviado: subscription ausente para consultor', {
           consultantId,

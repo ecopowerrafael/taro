@@ -61,12 +61,13 @@ export function AdminPanel({
   onStripeCredentialsChange,
   adminUsers,
   onRefreshAdminUsers,
+  onSendPushBroadcast,
   onUpdateAdminUser,
   adminDashboardStats,
   onRefreshAdminDashboard,
   token,
 }) {
-  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'usuarios' | 'financeiro' | 'credenciais' | 'recharges' | 'saques'
+  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'usuarios' | 'financeiro' | 'credenciais' | 'notificacoes' | 'recharges' | 'saques'
   const [searchQuery, setSearchSearchQuery] = useState('')
   const [editingConsultantId, setEditingConsultantId] = useState(null)
   const [editForm, setEditForm] = useState(null)
@@ -224,6 +225,14 @@ export function AdminPanel({
   const [mockReviewFeedback, setMockReviewFeedback] = useState('')
   const [bulkMockSaving, setBulkMockSaving] = useState(false)
   const [bulkMockFeedback, setBulkMockFeedback] = useState('')
+  const [pushBroadcastDraft, setPushBroadcastDraft] = useState({
+    title: '',
+    body: '',
+    url: '/',
+    targetRole: 'all',
+  })
+  const [pushBroadcastSaving, setPushBroadcastSaving] = useState(false)
+  const [pushBroadcastFeedback, setPushBroadcastFeedback] = useState('')
 
   const tabButtonClass = (tabId) =>
     `inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition ${
@@ -384,6 +393,26 @@ export function AdminPanel({
       setCredentialsFeedback('Não foi possível salvar credenciais. Tente novamente.')
     }
     setCredentialsSaving(false)
+  }
+
+  const handleSendPushBroadcast = async () => {
+    if (!pushBroadcastDraft.title.trim() || !pushBroadcastDraft.body.trim()) {
+      setPushBroadcastFeedback('Preencha título e mensagem para enviar a notificação.')
+      return
+    }
+
+    setPushBroadcastSaving(true)
+    setPushBroadcastFeedback('')
+    const result = await onSendPushBroadcast?.(pushBroadcastDraft)
+    if (result?.ok) {
+      setPushBroadcastFeedback(
+        `Broadcast enviado. ${result.successCount || 0} entrega(s) ok em ${result.totalSubscriptions || 0} subscription(s).`,
+      )
+      setPushBroadcastDraft((prev) => ({ ...prev, title: '', body: '' }))
+    } else {
+      setPushBroadcastFeedback(result?.message || 'Falha ao enviar push.')
+    }
+    setPushBroadcastSaving(false)
   }
 
   const openEditConsultant = (consultant) => {
@@ -599,6 +628,10 @@ export function AdminPanel({
         <button className={tabButtonClass('credenciais')} onClick={() => setActiveTab('credenciais')}>
           <Landmark size={14} />
           Credenciais
+        </button>
+        <button className={tabButtonClass('notificacoes')} onClick={() => setActiveTab('notificacoes')}>
+          <AlertCircle size={14} />
+          Notificações
         </button>
         <button
           className={tabButtonClass('recharges')}
@@ -1562,6 +1595,82 @@ export function AdminPanel({
             </section>
             {credentialsFeedback && <p className="mt-2 text-xs text-amber-100/80">{credentialsFeedback}</p>}
           </div>
+        )}
+
+        {activeTab === 'notificacoes' && (
+          <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+            <div className="mb-4">
+              <h3 className="font-display text-xl text-mystic-goldSoft">Broadcast Push</h3>
+              <p className="text-xs text-ethereal-silver/70">
+                Envia uma notificação push do admin para todos os usuários, clientes, consultores ou admins.
+              </p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="grid gap-1.5 text-sm text-amber-100/75">
+                Título
+                <input
+                  value={pushBroadcastDraft.title}
+                  onChange={(event) =>
+                    setPushBroadcastDraft((prev) => ({ ...prev, title: event.target.value }))
+                  }
+                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                />
+              </label>
+              <label className="grid gap-1.5 text-sm text-amber-100/75">
+                Público
+                <select
+                  value={pushBroadcastDraft.targetRole}
+                  onChange={(event) =>
+                    setPushBroadcastDraft((prev) => ({ ...prev, targetRole: event.target.value }))
+                  }
+                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                >
+                  <option value="all">Todos</option>
+                  <option value="client">Clientes</option>
+                  <option value="consultant">Consultores</option>
+                  <option value="admin">Admins</option>
+                </select>
+              </label>
+            </div>
+
+            <label className="mt-3 grid gap-1.5 text-sm text-amber-100/75">
+              Mensagem
+              <textarea
+                value={pushBroadcastDraft.body}
+                onChange={(event) =>
+                  setPushBroadcastDraft((prev) => ({ ...prev, body: event.target.value }))
+                }
+                className="min-h-[120px] rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+              />
+            </label>
+
+            <label className="mt-3 grid gap-1.5 text-sm text-amber-100/75">
+              URL de destino
+              <input
+                value={pushBroadcastDraft.url}
+                onChange={(event) =>
+                  setPushBroadcastDraft((prev) => ({ ...prev, url: event.target.value }))
+                }
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+              />
+            </label>
+
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                onClick={() => {
+                  void handleSendPushBroadcast()
+                }}
+                disabled={pushBroadcastSaving}
+                className="rounded-lg bg-mystic-gold/90 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {pushBroadcastSaving ? 'Enviando...' : 'Enviar Push'}
+              </button>
+              {pushBroadcastFeedback ? (
+                <p className="text-xs text-amber-100/80">{pushBroadcastFeedback}</p>
+              ) : null}
+            </div>
+          </section>
         )}
       </div>
 

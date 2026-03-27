@@ -30,6 +30,7 @@ export function AdminPage() {
     updateWithdrawalStatus,
     adminUsers,
     fetchAdminUsers,
+    sendAdminPushBroadcast,
     updateAdminUser,
     adminDashboardStats,
     fetchAdminDashboardStats,
@@ -70,6 +71,7 @@ export function AdminPage() {
         updateWithdrawalStatus={updateWithdrawalStatus}
         adminUsers={adminUsers}
         onRefreshAdminUsers={fetchAdminUsers}
+        onSendPushBroadcast={sendAdminPushBroadcast}
         onUpdateAdminUser={updateAdminUser}
         adminDashboardStats={adminDashboardStats}
         onRefreshAdminDashboard={fetchAdminDashboardStats}
