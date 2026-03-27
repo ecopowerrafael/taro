@@ -120,7 +120,13 @@ export const sendPushToUsers = async ({ pool, webpush, userIds, payload }) => {
         })
       } catch (error) {
         const statusCode = error?.statusCode
-        if (statusCode === 404 || statusCode === 410) {
+        const message = error?.body || error?.message || ''
+        const hasVapidMismatch =
+          statusCode === 403 &&
+          typeof message === 'string' &&
+          message.toLowerCase().includes('do not correspond to the credentials used to create the subscriptions')
+
+        if (statusCode === 404 || statusCode === 410 || hasVapidMismatch) {
           await markSubscriptionFailure({ pool, endpoint: subscription.endpoint })
         }
         results.push({

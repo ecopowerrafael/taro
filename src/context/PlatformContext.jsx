@@ -149,6 +149,29 @@ const buildApiUrl = (resource) => {
   return `${base}${path}`
 }
 
+const uint8ArrayToBase64Url = (value) => {
+  let binary = ''
+  value.forEach((item) => {
+    binary += String.fromCharCode(item)
+  })
+
+  return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+}
+
+const applicationServerKeyMatches = (subscription, expectedKey) => {
+  const currentKey = subscription?.options?.applicationServerKey
+  if (!currentKey) {
+    return false
+  }
+
+  try {
+    const normalizedCurrent = new Uint8Array(currentKey)
+    return uint8ArrayToBase64Url(normalizedCurrent) === uint8ArrayToBase64Url(expectedKey)
+  } catch {
+    return false
+  }
+}
+
 const normalizeConsultant = (consultant) => ({
   ...consultant,
   pricePerMinute: Number(consultant.pricePerMinute) || 0,
@@ -326,6 +349,11 @@ export function PlatformProvider({ children }) {
       }
 
       let subscription = await registration.pushManager.getSubscription()
+      if (subscription && !applicationServerKeyMatches(subscription, outputArray)) {
+        await subscription.unsubscribe().catch(() => {})
+        subscription = null
+      }
+
       if (!subscription) {
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
