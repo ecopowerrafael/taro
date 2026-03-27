@@ -227,7 +227,7 @@ export const createRechargesRouter = (pool) => {
       if (action === 'approved') {
         await connection.query(
           'UPDATE users SET minutesBalance = minutesBalance + ? WHERE id = ?',
-          [req.minutes, req.userId] // Adicionar minutos, não o valor em reais
+          [req.amount, req.userId] // minutesBalance armazena saldo em R$
         )
       }
 
@@ -417,15 +417,15 @@ export const createRechargesRouter = (pool) => {
         // Adicionar minutos ao usuário
         await connection.query(
           'UPDATE users SET minutesBalance = minutesBalance + ? WHERE id = ?',
-          [rechargeRequest.minutes, userId]
+          [rechargeRequest.amount, userId]
         )
 
         await connection.commit()
-        console.log(`[Stripe Confirm] Minutos creditados para usuário ${userId}: +${rechargeRequest.minutes}`)
+        console.log(`[Stripe Confirm] Saldo creditado para usuário ${userId}: +R$ ${rechargeRequest.amount}`)
         response.json({
           ok: true,
-          message: 'Minutos adicionados com sucesso',
-          minutesAdded: rechargeRequest.minutes,
+          message: 'Saldo adicionado com sucesso',
+          amountAdded: rechargeRequest.amount,
         })
       } else {
         await connection.rollback()
