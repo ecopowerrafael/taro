@@ -10,6 +10,9 @@ export const createAuthRouter = (pool) => {
   // Fallback temporário para taxas Stripe quando a API não retorna fee real.
   // Mantido como constante explícita para facilitar remoção ou ajuste futuro.
   const STRIPE_FEE_FALLBACK_RATE = 0.12
+  // Regra de negócio: sobre o saldo em custódia, projetamos 30% de retorno
+  // para a plataforma quando esse saldo for consumido em consultas.
+  const CUSTODY_EXPECTED_RETURN_RATE = 0.3
 
   // Register
   router.post('/register', async (request, response) => {
@@ -563,8 +566,17 @@ export const createAuthRouter = (pool) => {
       const rechargeCountLast30Days = Number(essentialKpisRow?.rechargeCountLast30Days) || 0
       const custodyBalance = Number(custodyRow?.custodyBalance) || 0
       const consultantPayoutLast30Days = Number(consultantPayoutRow?.consultantPayoutLast30Days) || 0
+      const custodyExpectedReturn = Number(
+        (custodyBalance * CUSTODY_EXPECTED_RETURN_RATE).toFixed(2),
+      )
       const realNetProfitLast30Days = Number(
-        (vgvLast30Days - consultantPayoutLast30Days - stripeFeesLast30Days).toFixed(2),
+        (
+          vgvLast30Days -
+          consultantPayoutLast30Days -
+          stripeFeesLast30Days -
+          custodyBalance +
+          custodyExpectedReturn
+        ).toFixed(2),
       )
 
       let monthOverMonthPercent = 0
@@ -586,6 +598,7 @@ export const createAuthRouter = (pool) => {
         vgvLast30Days,
         stripeFeesLast30Days,
         custodyBalance,
+        custodyExpectedReturn,
         consultantPayoutLast30Days,
         realNetProfitLast30Days,
         averageRechargeTicketLast30Days: Number(averageRechargeTicketLast30Days.toFixed(2)),

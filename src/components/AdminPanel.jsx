@@ -653,11 +653,17 @@ export function AdminPanel({
                 <p className="mt-1 font-display text-2xl text-sky-200">
                   R$ {Number(adminDashboardStats?.custodyBalance || 0).toFixed(2)}
                 </p>
+                <p className="mt-2 text-[11px] text-sky-100/65">
+                  Saldo a receber (30%): R$ {Number(adminDashboardStats?.custodyExpectedReturn || 0).toFixed(2)}
+                </p>
               </article>
               <article className="rounded-lg border border-amber-400/25 bg-amber-950/20 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-amber-100/70">Lucro Líquido Real (30 dias)</p>
                 <p className="mt-1 font-display text-2xl text-amber-200">
                   R$ {Number(adminDashboardStats?.realNetProfitLast30Days || 0).toFixed(2)}
+                </p>
+                <p className="mt-2 text-[11px] text-amber-100/65">
+                  Desconta custódia e considera retorno projetado de 30%
                 </p>
               </article>
               <article className="rounded-lg border border-violet-400/25 bg-violet-950/20 p-4">
