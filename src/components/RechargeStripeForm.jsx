@@ -72,7 +72,7 @@ function StripeCheckoutForm({ packageData, onSuccess, onError }) {
 
       if (!intentResponse.ok) {
         const error = await intentResponse.json()
-        throw new Error(error.message || 'Erro ao criar sessão de pagamento')
+        throw new Error(error.error || error.message || 'Erro ao criar sessão de pagamento')
       }
 
       const { clientSecret } = await intentResponse.json()

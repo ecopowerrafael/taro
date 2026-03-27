@@ -19,18 +19,17 @@ let stripe = null
 let activeStripeSecretKey = null
 
 const resolveStripeSecretKey = async (pool) => {
-  const envKey = (process.env.STRIPE_SECRET_KEY || '').trim()
-  if (envKey) {
-    return envKey
-  }
-
   try {
     const [rows] = await pool.query('SELECT stripeSecretKey FROM platform_credentials WHERE id = 1 LIMIT 1')
-    return (rows?.[0]?.stripeSecretKey || '').trim()
+    const dbKey = (rows?.[0]?.stripeSecretKey || '').trim()
+    if (dbKey) {
+      return dbKey
+    }
   } catch (error) {
     console.error('[Stripe] Erro ao buscar stripeSecretKey no banco:', error.message)
-    return ''
   }
+
+  return (process.env.STRIPE_SECRET_KEY || '').trim()
 }
 
 const initializeStripe = async (pool) => {
@@ -247,8 +246,10 @@ export const createRechargesRouter = (pool) => {
   router.post('/stripe-payment-intent', authenticate, async (request, response) => {
     const { amount, minutes, packageId, customerEmail } = request.body
     const userId = request.user.id
+    const amountNumber = Number(amount)
+    const minutesNumber = Number(minutes)
 
-    if (!amount || !minutes || !packageId) {
+    if (!amountNumber || !minutesNumber || !packageId) {
       return response.status(400).json({ message: 'Dados incompletos para pagamento.' })
     }
 
@@ -259,15 +260,20 @@ export const createRechargesRouter = (pool) => {
     }
 
     try {
+      const amountInCents = Math.round(amountNumber * 100)
+      if (!Number.isFinite(amountInCents) || amountInCents <= 0) {
+        return response.status(400).json({ message: 'Valor do pagamento inválido.' })
+      }
+
       // Criar Payment Intent
       const paymentIntent = await stripeInstance.paymentIntents.create({
-        amount: Math.round(amount * 100), // Stripe usa centavos
+        amount: amountInCents,
         currency: 'brl',
         metadata: {
-          userId,
-          packageId,
-          minutes,
-          customerEmail,
+          userId: String(userId),
+          packageId: String(packageId),
+          minutes: String(minutesNumber),
+          customerEmail: String(customerEmail || ''),
         },
         receipt_email: customerEmail,
       })
@@ -279,7 +285,7 @@ export const createRechargesRouter = (pool) => {
       await pool.query(
         `INSERT INTO recharge_requests (id, userId, amount, minutes, method, status, createdAt)
          VALUES (?, ?, ?, ?, 'card', 'pending', ?)`,
-        [rechargeId, userId, amount, minutes, createdAt]
+        [rechargeId, userId, amountNumber, minutesNumber, createdAt]
       )
 
       response.json({
@@ -290,7 +296,9 @@ export const createRechargesRouter = (pool) => {
       console.error('[Stripe] Erro ao criar payment intent:', error)
       response.status(500).json({ 
         message: 'Erro ao criar sessão de pagamento.',
-        error: error.message 
+        error: error.message,
+        type: error.type,
+        code: error.code,
       })
     }
   })
