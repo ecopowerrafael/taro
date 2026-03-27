@@ -1,5 +1,11 @@
 let deferredInstallPrompt = null
 
+const requestImmediateActivation = (registration) => {
+  if (registration?.waiting) {
+    registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+  }
+}
+
 export const registerPwaServiceWorker = () => {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
     return
@@ -16,7 +22,32 @@ export const registerPwaServiceWorker = () => {
 
   const registerWorker = async () => {
     try {
-      await navigator.serviceWorker.register('/sw.js')
+      const registration = await navigator.serviceWorker.register('/sw.js')
+
+      requestImmediateActivation(registration)
+      void registration.update()
+
+      registration.addEventListener('updatefound', () => {
+        const installingWorker = registration.installing
+        if (!installingWorker) {
+          return
+        }
+
+        installingWorker.addEventListener('statechange', () => {
+          if (installingWorker.state === 'installed') {
+            requestImmediateActivation(registration)
+          }
+        })
+      })
+
+      let refreshing = false
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) {
+          return
+        }
+        refreshing = true
+        window.location.reload()
+      })
     } catch {
       return
     }

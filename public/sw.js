@@ -1,3 +1,17 @@
+self.addEventListener('install', function() {
+  self.skipWaiting()
+})
+
+self.addEventListener('activate', function(event) {
+  event.waitUntil(self.clients.claim())
+})
+
+self.addEventListener('message', function(event) {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
+
 self.addEventListener('push', function(event) {
   if (event.data) {
     const data = event.data.json()
