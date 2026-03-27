@@ -2,7 +2,23 @@ import { Router } from 'express'
 import { authenticate, authorizeAdmin } from '../middleware/auth.mjs'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
+// Inicializar Stripe apenas se a chave estiver disponível
+let stripe = null
+const initializeStripe = () => {
+  if (!stripe) {
+    if (process.env.STRIPE_SECRET_KEY) {
+      try {
+        stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+        console.log('[Stripe] Inicializado com sucesso')
+      } catch (error) {
+        console.error('[Stripe] Erro ao inicializar:', error.message)
+      }
+    } else {
+      console.warn('[Stripe] STRIPE_SECRET_KEY não encontrada no ambiente')
+    }
+  }
+  return stripe
+}
 
 export const createRechargesRouter = (pool) => {
   const router = Router()
@@ -110,14 +126,15 @@ export const createRechargesRouter = (pool) => {
       return response.status(400).json({ message: 'Dados incompletos para pagamento.' })
     }
 
-    // Validar chave Secret do Stripe
-    if (!process.env.STRIPE_SECRET_KEY) {
+    // Inicializar Stripe e validar chave Secret
+    const stripeInstance = initializeStripe()
+    if (!stripeInstance) {
       return response.status(500).json({ message: 'Stripe não está configurado no servidor.' })
     }
 
     try {
       // Criar Payment Intent
-      const paymentIntent = await stripe.paymentIntents.create({
+      const paymentIntent = await stripeInstance.paymentIntents.create({
         amount: Math.round(amount * 100), // Stripe usa centavos
         currency: 'brl',
         metadata: {
@@ -161,9 +178,14 @@ export const createRechargesRouter = (pool) => {
       return response.status(400).json({ message: 'Webhook não configurado' })
     }
 
+    const stripeInstance = initializeStripe()
+    if (!stripeInstance) {
+      return response.status(500).json({ message: 'Stripe não está configurado' })
+    }
+
     try {
       // Nota: Em produção, o body raw é necessário. Para desenvolvimento, usar JSON normal
-      const event = stripe.webhooks.constructEvent(
+      const event = stripeInstance.webhooks.constructEvent(
         typeof request.body === 'string' ? request.body : JSON.stringify(request.body),
         sig,
         endpointSecret
