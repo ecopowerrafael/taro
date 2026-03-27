@@ -18,6 +18,46 @@ const normalizePackage = (row) => ({
 let stripe = null
 let activeStripeSecretKey = null
 
+const normalizeStripeAmount = (value) => {
+  if (!Number.isFinite(Number(value))) {
+    return null
+  }
+  return Number((Number(value) / 100).toFixed(2))
+}
+
+const extractStripeChargeFinancials = (paymentIntent) => {
+  const latestCharge = paymentIntent?.latest_charge
+  const balanceTransaction = latestCharge?.balance_transaction
+
+  return {
+    stripePaymentIntentId: paymentIntent?.id || null,
+    stripeChargeId: typeof latestCharge === 'object' ? latestCharge.id || null : null,
+    stripeBalanceTransactionId:
+      typeof balanceTransaction === 'object' ? balanceTransaction.id || null : null,
+    stripeFeeAmount:
+      typeof balanceTransaction === 'object' ? normalizeStripeAmount(balanceTransaction.fee) : null,
+    stripeNetAmount:
+      typeof balanceTransaction === 'object' ? normalizeStripeAmount(balanceTransaction.net) : null,
+  }
+}
+
+const fetchStripePaymentIntentFinancials = async (stripeInstance, paymentIntentId) => {
+  if (!stripeInstance || !paymentIntentId) {
+    return null
+  }
+
+  try {
+    const paymentIntent = await stripeInstance.paymentIntents.retrieve(paymentIntentId, {
+      expand: ['latest_charge.balance_transaction'],
+    })
+
+    return extractStripeChargeFinancials(paymentIntent)
+  } catch (error) {
+    console.error('[Stripe] Erro ao buscar dados financeiros do PaymentIntent:', error.message)
+    return null
+  }
+}
+
 const resolveStripeSecretKey = async (pool) => {
   try {
     const [rows] = await pool.query('SELECT stripeSecretKey FROM platform_credentials WHERE id = 1 LIMIT 1')
@@ -292,9 +332,18 @@ export const createRechargesRouter = (pool) => {
       const createdAt = new Date()
 
       await pool.query(
-        `INSERT INTO recharge_requests (id, userId, amount, minutes, method, status, createdAt)
-         VALUES (?, ?, ?, ?, 'card', 'processing', ?)`,
-        [rechargeId, userId, amountNumber, minutesNumber, createdAt]
+        `INSERT INTO recharge_requests (
+           id,
+           userId,
+           amount,
+           minutes,
+           method,
+           status,
+           stripePaymentIntentId,
+           createdAt
+         )
+         VALUES (?, ?, ?, ?, 'card', 'processing', ?, ?)`,
+        [rechargeId, userId, amountNumber, minutesNumber, paymentIntent.id, createdAt]
       )
 
       response.json({
@@ -336,13 +385,30 @@ export const createRechargesRouter = (pool) => {
 
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object
-        const { userId, packageId, minutes } = paymentIntent.metadata
+        const stripeFinancials = await fetchStripePaymentIntentFinancials(stripeInstance, paymentIntent.id)
 
         // Marcar como 'approved' mas NÃO adicionar minutos ainda
         // Os minutos serão adicionados apenas quando o frontend confirmar via API dedicada
         await pool.query(
-          `UPDATE recharge_requests SET status = 'approved', updatedAt = ? WHERE id = ?`,
-          [new Date(), `stripe_${paymentIntent.id}`]
+          `UPDATE recharge_requests
+           SET
+             status = 'approved',
+             stripePaymentIntentId = ?,
+             stripeChargeId = ?,
+             stripeBalanceTransactionId = ?,
+             stripeFeeAmount = ?,
+             stripeNetAmount = ?,
+             updatedAt = ?
+           WHERE id = ?`,
+          [
+            stripeFinancials?.stripePaymentIntentId || paymentIntent.id,
+            stripeFinancials?.stripeChargeId || null,
+            stripeFinancials?.stripeBalanceTransactionId || null,
+            stripeFinancials?.stripeFeeAmount ?? null,
+            stripeFinancials?.stripeNetAmount ?? null,
+            new Date(),
+            `stripe_${paymentIntent.id}`,
+          ]
         )
 
         console.log('[Stripe Webhook] Pagamento confirmado, aguardando confirmação do frontend:', paymentIntent.id)
@@ -351,8 +417,10 @@ export const createRechargesRouter = (pool) => {
 
         // Marcar como rejeitado
         await pool.query(
-          `UPDATE recharge_requests SET status = 'rejected', updatedAt = ? WHERE id = ?`,
-          [new Date(), `stripe_${paymentIntent.id}`]
+          `UPDATE recharge_requests
+           SET status = 'rejected', stripePaymentIntentId = ?, updatedAt = ?
+           WHERE id = ?`,
+          [paymentIntent.id, new Date(), `stripe_${paymentIntent.id}`]
         )
 
         console.log('[Stripe Webhook] Pagamento falhou:', paymentIntent.id)
@@ -408,8 +476,30 @@ export const createRechargesRouter = (pool) => {
       // Verificar o status real na Stripe (evita race condition com webhook)
       let paymentIntentStatus = 'unknown'
       try {
-        const stripePaymentIntent = await stripeInstance.paymentIntents.retrieve(paymentIntentId)
+        const stripePaymentIntent = await stripeInstance.paymentIntents.retrieve(paymentIntentId, {
+          expand: ['latest_charge.balance_transaction'],
+        })
         paymentIntentStatus = stripePaymentIntent.status
+        const stripeFinancials = extractStripeChargeFinancials(stripePaymentIntent)
+
+        await connection.query(
+          `UPDATE recharge_requests
+           SET
+             stripePaymentIntentId = ?,
+             stripeChargeId = ?,
+             stripeBalanceTransactionId = ?,
+             stripeFeeAmount = ?,
+             stripeNetAmount = ?
+           WHERE id = ?`,
+          [
+            stripeFinancials?.stripePaymentIntentId || paymentIntentId,
+            stripeFinancials?.stripeChargeId || null,
+            stripeFinancials?.stripeBalanceTransactionId || null,
+            stripeFinancials?.stripeFeeAmount ?? null,
+            stripeFinancials?.stripeNetAmount ?? null,
+            `stripe_${paymentIntentId}`,
+          ]
+        )
         console.log(`[Stripe Confirm] Status na Stripe: ${paymentIntentStatus}`)
       } catch (stripeError) {
         console.error('[Stripe Confirm] Erro ao buscar status na Stripe:', stripeError.message)

@@ -7,6 +7,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'taro-secret-key-123'
 
 export const createAuthRouter = (pool) => {
   const router = Router()
+  // Fallback temporário para taxas Stripe quando a API não retorna fee real.
+  // Mantido como constante explícita para facilitar remoção ou ajuste futuro.
+  const STRIPE_FEE_FALLBACK_RATE = 0.12
 
   // Register
   router.post('/register', async (request, response) => {
@@ -441,6 +444,9 @@ export const createAuthRouter = (pool) => {
   // Admin: métricas do dashboard
   router.get('/admin/dashboard-metrics', authenticate, authorizeAdmin, async (_request, response) => {
     try {
+      const rechargeDateExpression = 'COALESCE(updatedAt, createdAt)'
+      const payoutDateExpression = 'createdAt'
+
       const [[rechargeTotalsRow]] = await pool.query(
         `SELECT
           COALESCE(SUM(CASE WHEN status IN ('approved', 'completed') THEN amount ELSE 0 END), 0) AS totalBilled
@@ -450,6 +456,41 @@ export const createAuthRouter = (pool) => {
       const [[commissionRow]] = await pool.query(
         `SELECT COALESCE(SUM(commissionValue), 0) AS totalCommission
          FROM wallet_transactions`
+      )
+
+      const [[essentialKpisRow]] = await pool.query(
+        `SELECT
+          COALESCE(SUM(CASE
+            WHEN status IN ('approved', 'completed')
+             AND DATE(${rechargeDateExpression}) >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+            THEN amount ELSE 0 END), 0) AS vgvLast30Days,
+          COALESCE(SUM(CASE
+            WHEN status IN ('approved', 'completed')
+             AND DATE(${rechargeDateExpression}) >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+             AND method = 'card'
+            THEN COALESCE(stripeFeeAmount, ROUND(amount * ${STRIPE_FEE_FALLBACK_RATE}, 2)) ELSE 0 END), 0) AS stripeFeesLast30Days,
+          COALESCE(AVG(CASE
+            WHEN status IN ('approved', 'completed')
+             AND DATE(${rechargeDateExpression}) >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+            THEN amount ELSE NULL END), 0) AS averageRechargeTicketLast30Days,
+          COALESCE(COUNT(CASE
+            WHEN status IN ('approved', 'completed')
+             AND DATE(${rechargeDateExpression}) >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+            THEN 1 ELSE NULL END), 0) AS rechargeCountLast30Days
+         FROM recharge_requests`
+      )
+
+      const [[custodyRow]] = await pool.query(
+        `SELECT COALESCE(SUM(minutesBalance), 0) AS custodyBalance
+         FROM users
+         WHERE role = 'client'`
+      )
+
+      const [[consultantPayoutRow]] = await pool.query(
+        `SELECT COALESCE(SUM(amount), 0) AS consultantPayoutLast30Days
+         FROM wallet_transactions
+         WHERE type = 'credit'
+           AND DATE(${payoutDateExpression}) >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)`
       )
 
       const [[countsRow]] = await pool.query(
@@ -516,6 +557,15 @@ export const createAuthRouter = (pool) => {
       const totalCommission = Number(commissionRow?.totalCommission) || 0
       const currentMonthTotal = Number(monthComparisonRow?.currentMonthTotal) || 0
       const previousMonthTotal = Number(monthComparisonRow?.previousMonthTotal) || 0
+      const vgvLast30Days = Number(essentialKpisRow?.vgvLast30Days) || 0
+      const stripeFeesLast30Days = Number(essentialKpisRow?.stripeFeesLast30Days) || 0
+      const averageRechargeTicketLast30Days = Number(essentialKpisRow?.averageRechargeTicketLast30Days) || 0
+      const rechargeCountLast30Days = Number(essentialKpisRow?.rechargeCountLast30Days) || 0
+      const custodyBalance = Number(custodyRow?.custodyBalance) || 0
+      const consultantPayoutLast30Days = Number(consultantPayoutRow?.consultantPayoutLast30Days) || 0
+      const realNetProfitLast30Days = Number(
+        (vgvLast30Days - consultantPayoutLast30Days - stripeFeesLast30Days).toFixed(2),
+      )
 
       let monthOverMonthPercent = 0
       if (previousMonthTotal > 0) {
@@ -533,6 +583,13 @@ export const createAuthRouter = (pool) => {
         todayTotal: Number(monthComparisonRow?.todayTotal) || 0,
         currentMonthTotal,
         previousMonthTotal,
+        vgvLast30Days,
+        stripeFeesLast30Days,
+        custodyBalance,
+        consultantPayoutLast30Days,
+        realNetProfitLast30Days,
+        averageRechargeTicketLast30Days: Number(averageRechargeTicketLast30Days.toFixed(2)),
+        rechargeCountLast30Days,
         monthOverMonthPercent: Number(monthOverMonthPercent.toFixed(2)),
         dailyTotals: dailyRows.map((row) => ({
           label: row.day,

@@ -262,7 +262,12 @@ export const initializeSchema = async (pool) => {
       amount DECIMAL(10,2) NOT NULL,
       minutes INT NOT NULL,
       method ENUM('pix', 'card') NOT NULL,
-      status ENUM('pending', 'approved', 'completed', 'rejected') NOT NULL DEFAULT 'pending',
+      status ENUM('pending', 'processing', 'approved', 'completed', 'rejected') NOT NULL DEFAULT 'pending',
+      stripePaymentIntentId VARCHAR(80) NULL,
+      stripeChargeId VARCHAR(80) NULL,
+      stripeBalanceTransactionId VARCHAR(80) NULL,
+      stripeFeeAmount DECIMAL(10,2) NULL,
+      stripeNetAmount DECIMAL(10,2) NULL,
       createdAt DATETIME NOT NULL,
       updatedAt DATETIME NULL,
       CONSTRAINT fk_recharge_user
@@ -272,7 +277,22 @@ export const initializeSchema = async (pool) => {
   `)
 
   try {
-    await pool.query("ALTER TABLE recharge_requests MODIFY COLUMN status ENUM('pending', 'approved', 'completed', 'rejected') NOT NULL DEFAULT 'pending'")
+    await pool.query("ALTER TABLE recharge_requests MODIFY COLUMN status ENUM('pending', 'processing', 'approved', 'completed', 'rejected') NOT NULL DEFAULT 'pending'")
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE recharge_requests ADD COLUMN stripePaymentIntentId VARCHAR(80) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE recharge_requests ADD COLUMN stripeChargeId VARCHAR(80) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE recharge_requests ADD COLUMN stripeBalanceTransactionId VARCHAR(80) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE recharge_requests ADD COLUMN stripeFeeAmount DECIMAL(10,2) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE recharge_requests ADD COLUMN stripeNetAmount DECIMAL(10,2) NULL')
   } catch (e) {}
 
   await pool.query(`
