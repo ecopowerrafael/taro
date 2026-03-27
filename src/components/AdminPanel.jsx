@@ -690,7 +690,10 @@ export function AdminPanel({
                   {Number(adminDashboardStats?.consultantSharePercentLast30Days || 0).toFixed(2)}%
                 </p>
                 <p className="mt-2 text-[11px] text-orange-100/65">
-                  R$ {Number(adminDashboardStats?.consultantPayoutLast30Days || 0).toFixed(2)} repassados
+                  R$ {Number(adminDashboardStats?.consultantPayoutLast30Days || 0).toFixed(2)} repasse total
+                </p>
+                <p className="mt-1 text-[11px] text-orange-100/55">
+                  R$ {Number(adminDashboardStats?.consultantServicePayoutLast30Days || 0).toFixed(2)} em atendimento/perguntas
                 </p>
               </article>
               <article className="rounded-lg border border-lime-400/25 bg-lime-950/20 p-4">

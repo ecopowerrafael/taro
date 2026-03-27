@@ -120,6 +120,7 @@ const initialAdminDashboardStats = {
   custodyBalance: 0,
   custodyExpectedReturn: 0,
   consultantPayoutLast30Days: 0,
+  consultantServicePayoutLast30Days: 0,
   platformCommissionRealizedLast30Days: 0,
   serviceGrossUsedLast30Days: 0,
   consultantSharePercentLast30Days: 0,
@@ -636,6 +637,8 @@ export function PlatformProvider({ children }) {
         custodyBalance: Number(payload?.custodyBalance) || 0,
         custodyExpectedReturn: Number(payload?.custodyExpectedReturn) || 0,
         consultantPayoutLast30Days: Number(payload?.consultantPayoutLast30Days) || 0,
+        consultantServicePayoutLast30Days:
+          Number(payload?.consultantServicePayoutLast30Days) || 0,
         platformCommissionRealizedLast30Days:
           Number(payload?.platformCommissionRealizedLast30Days) || 0,
         serviceGrossUsedLast30Days: Number(payload?.serviceGrossUsedLast30Days) || 0,

@@ -491,11 +491,11 @@ export const createAuthRouter = (pool) => {
       const [[serviceEconomicsRow]] = await pool.query(
         `SELECT
           COALESCE(SUM(amount), 0) AS consultantPayoutLast30Days,
-          COALESCE(SUM(commissionValue), 0) AS platformCommissionRealizedLast30Days,
-          COALESCE(SUM(amount + commissionValue), 0) AS serviceGrossUsedLast30Days
+          COALESCE(SUM(CASE WHEN commissionValue IS NOT NULL THEN amount ELSE 0 END), 0) AS consultantServicePayoutLast30Days,
+          COALESCE(SUM(CASE WHEN commissionValue IS NOT NULL THEN commissionValue ELSE 0 END), 0) AS platformCommissionRealizedLast30Days,
+          COALESCE(SUM(CASE WHEN commissionValue IS NOT NULL THEN amount + commissionValue ELSE 0 END), 0) AS serviceGrossUsedLast30Days
          FROM wallet_transactions
          WHERE type = 'credit'
-           AND commissionValue IS NOT NULL
            AND DATE(${payoutDateExpression}) >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)`
       )
 
@@ -569,6 +569,9 @@ export const createAuthRouter = (pool) => {
       const rechargeCountLast30Days = Number(essentialKpisRow?.rechargeCountLast30Days) || 0
       const custodyBalance = Number(custodyRow?.custodyBalance) || 0
       const consultantPayoutLast30Days = Number(serviceEconomicsRow?.consultantPayoutLast30Days) || 0
+      const consultantServicePayoutLast30Days = Number(
+        serviceEconomicsRow?.consultantServicePayoutLast30Days,
+      ) || 0
       const platformCommissionRealizedLast30Days = Number(
         serviceEconomicsRow?.platformCommissionRealizedLast30Days,
       ) || 0
@@ -577,7 +580,7 @@ export const createAuthRouter = (pool) => {
         (custodyBalance * CUSTODY_EXPECTED_RETURN_RATE).toFixed(2),
       )
       const consultantSharePercentLast30Days = serviceGrossUsedLast30Days > 0
-        ? Number(((consultantPayoutLast30Days / serviceGrossUsedLast30Days) * 100).toFixed(2))
+        ? Number(((consultantServicePayoutLast30Days / serviceGrossUsedLast30Days) * 100).toFixed(2))
         : 0
       const platformSharePercentLast30Days = serviceGrossUsedLast30Days > 0
         ? Number(((platformCommissionRealizedLast30Days / serviceGrossUsedLast30Days) * 100).toFixed(2))
@@ -607,6 +610,7 @@ export const createAuthRouter = (pool) => {
         custodyBalance,
         custodyExpectedReturn,
         consultantPayoutLast30Days,
+        consultantServicePayoutLast30Days,
         platformCommissionRealizedLast30Days,
         serviceGrossUsedLast30Days,
         consultantSharePercentLast30Days,
