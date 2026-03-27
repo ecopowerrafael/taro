@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { SendHorizontal, Wallet, Lock, UserPlus, Info, XCircle } from 'lucide-react'
+import { BellRing, SendHorizontal, Wallet, Lock, UserPlus, Info, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
@@ -40,6 +40,8 @@ export function AreaConsultorPage() {
   const [rejectModal, setRejectModal] = useState(null)
   const [confirmResponseModal, setConfirmResponseModal] = useState(null)
   const [pendingStatusModal, setPendingStatusModal] = useState(false)
+  const [questionAlertVisible, setQuestionAlertVisible] = useState(true)
+  const [questionInboxModalOpen, setQuestionInboxModalOpen] = useState(false)
 
   // Polling para novas chamadas de v\u00eddeo
   useEffect(() => {
@@ -194,6 +196,18 @@ export function AreaConsultorPage() {
   const answeredRequests = questionRequests.filter(
     (request) => request.consultantId === selectedConsultantId && request.status === 'answered',
   )
+  const canAnswerQuestions =
+    isAdmin || !selectedConsultant || (selectedConsultant.status !== 'pending' && selectedConsultant.status !== 'Pendente')
+
+  useEffect(() => {
+    if (!isAdmin && pendingRequests.length > 0) {
+      setQuestionAlertVisible(true)
+    }
+
+    if (pendingRequests.length === 0) {
+      setQuestionInboxModalOpen(false)
+    }
+  }, [isAdmin, pendingRequests.length])
 
   const filteredEarnings = useMemo(() => {
     const msByFilter = {
@@ -442,6 +456,62 @@ export function AreaConsultorPage() {
     }
   }
 
+  const renderPendingRequestsList = () => (
+    <div className="grid gap-3">
+      {pendingRequests.length === 0 && (
+        <p className="rounded-lg border border-mystic-gold/25 bg-black/30 p-3 text-sm text-ethereal-silver/80">
+          Você não possui mensagens pendentes.
+        </p>
+      )}
+      {pendingRequests.map((request) => (
+        <article key={request.id} className="rounded-xl border border-mystic-gold/35 bg-black/30 p-4">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-amber-50">
+              Cliente: {request.customerName} • Pacote {request.questionCount} perguntas
+            </p>
+            <span className="text-xs text-mystic-goldSoft">Comissão estimada: R$ {(request.packagePrice * 0.7).toFixed(2)}</span>
+          </div>
+          <div className="mt-2 text-xs text-amber-100/70">
+            <p>Nascimento: {request.customerBirthDate || 'Não informado'} • Signo: {request.customerZodiac || 'Não informado'}</p>
+          </div>
+          <div className="mt-4 grid gap-4 border-t border-mystic-gold/20 pt-4">
+            {request.entries.map((entry, index) => {
+              const questionText =
+                entry.question || entry.text || (entry.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada')
+              return (
+                <div key={index} className="grid gap-2">
+                  <p className="text-sm text-amber-50">
+                    <span className="font-bold text-mystic-goldSoft">P{index + 1}: </span>
+                    {questionText}
+                  </p>
+                  <textarea
+                    placeholder={`Digite a resposta para a Pergunta ${index + 1}...`}
+                    value={responseDrafts[request.id]?.[index] ?? ''}
+                    onChange={(event) =>
+                      handleResponseChange(request.id, index, event.target.value)
+                    }
+                    className="min-h-[80px] w-full resize-y rounded-lg border border-mystic-gold/35 bg-black/35 p-3 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                  />
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => {
+                void handleSubmitResponse(request.id)
+              }}
+              className="flex items-center gap-2 rounded-lg bg-mystic-gold/90 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110"
+            >
+              <SendHorizontal size={16} />
+              Enviar Resposta
+            </button>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+
   return (
     <PageShell
       title="Área do Consultor"
@@ -487,7 +557,7 @@ export function AreaConsultorPage() {
       )}
 
       {/* Atendimento de Perguntas - Oculto se consultor pendente */}
-      {(isAdmin || !selectedConsultant || (selectedConsultant.status !== 'pending' && selectedConsultant.status !== 'Pendente')) && (
+      {canAnswerQuestions && (
         <GlassCard title="Atendimento de Perguntas" subtitle="Visualize e responda cada item enviado pelo cliente.">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             {isAdmin ? (
@@ -532,60 +602,75 @@ export function AreaConsultorPage() {
               </button>
             </div>
           </div>
-        <div className="grid gap-3">
-          {pendingRequests.length === 0 && (
-            <p className="rounded-lg border border-mystic-gold/25 bg-black/30 p-3 text-sm text-ethereal-silver/80">
-              Você não possui mensagens pendentes.
-            </p>
+          {isAdmin ? (
+            renderPendingRequestsList()
+          ) : (
+            <div className="rounded-lg border border-mystic-gold/25 bg-black/30 p-3">
+              {pendingRequests.length > 0 ? (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-amber-50">Você tem perguntas para responder.</p>
+                  <button
+                    onClick={() => {
+                      setQuestionInboxModalOpen(true)
+                      setQuestionAlertVisible(false)
+                    }}
+                    className="rounded-lg bg-mystic-gold/90 px-4 py-2 text-xs font-bold text-black transition hover:brightness-110"
+                  >
+                    Responder Agora
+                  </button>
+                </div>
+              ) : (
+                <p className="text-sm text-ethereal-silver/80">Você não possui mensagens pendentes.</p>
+              )}
+            </div>
           )}
-          {pendingRequests.map((request) => (
-            <article key={request.id} className="rounded-xl border border-mystic-gold/35 bg-black/30 p-4">
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm text-amber-50">
-                  Cliente: {request.customerName} • Pacote {request.questionCount} perguntas
-                </p>
-                <span className="text-xs text-mystic-goldSoft">Comissão estimada: R$ {(request.packagePrice * 0.7).toFixed(2)}</span>
-              </div>
-              <div className="mt-2 text-xs text-amber-100/70">
-                <p>Nascimento: {request.customerBirthDate || 'Não informado'} • Signo: {request.customerZodiac || 'Não informado'}</p>
-              </div>
-              <div className="mt-4 grid gap-4 border-t border-mystic-gold/20 pt-4">
-                {request.entries.map((entry, index) => {
-                  const questionText =
-                    entry.question || entry.text || (entry.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada')
-                  return (
-                    <div key={index} className="grid gap-2">
-                      <p className="text-sm text-amber-50">
-                        <span className="font-bold text-mystic-goldSoft">P{index + 1}: </span>
-                        {questionText}
-                      </p>
-                      <textarea
-                        placeholder={`Digite a resposta para a Pergunta ${index + 1}...`}
-                        value={responseDrafts[request.id]?.[index] ?? ''}
-                        onChange={(event) =>
-                          handleResponseChange(request.id, index, event.target.value)
-                        }
-                        className="min-h-[80px] w-full resize-y rounded-lg border border-mystic-gold/35 bg-black/35 p-3 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={() => {
-                    void handleSubmitResponse(request.id)
-                  }}
-                  className="flex items-center gap-2 rounded-lg bg-mystic-gold/90 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110"
-                >
-                  <SendHorizontal size={16} />
-                  Enviar Resposta
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
         </GlassCard>
+      )}
+
+      {!isAdmin && canAnswerQuestions && questionAlertVisible && pendingRequests.length > 0 && !questionInboxModalOpen && (
+        <div className="fixed bottom-5 right-5 z-40 w-[calc(100%-2.5rem)] max-w-sm rounded-xl border border-mystic-gold/45 bg-[#1a1028]/95 p-4 shadow-[0_0_35px_rgba(197,160,89,0.22)] backdrop-blur-sm">
+          <div className="mb-3 flex items-start gap-3">
+            <BellRing size={18} className="text-mystic-goldSoft" />
+            <div>
+              <p className="text-sm font-semibold text-amber-50">Você tem perguntas para responder</p>
+              <p className="text-xs text-amber-100/70">Há {pendingRequests.length} solicitação(ões) pendente(s).</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setQuestionInboxModalOpen(true)
+                setQuestionAlertVisible(false)
+              }}
+              className="flex-1 rounded-lg bg-mystic-gold/90 px-3 py-2 text-xs font-bold text-black transition hover:brightness-110"
+            >
+              Responder Agora
+            </button>
+            <button
+              onClick={() => setQuestionAlertVisible(false)}
+              className="rounded-lg border border-mystic-gold/35 bg-black/30 px-3 py-2 text-xs text-amber-100/80 transition hover:bg-black/50"
+            >
+              Depois
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isAdmin && questionInboxModalOpen && canAnswerQuestions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-4xl max-h-[86vh] overflow-y-auto rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h3 className="font-display text-2xl text-mystic-goldSoft">Perguntas Pendentes</h3>
+              <button
+                onClick={() => setQuestionInboxModalOpen(false)}
+                className="rounded-lg border border-mystic-gold/30 bg-black/40 px-3 py-2 text-xs text-amber-100/85 transition hover:bg-black/60"
+              >
+                Fechar
+              </button>
+            </div>
+            {renderPendingRequestsList()}
+          </div>
+        </div>
       )}
 
       {/* Editar Meu Perfil - Oculto se consultor pendente */}
