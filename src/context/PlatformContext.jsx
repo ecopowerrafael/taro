@@ -406,8 +406,15 @@ export function PlatformProvider({ children }) {
 
   const savePlatformCredentials = async (type, data) => {
     try {
-      const response = await fetch(buildApiUrl('/api/credentials'), {
-        method: 'PUT',
+      // Use PATCH para salvar credenciais individuais por tipo
+      // Use PUT para salvar tudo (compatibilidade com código antigo)
+      const method = type ? 'PATCH' : 'PUT'
+      const url = type ? buildApiUrl(`/api/credentials/${type}`) : buildApiUrl('/api/credentials')
+
+      console.log(`[PlatformContext] Salvando ${type || 'todas'} credenciais via ${method}`, data)
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -421,12 +428,13 @@ export function PlatformProvider({ children }) {
         if (type === 'daily') setDailyCredentialsState((prev) => ({ ...prev, ...data }))
         if (type === 'pix') setMpCredentialsState((prev) => ({ ...prev, ...data }))
         if (type === 'stripe') setStripeCredentialsState((prev) => ({ ...prev, ...data }))
-        setSystemNotice('Configurações salvas com sucesso.')
+        if (type === 'smtp') setMpCredentialsState((prev) => ({ ...prev, ...data }))
+        setSystemNotice(`Configurações de ${type || 'credenciais'} salvas com sucesso.`)
         return { ok: true }
       } else {
         const errData = await response.json().catch(() => ({ message: 'Resposta inválida do servidor (HTML ou Vazio)' }))
         const errorMsg = errData.message || 'Erro ao salvar credenciais.'
-        console.error('[PlatformContext] Erro no salvamento:', errData)
+        console.error(`[PlatformContext] Erro no salvamento de ${type}:`, errData)
         alert(`Falha no salvamento: ${errorMsg}\n\nDetalhes: ${JSON.stringify(errData, null, 2)}`)
         setSystemNotice(errorMsg)
         return { ok: false }

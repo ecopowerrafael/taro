@@ -94,6 +94,25 @@ export function AdminPanel({
     smtpPass: '',
     smtpFrom: '',
   })
+  const [mercadoPagoAvailable, setMercadoPagoAvailable] = useState(false)
+  const [paymentMethodsChecked, setPaymentMethodsChecked] = useState(false)
+
+  // Verificar disponibilidade de métodos de pagamento
+  useEffect(() => {
+    const checkPaymentMethods = async () => {
+      try {
+        const response = await fetch('/api/credentials/info/payment-methods')
+        if (response.ok) {
+          const data = await response.json()
+          setMercadoPagoAvailable(data.mercadoPagoAvailable || false)
+        }
+      } catch (error) {
+        console.warn('[AdminPanel] Erro ao verificar métodos de pagamento:', error)
+      }
+      setPaymentMethodsChecked(true)
+    }
+    checkPaymentMethods()
+  }, [])
 
   useEffect(() => {
     if (mpCredentials || dailyCredentials || stripeCredentials) {
@@ -706,40 +725,61 @@ export function AdminPanel({
 
         {activeTab === 'credenciais' && (
           <div className="grid gap-6">
+            {/* Seção de informações de métodos de pagamento */}
             <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-3 flex items-start gap-2">
+                <Info size={18} className="text-mystic-gold mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-display text-xl text-mystic-goldSoft">Mercado Pago</h3>
-                  <p className="text-xs text-ethereal-silver/70">Credenciais para pagamentos com cartão.</p>
+                  <h3 className="font-display text-sm text-mystic-goldSoft">Meios de Pagamento Disponíveis</h3>
+                  <div className="mt-2 text-xs text-ethereal-silver/75 space-y-1">
+                    <p>✅ <strong>Stripe:</strong> Disponível (Cartões de Crédito)</p>
+                    {mercadoPagoAvailable ? (
+                      <p>✅ <strong>Mercado Pago:</strong> Disponível (Cartões + Boleto)</p>
+                    ) : (
+                      <p>❌ <strong>Mercado Pago:</strong> Não instalado (instale npm package para ativar)</p>
+                    )}
+                  </div>
                 </div>
-                <button
-                  onClick={() => handleSavePartial('mp')}
-                  className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110"
-                >
-                  <Save size={14} />
-                  Salvar MP
-                </button>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="grid gap-1.5 text-sm text-amber-100/75">
-                  Public Key
-                  <input
-                    value={credentialsDraft.mpPublicKey}
-                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, mpPublicKey: e.target.value })}
-                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
-                  />
-                </label>
-                <label className="grid gap-1.5 text-sm text-amber-100/75">
-                  Access Token
-                  <input
-                    type="password"
-                    value={credentialsDraft.mpAccessToken}
-                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, mpAccessToken: e.target.value })}
-                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
-                  />
-                </label>
               </div>
             </section>
+
+            {/* Seção Mercado Pago - condicionalizada */}
+            {mercadoPagoAvailable && (
+              <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-display text-xl text-mystic-goldSoft">Mercado Pago</h3>
+                    <p className="text-xs text-ethereal-silver/70">Credenciais para pagamentos com cartão.</p>
+                  </div>
+                  <button
+                    onClick={() => handleSavePartial('mp')}
+                    className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110"
+                  >
+                    <Save size={14} />
+                    Salvar MP
+                  </button>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="grid gap-1.5 text-sm text-amber-100/75">
+                    Public Key
+                    <input
+                      value={credentialsDraft.mpPublicKey}
+                      onChange={(e) => setCredentialsDraft({ ...credentialsDraft, mpPublicKey: e.target.value })}
+                      className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                    />
+                  </label>
+                  <label className="grid gap-1.5 text-sm text-amber-100/75">
+                    Access Token
+                    <input
+                      type="password"
+                      value={credentialsDraft.mpAccessToken}
+                      onChange={(e) => setCredentialsDraft({ ...credentialsDraft, mpAccessToken: e.target.value })}
+                      className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                    />
+                  </label>
+                </div>
+              </section>
+            )}
 
             <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
               <div className="mb-4 flex items-center justify-between">

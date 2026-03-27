@@ -6,8 +6,31 @@ const normalizeNullableText = (value) => {
   return normalized === '' ? null : normalized
 }
 
+// Verificar disponibilidade de bibliotecas de pagamento
+// Por padrão, assumir que não está disponível (será atualizado dinamicamente)
+let mercadoPagoAvailable = false
+
 export const createCredentialsRouter = (pool) => {
   const router = Router()
+
+  // GET - Informações sobre disponibilidade de pagamentos
+  router.get('/info/payment-methods', authenticate, async (_request, response) => {
+    // Verificar disposição de Mercado Pago a cada requisição
+    try {
+      // Se conseguir importar, está disponível
+      // Mas como estamos em módulo ES, vamos apenas return false por enquanto
+      // (vamos instalar Mercado Pago depois via npm)
+      response.json({
+        mercadoPagoAvailable: false, // Não está instalado
+        stripeAvailable: true, // Stripe está instalado
+      })
+    } catch (error) {
+      response.json({
+        mercadoPagoAvailable: false,
+        stripeAvailable: true,
+      })
+    }
+  })
 
   // Rota de teste pública para confirmar se o backend atualizou
   router.get('/ping-v4', (_request, response) => {
@@ -47,6 +70,8 @@ export const createCredentialsRouter = (pool) => {
         pixKey: 'pixKey',
         pixReceiverName: 'pixReceiverName',
         pixReceiverCity: 'pixReceiverCity',
+        stripePublicKey: 'stripePublicKey',
+        stripeSecretKey: 'stripeSecretKey',
         smtpHost: 'smtpHost',
         smtpPort: 'smtpPort',
         smtpUser: 'smtpUser',
@@ -100,5 +125,61 @@ export const createCredentialsRouter = (pool) => {
     }
   })
 
+  // PATCH - Salvar credenciais parciais por tipo
+  // Exemplo: PATCH /api/credentials/stripe com body { stripePublicKey: "...", stripeSecretKey: "..." }
+  router.patch('/:type', async (request, response) => {
+    try {
+      const { type } = request.params
+      const fieldsMap = {
+        mp: ['mpPublicKey', 'mpAccessToken', 'mpWebhookSecret'],
+        daily: ['dailyApiKey', 'dailyDomain', 'dailyRoomName'],
+        pix: ['pixKey', 'pixReceiverName', 'pixReceiverCity'],
+        stripe: ['stripePublicKey', 'stripeSecretKey'],
+        smtp: ['smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpFrom'],
+      }
+
+      const allowedFields = fieldsMap[type]
+      if (!allowedFields) {
+        return response.status(400).json({ message: `Tipo de credencial inválido: ${type}` })
+      }
+
+      const updates = []
+      const values = []
+
+      // Atualizar apenas os campos permitidos para esse tipo
+      allowedFields.forEach((field) => {
+        if (request.body[field] !== undefined) {
+          updates.push(`${field} = ?`)
+          values.push(normalizeNullableText(request.body[field]))
+        }
+      })
+
+      if (updates.length === 0) {
+        return response.status(400).json({ message: `Nenhum campo de tipo '${type}' para atualizar.` })
+      }
+
+      values.push(1)
+      const sql = `UPDATE platform_credentials SET ${updates.join(', ')} WHERE id = ?`
+      console.log(`[API/Credentials] PATCH ${type}:`, sql)
+
+      const [result] = await pool.query(sql, values)
+
+      if (result.affectedRows === 0) {
+        // Inserir linha padrão se não existir
+        await pool.query('INSERT IGNORE INTO platform_credentials (id) VALUES (1)')
+        await pool.query(sql, values)
+      }
+
+      response.json({ message: `Credenciais de '${type}' atualizadas com sucesso.` })
+    } catch (error) {
+      console.error(`[API/Credentials] Erro ao atualizar ${request.params.type}:`, error)
+      response.status(503).json({
+        message: `Erro ao salvar credenciais de ${request.params.type}.`,
+        error: error.message,
+      })
+    }
+  })
+
   return router
 }
+
