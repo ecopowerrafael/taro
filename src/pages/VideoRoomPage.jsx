@@ -22,6 +22,16 @@ const getRealtimeServerUrl = () => {
   }
 }
 
+const buildApiUrl = (resource) => {
+  if (!API_BASE_URL) {
+    return resource
+  }
+
+  const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL
+  const path = resource.startsWith('/') ? resource : `/${resource}`
+  return `${base}${path}`
+}
+
 export function VideoRoomPage() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
@@ -35,6 +45,7 @@ export function VideoRoomPage() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [endModal, setEndModal] = useState(null)
   const [reviewModal, setReviewModal] = useState({ isOpen: false, consultantId: '', consultantName: '', sessionId: '' })
+  const [presenceState, setPresenceState] = useState({ customerOnline: false, consultantOnline: false })
   const callFrameRef = useRef(null)
   const containerRef = useRef(null)
   const socketRef = useRef(null)
@@ -54,7 +65,7 @@ export function VideoRoomPage() {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const res = await fetch(`/api/video-sessions/${sessionId}`, {
+        const res = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}`), {
           headers: { Authorization: `Bearer ${token}` }
         })
         const data = await res.json()
@@ -63,6 +74,10 @@ export function VideoRoomPage() {
         console.log('[VideoRoomPage] fetchSession - dailyToken:', data.dailyToken ? `${data.dailyToken.substring(0, 20)}...` : 'UNDEFINED')
         console.log('[VideoRoomPage] fetchSession - isConsultant:', data.isConsultant)
         console.log('[VideoRoomPage] fetchSession - pricePerMinute:', data.pricePerMinute)
+        setPresenceState({
+          customerOnline: Boolean(data.customerOnline),
+          consultantOnline: Boolean(data.consultantOnline),
+        })
         setSession(data)
       } catch (err) {
         setError(err.message || 'Erro ao carregar a sala.')
@@ -78,15 +93,34 @@ export function VideoRoomPage() {
 
   // ✅ AUTO-JOIN para Consultor - ingressar automaticamente na sala
   useEffect(() => {
-    if (session && session.isConsultant && !isCallActive && !joinInProgressRef.current) {
+    if (
+      session &&
+      session.isConsultant &&
+      !isCallActive &&
+      !joinInProgressRef.current &&
+      session.status === 'waiting' &&
+      presenceState.customerOnline
+    ) {
       console.log('[VideoRoomPage] Auto-iniciando para consultor')
       handleStartByConsultant()
     }
-  }, [session?.isConsultant, isCallActive])
+  }, [session, isCallActive, presenceState.customerOnline])
 
   // Setup Socket.io para sincronizar encerramento de chamada
   useEffect(() => {
     socketRef.current = io(getRealtimeServerUrl())
+
+    socketRef.current.on('session_presence_update', (payload) => {
+      if (payload?.sessionId !== sessionId) {
+        return
+      }
+
+      const members = Array.isArray(payload.members) ? payload.members : []
+      setPresenceState({
+        customerOnline: members.some((member) => member.role === 'customer'),
+        consultantOnline: members.some((member) => member.role === 'consultant'),
+      })
+    })
 
     return () => {
       console.log('[VideoRoomPage] Desconectando socket.io')
@@ -95,6 +129,48 @@ export function VideoRoomPage() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (!socketRef.current || !socketRef.current.connected || !sessionId || !profile?.id || !session) {
+      return undefined
+    }
+
+    const payload = {
+      sessionId,
+      userId: profile.id,
+      role: session.isConsultant ? 'consultant' : 'customer',
+    }
+
+    socketRef.current.emit('join_session_presence', payload)
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.emit('leave_session_presence', {
+          sessionId,
+          userId: profile.id,
+        })
+      }
+    }
+  }, [profile?.id, session, sessionId])
+
+  useEffect(() => {
+    if (!socketRef.current || !sessionId || !profile?.id || !session) {
+      return undefined
+    }
+
+    const emitPresence = () => {
+      socketRef.current.emit('join_session_presence', {
+        sessionId,
+        userId: profile.id,
+        role: session.isConsultant ? 'consultant' : 'customer',
+      })
+    }
+
+    socketRef.current.on('connect', emitPresence)
+    return () => {
+      socketRef.current?.off('connect', emitPresence)
+    }
+  }, [profile?.id, session, sessionId])
 
   // Atualizar listener do socket.io quando billing mudar (para capturar elapsedSeconds correto)
   useEffect(() => {
@@ -152,7 +228,7 @@ export function VideoRoomPage() {
       
       // In a real prod environment we'd use WebSockets. Here we poll status every 10s
       try {
-        const res = await fetch(`/api/video-sessions/${sessionId}`, {
+        const res = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}`), {
           headers: { Authorization: `Bearer ${token}` }
         })
         const data = await res.json()
@@ -209,11 +285,16 @@ export function VideoRoomPage() {
     
     // Marcar sessão como ativa no DB se ainda não estiver
     if (sessionData.status !== 'active') {
-      await fetch(`/api/video-sessions/${sessionId}/status`, {
+      const activateResponse = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: 'active' })
       })
+
+      if (!activateResponse.ok) {
+        const activatePayload = await activateResponse.json().catch(() => ({}))
+        throw new Error(activatePayload.message || 'A sessão não pode ser iniciada agora.')
+      }
     }
 
     // Usar createCallObject ao invés de createFrame para controle 100% via código
@@ -690,20 +771,40 @@ export function VideoRoomPage() {
 
   const handleStartByConsultant = async () => {
     callAlreadyEndedRef.current = false // Reset para nova sessão
-    setIsCallActive(true)
     
     try {
       // Refetch session para garantir dados atualizados, especialmente pricePerMinute
-      const res = await fetch(`/api/video-sessions/${sessionId}`, {
+      const res = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}`), {
         headers: { Authorization: `Bearer ${token}` }
       })
       const freshSession = await res.json()
+
+      if (!res.ok) {
+        throw new Error(freshSession.message || 'Erro ao carregar o estado da sessão.')
+      }
+
+      setPresenceState({
+        customerOnline: Boolean(freshSession.customerOnline),
+        consultantOnline: Boolean(freshSession.consultantOnline),
+      })
+
+      if (['cancelled', 'rejected', 'finished'].includes(freshSession.status)) {
+        setSystemNotice('O cliente cancelou ou a chamada já foi encerrada. Não é possível iniciar o atendimento.')
+        navigate('/area-consultor')
+        return
+      }
+
+      if (!freshSession.customerOnline) {
+        setSystemNotice('O cliente ainda não está online na sala. Aguarde antes de iniciar.')
+        return
+      }
       
       console.log('[VideoRoomPage] Consultor iniciando. freshSession:', freshSession)
       console.log('[VideoRoomPage] Consultor - roomUrl:', freshSession.roomUrl)
       console.log('[VideoRoomPage] Consultor - dailyToken:', freshSession.dailyToken ? `${freshSession.dailyToken.substring(0, 20)}...` : 'UNDEFINED')
       
       if (freshSession) {
+        setIsCallActive(true)
         // Chamando joinCall, que agora cuida de iniciar o billing APÓS conexão bem-sucedida
         joinCall(freshSession)
       }
@@ -797,7 +898,7 @@ export function VideoRoomPage() {
 
     // Salvar sessão com duração e earnings
     try {
-      const finishResponse = await fetch(`/api/video-sessions/${sessionId}/finish`, {
+      const finishResponse = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/finish`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ 
@@ -844,7 +945,7 @@ export function VideoRoomPage() {
   const handleCancelWaiting = async () => {
     setShowCancelConfirm(false)
     try {
-      await fetch(`/api/video-sessions/${sessionId}/status`, {
+      await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: 'cancelled' })
@@ -947,7 +1048,9 @@ export function VideoRoomPage() {
               </h2>
               <p className="max-w-md text-amber-100/70">
                 {session.isConsultant 
-                  ? 'Entrando na sala automaticamente...'
+                  ? (presenceState.customerOnline
+                      ? 'Cliente online detectado. Entrando na sala e validando a sessão.'
+                      : 'Aguardando o cliente ficar online na sala para liberar o atendimento.')
                   : 'Sua sala já foi criada e o consultor foi notificado por e-mail e painel. Aguarde que estamos chamando o Consultor para lhe atender.'}
               </p>
               

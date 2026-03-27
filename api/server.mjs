@@ -54,6 +54,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const app = express()
 const httpServer = createServer(app)
+const sessionPresence = new Map()
 const io = new Server(httpServer, {
   cors: {
     origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
@@ -65,6 +66,7 @@ const io = new Server(httpServer, {
 app.set('io', io)
 app.set('webpush', webpush)
 app.set('pushEnabled', pushEnabled)
+app.set('sessionPresence', sessionPresence)
 
 const initialCorsOptions = {
   origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
@@ -83,10 +85,65 @@ app.get('/api/push/public-key', (req, res) => {
 
 // Lógica de Sockets para notificações em tempo real
 io.on('connection', (socket) => {
+  socket.data.sessionPresenceKeys = new Set()
+
+  const addPresence = ({ sessionId, userId, role }) => {
+    if (!sessionId || !userId) {
+      return
+    }
+
+    const key = String(sessionId)
+    const current = sessionPresence.get(key) || new Map()
+    current.set(String(userId), {
+      userId: String(userId),
+      role: role || 'unknown',
+      connectedAt: Date.now(),
+      socketId: socket.id,
+    })
+    sessionPresence.set(key, current)
+    socket.data.sessionPresenceKeys.add(key)
+  }
+
+  const removePresence = (sessionId, userId) => {
+    if (!sessionId || !userId) {
+      return
+    }
+
+    const key = String(sessionId)
+    const current = sessionPresence.get(key)
+    if (!current) {
+      return
+    }
+
+    current.delete(String(userId))
+    if (current.size === 0) {
+      sessionPresence.delete(key)
+    }
+    socket.data.sessionPresenceKeys.delete(key)
+  }
+
   // Consultor entra na sua própria sala privada para receber notificações
   socket.on('join_consultant_room', (consultantId) => {
     socket.join(`consultant_${consultantId}`)
     console.log(`[Socket] Consultor ${consultantId} conectou e entrou na sala.`)
+  })
+
+  socket.on('join_session_presence', ({ sessionId, userId, role }) => {
+    addPresence({ sessionId, userId, role })
+    socket.join(`presence_${sessionId}`)
+    io.to(`presence_${sessionId}`).emit('session_presence_update', {
+      sessionId,
+      members: Array.from(sessionPresence.get(String(sessionId))?.values() || []),
+    })
+  })
+
+  socket.on('leave_session_presence', ({ sessionId, userId }) => {
+    removePresence(sessionId, userId)
+    socket.leave(`presence_${sessionId}`)
+    io.to(`presence_${sessionId}`).emit('session_presence_update', {
+      sessionId,
+      members: Array.from(sessionPresence.get(String(sessionId))?.values() || []),
+    })
   })
 
   // Sincronizar encerramento de videochamada entre usuário e consultor
@@ -103,7 +160,27 @@ io.on('connection', (socket) => {
   })
 
   socket.on('disconnect', () => {
-    // console.log('[Socket] Cliente desconectado')
+    socket.data.sessionPresenceKeys?.forEach((sessionId) => {
+      const current = sessionPresence.get(sessionId)
+      if (!current) {
+        return
+      }
+
+      Array.from(current.values()).forEach((member) => {
+        if (member.socketId === socket.id) {
+          current.delete(member.userId)
+        }
+      })
+
+      if (current.size === 0) {
+        sessionPresence.delete(sessionId)
+      } else {
+        io.to(`presence_${sessionId}`).emit('session_presence_update', {
+          sessionId,
+          members: Array.from(current.values()),
+        })
+      }
+    })
   })
 })
 

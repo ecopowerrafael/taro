@@ -9,6 +9,45 @@ export const createVideoSessionsRouter = (pool) => {
 
   const roundCurrency = (value) => Number((Number(value) || 0).toFixed(2))
 
+  const resolveSessionActors = async ({ pool, sessionId, userId, userEmail }) => {
+    const [sessions] = await pool.query(
+      `
+        SELECT vs.*, u.name as userName, c.name as consultantName, c.pricePerMinute
+        FROM video_sessions vs
+        JOIN users u ON vs.userId = u.id
+        JOIN consultants c ON vs.consultantId = c.id
+        WHERE vs.id = ?
+      `,
+      [sessionId],
+    )
+
+    if (!sessions.length) {
+      return { session: null, isCustomer: false, isConsultant: false, consultantUserId: null, consultantEmail: null }
+    }
+
+    const session = sessions[0]
+    const [cRows] = await pool.query('SELECT userId, email FROM consultants WHERE id = ?', [session.consultantId])
+    const consultantUserId = cRows[0]?.userId || null
+    const consultantEmail = cRows[0]?.email || null
+
+    const isCustomer = session.userId === userId
+    const isConsultant =
+      consultantUserId === userId ||
+      Boolean(consultantEmail && userEmail && consultantEmail.toLowerCase() === userEmail.toLowerCase())
+
+    return { session, isCustomer, isConsultant, consultantUserId, consultantEmail }
+  }
+
+  const getSessionPresenceSnapshot = (request, sessionId) => {
+    const sessionPresence = request.app.get('sessionPresence')
+    const members = Array.from(sessionPresence?.get(String(sessionId))?.values() || [])
+    return {
+      members,
+      customerOnline: members.some((member) => member.role === 'customer'),
+      consultantOnline: members.some((member) => member.role === 'consultant'),
+    }
+  }
+
   router.use(authenticate)
 
   router.post('/', async (request, response) => {
@@ -230,35 +269,22 @@ export const createVideoSessionsRouter = (pool) => {
     const userEmail = request.user.email
     
     try {
-      const [sessions] = await pool.query(`
-        SELECT vs.*, u.name as userName, c.name as consultantName, c.pricePerMinute
-        FROM video_sessions vs
-        JOIN users u ON vs.userId = u.id
-        JOIN consultants c ON vs.consultantId = c.id
-        WHERE vs.id = ?
-      `, [sessionId])
+      const { session, isCustomer, isConsultant } = await resolveSessionActors({
+        pool,
+        sessionId,
+        userId,
+        userEmail,
+      })
 
-      if (sessions.length === 0) {
+      if (!session) {
         return response.status(404).json({ message: 'Sessão não encontrada.' })
       }
-
-      const session = sessions[0]
-      
-      // Verifica se o usuário atual é o cliente ou o consultor da sala
-      // Como o consultor também tem uma conta de user, precisamos verificar pelo user.id ou consultor.userId
-      // Vamos buscar o userId atrelado ao consultantId
-      const [cRows] = await pool.query('SELECT userId, email FROM consultants WHERE id = ?', [session.consultantId])
-      const consultantUserId = cRows[0]?.userId
-      const consultantEmail = cRows[0]?.email
-
-      const isCustomer = session.userId === userId
-      const isConsultant =
-        consultantUserId === userId ||
-        Boolean(consultantEmail && userEmail && consultantEmail.toLowerCase() === userEmail.toLowerCase())
 
       if (!isCustomer && !isConsultant) {
         return response.status(403).json({ message: 'Acesso negado a esta sala.' })
       }
+
+      const presence = getSessionPresenceSnapshot(request, sessionId)
 
       // Adicionamos o daily token se for uma sala privada e tivermos API key
       let dailyToken = null
@@ -330,7 +356,10 @@ export const createVideoSessionsRouter = (pool) => {
         consultantId: session.consultantId,
         consultantName: session.consultantName,
         isConsultant,
-        dailyToken
+        dailyToken,
+        customerOnline: presence.customerOnline,
+        consultantOnline: presence.consultantOnline,
+        presenceMembers: presence.members,
       })
     } catch (error) {
       console.error('Erro ao buscar sessão:', error)
@@ -342,12 +371,52 @@ export const createVideoSessionsRouter = (pool) => {
   router.patch('/:sessionId/status', async (request, response) => {
     const { sessionId } = request.params
     const { status } = request.body
+    const userId = request.user.id
+    const userEmail = request.user.email
 
     if (!['active', 'finished', 'cancelled', 'rejected'].includes(status)) {
       return response.status(400).json({ message: 'Status inválido.' })
     }
 
     try {
+      const { session, isCustomer, isConsultant } = await resolveSessionActors({
+        pool,
+        sessionId,
+        userId,
+        userEmail,
+      })
+
+      if (!session) {
+        return response.status(404).json({ message: 'Sessão não encontrada.' })
+      }
+
+      if (!isCustomer && !isConsultant) {
+        return response.status(403).json({ message: 'Acesso negado a esta sala.' })
+      }
+
+      if (status === 'active') {
+        if (!isConsultant) {
+          return response.status(403).json({ message: 'Somente o consultor pode iniciar o atendimento.' })
+        }
+
+        if (session.status !== 'waiting') {
+          return response.status(409).json({ message: 'A sessão não está mais aguardando atendimento.', currentStatus: session.status })
+        }
+
+        const presence = getSessionPresenceSnapshot(request, sessionId)
+        if (!presence.customerOnline) {
+          return response.status(409).json({
+            message: 'O cliente não está online nesta sala ou já cancelou a chamada.',
+            currentStatus: session.status,
+            customerOnline: false,
+          })
+        }
+      }
+
+      if ((status === 'cancelled' || status === 'rejected') && session.status !== 'waiting') {
+        return response.status(409).json({ message: 'A sessão já foi iniciada ou encerrada.', currentStatus: session.status })
+      }
+
       const timeField = status === 'active' ? 'startedAt' : 'finishedAt'
       await pool.query(`UPDATE video_sessions SET status = ?, ${timeField} = NOW() WHERE id = ?`, [status, sessionId])
       response.json({ ok: true })
@@ -380,6 +449,11 @@ export const createVideoSessionsRouter = (pool) => {
       }
 
       const session = sessions[0]
+
+      if (!session.startedAt || session.status !== 'active') {
+        await connection.rollback()
+        return response.status(409).json({ message: 'A chamada não foi efetivamente iniciada. Nada a cobrar.' })
+      }
 
       // Idempotência: evita débito/crédito duplicado quando os dois lados encerram quase juntos.
       if (session.status === 'finished') {
