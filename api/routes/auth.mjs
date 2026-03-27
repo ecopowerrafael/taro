@@ -10,8 +10,7 @@ export const createAuthRouter = (pool) => {
   // Fallback temporário para taxas Stripe quando a API não retorna fee real.
   // Mantido como constante explícita para facilitar remoção ou ajuste futuro.
   const STRIPE_FEE_FALLBACK_RATE = 0.12
-  // Regra de negócio: sobre o saldo em custódia, projetamos 30% de retorno
-  // para a plataforma quando esse saldo for consumido em consultas.
+  // Regra de negócio para previsão de potencial de monetização da custódia.
   const CUSTODY_EXPECTED_RETURN_RATE = 0.3
 
   // Register
@@ -489,10 +488,14 @@ export const createAuthRouter = (pool) => {
          WHERE role = 'client'`
       )
 
-      const [[consultantPayoutRow]] = await pool.query(
-        `SELECT COALESCE(SUM(amount), 0) AS consultantPayoutLast30Days
+      const [[serviceEconomicsRow]] = await pool.query(
+        `SELECT
+          COALESCE(SUM(amount), 0) AS consultantPayoutLast30Days,
+          COALESCE(SUM(commissionValue), 0) AS platformCommissionRealizedLast30Days,
+          COALESCE(SUM(amount + commissionValue), 0) AS serviceGrossUsedLast30Days
          FROM wallet_transactions
          WHERE type = 'credit'
+           AND commissionValue IS NOT NULL
            AND DATE(${payoutDateExpression}) >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)`
       )
 
@@ -565,18 +568,22 @@ export const createAuthRouter = (pool) => {
       const averageRechargeTicketLast30Days = Number(essentialKpisRow?.averageRechargeTicketLast30Days) || 0
       const rechargeCountLast30Days = Number(essentialKpisRow?.rechargeCountLast30Days) || 0
       const custodyBalance = Number(custodyRow?.custodyBalance) || 0
-      const consultantPayoutLast30Days = Number(consultantPayoutRow?.consultantPayoutLast30Days) || 0
+      const consultantPayoutLast30Days = Number(serviceEconomicsRow?.consultantPayoutLast30Days) || 0
+      const platformCommissionRealizedLast30Days = Number(
+        serviceEconomicsRow?.platformCommissionRealizedLast30Days,
+      ) || 0
+      const serviceGrossUsedLast30Days = Number(serviceEconomicsRow?.serviceGrossUsedLast30Days) || 0
       const custodyExpectedReturn = Number(
         (custodyBalance * CUSTODY_EXPECTED_RETURN_RATE).toFixed(2),
       )
+      const consultantSharePercentLast30Days = serviceGrossUsedLast30Days > 0
+        ? Number(((consultantPayoutLast30Days / serviceGrossUsedLast30Days) * 100).toFixed(2))
+        : 0
+      const platformSharePercentLast30Days = serviceGrossUsedLast30Days > 0
+        ? Number(((platformCommissionRealizedLast30Days / serviceGrossUsedLast30Days) * 100).toFixed(2))
+        : 0
       const realNetProfitLast30Days = Number(
-        (
-          vgvLast30Days -
-          consultantPayoutLast30Days -
-          stripeFeesLast30Days -
-          custodyBalance +
-          custodyExpectedReturn
-        ).toFixed(2),
+        (platformCommissionRealizedLast30Days - stripeFeesLast30Days).toFixed(2),
       )
 
       let monthOverMonthPercent = 0
@@ -600,6 +607,10 @@ export const createAuthRouter = (pool) => {
         custodyBalance,
         custodyExpectedReturn,
         consultantPayoutLast30Days,
+        platformCommissionRealizedLast30Days,
+        serviceGrossUsedLast30Days,
+        consultantSharePercentLast30Days,
+        platformSharePercentLast30Days,
         realNetProfitLast30Days,
         averageRechargeTicketLast30Days: Number(averageRechargeTicketLast30Days.toFixed(2)),
         rechargeCountLast30Days,

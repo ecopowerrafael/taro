@@ -663,7 +663,7 @@ export function AdminPanel({
                   R$ {Number(adminDashboardStats?.realNetProfitLast30Days || 0).toFixed(2)}
                 </p>
                 <p className="mt-2 text-[11px] text-amber-100/65">
-                  Desconta custódia e considera retorno projetado de 30%
+                  Comissão realizada em atendimentos - taxas Stripe
                 </p>
               </article>
               <article className="rounded-lg border border-violet-400/25 bg-violet-950/20 p-4">
@@ -673,6 +673,33 @@ export function AdminPanel({
                 </p>
                 <p className="mt-2 text-[11px] text-violet-100/55">
                   {Number(adminDashboardStats?.rechargeCountLast30Days || 0)} recargas aprovadas
+                </p>
+              </article>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <article className="rounded-lg border border-cyan-400/25 bg-cyan-950/20 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/70">Total gasto em atendimento + perguntas (30 dias)</p>
+                <p className="mt-1 font-display text-2xl text-cyan-200">
+                  R$ {Number(adminDashboardStats?.serviceGrossUsedLast30Days || 0).toFixed(2)}
+                </p>
+              </article>
+              <article className="rounded-lg border border-orange-400/25 bg-orange-950/20 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-orange-100/70">% paga aos consultores (30 dias)</p>
+                <p className="mt-1 font-display text-2xl text-orange-200">
+                  {Number(adminDashboardStats?.consultantSharePercentLast30Days || 0).toFixed(2)}%
+                </p>
+                <p className="mt-2 text-[11px] text-orange-100/65">
+                  R$ {Number(adminDashboardStats?.consultantPayoutLast30Days || 0).toFixed(2)} repassados
+                </p>
+              </article>
+              <article className="rounded-lg border border-lime-400/25 bg-lime-950/20 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-lime-100/70">% recebida pela plataforma (30 dias)</p>
+                <p className="mt-1 font-display text-2xl text-lime-200">
+                  {Number(adminDashboardStats?.platformSharePercentLast30Days || 0).toFixed(2)}%
+                </p>
+                <p className="mt-2 text-[11px] text-lime-100/65">
+                  R$ {Number(adminDashboardStats?.platformCommissionRealizedLast30Days || 0).toFixed(2)} de comissão
                 </p>
               </article>
             </div>
