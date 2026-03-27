@@ -89,9 +89,6 @@ export const createCredentialsRouter = (pool) => {
       })
     }
   })
-      message: 'Se você vê isso, o backend V4 está ativo.'
-    })
-  })
 
   // GET - Qualquer usuário autenticado pode ler (não precisa ser admin)
   router.get('/', authenticate, async (_request, response) => {
