@@ -707,10 +707,16 @@ export function PlatformProvider({ children }) {
           domain: payload?.dailyDomain ?? 'demo.daily.co',
           roomName: payload?.dailyRoomName ?? 'hello',
         }
+        const stripe = {
+          publicKey: payload?.stripePublicKey ?? '',
+          secretKey: payload?.stripeSecretKey ?? '',
+        }
         mpCredentialsRef.current = mp
         dailyCredentialsRef.current = daily
+        stripeCredentialsRef.current = stripe
         setMpCredentialsState(mp)
         setDailyCredentialsState(daily)
+        setStripeCredentialsState(stripe)
       } catch {
         return
       }
