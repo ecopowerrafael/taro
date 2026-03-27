@@ -138,6 +138,9 @@ export const createCredentialsRouter = (pool) => {
         smtp: ['smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpFrom'],
       }
 
+      console.log(`[API/Credentials] PATCH request para tipo: ${type}`)
+      console.log(`[API/Credentials] Body recebido:`, request.body)
+
       const allowedFields = fieldsMap[type]
       if (!allowedFields) {
         return response.status(400).json({ message: `Tipo de credencial inválido: ${type}` })
@@ -149,8 +152,10 @@ export const createCredentialsRouter = (pool) => {
       // Atualizar apenas os campos permitidos para esse tipo
       allowedFields.forEach((field) => {
         if (request.body[field] !== undefined) {
+          const normalizedValue = normalizeNullableText(request.body[field])
           updates.push(`${field} = ?`)
-          values.push(normalizeNullableText(request.body[field]))
+          values.push(normalizedValue)
+          console.log(`[API/Credentials] Campo ${field}: ${request.body[field]?.substring?.(0, 20)}... -> ${normalizedValue ? 'VALOR' : 'NULL'}`)
         }
       })
 
@@ -160,14 +165,19 @@ export const createCredentialsRouter = (pool) => {
 
       values.push(1)
       const sql = `UPDATE platform_credentials SET ${updates.join(', ')} WHERE id = ?`
-      console.log(`[API/Credentials] PATCH ${type}:`, sql)
+      console.log(`[API/Credentials] SQL: ${sql}`)
+      console.log(`[API/Credentials] Valores:`, values.slice(0, -1).map(v => v ? '[PRESENTE]' : '[NULL]'))
 
       const [result] = await pool.query(sql, values)
+      
+      console.log(`[API/Credentials] Query result:`, { affectedRows: result.affectedRows, changedRows: result.changedRows })
 
       if (result.affectedRows === 0) {
+        console.warn(`[API/Credentials] Nenhuma linha atualizada. Tentando inserir linha padrão...`)
         // Inserir linha padrão se não existir
         await pool.query('INSERT IGNORE INTO platform_credentials (id) VALUES (1)')
-        await pool.query(sql, values)
+        const [retryResult] = await pool.query(sql, values)
+        console.log(`[API/Credentials] Retry result:`, { affectedRows: retryResult.affectedRows })
       }
 
       response.json({ 
@@ -175,7 +185,8 @@ export const createCredentialsRouter = (pool) => {
         message: `Credenciais de '${type}' atualizadas com sucesso.` 
       })
     } catch (error) {
-      console.error(`[API/Credentials] Erro ao atualizar ${request.params.type}:`, error)
+      console.error(`[API/Credentials] Erro CRÍTICO ao atualizar ${request.params.type}:`, error.message)
+      console.error(`[API/Credentials] Stack:`, error.stack)
       response.status(503).json({
         ok: false,
         message: `Erro ao salvar credenciais de ${request.params.type}.`,
