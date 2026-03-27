@@ -63,7 +63,7 @@ function StripeCheckoutForm({ packageData, onSuccess, onError }) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          amount: Math.round((packageData.promoPrice ?? packageData.price) * 100), // em centavos
+          amount: packageData.promoPrice ?? packageData.price,
           minutes: packageData.minutes,
           packageId: packageData.id,
           customerEmail: profile?.email ?? 'guest@taro.com',
