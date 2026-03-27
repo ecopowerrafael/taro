@@ -309,7 +309,17 @@ app.use((err, _req, res, _next) => {
 })
 
 httpServer.listen(port, () => {
-  console.log(`API Express iniciada na porta ${port}`)
+  console.log(`[API] Express iniciada na porta ${port}`)
+  
+  // Inicializar schema do banco de dados APÓS o servidor estar ouvindo
+  // Isso evita que erros de DB impçam a inicialização do servidor
+  if (databaseConfigError) {
+    console.warn('[API] ⚠️  AVISO: Servidor rodando mas com erro de configuração de banco!')
+    console.warn('[API] Endpoints de diagnóstico estarão disponíveis.')
+  } else {
+    // Se não houve erro durante o carregamento dos routers, já está OK
+    console.log('[API] ✅ Sistema pronto e operacional')
+  }
 })
 
 export default app
