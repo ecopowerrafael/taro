@@ -412,6 +412,7 @@ export function PlatformProvider({ children }) {
       const url = type ? buildApiUrl(`/api/credentials/${type}`) : buildApiUrl('/api/credentials')
 
       console.log(`[PlatformContext] Salvando ${type || 'todas'} credenciais via ${method}`, data)
+      console.log(`[PlatformContext] URL: ${url}, Token: ${token ? 'presente' : 'FALTANDO'}`)
 
       const response = await fetch(url, {
         method,
@@ -422,6 +423,8 @@ export function PlatformProvider({ children }) {
         body: JSON.stringify(data),
       })
 
+      console.log(`[PlatformContext] Resposta recebida: status=${response.status}, ok=${response.ok}`)
+
       if (response.ok) {
         // Atualiza o estado local dependendo do tipo (usa funções normalizadoras)
         if (type === 'mp') setMpCredentials(data)
@@ -430,6 +433,7 @@ export function PlatformProvider({ children }) {
         if (type === 'stripe') setStripeCredentials(data)
         if (type === 'smtp') setMpCredentials(data)
         setSystemNotice(`Configurações de ${type || 'credenciais'} salvas com sucesso.`)
+        console.log(`[PlatformContext] Sucesso ao salvar ${type}`)
         return { ok: true }
       } else {
         const errData = await response.json().catch(() => ({ message: 'Resposta inválida do servidor (HTML ou Vazio)' }))
