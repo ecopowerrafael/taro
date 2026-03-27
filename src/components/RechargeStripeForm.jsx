@@ -42,6 +42,12 @@ const stripeAppearance = {
   },
 }
 
+const formatCurrency = (value) =>
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(Number(value) || 0)
+
 async function createStripePaymentIntent({ packageData, profile, token }) {
   const intentResponse = await fetch('/api/recharges/stripe-payment-intent', {
     method: 'POST',
@@ -230,10 +236,11 @@ function StripeCheckoutForm({ packageData, onSuccess, onError }) {
 
       <div className="rounded-lg border border-mystic-gold/30 bg-black/30 p-3">
         <p className="text-xs text-ethereal-silver/70">
-          Você receberá <span className="font-semibold text-mystic-goldSoft">{packageData.minutes} minutos</span> por{' '}
+          Você está carregando{' '}
           <span className="font-semibold text-emerald-400">
-            R$ {(packageData.promoPrice ?? packageData.price).toFixed(2)}
-          </span>
+            {formatCurrency(packageData.promoPrice ?? packageData.price)}
+          </span>{' '}
+          em saldo para usar nas consultas.
         </p>
       </div>
 
