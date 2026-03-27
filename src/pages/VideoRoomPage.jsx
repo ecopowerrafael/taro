@@ -55,6 +55,7 @@ export function VideoRoomPage() {
   const joinInProgressRef = useRef(false) // Prevenir chamadas simultâneas de joinCall
   const wakeLockRef = useRef(null) // Screen wake lock para evitar descanso da tela
   const resizeHandlerRef = useRef(null) // Handler de resize para layout PIP
+  const billingStartedRef = useRef(false)
 
   const formatElapsed = (seconds) => {
     const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
@@ -131,29 +132,6 @@ export function VideoRoomPage() {
   }, [])
 
   useEffect(() => {
-    if (!socketRef.current || !socketRef.current.connected || !sessionId || !profile?.id || !session) {
-      return undefined
-    }
-
-    const payload = {
-      sessionId,
-      userId: profile.id,
-      role: session.isConsultant ? 'consultant' : 'customer',
-    }
-
-    socketRef.current.emit('join_session_presence', payload)
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.emit('leave_session_presence', {
-          sessionId,
-          userId: profile.id,
-        })
-      }
-    }
-  }, [profile?.id, session, sessionId])
-
-  useEffect(() => {
     if (!socketRef.current || !sessionId || !profile?.id || !session) {
       return undefined
     }
@@ -166,8 +144,13 @@ export function VideoRoomPage() {
       })
     }
 
+    emitPresence()
     socketRef.current.on('connect', emitPresence)
     return () => {
+      socketRef.current?.emit('leave_session_presence', {
+        sessionId,
+        userId: profile.id,
+      })
       socketRef.current?.off('connect', emitPresence)
     }
   }, [profile?.id, session, sessionId])
@@ -235,7 +218,6 @@ export function VideoRoomPage() {
         if (data.status === 'active' && !isCallActive) {
           // Both are ready! O consultor já iniciou!
           setIsCallActive(true) // Libera a div do iframe
-          setCallStartedAt(Date.now())
           setTimeout(() => {
             joinCall(data)
           }, 100)
@@ -259,6 +241,7 @@ export function VideoRoomPage() {
     
     // Reset flag SEMPRE para nova entrada
     callAlreadyEndedRef.current = false
+    billingStartedRef.current = false
     
     if (!containerRef.current) {
       joinInProgressRef.current = false
@@ -453,6 +436,32 @@ export function VideoRoomPage() {
       }
     }
     
+    const confirmConnectedSessionStart = async () => {
+      if (billingStartedRef.current) {
+        return
+      }
+
+      const startResponse = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'active', confirmStart: true })
+      })
+
+      if (!startResponse.ok) {
+        const startPayload = await startResponse.json().catch(() => ({}))
+        throw new Error(startPayload.message || 'A sessão não pôde ser confirmada para cobrança.')
+      }
+
+      billingStartedRef.current = true
+      billing.startSession({
+        consultantId: sessionData.consultantId,
+        consultantName: sessionData.consultantName,
+        pricePerMinute: sessionData.pricePerMinute,
+        isConsultantMode: sessionData.isConsultant
+      })
+      setCallStartedAt((prev) => prev ?? Date.now())
+    }
+
     // Handler para participant-joined e participant-updated
     const handleParticipantJoinedOrUpdated = (event) => {
       const { participant } = event
@@ -486,6 +495,13 @@ export function VideoRoomPage() {
           }
         }
       })
+
+      if (!isLocal) {
+        confirmConnectedSessionStart().catch((error) => {
+          console.error('[VideoRoomPage] Falha ao confirmar início real da sessão:', error)
+          setSystemNotice(error.message || 'Não foi possível confirmar o início da sessão.')
+        })
+      }
     }
     
     // Quando participantes forem adicionados ou atualizados
@@ -656,15 +672,6 @@ export function VideoRoomPage() {
       console.log('[VideoRoomPage] ✓ Join bem-sucedido')
       console.log('[VideoRoomPage] Join result:', joinResult)
       
-      // ✅ APENAS AGORA que o join foi bem-sucedido, iniciar o billing
-      console.log('[VideoRoomPage] Iniciando billing após join bem-sucedido. isConsultant:', sessionData.isConsultant)
-      billing.startSession({
-        consultantId: sessionData.consultantId,
-        consultantName: sessionData.consultantName,
-        pricePerMinute: sessionData.pricePerMinute,
-        isConsultantMode: sessionData.isConsultant
-      })
-      
       // Esperar um momento para que os eventos sejam disparados
       await new Promise(resolve => setTimeout(resolve, 500))
       
@@ -681,7 +688,6 @@ export function VideoRoomPage() {
       })
       
       setIsCallActive(true)
-      setCallStartedAt((prev) => prev ?? Date.now())
       
       // ═══════════════════════════════════════════════════════════════
       // 📱 ADICIONAR LISTENER DE RESIZE PARA LAYOUT PIP
@@ -771,6 +777,7 @@ export function VideoRoomPage() {
 
   const handleStartByConsultant = async () => {
     callAlreadyEndedRef.current = false // Reset para nova sessão
+    billingStartedRef.current = false
     
     try {
       // Refetch session para garantir dados atualizados, especialmente pricePerMinute
@@ -825,6 +832,7 @@ export function VideoRoomPage() {
     }
     
     callAlreadyEndedRef.current = true
+    billingStartedRef.current = false
     
     // ═══════════════════════════════════════════════════════════════
     // 🔓 LIBERAR SCREEN WAKE LOCK E REMOVER LISTENERS

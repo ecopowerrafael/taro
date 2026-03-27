@@ -370,7 +370,7 @@ export const createVideoSessionsRouter = (pool) => {
   // Atualizar status (quando ambos entram e o vídeo inicia)
   router.patch('/:sessionId/status', async (request, response) => {
     const { sessionId } = request.params
-    const { status } = request.body
+    const { status, confirmStart } = request.body
     const userId = request.user.id
     const userEmail = request.user.email
 
@@ -395,8 +395,21 @@ export const createVideoSessionsRouter = (pool) => {
       }
 
       if (status === 'active') {
+        if (confirmStart) {
+          if (session.status !== 'active') {
+            return response.status(409).json({ message: 'A sessão ainda não foi liberada para conexão.', currentStatus: session.status })
+          }
+
+          if (session.startedAt) {
+            return response.json({ ok: true, alreadyStarted: true })
+          }
+
+          await pool.query('UPDATE video_sessions SET startedAt = NOW() WHERE id = ? AND startedAt IS NULL', [sessionId])
+          return response.json({ ok: true, started: true })
+        }
+
         if (!isConsultant) {
-          return response.status(403).json({ message: 'Somente o consultor pode iniciar o atendimento.' })
+          return response.status(403).json({ message: 'Somente o consultor pode liberar o atendimento.' })
         }
 
         if (session.status !== 'waiting') {
@@ -411,6 +424,9 @@ export const createVideoSessionsRouter = (pool) => {
             customerOnline: false,
           })
         }
+
+        await pool.query('UPDATE video_sessions SET status = ?, startedAt = NULL WHERE id = ?', [status, sessionId])
+        return response.json({ ok: true, awaitingConnection: true })
       }
 
       if ((status === 'cancelled' || status === 'rejected') && session.status !== 'waiting') {
