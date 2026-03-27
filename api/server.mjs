@@ -141,15 +141,6 @@ app.get('/health-check', (_req, res) => {
   res.send('O Servidor Node.js está VIVO e REINICIADO (V9)!')
 })
 
-// Servir arquivos estáticos do Frontend
-app.use(express.static(distPath))
-
-// Middleware para diagnóstico de versão
-app.use((_req, res, next) => {
-  res.setHeader('X-Backend-Version', 'V5-STABLE')
-  next()
-})
-
 // Rota de ping pública no root
 app.get('/ping-v6', (_request, response) => {
   response.json({ 
@@ -169,7 +160,7 @@ app.get('/api/ping-v6', (_request, response) => {
   })
 })
 
-// Logger middleware
+// Logger middleware - Log all requests
 app.use((request, _response, next) => {
   console.log(`[${new Date().toISOString()}] ${request.method} ${request.url}`)
   next()
@@ -202,13 +193,28 @@ let databaseConfigError = null
 try {
   assertDatabaseConfig()
   const pool = createPool()
+  console.log('[API] Pool de conexão criado com sucesso.')
+  
   app.use('/api/auth', createAuthRouter(pool))
+  console.log('[API] Router /auth carregado.')
+  
   app.use('/api/recharges', createRechargesRouter(pool))
+  console.log('[API] Router /recharges carregado.')
+  
   app.use('/api/consultants', createConsultantsRouter(pool))
+  console.log('[API] Router /consultants carregado.')
+  
   app.use('/api/credentials', createCredentialsRouter(pool))
+  console.log('[API] Router /credentials carregado.')
+  
   app.use('/api/question-requests', createQuestionRequestsRouter(pool))
+  console.log('[API] Router /question-requests carregado.')
+  
   app.use('/api/wallets', createWalletsRouter(pool))
+  console.log('[API] Router /wallets carregado.')
+  
   app.use('/api/video-sessions', createVideoSessionsRouter(pool))
+  console.log('[API] Router /video-sessions carregado.')
 
   // Await schema initialization to avoid table not found errors
   console.log('[API] Inicializando schema...')
@@ -218,6 +224,7 @@ try {
     })
     .catch((error) => {
       databaseConfigError = error.message
+      console.error('[API] Erro ao inicializar schema:', error)
       console.error('[API] Falha crítica ao inicializar schema MySQL:', error.message)
     })
 } catch (error) {
@@ -249,6 +256,15 @@ app.get('/api/runtime-info', (_request, response) => {
   })
 })
 
+// Servir arquivos estáticos do Frontend APÓS as rotas da API
+app.use(express.static(distPath))
+
+// Middleware para diagnóstico de versão
+app.use((_req, res, next) => {
+  res.setHeader('X-Backend-Version', 'V5-STABLE')
+  next()
+})
+
 // Roteamento SPA: Qualquer rota que não comece com /api deve retornar o index.html
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
@@ -262,20 +278,13 @@ app.use((req, res, next) => {
   }
 })
 
-// Error handler global
+// Error handler global - DEVE SER O ÚLTIMO
 app.use((err, _req, res, _next) => {
   console.error('[API] Erro global capturado:', err)
   res.status(500).json({ 
     message: 'Erro interno fatal no servidor.',
     error: err.message,
-    stack: err.stack
-  })
-})
-
-app.use((error, _request, response, _next) => {
-  response.status(500).json({
-    ok: false,
-    message: error.message || 'Erro interno.',
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
   })
 })
 
