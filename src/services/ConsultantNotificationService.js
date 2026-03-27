@@ -18,6 +18,8 @@ class ConsultantNotificationService {
   constructor() {
     this.socket = null
     this.audio = null
+    this.audioContext = null
+    this.fallbackToneInterval = null
     this.wakeLock = null
     this.consultantId = null
     this.onIncomingCall = null
@@ -57,10 +59,61 @@ class ConsultantNotificationService {
   }
 
   setupAudio() {
-    // Usamos um ringtone simples que o navegador suporte (você pode colocar um mp3 real em public/ringtone.mp3)
-    // Para fallback usaremos um som gerado ou um path que podemos criar depois
-    this.audio = new Audio('/ringtone.mp3') // Crie um arquivo ringtone.mp3 na pasta public
+    this.audio = new Audio('/ringtone.mp3')
     this.audio.loop = true
+    this.audio.preload = 'auto'
+  }
+
+  async primeAudio() {
+    try {
+      if (!this.audioContext && 'AudioContext' in window) {
+        this.audioContext = new window.AudioContext()
+      }
+
+      if (this.audioContext?.state === 'suspended') {
+        await this.audioContext.resume()
+      }
+
+      if (this.audio) {
+        this.audio.muted = true
+        await this.audio.play()
+        this.audio.pause()
+        this.audio.currentTime = 0
+        this.audio.muted = false
+      }
+    } catch (error) {
+      console.warn('[ConsultantNotificationService] Não foi possível preparar áudio:', error)
+    }
+  }
+
+  startFallbackToneLoop() {
+    if (!this.audioContext || this.fallbackToneInterval) {
+      return
+    }
+
+    const playBeep = () => {
+      try {
+        const oscillator = this.audioContext.createOscillator()
+        const gainNode = this.audioContext.createGain()
+
+        oscillator.type = 'sine'
+        oscillator.frequency.setValueAtTime(880, this.audioContext.currentTime)
+        gainNode.gain.setValueAtTime(0.001, this.audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.08, this.audioContext.currentTime + 0.02)
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.35)
+
+        oscillator.connect(gainNode)
+        gainNode.connect(this.audioContext.destination)
+
+        oscillator.start()
+        oscillator.stop(this.audioContext.currentTime + 0.35)
+      } catch (error) {
+        console.warn('[ConsultantNotificationService] Falha no beep alternativo:', error)
+      }
+    }
+
+    playBeep()
+    this.fallbackToneInterval = window.setInterval(playBeep, 1200)
   }
 
   async requestWakeLock() {
@@ -106,6 +159,7 @@ class ConsultantNotificationService {
       this.socket.emit('join_consultant_room', consultantId)
       this.requestWakeLock()
       this.requestNotificationPermission()
+      this.primeAudio()
     })
 
     this.socket.on('incoming_call', (data) => {
@@ -135,46 +189,67 @@ class ConsultantNotificationService {
   playRingtone() {
     if (this.isRinging) return
     this.isRinging = true
-    
-    // Tenta tocar o áudio
-    this.audio.play().catch(e => console.error('Erro ao tocar ringtone (interação de usuário requerida):', e))
 
-    // Tenta vibrar o celular
+    this.primeAudio().finally(() => {
+      this.audio.play().catch((error) => {
+        console.warn('Erro ao tocar ringtone por arquivo, usando beep alternativo:', error)
+        this.startFallbackToneLoop()
+      })
+    })
+
     if ('vibrate' in navigator) {
-      navigator.vibrate([500, 250, 500, 250, 500, 250, 500, 250, 500]) // Padrão de chamada
+      navigator.vibrate([700, 250, 700, 250, 700, 250, 700])
     }
   }
 
   stopRingtone() {
     this.isRinging = false
-    this.audio.pause()
-    this.audio.currentTime = 0
+    if (this.audio) {
+      this.audio.pause()
+      this.audio.currentTime = 0
+    }
+    if (this.fallbackToneInterval) {
+      window.clearInterval(this.fallbackToneInterval)
+      this.fallbackToneInterval = null
+    }
     if ('vibrate' in navigator) {
-      navigator.vibrate(0) // Para a vibração
+      navigator.vibrate(0)
     }
   }
 
-  showNotification(data) {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      const notif = new Notification('Nova Chamada de Vídeo!', {
-        body: `O cliente ${data.customerName} está aguardando você na sala.`,
-        icon: '/logoastria.png',
-        vibrate: [500, 250, 500],
-        requireInteraction: true, // Mantém a notificação até ser clicada
-        tag: 'incoming_call'
-      })
+  async showNotification(data) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+      return
+    }
 
-      notif.onclick = () => {
-        window.focus() // Traz a aba pro foco
-        notif.close()
-        this.stopRingtone()
-        // Redireciona o consultor para a sala
-        window.location.href = `/sala/${data.sessionId}`
+    const notificationOptions = {
+      body: `O cliente ${data.customerName} está aguardando você na sala.`,
+      icon: '/logoastria.png',
+      badge: '/logoastria.png',
+      vibrate: [700, 250, 700],
+      requireInteraction: true,
+      tag: `incoming_call_${data.sessionId}`,
+      data: {
+        url: `/sala/${data.sessionId}`,
+      },
+    }
+
+    try {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready
+        await registration.showNotification('Nova Chamada de Vídeo!', notificationOptions)
+        return
       }
-    } else {
-      // Fallback visual se não tiver permissão
-      alert(`NOVA CHAMADA DE VÍDEO!\nO cliente ${data.customerName} está esperando.`)
+    } catch (error) {
+      console.warn('[ConsultantNotificationService] Falha ao mostrar via service worker:', error)
+    }
+
+    const notification = new Notification('Nova Chamada de Vídeo!', notificationOptions)
+    notification.onclick = () => {
+      window.focus()
+      notification.close()
       this.stopRingtone()
+      window.location.href = `/sala/${data.sessionId}`
     }
   }
 }

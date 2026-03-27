@@ -35,13 +35,13 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
   event.notification.close()
   
-  const urlToOpen = event.notification.data.url || '/'
+  const urlToOpen = new URL(event.notification.data?.url || '/', self.location.origin).href
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
       for (let i = 0; i < clientList.length; i++) {
         let client = clientList[i]
-        if (client.url.includes('appastria.online') && 'focus' in client) {
+        if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
           client.navigate(urlToOpen)
           return client.focus()
         }

@@ -264,6 +264,11 @@ export function AreaConsultorPage() {
           },
         ],
       }
+      notificationService.playRingtone()
+      void notificationService.showNotification({
+        sessionId: session.id,
+        customerName: session.userName || 'Cliente',
+      })
       addInAppNotification(notification)
       addToNotificationHistory(notification)
     })
@@ -299,6 +304,9 @@ export function AreaConsultorPage() {
             },
           },
         ],
+      }
+      if ('vibrate' in navigator) {
+        navigator.vibrate([350, 120, 350])
       }
       addInAppNotification(notification)
       addToNotificationHistory(notification)

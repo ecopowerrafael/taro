@@ -2,7 +2,35 @@ import { useEffect, useRef, useState } from 'react'
 
 export function NotificationToast ({ notifications, onClose }) {
   const audioRef = useRef(null)
+  const audioContextRef = useRef(null)
   const [displayedIds, setDisplayedIds] = useState(new Set())
+
+  const playFallbackBeep = () => {
+    try {
+      if (!audioContextRef.current && 'AudioContext' in window) {
+        audioContextRef.current = new window.AudioContext()
+      }
+
+      const audioContext = audioContextRef.current
+      if (!audioContext) {
+        return
+      }
+
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      oscillator.type = 'triangle'
+      oscillator.frequency.setValueAtTime(880, audioContext.currentTime)
+      gainNode.gain.setValueAtTime(0.001, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.06, audioContext.currentTime + 0.02)
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25)
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      oscillator.start()
+      oscillator.stop(audioContext.currentTime + 0.25)
+    } catch (error) {
+      console.warn('Não foi possível tocar beep alternativo:', error)
+    }
+  }
 
   // Reproduz som quando há notificação nova
   useEffect(() => {
@@ -16,9 +44,16 @@ export function NotificationToast ({ notifications, onClose }) {
       // Play sound
       if (audioRef.current) {
         audioRef.current.currentTime = 0
-        audioRef.current.play().catch((e) =>
-          console.warn('Não foi possível tocar áudio de notificação:', e)
-        )
+        audioRef.current.play().catch((error) => {
+          console.warn('Não foi possível tocar áudio de notificação:', error)
+          playFallbackBeep()
+        })
+      } else {
+        playFallbackBeep()
+      }
+
+      if ('vibrate' in navigator) {
+        navigator.vibrate([500, 150, 500])
       }
     }
   }, [notifications, displayedIds])
