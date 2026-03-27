@@ -148,13 +148,17 @@ export const createRechargesRouter = (pool) => {
     }
   })
 
-  // Solicitar recarga (PIX ou Card)
+  // Solicitar recarga manual (apenas PIX)
   router.post('/request', authenticate, async (request, response) => {
     const { amount, minutes, method } = request.body
     const userId = request.user.id
 
     if (!amount || !minutes || !method) {
       return response.status(400).json({ message: 'Dados incompletos para solicitação.' })
+    }
+
+    if (method !== 'pix') {
+      return response.status(400).json({ message: 'Aprovação manual disponível apenas para recarga PIX.' })
     }
 
     try {
@@ -181,7 +185,7 @@ export const createRechargesRouter = (pool) => {
         `SELECT r.*, u.name as userName, u.email as userEmail 
          FROM recharge_requests r
          JOIN users u ON r.userId = u.id
-         WHERE r.status = 'pending'
+         WHERE r.status = 'pending' AND r.method = 'pix'
          ORDER BY r.createdAt DESC`
       )
       response.json(rows)
@@ -215,6 +219,11 @@ export const createRechargesRouter = (pool) => {
       if (req.status !== 'pending') {
         await connection.rollback()
         return response.status(400).json({ message: 'Esta solicitação já foi processada.' })
+      }
+
+      if (req.method !== 'pix') {
+        await connection.rollback()
+        return response.status(400).json({ message: 'Apenas recargas PIX podem ser processadas manualmente.' })
       }
 
       // 2. Atualizar status da solicitação
@@ -284,7 +293,7 @@ export const createRechargesRouter = (pool) => {
 
       await pool.query(
         `INSERT INTO recharge_requests (id, userId, amount, minutes, method, status, createdAt)
-         VALUES (?, ?, ?, ?, 'card', 'pending', ?)`,
+         VALUES (?, ?, ?, ?, 'card', 'processing', ?)`,
         [rechargeId, userId, amountNumber, minutesNumber, createdAt]
       )
 
