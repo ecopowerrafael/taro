@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BellRing, SendHorizontal, Wallet, Lock, UserPlus, Info, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
@@ -8,6 +8,18 @@ import { NotificationBadge } from '../components/NotificationBadge'
 import { usePlatformContext } from '../context/platform-context'
 import { notificationService } from '../services/ConsultantNotificationService'
 import { canPromptPwaInstall, promptPwaInstall } from '../services/pwaService'
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
+
+const buildApiUrl = (resource) => {
+  if (!API_BASE_URL) {
+    return resource
+  }
+
+  const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL
+  const path = resource.startsWith('/') ? resource : `/${resource}`
+  return `${base}${path}`
+}
 
 export function AreaConsultorPage() {
   const {
@@ -25,7 +37,11 @@ export function AreaConsultorPage() {
     requestConsultantWithdrawal,
     minWithdrawalAmount,
     updateConsultantAvailability,
+    addInAppNotification,
+    addToNotificationHistory,
     ensurePushSubscription,
+    getMyPushStatus,
+    sendMyPushTest,
     authLoading,
     token,
   } = usePlatformContext()
@@ -46,6 +62,10 @@ export function AreaConsultorPage() {
   const [questionAlertVisible, setQuestionAlertVisible] = useState(true)
   const [questionInboxModalOpen, setQuestionInboxModalOpen] = useState(false)
   const [pwaInstallAvailable, setPwaInstallAvailable] = useState(canPromptPwaInstall())
+  const [pushDebugStatus, setPushDebugStatus] = useState(null)
+  const [pushDebugLoading, setPushDebugLoading] = useState(false)
+  const seenPendingSessionIdsRef = useRef(new Set())
+  const seenPendingQuestionIdsRef = useRef(new Set())
 
   // Polling para novas chamadas de v\u00eddeo
   useEffect(() => {
@@ -53,7 +73,7 @@ export function AreaConsultorPage() {
 
     const fetchPendingVideo = async () => {
       try {
-        const res = await fetch('/api/video-sessions/pending', {
+        const res = await fetch(buildApiUrl('/api/video-sessions/pending'), {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (res.ok) {
@@ -66,7 +86,7 @@ export function AreaConsultorPage() {
               const ageMs = now - createdAt
               if (ageMs > 15 * 60 * 1000) {
                 // Remove sessões antigas automaticamente e marca como cancelled
-                await fetch(`/api/video-sessions/${session.id}/status`, {
+                await fetch(buildApiUrl(`/api/video-sessions/${session.id}/status`), {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                   body: JSON.stringify({ status: 'cancelled' })
@@ -110,7 +130,7 @@ export function AreaConsultorPage() {
 
   const handleRejectVideoCall = async (sessionId) => {
     try {
-      const res = await fetch(`/api/video-sessions/${sessionId}/status`, {
+      const res = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: 'rejected' })
@@ -212,6 +232,77 @@ export function AreaConsultorPage() {
       setQuestionInboxModalOpen(false)
     }
   }, [isAdmin, pendingRequests.length])
+
+  useEffect(() => {
+    if (isAdmin) {
+      return
+    }
+
+    pendingVideoSessions.forEach((session) => {
+      if (seenPendingSessionIdsRef.current.has(session.id)) {
+        return
+      }
+
+      seenPendingSessionIdsRef.current.add(session.id)
+      const notification = {
+        id: `poll-call-${session.id}`,
+        title: '📞 Chamada detectada no painel',
+        message: `${session.userName || 'Cliente'} está aguardando sua entrada na sala.`,
+        icon: 'phone',
+        contactName: session.userName || 'Cliente',
+        type: 'call',
+        autoCloseMs: 0,
+        actions: [
+          {
+            id: 'answer',
+            label: 'Entrar na sala',
+            primary: true,
+            onClick: () => {
+              window.location.href = `/sala/${session.id}`
+            },
+          },
+        ],
+      }
+      addInAppNotification(notification)
+      addToNotificationHistory(notification)
+    })
+  }, [addInAppNotification, addToNotificationHistory, isAdmin, pendingVideoSessions])
+
+  useEffect(() => {
+    if (isAdmin) {
+      return
+    }
+
+    pendingRequests.forEach((request) => {
+      if (seenPendingQuestionIdsRef.current.has(request.id)) {
+        return
+      }
+
+      seenPendingQuestionIdsRef.current.add(request.id)
+      const notification = {
+        id: `poll-question-${request.id}`,
+        title: `❓ ${request.questionCount} pergunta(s) pendente(s)`,
+        message: `${request.customerName || 'Cliente'} enviou uma nova consulta para você.`,
+        icon: 'message',
+        contactName: request.customerName || 'Cliente',
+        type: 'question',
+        autoCloseMs: 10000,
+        actions: [
+          {
+            id: 'answer',
+            label: 'Responder Agora',
+            primary: true,
+            onClick: () => {
+              setQuestionInboxModalOpen(true)
+              setQuestionAlertVisible(false)
+            },
+          },
+        ],
+      }
+      addInAppNotification(notification)
+      addToNotificationHistory(notification)
+    })
+  }, [addInAppNotification, addToNotificationHistory, isAdmin, pendingRequests])
 
   const filteredEarnings = useMemo(() => {
     const msByFilter = {
@@ -508,6 +599,46 @@ export function AreaConsultorPage() {
     }
 
     setPanelNotice('A instalação do app foi cancelada.')
+  }
+
+  const handleRefreshPushStatus = async () => {
+    setPushDebugLoading(true)
+    const result = await getMyPushStatus()
+    setPushDebugLoading(false)
+    if (!result?.ok) {
+      setPanelNotice(result?.message || 'Não foi possível consultar o status do push.')
+      return
+    }
+    setPushDebugStatus(result)
+    setPanelNotice(
+      `Push status: ${result.activeSubscriptions} subscription(s) ativa(s) de ${result.totalSubscriptions}.`,
+    )
+  }
+
+  const handleReRegisterPush = async () => {
+    setPushDebugLoading(true)
+    const result = await ensurePushSubscription()
+    setPushDebugLoading(false)
+    if (!result?.ok) {
+      setPanelNotice(result?.message || 'Falha ao reativar push neste dispositivo.')
+      return
+    }
+    setPanelNotice('Subscription push registrada novamente neste dispositivo.')
+    await handleRefreshPushStatus()
+  }
+
+  const handleSendPushTest = async () => {
+    setPushDebugLoading(true)
+    const result = await sendMyPushTest()
+    setPushDebugLoading(false)
+    if (!result?.ok) {
+      setPanelNotice(result?.message || 'Falha ao enviar push de teste.')
+      return
+    }
+    setPanelNotice(
+      `Teste push disparado. ${result.successCount || 0} entrega(s) ok em ${result.totalSubscriptions || 0} subscription(s).`,
+    )
+    await handleRefreshPushStatus()
   }
 
   const renderPendingRequestsList = () => (
@@ -953,6 +1084,57 @@ export function AreaConsultorPage() {
           >
             Instalar App
           </button>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-cyan-400/25 bg-cyan-500/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-cyan-200">Diagnóstico de Push</p>
+              <p className="text-xs text-cyan-100/70">
+                Regrave a subscription deste aparelho, consulte o backend e dispare um push de teste.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  void handleRefreshPushStatus()
+                }}
+                disabled={pushDebugLoading}
+                className="rounded-lg border border-cyan-400/40 bg-black/30 px-3 py-2 text-xs text-cyan-100 transition hover:bg-black/50 disabled:opacity-50"
+              >
+                Ver status
+              </button>
+              <button
+                onClick={() => {
+                  void handleReRegisterPush()
+                }}
+                disabled={pushDebugLoading}
+                className="rounded-lg border border-cyan-400/40 bg-black/30 px-3 py-2 text-xs text-cyan-100 transition hover:bg-black/50 disabled:opacity-50"
+              >
+                Regravar push
+              </button>
+              <button
+                onClick={() => {
+                  void handleSendPushTest()
+                }}
+                disabled={pushDebugLoading}
+                className="rounded-lg bg-cyan-300 px-3 py-2 text-xs font-bold text-black transition hover:brightness-110 disabled:opacity-50"
+              >
+                Testar push
+              </button>
+            </div>
+          </div>
+
+          {pushDebugStatus ? (
+            <div className="mt-3 rounded-lg border border-cyan-400/20 bg-black/20 p-3 text-left text-xs text-cyan-50">
+              <p>VAPID no servidor: {pushDebugStatus.vapidConfigured ? 'configurado via .env' : 'fallback/default'}</p>
+              <p>Subscriptions totais: {pushDebugStatus.totalSubscriptions}</p>
+              <p>Subscriptions ativas: {pushDebugStatus.activeSubscriptions}</p>
+              {pushDebugStatus.subscriptions?.[0] ? (
+                <p>Último endpoint: {pushDebugStatus.subscriptions[0].endpointPreview}</p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </GlassCard>
 

@@ -333,7 +333,7 @@ export function PlatformProvider({ children }) {
         })
       }
 
-      await fetch(buildApiUrl('/api/push/subscribe'), {
+      const response = await fetch(buildApiUrl('/api/push/subscribe'), {
         method: 'POST',
         body: JSON.stringify({ subscription, userId }),
         headers: {
@@ -341,8 +341,16 @@ export function PlatformProvider({ children }) {
           Authorization: `Bearer ${token}`,
         }
       })
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        throw new Error(payload.error || payload.message || 'Falha ao registrar subscription push.')
+      }
+
+      return { ok: true, endpoint: subscription.endpoint }
     } catch (e) {
       console.error('Erro ao registrar Push:', e)
+      return { ok: false, message: e.message || 'Erro ao registrar push.' }
     }
   }
 
@@ -354,11 +362,10 @@ export function PlatformProvider({ children }) {
 
   const ensurePushSubscription = async () => {
     if (!profile?.id) {
-      return false
+      return { ok: false, message: 'Usuário não autenticado.' }
     }
 
-    await registerPushSubscription(profile.id)
-    return true
+    return registerPushSubscription(profile.id)
   }
 
   // Sistema de notificações in-app (Toast/Overlay)
@@ -830,6 +837,43 @@ export function PlatformProvider({ children }) {
     } catch (error) {
       console.error('[sendAdminPushBroadcast] Erro ao enviar broadcast:', error)
       return { ok: false, message: 'Erro de conexão ao enviar broadcast push.' }
+    }
+  }
+
+  const getMyPushStatus = async () => {
+    try {
+      const response = await fetch(buildApiUrl('/api/push/me/status'), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao consultar status do push.' }
+      }
+      return payload
+    } catch (error) {
+      console.error('[getMyPushStatus] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao consultar push.' }
+    }
+  }
+
+  const sendMyPushTest = async () => {
+    try {
+      const response = await fetch(buildApiUrl('/api/push/me/test'), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao enviar push de teste.' }
+      }
+      return payload
+    } catch (error) {
+      console.error('[sendMyPushTest] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao enviar teste push.' }
     }
   }
 
@@ -1758,6 +1802,8 @@ export function PlatformProvider({ children }) {
     addToNotificationHistory,
     clearNotificationHistory,
     ensurePushSubscription,
+    getMyPushStatus,
+    sendMyPushTest,
     billing,
     roomUrl,
     minutePackages,

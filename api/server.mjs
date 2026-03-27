@@ -218,6 +218,56 @@ try {
     }
   })
 
+  app.get('/api/push/me/status', authenticate, async (req, res) => {
+    try {
+      const [rows] = await pool.query(
+        `
+          SELECT endpoint, isActive, failureCount, lastSuccessAt, lastFailureAt, createdAt, updatedAt
+          FROM push_subscriptions
+          WHERE userId = ?
+          ORDER BY updatedAt DESC
+        `,
+        [req.user.id],
+      )
+
+      res.json({
+        ok: true,
+        userId: req.user.id,
+        vapidConfigured: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
+        totalSubscriptions: rows.length,
+        activeSubscriptions: rows.filter((row) => Number(row.isActive) === 1).length,
+        subscriptions: rows.map((row) => ({
+          ...row,
+          endpointPreview: `${row.endpoint.slice(0, 48)}...`,
+        })),
+      })
+    } catch (error) {
+      console.error('[push status] erro:', error)
+      res.status(500).json({ ok: false, message: 'Erro ao consultar status do push.' })
+    }
+  })
+
+  app.post('/api/push/me/test', authenticate, async (req, res) => {
+    try {
+      const result = await sendPushToUsers({
+        pool,
+        webpush,
+        userIds: [req.user.id],
+        payload: {
+          title: 'Teste de Push Astria',
+          body: 'Se você recebeu isso, o Web Push deste dispositivo está funcionando.',
+          url: '/area-consultor',
+          type: 'self_test',
+        },
+      })
+
+      res.json({ ok: true, ...result })
+    } catch (error) {
+      console.error('[push self test] erro:', error)
+      res.status(500).json({ ok: false, message: 'Erro ao enviar push de teste.' })
+    }
+  })
+
   app.post('/api/push/admin/broadcast', authenticate, authorizeAdmin, async (req, res) => {
     const { title, body, url, targetRole = 'all' } = req.body ?? {}
 
