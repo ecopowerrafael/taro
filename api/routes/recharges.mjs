@@ -227,7 +227,7 @@ export const createRechargesRouter = (pool) => {
       if (action === 'approved') {
         await connection.query(
           'UPDATE users SET minutesBalance = minutesBalance + ? WHERE id = ?',
-          [req.amount, req.userId] // Tratando minutesBalance como Reais
+          [req.minutes, req.userId] // Adicionar minutos, não o valor em reais
         )
       }
 
@@ -359,6 +359,7 @@ export const createRechargesRouter = (pool) => {
   // Rota para confirmar pagamento Stripe e adicionar minutos
   // O frontend chama isso APÓS receber sucesso do Stripe
   router.post('/stripe-confirm/:paymentIntentId', authenticate, async (request, response) => {
+    const connection = await pool.getConnection()
     try {
       const { paymentIntentId } = request.params
       const userId = request.user.id
@@ -369,17 +370,31 @@ export const createRechargesRouter = (pool) => {
         return response.status(500).json({ message: 'Stripe não está configurado no servidor.' })
       }
 
-      // Buscar o recharge request associado ao payment intent
-      const [rechargeRequests] = await pool.query(
-        'SELECT * FROM recharge_requests WHERE id = ? AND userId = ?',
+      await connection.beginTransaction()
+
+      // Buscar e TRAVAr o recharge request (SELECT FOR UPDATE para evitar race condition)
+      const [rechargeRequests] = await connection.query(
+        'SELECT * FROM recharge_requests WHERE id = ? AND userId = ? FOR UPDATE',
         [`stripe_${paymentIntentId}`, userId]
       )
 
       if (!rechargeRequests || rechargeRequests.length === 0) {
+        await connection.rollback()
         return response.status(404).json({ message: 'Pagamento não encontrado' })
       }
 
       const rechargeRequest = rechargeRequests[0]
+
+      // Se já foi completado, não faz nada (protege contra retentativas)
+      if (rechargeRequest.status === 'completed') {
+        await connection.rollback()
+        console.log(`[Stripe Confirm] Pagamento já foi creditado para usuário ${userId}`)
+        return response.json({
+          ok: true,
+          message: 'Minutos já haviam sido adicionados',
+          minutesAdded: 0,
+        })
+      }
 
       // Verificar o status real na Stripe (evita race condition com webhook)
       let paymentIntentStatus = 'unknown'
@@ -393,28 +408,19 @@ export const createRechargesRouter = (pool) => {
 
       // Aceitar como bem-sucedido se: status is 'approved' OU status na Stripe é 'succeeded'
       if (rechargeRequest.status === 'approved' || paymentIntentStatus === 'succeeded') {
-        // Verificar se já foi creditado
-        if (rechargeRequest.status === 'completed') {
-          console.log(`[Stripe Confirm] Pagamento já foi creditado para usuário ${userId}`)
-          return response.json({
-            ok: true,
-            message: 'Minutos já haviam sido adicionados',
-            minutesAdded: 0,
-          })
-        }
-
         // Marcar como 'completed' para indicar que os minutos foram creditados
-        await pool.query(
+        await connection.query(
           'UPDATE recharge_requests SET status = ?, updatedAt = ? WHERE id = ?',
           ['completed', new Date(), `stripe_${paymentIntentId}`]
         )
 
         // Adicionar minutos ao usuário
-        await pool.query(
+        await connection.query(
           'UPDATE users SET minutesBalance = minutesBalance + ? WHERE id = ?',
           [rechargeRequest.minutes, userId]
         )
 
+        await connection.commit()
         console.log(`[Stripe Confirm] Minutos creditados para usuário ${userId}: +${rechargeRequest.minutes}`)
         response.json({
           ok: true,
@@ -422,12 +428,16 @@ export const createRechargesRouter = (pool) => {
           minutesAdded: rechargeRequest.minutes,
         })
       } else {
+        await connection.rollback()
         console.warn(`[Stripe Confirm] Pagamento em estado inválido. Status BD: ${rechargeRequest.status}, Status Stripe: ${paymentIntentStatus}`)
         return response.status(400).json({ message: 'Pagamento não foi aprovado' })
       }
     } catch (error) {
+      await connection.rollback()
       console.error('[Stripe Confirm] Erro:', error)
       response.status(500).json({ message: 'Erro ao confirmar pagamento' })
+    } finally {
+      connection.release()
     }
   })
 

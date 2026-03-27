@@ -66,7 +66,7 @@ async function createStripePaymentIntent({ packageData, profile, token }) {
 }
 
 async function confirmStripeRecharge({ paymentIntentId, token, packageData, onSuccess }) {
-  const maxRetries = 3
+  const maxRetries = 2
   let lastError = null
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -87,8 +87,8 @@ async function confirmStripeRecharge({ paymentIntentId, token, packageData, onSu
         
         // Se for erro 400 (not approved) e não for última tentativa, aguarda e tenta novamente
         if (confirmResponse.status === 400 && attempt < maxRetries) {
-          console.log(`[StripeCheckoutForm] Pagamento ainda não foi aprovado, aguardando ${attempt * 1000}ms...`)
-          await new Promise(resolve => setTimeout(resolve, attempt * 1000))
+          console.log(`[StripeCheckoutForm] Pagamento ainda não foi aprovado, aguardando ${attempt * 800}ms...`)
+          await new Promise(resolve => setTimeout(resolve, attempt * 800))
           continue
         }
         
