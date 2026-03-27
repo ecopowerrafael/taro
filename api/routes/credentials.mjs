@@ -13,8 +13,8 @@ let mercadoPagoAvailable = false
 export const createCredentialsRouter = (pool) => {
   const router = Router()
 
-  // GET - Informações sobre disponibilidade de pagamentos
-  router.get('/info/payment-methods', authenticate, async (_request, response) => {
+  // GET - Informações sobre disponibilidade de pagamentos (público, não requer autenticação)
+  router.get('/info/payment-methods', async (_request, response) => {
     // Verificar disposição de Mercado Pago a cada requisição
     try {
       // Se conseguir importar, está disponível
@@ -125,9 +125,9 @@ export const createCredentialsRouter = (pool) => {
     }
   })
 
-  // PATCH - Salvar credenciais parciais por tipo
+  // PATCH - Salvar credenciais parciais por tipo (requer autenticação de admin)
   // Exemplo: PATCH /api/credentials/stripe com body { stripePublicKey: "...", stripeSecretKey: "..." }
-  router.patch('/:type', async (request, response) => {
+  router.patch('/:type', authenticate, authorizeAdmin, async (request, response) => {
     try {
       const { type } = request.params
       const fieldsMap = {
