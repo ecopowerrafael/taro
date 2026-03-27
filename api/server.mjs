@@ -229,7 +229,16 @@ try {
     })
 } catch (error) {
   databaseConfigError = error.message
-  console.error('Configuração de banco inválida:', error.message)
+  console.error('[API] ERRO CRÍTICO - Configuração de banco inválida:', error.message)
+  console.error('[API] Stack:', error.stack)
+  
+  // Log das variáveis de ambiente para debug
+  console.error('[API] Variáveis de ambiente disponíveis:')
+  console.error('[API]   DB_HOST:', process.env.DB_HOST ? 'SET' : 'NOT SET')
+  console.error('[API]   DB_PORT:', process.env.DB_PORT ? 'SET' : 'NOT SET')
+  console.error('[API]   DB_USER:', process.env.DB_USER ? 'SET' : 'NOT SET')
+  console.error('[API]   DB_PASSWORD:', process.env.DB_PASSWORD ? 'SET' : 'NOT SET')
+  console.error('[API]   DB_NAME:', process.env.DB_NAME ? 'SET' : 'NOT SET')
 }
 
 app.get('/api/config-error', (_request, response) => {
