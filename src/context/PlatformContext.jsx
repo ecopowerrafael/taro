@@ -304,7 +304,7 @@ export function PlatformProvider({ children }) {
       }
 
       const registration = await navigator.serviceWorker.register('/sw.js')
-      const publicVapidKeyRes = await fetch('/api/push/public-key')
+      const publicVapidKeyRes = await fetch(buildApiUrl('/api/push/public-key'))
       if (!publicVapidKeyRes.ok) {
         throw new Error('Não foi possível obter a chave pública de push.')
       }
@@ -327,7 +327,7 @@ export function PlatformProvider({ children }) {
         })
       }
 
-      await fetch('/api/push/subscribe', {
+      await fetch(buildApiUrl('/api/push/subscribe'), {
         method: 'POST',
         body: JSON.stringify({ subscription, userId }),
         headers: { 'Content-Type': 'application/json' }

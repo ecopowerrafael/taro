@@ -8,6 +8,20 @@ import { io } from 'socket.io-client'
 import DailyIframe from '@daily-co/daily-js'
 import { ReviewModal } from '../components/ReviewModal'
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
+
+const getRealtimeServerUrl = () => {
+  if (!API_BASE_URL) {
+    return undefined
+  }
+
+  try {
+    return new URL(API_BASE_URL).origin
+  } catch {
+    return undefined
+  }
+}
+
 export function VideoRoomPage() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
@@ -72,7 +86,7 @@ export function VideoRoomPage() {
 
   // Setup Socket.io para sincronizar encerramento de chamada
   useEffect(() => {
-    socketRef.current = io()
+    socketRef.current = io(getRealtimeServerUrl())
 
     return () => {
       console.log('[VideoRoomPage] Desconectando socket.io')

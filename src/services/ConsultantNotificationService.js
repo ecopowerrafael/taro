@@ -1,5 +1,19 @@
 import { io } from 'socket.io-client'
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
+
+const getRealtimeServerUrl = () => {
+  if (!API_BASE_URL) {
+    return window.location.origin
+  }
+
+  try {
+    return new URL(API_BASE_URL).origin
+  } catch {
+    return window.location.origin
+  }
+}
+
 class ConsultantNotificationService {
   constructor() {
     this.socket = null
@@ -55,8 +69,7 @@ class ConsultantNotificationService {
     this.consultantId = consultantId
     this.onIncomingCall = onIncomingCall
 
-    // Conecta ao mesmo domínio/porta do servidor atual
-    this.socket = io(window.location.origin)
+    this.socket = io(getRealtimeServerUrl())
 
     this.socket.on('connect', () => {
       this.socket.emit('join_consultant_room', consultantId)
