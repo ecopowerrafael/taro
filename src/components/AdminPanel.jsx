@@ -137,7 +137,10 @@ export function AdminPanel({
     }
   }, [mpCredentials, dailyCredentials, stripeCredentials])
 
-  const handleSavePartial = (type) => {
+  const handleSavePartial = async (type) => {
+    setCredentialsSaving(true)
+    setCredentialsFeedback('')
+    
     let data = {}
     if (type === 'mp') {
       data = {
@@ -171,9 +174,18 @@ export function AdminPanel({
         smtpFrom: credentialsDraft.smtpFrom,
       }
     }
-    // As the prop is `onMpCredentialsChange` but it's passed `savePlatformCredentials` from Context
-    // which expects `(type, data)`, we use it generically for all types:
-    onMpCredentialsChange(type, data)
+    
+    // Call savePlatformCredentials and wait for response
+    const result = await onMpCredentialsChange(type, data)
+    
+    if (result?.ok) {
+      setCredentialsFeedback(`✓ Credenciais de ${type} salvas com sucesso!`)
+      setTimeout(() => setCredentialsFeedback(''), 3000)
+    } else {
+      setCredentialsFeedback(`✗ Erro ao salvar credenciais de ${type}. Tente novamente.`)
+    }
+    
+    setCredentialsSaving(false)
   }
 
   const [credentialsSaving, setCredentialsSaving] = useState(false)
@@ -834,10 +846,11 @@ export function AdminPanel({
                 </div>
                 <button
                   onClick={() => handleSavePartial('stripe')}
-                  className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110"
+                  disabled={credentialsSaving}
+                  className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save size={14} />
-                  Salvar Stripe
+                  {credentialsSaving ? 'Salvando...' : 'Salvar Stripe'}
                 </button>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
