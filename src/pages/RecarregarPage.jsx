@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { WalletCards, QrCode, CreditCard, Copy, CheckCircle2, Loader2, Smartphone } from 'lucide-react'
+import { WalletCards, QrCode, CreditCard, Copy, CheckCircle2, Loader2, X } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { QRCodeSVG } from 'qrcode.react'
 import { GlassCard } from '../components/GlassCard'
@@ -86,7 +86,7 @@ export function RecarregarPage() {
   const [copied, setCopied] = useState(false)
   const [requesting, setRequesting] = useState(false)
   const [stripeSuccess, setStripeSuccess] = useState(false)
-  const [cardVariant, setCardVariant] = useState('card')
+  const [cardModalOpen, setCardModalOpen] = useState(false)
 
   // Gerar Pix Copia e Cola dinâmico baseado no pacote
   const pixData = useMemo(() => {
@@ -222,7 +222,10 @@ export function RecarregarPage() {
                 </div>
               </button>
               <button
-                onClick={() => setPaymentMethod('card')}
+                onClick={() => {
+                  setPaymentMethod('card')
+                  setCardModalOpen(true)
+                }}
                 className={`flex flex-col items-center gap-4 rounded-xl border p-6 transition ${
                   paymentMethod === 'card' ? 'border-mystic-gold bg-mystic-gold/10' : 'border-mystic-gold/30 bg-black/30 hover:bg-black/50'
                 }`}
@@ -284,85 +287,61 @@ export function RecarregarPage() {
             </GlassCard>
           )}
 
-          {paymentMethod === 'card' && (
-            <>
-              <GlassCard title="Escolha como deseja pagar" subtitle="Você pode digitar o cartão ou usar carteiras aprovadas na sua conta Stripe.">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <button
-                    onClick={() => setCardVariant('card')}
-                    className={`flex flex-col items-start gap-3 rounded-xl border p-5 text-left transition ${
-                      cardVariant === 'card'
-                        ? 'border-mystic-gold bg-mystic-gold/10'
-                        : 'border-mystic-gold/30 bg-black/30 hover:bg-black/50'
-                    }`}
-                  >
-                    <div className="rounded-full bg-mystic-gold/10 p-3 text-mystic-gold">
-                      <CreditCard size={24} />
-                    </div>
-                    <div>
-                      <h3 className="font-display text-lg text-mystic-goldSoft">Cartão digitado</h3>
-                      <p className="mt-1 text-xs text-amber-100/60">Número, validade e CVC em campos separados.</p>
-                    </div>
-                  </button>
+        </div>
+      )}
 
-                  <button
-                    onClick={() => setCardVariant('wallets')}
-                    className={`flex flex-col items-start gap-3 rounded-xl border p-5 text-left transition ${
-                      cardVariant === 'wallets'
-                        ? 'border-mystic-gold bg-mystic-gold/10'
-                        : 'border-mystic-gold/30 bg-black/30 hover:bg-black/50'
-                    }`}
-                  >
-                    <div className="rounded-full bg-mystic-gold/10 p-3 text-mystic-gold">
-                      <Smartphone size={24} />
-                    </div>
-                    <div>
-                      <h3 className="font-display text-lg text-mystic-goldSoft">Apple Pay, Google Pay e Link</h3>
-                      <p className="mt-1 text-xs text-amber-100/60">Os botões exibidos dependem do navegador e do dispositivo do usuário.</p>
-                    </div>
-                  </button>
+      {cardModalOpen && selectedPack && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl">
+            <div className="mb-3 flex justify-end">
+              <button
+                onClick={() => {
+                  setCardModalOpen(false)
+                  setStripeSuccess(false)
+                  setPaymentMethod(null)
+                }}
+                className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/35 bg-black/40 px-3 py-2 text-sm text-amber-100/80 transition hover:bg-black/60"
+              >
+                <X size={16} />
+                Fechar
+              </button>
+            </div>
+
+            {stripeSuccess ? (
+              <GlassCard title="Pagamento Confirmado" subtitle="Seu pagamento foi processado com sucesso!">
+                <div className="flex flex-col items-center gap-4 py-8">
+                  <div className="rounded-full bg-emerald-500/20 p-4 text-emerald-400">
+                    <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <p className="mb-2 text-lg font-semibold text-mystic-goldSoft">Pagamento Recebido!</p>
+                    <p className="mb-4 text-sm text-amber-100/70">
+                      Seus créditos foram processados e a confirmação do Stripe foi concluída.
+                    </p>
+                    <p className="text-xs text-amber-100/50">Você já pode voltar e conferir o saldo atualizado.</p>
+                  </div>
                 </div>
               </GlassCard>
-
-              {stripeSuccess ? (
-                <GlassCard title="Pagamento Confirmado" subtitle="Seu pagamento foi processado com sucesso!">
-                  <div className="flex flex-col items-center gap-4 py-8">
-                    <div className="rounded-full bg-emerald-500/20 p-4 text-emerald-400">
-                      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-lg font-semibold text-mystic-goldSoft mb-2">Pagamento Recebido!</p>
-                      <p className="text-sm text-amber-100/70 mb-4">
-                        Seus créditos foram processados e a confirmação do Stripe foi concluída.
-                      </p>
-                      <p className="text-xs text-amber-100/50">
-                        Você já pode voltar e conferir o saldo atualizado.
-                      </p>
-                    </div>
-                  </div>
-                </GlassCard>
-              ) : (
-                <RechargeStripeForm
-                  packageData={selectedPack}
-                  variant={cardVariant}
-                  onSuccess={(result) => {
-                    setStripeSuccess(true)
-                    // Após sucesso, usar rechargePackage para adicionar ao contexto
-                    setTimeout(() => {
-                      setSelectedPack(null)
-                      setPaymentMethod(null)
-                      setStripeSuccess(false)
-                    }, 3000)
-                  }}
-                  onError={(error) => {
-                    console.error('Erro no Stripe:', error)
-                  }}
-                />
-              )}
-            </>
-          )}
+            ) : (
+              <RechargeStripeForm
+                packageData={selectedPack}
+                onSuccess={() => {
+                  setStripeSuccess(true)
+                  setTimeout(() => {
+                    setCardModalOpen(false)
+                    setSelectedPack(null)
+                    setPaymentMethod(null)
+                    setStripeSuccess(false)
+                  }, 3000)
+                }}
+                onError={(error) => {
+                  console.error('Erro no Stripe:', error)
+                }}
+              />
+            )}
+          </div>
         </div>
       )}
     </PageShell>
