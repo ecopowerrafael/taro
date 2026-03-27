@@ -34,7 +34,7 @@ const stripeElementOptions = {
 function StripeCheckoutForm({ packageData, onSuccess, onError }) {
   const stripe = useStripe()
   const elements = useElements()
-  const { profile } = usePlatformContext()
+  const { profile, token } = usePlatformContext()
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -46,6 +46,11 @@ function StripeCheckoutForm({ packageData, onSuccess, onError }) {
       return
     }
 
+    if (!token) {
+      setErrorMessage('Sua sessão expirou. Faça login novamente para pagar com cartão.')
+      return
+    }
+
     setLoading(true)
     setErrorMessage('')
 
@@ -53,7 +58,10 @@ function StripeCheckoutForm({ packageData, onSuccess, onError }) {
       // 1. Criar Payment Intent no backend
       const intentResponse = await fetch('/api/recharges/stripe-payment-intent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           amount: Math.round((packageData.promoPrice ?? packageData.price) * 100), // em centavos
           minutes: packageData.minutes,
@@ -95,7 +103,7 @@ function StripeCheckoutForm({ packageData, onSuccess, onError }) {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              Authorization: `Bearer ${token}`,
             },
           })
 
