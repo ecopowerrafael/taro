@@ -112,13 +112,28 @@ export const sendPushToUsers = async ({ pool, webpush, userIds, payload }) => {
       try {
         await webpush.sendNotification(subscription, JSON.stringify(payload))
         await markSubscriptionSuccess({ pool, endpoint: subscription.endpoint })
-        results.push({ ok: true, userId, endpoint: subscription.endpoint })
+        results.push({
+          ok: true,
+          userId,
+          endpoint: subscription.endpoint,
+          endpointPreview: `${subscription.endpoint.slice(0, 48)}...`,
+        })
       } catch (error) {
         const statusCode = error?.statusCode
         if (statusCode === 404 || statusCode === 410) {
           await markSubscriptionFailure({ pool, endpoint: subscription.endpoint })
         }
-        results.push({ ok: false, userId, endpoint: subscription.endpoint, error })
+        results.push({
+          ok: false,
+          userId,
+          endpoint: subscription.endpoint,
+          endpointPreview: `${subscription.endpoint.slice(0, 48)}...`,
+          error: {
+            statusCode: error?.statusCode || null,
+            message: error?.body || error?.message || 'Erro desconhecido no web-push',
+            headers: error?.headers || null,
+          },
+        })
       }
     }),
   )

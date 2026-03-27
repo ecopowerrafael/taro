@@ -261,7 +261,13 @@ try {
         },
       })
 
-      res.json({ ok: true, ...result })
+      res.json({
+        ok: true,
+        ...result,
+        failureMessages: result.results
+          .filter((item) => !item.ok)
+          .map((item) => `${item.error?.statusCode || 'n/a'}: ${item.error?.message || 'erro'}`),
+      })
     } catch (error) {
       console.error('[push self test] erro:', error)
       res.status(500).json({ ok: false, message: 'Erro ao enviar push de teste.' })

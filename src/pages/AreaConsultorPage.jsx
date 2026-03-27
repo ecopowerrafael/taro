@@ -64,6 +64,7 @@ export function AreaConsultorPage() {
   const [pwaInstallAvailable, setPwaInstallAvailable] = useState(canPromptPwaInstall())
   const [pushDebugStatus, setPushDebugStatus] = useState(null)
   const [pushDebugLoading, setPushDebugLoading] = useState(false)
+  const [pushDebugActionResult, setPushDebugActionResult] = useState(null)
   const seenPendingSessionIdsRef = useRef(new Set())
   const seenPendingQuestionIdsRef = useRef(new Set())
 
@@ -603,13 +604,20 @@ export function AreaConsultorPage() {
 
   const handleRefreshPushStatus = async () => {
     setPushDebugLoading(true)
+    setPushDebugActionResult({ type: 'status', message: 'Consultando status no backend...' })
     const result = await getMyPushStatus()
     setPushDebugLoading(false)
     if (!result?.ok) {
+      setPushDebugActionResult({ type: 'status', ok: false, message: result?.message || 'Falha ao consultar status.' })
       setPanelNotice(result?.message || 'Não foi possível consultar o status do push.')
       return
     }
     setPushDebugStatus(result)
+    setPushDebugActionResult({
+      type: 'status',
+      ok: true,
+      message: `Status consultado: ${result.activeSubscriptions} ativa(s) de ${result.totalSubscriptions}.`,
+    })
     setPanelNotice(
       `Push status: ${result.activeSubscriptions} subscription(s) ativa(s) de ${result.totalSubscriptions}.`,
     )
@@ -617,24 +625,40 @@ export function AreaConsultorPage() {
 
   const handleReRegisterPush = async () => {
     setPushDebugLoading(true)
+    setPushDebugActionResult({ type: 'register', message: 'Regravando subscription do dispositivo...' })
     const result = await ensurePushSubscription()
     setPushDebugLoading(false)
     if (!result?.ok) {
+      setPushDebugActionResult({ type: 'register', ok: false, message: result?.message || 'Falha ao registrar push.' })
       setPanelNotice(result?.message || 'Falha ao reativar push neste dispositivo.')
       return
     }
+    setPushDebugActionResult({
+      type: 'register',
+      ok: true,
+      message: `Subscription regravada com sucesso. Endpoint: ${result.endpoint ? `${result.endpoint.slice(0, 48)}...` : 'ok'}`,
+    })
     setPanelNotice('Subscription push registrada novamente neste dispositivo.')
     await handleRefreshPushStatus()
   }
 
   const handleSendPushTest = async () => {
     setPushDebugLoading(true)
+    setPushDebugActionResult({ type: 'test', message: 'Enviando push de teste...' })
     const result = await sendMyPushTest()
     setPushDebugLoading(false)
     if (!result?.ok) {
+      setPushDebugActionResult({ type: 'test', ok: false, message: result?.message || 'Falha ao enviar teste push.' })
       setPanelNotice(result?.message || 'Falha ao enviar push de teste.')
       return
     }
+    setPushDebugActionResult({
+      type: 'test',
+      ok: (result.successCount || 0) > 0,
+      message: `Teste enviado: ${result.successCount || 0} sucesso(s), ${result.failureCount || 0} falha(s).`,
+      failureMessages: result.failureMessages || [],
+      results: result.results || [],
+    })
     setPanelNotice(
       `Teste push disparado. ${result.successCount || 0} entrega(s) ok em ${result.totalSubscriptions || 0} subscription(s).`,
     )
@@ -1132,6 +1156,25 @@ export function AreaConsultorPage() {
               <p>Subscriptions ativas: {pushDebugStatus.activeSubscriptions}</p>
               {pushDebugStatus.subscriptions?.[0] ? (
                 <p>Último endpoint: {pushDebugStatus.subscriptions[0].endpointPreview}</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {pushDebugActionResult ? (
+            <div className="mt-3 rounded-lg border border-cyan-400/20 bg-black/20 p-3 text-left text-xs text-cyan-50">
+              <p>
+                Última ação: {pushDebugActionResult.type === 'status' ? 'status' : pushDebugActionResult.type === 'register' ? 'regravar push' : 'teste push'}
+              </p>
+              <p>
+                Resultado: {pushDebugActionResult.ok === false ? 'falhou' : pushDebugActionResult.ok === true ? 'ok' : 'em andamento'}
+              </p>
+              <p>{pushDebugActionResult.message}</p>
+              {Array.isArray(pushDebugActionResult.failureMessages) && pushDebugActionResult.failureMessages.length > 0 ? (
+                <div className="mt-2">
+                  {pushDebugActionResult.failureMessages.map((message, index) => (
+                    <p key={`${message}-${index}`}>Falha {index + 1}: {message}</p>
+                  ))}
+                </div>
               ) : null}
             </div>
           ) : null}
