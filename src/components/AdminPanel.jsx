@@ -1036,6 +1036,12 @@ export function AdminPanel({
                     <div>
                       <p className="text-sm text-amber-50">{consultant.name}</p>
                       <p className="text-[11px] text-ethereal-silver/70">{consultant.email}</p>
+                      {consultant.isPremium && (
+                        <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-mystic-gold/55 bg-mystic-gold/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-mystic-goldSoft">
+                          <Star size={10} className="fill-current" />
+                          Premium ativo
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-ethereal-silver/85">{consultant.status}</p>
                   <p className="text-xs text-ethereal-silver/85">
@@ -1064,6 +1070,17 @@ export function AdminPanel({
                       >
                         <ShieldBan size={12} />
                         Bloquear
+                      </button>
+                      <button
+                        onClick={() => onSaveConsultant(consultant.id, { isPremium: !consultant.isPremium })}
+                        className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] transition ${
+                          consultant.isPremium
+                            ? 'border-mystic-gold/70 bg-mystic-gold/10 text-mystic-goldSoft hover:bg-mystic-gold/20'
+                            : 'border-amber-300/40 text-amber-100/80 hover:bg-amber-500/10'
+                        }`}
+                      >
+                        <Star size={12} className={consultant.isPremium ? 'fill-current' : ''} />
+                        {consultant.isPremium ? 'Remover destaque' : 'Destacar'}
                       </button>
                       <button
                         onClick={() => openEditConsultant(consultant)}

@@ -139,7 +139,7 @@ export function ConsultantMarketplaceNew({
                   {consultant.status || 'Offline'}
                 </span>
               </div>
-              {consultant.ratingAverage >= 4.8 && (
+              {consultant.isPremium && (
                 <span className="px-3 py-1 rounded-full bg-gradient-to-r from-mystic-gold to-mystic-gold-light text-mystic-black text-[10px] font-bold uppercase tracking-widest shadow-gold-glow">
                   Premium
                 </span>

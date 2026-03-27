@@ -35,6 +35,7 @@ const initialConsultants = [
     baseConsultations: 16,
     realSessions: 11,
     ratingAverage: 4.9,
+    isPremium: true,
     photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=320&auto=format&fit=crop',
     commissionOverride: null,
   },
@@ -52,6 +53,7 @@ const initialConsultants = [
     baseConsultations: 9,
     realSessions: 6,
     ratingAverage: 4.8,
+    isPremium: true,
     photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=320&auto=format&fit=crop',
     commissionOverride: 25,
   },
@@ -69,6 +71,7 @@ const initialConsultants = [
     baseConsultations: 12,
     realSessions: 8,
     ratingAverage: 4.7,
+    isPremium: false,
     photo: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=320&auto=format&fit=crop',
     commissionOverride: null,
   },
@@ -153,6 +156,7 @@ const normalizeConsultant = (consultant) => ({
   baseConsultations: Number(consultant.baseConsultations) || 0,
   realSessions: Number(consultant.realSessions) || 0,
   ratingAverage: Number(consultant.ratingAverage) || 0,
+  isPremium: Boolean(consultant.isPremium),
   commissionOverride:
     consultant.commissionOverride === null || consultant.commissionOverride === undefined
       ? null
@@ -987,6 +991,7 @@ export function PlatformProvider({ children }) {
         baseConsultations: 0,
         realSessions: 0,
         ratingAverage: 5,
+        isPremium: false,
         commissionOverride: null,
       }
       consultantToPersist = approvedConsultant

@@ -74,6 +74,7 @@ export const initializeSchema = async (pool) => {
       baseConsultations INT NOT NULL DEFAULT 0,
       realSessions INT NOT NULL DEFAULT 0,
       ratingAverage DECIMAL(3,2) NOT NULL DEFAULT 0,
+      isPremium TINYINT(1) NOT NULL DEFAULT 0,
       commissionOverride DECIMAL(5,2) NULL,
       createdAt DATE NULL,
       userId VARCHAR(50) NULL,
@@ -95,6 +96,10 @@ export const initializeSchema = async (pool) => {
   } catch (e) {
     // Ignora se a coluna já existir
   }
+
+  try {
+    await pool.query('ALTER TABLE consultants ADD COLUMN isPremium TINYINT(1) NOT NULL DEFAULT 0')
+  } catch (e) {}
 
   // Garantir que a coluna birthDate e minutesBalance existem em users (para bancos já criados)
   try {

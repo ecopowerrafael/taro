@@ -26,6 +26,7 @@ export const createConsultantsRouter = (pool) => {
           baseConsultations,
           realSessions,
           ratingAverage,
+          isPremium,
           commissionOverride,
           createdAt
         FROM consultants
@@ -73,6 +74,7 @@ export const createConsultantsRouter = (pool) => {
       baseConsultations,
       realSessions,
       ratingAverage,
+      isPremium,
       commissionOverride,
       createdAt,
     } = request.body ?? {}
@@ -87,17 +89,19 @@ export const createConsultantsRouter = (pool) => {
     let finalBaseConsultations = baseConsultations
     let finalRealSessions = realSessions
     let finalRatingAverage = ratingAverage
+    let finalIsPremium = isPremium
     let finalCommissionOverride = commissionOverride
 
     if (isSelfEdit && !isAdmin) {
       // Consultor não pode editar estes campos - manter os valores existentes
       // Buscar valores atuais do banco para não sobrescrever
-      const [existing] = await pool.query('SELECT status, baseConsultations, realSessions, ratingAverage, commissionOverride FROM consultants WHERE id = ?', [id])
+      const [existing] = await pool.query('SELECT status, baseConsultations, realSessions, ratingAverage, isPremium, commissionOverride FROM consultants WHERE id = ?', [id])
       if (existing && existing.length > 0) {
         finalStatus = existing[0].status
         finalBaseConsultations = existing[0].baseConsultations
         finalRealSessions = existing[0].realSessions
         finalRatingAverage = existing[0].ratingAverage
+        finalIsPremium = existing[0].isPremium
         finalCommissionOverride = existing[0].commissionOverride
       } else {
         // Se não existe, usar defaults
@@ -105,6 +109,7 @@ export const createConsultantsRouter = (pool) => {
         finalBaseConsultations = 0
         finalRealSessions = 0
         finalRatingAverage = 0
+        finalIsPremium = 0
         finalCommissionOverride = null
       }
     }
@@ -125,9 +130,10 @@ export const createConsultantsRouter = (pool) => {
           baseConsultations,
           realSessions,
           ratingAverage,
+          isPremium,
           commissionOverride,
           createdAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           name = VALUES(name),
           email = VALUES(email),
@@ -141,6 +147,7 @@ export const createConsultantsRouter = (pool) => {
           baseConsultations = VALUES(baseConsultations),
           realSessions = VALUES(realSessions),
           ratingAverage = VALUES(ratingAverage),
+            isPremium = VALUES(isPremium),
           commissionOverride = VALUES(commissionOverride),
           createdAt = VALUES(createdAt)
       `,
@@ -158,6 +165,7 @@ export const createConsultantsRouter = (pool) => {
         Math.max(0, Math.floor(parseNumber(finalBaseConsultations))),
         Math.max(0, Math.floor(parseNumber(finalRealSessions))),
         parseNumber(finalRatingAverage),
+        finalIsPremium ? 1 : 0,
         finalCommissionOverride === null || finalCommissionOverride === undefined || finalCommissionOverride === ''
           ? null
           : parseNumber(finalCommissionOverride),
@@ -223,7 +231,7 @@ export const createConsultantsRouter = (pool) => {
 
     // Consultor NÃO pode editar estes campos - buscar valores atuais
     const [existing] = await pool.query(
-      'SELECT status, baseConsultations, realSessions, ratingAverage, commissionOverride, createdAt FROM consultants WHERE id = ?',
+      'SELECT status, baseConsultations, realSessions, ratingAverage, isPremium, commissionOverride, createdAt FROM consultants WHERE id = ?',
       [id],
     )
     const existingData = existing && existing.length > 0 ? existing[0] : null
@@ -244,9 +252,10 @@ export const createConsultantsRouter = (pool) => {
           baseConsultations,
           realSessions,
           ratingAverage,
+          isPremium,
           commissionOverride,
           createdAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           name = VALUES(name),
           email = VALUES(email),
@@ -271,6 +280,7 @@ export const createConsultantsRouter = (pool) => {
         existingData?.baseConsultations || 0,
         existingData?.realSessions || 0,
         existingData?.ratingAverage || 0,
+        existingData?.isPremium ? 1 : 0,
         existingData?.commissionOverride || null,
         existingData?.createdAt || null,
       ],
@@ -312,7 +322,7 @@ export const createConsultantsRouter = (pool) => {
     const { id } = request.params
     const [rows] = await pool.query(
       `SELECT id, name, tagline, description, photo, status, pricePerMinute, priceThreeQuestions,
-              priceFiveQuestions, baseConsultations, realSessions, ratingAverage
+              priceFiveQuestions, baseConsultations, realSessions, ratingAverage, isPremium
        FROM consultants WHERE id = ?`,
       [id],
     )
