@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { authenticate, authorizeAdmin } from '../middleware/auth.mjs'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'taro-secret-key-123'
 
@@ -294,6 +295,146 @@ export const createAuthRouter = (pool) => {
     } catch (error) {
       console.error('Erro ao debitar minutos:', error)
       response.status(401).json({ message: 'Token inválido ou erro no servidor.' })
+    }
+  })
+
+  // Admin: listar usuários com estatísticas de consumo
+  router.get('/admin/users', authenticate, authorizeAdmin, async (_request, response) => {
+    try {
+      const [rows] = await pool.query(
+        `SELECT
+          u.id,
+          u.name,
+          u.email,
+          u.role,
+          u.birthDate,
+          u.minutesBalance,
+          u.createdAt,
+          (
+            SELECT COUNT(*)
+            FROM question_requests qr
+            WHERE qr.customerEmail = u.email AND qr.questionCount = 3
+          ) AS threeQuestionsCount,
+          (
+            SELECT COUNT(*)
+            FROM question_requests qr
+            WHERE qr.customerEmail = u.email AND qr.questionCount = 5
+          ) AS fiveQuestionsCount,
+          (
+            SELECT COUNT(*)
+            FROM video_sessions vs
+            WHERE vs.userId = u.id
+          ) AS liveConsultationsCount
+        FROM users u
+        ORDER BY u.createdAt DESC`
+      )
+
+      response.json(
+        rows.map((row) => ({
+          ...row,
+          minutesBalance: Number(row.minutesBalance) || 0,
+          threeQuestionsCount: Number(row.threeQuestionsCount) || 0,
+          fiveQuestionsCount: Number(row.fiveQuestionsCount) || 0,
+          liveConsultationsCount: Number(row.liveConsultationsCount) || 0,
+        })),
+      )
+    } catch (error) {
+      console.error('[Admin Users] Erro ao listar usuários:', error)
+      response.status(500).json({ message: 'Erro ao listar usuários.' })
+    }
+  })
+
+  // Admin: atualizar usuário e opcionalmente redefinir senha
+  router.put('/admin/users/:id', authenticate, authorizeAdmin, async (request, response) => {
+    const { id } = request.params
+    const {
+      name,
+      email,
+      role,
+      birthDate,
+      minutesBalance,
+      newPassword,
+    } = request.body ?? {}
+
+    const trimmedName = String(name ?? '').trim()
+    const trimmedEmail = String(email ?? '').trim().toLowerCase()
+    const normalizedRole = String(role ?? '').trim()
+    const parsedBalance = Number(minutesBalance)
+    const passwordText = String(newPassword ?? '').trim()
+
+    if (!trimmedName || !trimmedEmail || !normalizedRole) {
+      return response.status(400).json({ message: 'Nome, email e perfil são obrigatórios.' })
+    }
+
+    if (!['client', 'consultant', 'admin'].includes(normalizedRole)) {
+      return response.status(400).json({ message: 'Perfil inválido.' })
+    }
+
+    if (!Number.isFinite(parsedBalance) || parsedBalance < 0) {
+      return response.status(400).json({ message: 'Saldo inválido.' })
+    }
+
+    if (passwordText && passwordText.length < 6) {
+      return response.status(400).json({ message: 'A nova senha deve ter ao menos 6 caracteres.' })
+    }
+
+    const connection = await pool.getConnection()
+    try {
+      await connection.beginTransaction()
+
+      const [existingUsers] = await connection.query('SELECT id FROM users WHERE id = ? FOR UPDATE', [id])
+      if (!existingUsers.length) {
+        await connection.rollback()
+        return response.status(404).json({ message: 'Usuário não encontrado.' })
+      }
+
+      const [emailConflict] = await connection.query(
+        'SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1',
+        [trimmedEmail, id],
+      )
+      if (emailConflict.length > 0) {
+        await connection.rollback()
+        return response.status(409).json({ message: 'Este email já está em uso por outro usuário.' })
+      }
+
+      if (passwordText) {
+        const hashedPassword = await bcrypt.hash(passwordText, 10)
+        await connection.query(
+          `UPDATE users
+           SET name = ?, email = ?, role = ?, birthDate = ?, minutesBalance = ?, password = ?
+           WHERE id = ?`,
+          [
+            trimmedName,
+            trimmedEmail,
+            normalizedRole,
+            birthDate || null,
+            parsedBalance,
+            hashedPassword,
+            id,
+          ],
+        )
+      } else {
+        await connection.query(
+          `UPDATE users
+           SET name = ?, email = ?, role = ?, birthDate = ?, minutesBalance = ?
+           WHERE id = ?`,
+          [trimmedName, trimmedEmail, normalizedRole, birthDate || null, parsedBalance, id],
+        )
+      }
+
+      await connection.query(
+        'UPDATE consultants SET name = ?, email = ? WHERE userId = ?',
+        [trimmedName, trimmedEmail, id],
+      )
+
+      await connection.commit()
+      response.json({ ok: true, message: 'Usuário atualizado com sucesso.' })
+    } catch (error) {
+      await connection.rollback()
+      console.error('[Admin Users] Erro ao atualizar usuário:', error)
+      response.status(500).json({ message: 'Erro ao atualizar usuário.' })
+    } finally {
+      connection.release()
     }
   })
 

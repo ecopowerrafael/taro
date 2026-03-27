@@ -28,10 +28,14 @@ export function AdminPage() {
     fetchPendingRecharges,
     processRechargeAction,
     updateWithdrawalStatus,
+    adminUsers,
+    fetchAdminUsers,
+    updateAdminUser,
   } = usePlatformContext()
 
   useEffect(() => {
     fetchPendingRecharges()
+    fetchAdminUsers()
   }, [])
 
   return (
@@ -60,6 +64,9 @@ export function AdminPage() {
         rechargeRequests={rechargeRequests}
         onRechargeAction={processRechargeAction}
         updateWithdrawalStatus={updateWithdrawalStatus}
+        adminUsers={adminUsers}
+        onRefreshAdminUsers={fetchAdminUsers}
+        onUpdateAdminUser={updateAdminUser}
       />
     </PageShell>
   )

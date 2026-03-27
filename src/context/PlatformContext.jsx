@@ -468,6 +468,7 @@ export function PlatformProvider({ children }) {
   }
 
   const [rechargeRequests, setRechargeRequests] = useState([])
+  const [adminUsers, setAdminUsers] = useState([])
 
   const fetchPendingRecharges = async () => {
     try {
@@ -518,6 +519,77 @@ export function PlatformProvider({ children }) {
     } catch (error) {
       console.error('Erro ao processar recarga:', error)
       return false
+    }
+  }
+
+  const fetchAdminUsers = async () => {
+    if (!token) {
+      return
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('/api/auth/admin/users'), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) {
+        return
+      }
+
+      const payload = await response.json()
+      if (!Array.isArray(payload)) {
+        return
+      }
+
+      setAdminUsers(
+        payload.map((user) => ({
+          ...user,
+          minutesBalance: Number(user.minutesBalance) || 0,
+          threeQuestionsCount: Number(user.threeQuestionsCount) || 0,
+          fiveQuestionsCount: Number(user.fiveQuestionsCount) || 0,
+          liveConsultationsCount: Number(user.liveConsultationsCount) || 0,
+        })),
+      )
+    } catch (error) {
+      console.error('[fetchAdminUsers] Erro ao buscar usuários:', error)
+    }
+  }
+
+  const updateAdminUser = async ({
+    id,
+    name,
+    email,
+    role,
+    birthDate,
+    minutesBalance: nextBalance,
+    newPassword,
+  }) => {
+    try {
+      const response = await fetch(buildApiUrl(`/api/auth/admin/users/${id}`), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          role,
+          birthDate,
+          minutesBalance: Number(nextBalance),
+          newPassword,
+        }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao atualizar usuário.' }
+      }
+
+      await fetchAdminUsers()
+      return { ok: true, message: payload.message || 'Usuário atualizado com sucesso.' }
+    } catch (error) {
+      console.error('[updateAdminUser] Erro ao atualizar usuário:', error)
+      return { ok: false, message: 'Falha de conexão ao atualizar usuário.' }
     }
   }
 
@@ -1386,6 +1458,9 @@ export function PlatformProvider({ children }) {
     fetchPendingRecharges,
     requestRecharge,
     processRechargeAction,
+    adminUsers,
+    fetchAdminUsers,
+    updateAdminUser,
   }
 
   if (process.env.NODE_ENV === 'development') {

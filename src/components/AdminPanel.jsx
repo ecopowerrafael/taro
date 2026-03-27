@@ -58,6 +58,9 @@ export function AdminPanel({
   updateWithdrawalStatus,
   stripeCredentials,
   onStripeCredentialsChange,
+  adminUsers,
+  onRefreshAdminUsers,
+  onUpdateAdminUser,
 }) {
   const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'financeiro' | 'credenciais' | 'recharges' | 'saques'
   const [searchQuery, setSearchSearchQuery] = useState('')
@@ -206,6 +209,10 @@ export function AdminPanel({
 
   const [credentialsSaving, setCredentialsSaving] = useState(false)
   const [credentialsFeedback, setCredentialsFeedback] = useState('')
+  const [editingUser, setEditingUser] = useState(null)
+  const [userEditDraft, setUserEditDraft] = useState(null)
+  const [userEditSaving, setUserEditSaving] = useState(false)
+  const [userEditFeedback, setUserEditFeedback] = useState('')
 
   const tabButtonClass = (tabId) =>
     `inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition ${
@@ -455,6 +462,49 @@ export function AdminPanel({
 
   const totalPendingWithdrawals = getPendingWithdrawals().length
 
+  const openEditUser = (user) => {
+    setEditingUser(user)
+    setUserEditFeedback('')
+    setUserEditDraft({
+      id: user.id,
+      name: user.name || '',
+      email: user.email || '',
+      role: user.role || 'client',
+      birthDate: user.birthDate ? new Date(user.birthDate).toISOString().slice(0, 10) : '',
+      minutesBalance: (Number(user.minutesBalance) || 0).toString(),
+      newPassword: '',
+    })
+  }
+
+  const saveEditedUser = async () => {
+    if (!userEditDraft) return
+    setUserEditSaving(true)
+    setUserEditFeedback('')
+
+    const result = await onUpdateAdminUser?.({
+      id: userEditDraft.id,
+      name: userEditDraft.name,
+      email: userEditDraft.email,
+      role: userEditDraft.role,
+      birthDate: userEditDraft.birthDate || null,
+      minutesBalance: Number(userEditDraft.minutesBalance),
+      newPassword: userEditDraft.newPassword,
+    })
+
+    if (result?.ok) {
+      setUserEditFeedback('Usuário salvo com sucesso.')
+      setTimeout(() => {
+        setEditingUser(null)
+        setUserEditDraft(null)
+        setUserEditFeedback('')
+      }, 700)
+    } else {
+      setUserEditFeedback(result?.message || 'Erro ao salvar usuário.')
+    }
+
+    setUserEditSaving(false)
+  }
+
   return (
     <GlassCard
       title="Painel Administrativo"
@@ -464,6 +514,10 @@ export function AdminPanel({
         <button className={tabButtonClass('consultores')} onClick={() => setActiveTab('consultores')}>
           <Check size={14} />
           Consultores
+        </button>
+        <button className={tabButtonClass('usuarios')} onClick={() => setActiveTab('usuarios')}>
+          <Users size={14} />
+          Usuários
         </button>
         <button className={tabButtonClass('financeiro')} onClick={() => setActiveTab('financeiro')}>
           <CreditCard size={14} />
@@ -573,6 +627,65 @@ export function AdminPanel({
           </section>
         )}
 
+        {activeTab === 'usuarios' && (
+          <section className="grid gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-display text-2xl text-mystic-goldSoft">Usuários da Plataforma</h3>
+              <button
+                onClick={() => onRefreshAdminUsers?.()}
+                className="rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 px-3 py-1.5 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/20"
+              >
+                Atualizar lista
+              </button>
+            </div>
+
+            <div className="overflow-x-auto rounded-lg border border-mystic-gold/25">
+              <table className="min-w-full divide-y divide-mystic-gold/20 text-sm">
+                <thead className="bg-black/35">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Nome</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Email</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Saldo atual</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">3 perguntas</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">5 perguntas</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Consultas ao vivo</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-mystic-gold/15 bg-black/20">
+                  {(adminUsers || []).length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-3 py-8 text-center text-ethereal-silver/70">
+                        Nenhum usuário encontrado.
+                      </td>
+                    </tr>
+                  ) : (
+                    (adminUsers || []).map((user) => (
+                      <tr key={user.id}>
+                        <td className="px-3 py-2 text-amber-50">{user.name}</td>
+                        <td className="px-3 py-2 text-amber-100/80">{user.email}</td>
+                        <td className="px-3 py-2 text-mystic-goldSoft">R$ {Number(user.minutesBalance || 0).toFixed(2)}</td>
+                        <td className="px-3 py-2 text-ethereal-silver/85">{Number(user.threeQuestionsCount || 0)}</td>
+                        <td className="px-3 py-2 text-ethereal-silver/85">{Number(user.fiveQuestionsCount || 0)}</td>
+                        <td className="px-3 py-2 text-ethereal-silver/85">{Number(user.liveConsultationsCount || 0)}</td>
+                        <td className="px-3 py-2">
+                          <button
+                            onClick={() => openEditUser(user)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-mystic-gold/60 px-2 py-1 text-[11px] text-mystic-goldSoft transition hover:bg-mystic-gold/10"
+                          >
+                            <Pencil size={12} />
+                            Editar
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
         {activeTab === 'consultores' && (
           <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
             <h3 className="font-display text-xl text-mystic-goldSoft">Pendentes de Aprovação</h3>
@@ -593,6 +706,98 @@ export function AdminPanel({
                     className="h-12 w-12 rounded-full border border-mystic-gold/60 object-cover"
                   />
                   <div>
+
+                  {editingUser && userEditDraft && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                      <div className="w-full max-w-2xl rounded-xl border border-mystic-gold/40 bg-[#140d17] p-5">
+                        <div className="mb-4 flex items-center justify-between">
+                          <h4 className="font-display text-xl text-mystic-goldSoft">Editar usuário</h4>
+                          <button onClick={() => setEditingUser(null)} className="text-amber-100/70 hover:text-amber-50">
+                            <X size={18} />
+                          </button>
+                        </div>
+
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <label className="grid gap-1 text-sm text-amber-100/75">
+                            Nome
+                            <input
+                              value={userEditDraft.name}
+                              onChange={(e) => setUserEditDraft((prev) => ({ ...prev, name: e.target.value }))}
+                              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                            />
+                          </label>
+                          <label className="grid gap-1 text-sm text-amber-100/75">
+                            Email
+                            <input
+                              value={userEditDraft.email}
+                              onChange={(e) => setUserEditDraft((prev) => ({ ...prev, email: e.target.value }))}
+                              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                            />
+                          </label>
+                          <label className="grid gap-1 text-sm text-amber-100/75">
+                            Perfil
+                            <select
+                              value={userEditDraft.role}
+                              onChange={(e) => setUserEditDraft((prev) => ({ ...prev, role: e.target.value }))}
+                              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                            >
+                              <option value="client">Cliente</option>
+                              <option value="consultant">Consultor</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          </label>
+                          <label className="grid gap-1 text-sm text-amber-100/75">
+                            Data de nascimento
+                            <input
+                              type="date"
+                              value={userEditDraft.birthDate}
+                              onChange={(e) => setUserEditDraft((prev) => ({ ...prev, birthDate: e.target.value }))}
+                              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                            />
+                          </label>
+                          <label className="grid gap-1 text-sm text-amber-100/75">
+                            Saldo atual (R$)
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={userEditDraft.minutesBalance}
+                              onChange={(e) => setUserEditDraft((prev) => ({ ...prev, minutesBalance: e.target.value }))}
+                              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                            />
+                          </label>
+                          <label className="grid gap-1 text-sm text-amber-100/75">
+                            Nova senha (opcional)
+                            <input
+                              type="text"
+                              value={userEditDraft.newPassword}
+                              onChange={(e) => setUserEditDraft((prev) => ({ ...prev, newPassword: e.target.value }))}
+                              placeholder="Deixe vazio para manter a senha atual"
+                              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                            />
+                          </label>
+                        </div>
+
+                        {userEditFeedback && <p className="mt-3 text-xs text-amber-100/80">{userEditFeedback}</p>}
+
+                        <div className="mt-4 flex justify-end gap-2">
+                          <button
+                            onClick={() => setEditingUser(null)}
+                            className="rounded-lg border border-amber-100/35 px-3 py-2 text-xs text-amber-100/80 transition hover:bg-white/5"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={saveEditedUser}
+                            disabled={userEditSaving}
+                            className="rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200 transition enabled:hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {userEditSaving ? 'Salvando...' : 'Salvar alterações'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                     <p className="text-amber-50">{consultant.name}</p>
                     <p className="text-xs text-amber-100/65">{consultant.email}</p>
                   </div>
