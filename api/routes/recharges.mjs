@@ -363,6 +363,12 @@ export const createRechargesRouter = (pool) => {
       const { paymentIntentId } = request.params
       const userId = request.user.id
 
+      // Inicializar Stripe para verificar o status real
+      const stripeInstance = await initializeStripe(pool)
+      if (!stripeInstance) {
+        return response.status(500).json({ message: 'Stripe não está configurado no servidor.' })
+      }
+
       // Buscar o recharge request associado ao payment intent
       const [rechargeRequests] = await pool.query(
         'SELECT * FROM recharge_requests WHERE id = ? AND userId = ?',
@@ -375,37 +381,48 @@ export const createRechargesRouter = (pool) => {
 
       const rechargeRequest = rechargeRequests[0]
 
-      // Verificar se já foi creditado
-      if (rechargeRequest.status === 'approved') {
-        // Já foi processado, apenas adiciona os minutos se ainda não foi feito
-        const [userCheck] = await pool.query(
-          'SELECT minutesBalance FROM users WHERE id = ?',
-          [userId]
-        )
-        
-        if (userCheck && userCheck.length > 0) {
-          const previousBalance = userCheck[0].minutesBalance
-          
-          // Marcar como 'completed' para indicar que os minutos foram creditados
-          await pool.query(
-            'UPDATE recharge_requests SET status = ?, updatedAt = ? WHERE id = ?',
-            ['completed', new Date(), `stripe_${paymentIntentId}`]
-          )
+      // Verificar o status real na Stripe (evita race condition com webhook)
+      let paymentIntentStatus = 'unknown'
+      try {
+        const stripePaymentIntent = await stripeInstance.paymentIntents.retrieve(paymentIntentId)
+        paymentIntentStatus = stripePaymentIntent.status
+        console.log(`[Stripe Confirm] Status na Stripe: ${paymentIntentStatus}`)
+      } catch (stripeError) {
+        console.error('[Stripe Confirm] Erro ao buscar status na Stripe:', stripeError.message)
+      }
 
-          // Adicionar minutos ao usuário
-          await pool.query(
-            'UPDATE users SET minutesBalance = minutesBalance + ? WHERE id = ?',
-            [rechargeRequest.minutes, userId]
-          )
-
-          console.log(`[Stripe Confirm] Minutos creditados para usuário ${userId}: +${rechargeRequest.minutes}`)
-          response.json({
+      // Aceitar como bem-sucedido se: status is 'approved' OU status na Stripe é 'succeeded'
+      if (rechargeRequest.status === 'approved' || paymentIntentStatus === 'succeeded') {
+        // Verificar se já foi creditado
+        if (rechargeRequest.status === 'completed') {
+          console.log(`[Stripe Confirm] Pagamento já foi creditado para usuário ${userId}`)
+          return response.json({
             ok: true,
-            message: 'Minutos adicionados com sucesso',
-            minutesAdded: rechargeRequest.minutes,
+            message: 'Minutos já haviam sido adicionados',
+            minutesAdded: 0,
           })
         }
+
+        // Marcar como 'completed' para indicar que os minutos foram creditados
+        await pool.query(
+          'UPDATE recharge_requests SET status = ?, updatedAt = ? WHERE id = ?',
+          ['completed', new Date(), `stripe_${paymentIntentId}`]
+        )
+
+        // Adicionar minutos ao usuário
+        await pool.query(
+          'UPDATE users SET minutesBalance = minutesBalance + ? WHERE id = ?',
+          [rechargeRequest.minutes, userId]
+        )
+
+        console.log(`[Stripe Confirm] Minutos creditados para usuário ${userId}: +${rechargeRequest.minutes}`)
+        response.json({
+          ok: true,
+          message: 'Minutos adicionados com sucesso',
+          minutesAdded: rechargeRequest.minutes,
+        })
       } else {
+        console.warn(`[Stripe Confirm] Pagamento em estado inválido. Status BD: ${rechargeRequest.status}, Status Stripe: ${paymentIntentStatus}`)
         return response.status(400).json({ message: 'Pagamento não foi aprovado' })
       }
     } catch (error) {

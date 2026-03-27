@@ -66,26 +66,56 @@ async function createStripePaymentIntent({ packageData, profile, token }) {
 }
 
 async function confirmStripeRecharge({ paymentIntentId, token, packageData, onSuccess }) {
-  const confirmResponse = await fetch(`/api/recharges/stripe-confirm/${paymentIntentId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  })
+  const maxRetries = 3
+  let lastError = null
 
-  if (!confirmResponse.ok) {
-    const errorData = await confirmResponse.json().catch(() => ({}))
-    throw new Error(errorData.message || 'Erro ao confirmar pagamento')
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[StripeCheckoutForm] Tentativa ${attempt}/${maxRetries} de confirmar pagamento...`)
+      
+      const confirmResponse = await fetch(`/api/recharges/stripe-confirm/${paymentIntentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!confirmResponse.ok) {
+        const errorData = await confirmResponse.json().catch(() => ({}))
+        lastError = errorData.message || 'Erro ao confirmar pagamento'
+        
+        // Se for erro 400 (not approved) e não for última tentativa, aguarda e tenta novamente
+        if (confirmResponse.status === 400 && attempt < maxRetries) {
+          console.log(`[StripeCheckoutForm] Pagamento ainda não foi aprovado, aguardando ${attempt * 1000}ms...`)
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000))
+          continue
+        }
+        
+        throw new Error(lastError)
+      }
+
+      const confirmResult = await confirmResponse.json()
+      console.log(`[StripeCheckoutForm] Confirmação bem-sucedida na tentativa ${attempt}`)
+      
+      onSuccess?.({
+        amount: packageData.promoPrice ?? packageData.price,
+        minutes: packageData.minutes,
+        paymentIntentId,
+        ...confirmResult,
+      })
+      
+      return // Sucesso, sai da função
+    } catch (error) {
+      lastError = error
+      if (attempt === maxRetries) {
+        throw error // Última tentativa, relança o erro
+      }
+      console.warn(`[StripeCheckoutForm] Erro na tentativa ${attempt}:`, error.message)
+    }
   }
 
-  const confirmResult = await confirmResponse.json()
-  onSuccess?.({
-    amount: packageData.promoPrice ?? packageData.price,
-    minutes: packageData.minutes,
-    paymentIntentId,
-    ...confirmResult,
-  })
+  throw lastError
 }
 
 // Componente interno que usa Stripe
@@ -135,6 +165,10 @@ function StripeCheckoutForm({ packageData, onSuccess, onError }) {
         setErrorMessage(error.message || 'Erro ao processar pagamento')
         onError?.(error.message)
       } else if (paymentIntent.status === 'succeeded') {
+        console.log('[StripeCheckoutForm] Pagamento aprovado na Stripe, aguardando 500ms antes de confirmar no servidor...')
+        // Aguardar um pouco para dar tempo ao webhook processar
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
         try {
           await confirmStripeRecharge({
             paymentIntentId: paymentIntent.id,
@@ -262,6 +296,10 @@ function StripeWalletsCheckoutForm({ packageData, clientSecret, onSuccess, onErr
       }
 
       if (paymentIntent?.status === 'succeeded') {
+        console.log('[StripeWalletsCheckoutForm] Pagamento aprovado na Stripe, aguardando 500ms antes de confirmar no servidor...')
+        // Aguardar um pouco para dar tempo ao webhook processar
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
         await confirmStripeRecharge({
           paymentIntentId: paymentIntent.id,
           token,
