@@ -24,6 +24,7 @@ import { ContatoPage } from './pages/ContatoPage'
 import { ConsultorPerfilPage } from './pages/ConsultorPerfilPage'
 import { PageTransition } from './components/PageTransition'
 import { MobileBottomNav } from './components/MobileBottomNav'
+import { NotificationToast } from './components/NotificationToast'
 
 const wrapWithTransition = (element) => <PageTransition>{element}</PageTransition>
 
@@ -53,11 +54,12 @@ function ProtectedRoute({ children, role }) {
   return children
 }
 
-function App() {
+function AppContent() {
   const location = useLocation()
+  const { inAppNotifications, removeInAppNotification } = usePlatformContext()
 
   return (
-    <PlatformProvider>
+    <>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={wrapWithTransition(<HomePage />)} />
@@ -93,6 +95,18 @@ function App() {
         </Routes>
       </AnimatePresence>
       <MobileBottomNav />
+      <NotificationToast 
+        notifications={inAppNotifications}
+        onClose={removeInAppNotification}
+      />
+    </>
+  )
+}
+
+function App() {
+  return (
+    <PlatformProvider>
+      <AppContent />
     </PlatformProvider>
   )
 }

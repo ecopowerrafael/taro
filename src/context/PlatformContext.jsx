@@ -272,6 +272,8 @@ export function PlatformProvider({ children }) {
   const [consultantWallets, setConsultantWallets] = useState(initialConsultantWallets)
   const [paymentResult, setPaymentResult] = useState(null)
   const [systemNotice, setSystemNotice] = useState('')
+  const [inAppNotifications, setInAppNotifications] = useState([])
+  const notificationCounterRef = useRef(0)
   const mpCredentialsRef = useRef(mpCredentials)
   const dailyCredentialsRef = useRef(dailyCredentials)
   const stripeCredentialsRef = useRef(stripeCredentials)
@@ -352,6 +354,36 @@ export function PlatformProvider({ children }) {
     return true
   }
 
+  // Sistema de notificações in-app (Toast/Overlay)
+  const addInAppNotification = (notification) => {
+    const id = `notif-${Date.now()}-${++notificationCounterRef.current}`
+    const notif = {
+      id,
+      title: notification.title || 'Notificação',
+      message: notification.message || '',
+      icon: notification.icon || 'message',
+      contactName: notification.contactName || null,
+      actions: notification.actions || [],
+      autoCloseMs: notification.autoCloseMs || 8000,
+      ...notification,
+    }
+
+    setInAppNotifications((prev) => [...prev, notif])
+
+    if (notif.autoCloseMs > 0) {
+      const timeoutId = setTimeout(() => {
+        removeInAppNotification(id)
+      }, notif.autoCloseMs)
+      return { id, timeoutId }
+    }
+
+    return { id }
+  }
+
+  const removeInAppNotification = (id) => {
+    setInAppNotifications((prev) => prev.filter((n) => n.id !== id))
+  }
+
   const debitMinutes = async (minutes) => {
     const result = await debitMinutesFromAuth(minutes)
     if (!result.ok) {
@@ -410,6 +442,89 @@ export function PlatformProvider({ children }) {
   useEffect(() => {
     stripeCredentialsRef.current = stripeCredentials
   }, [stripeCredentials])
+
+  // Setup socket.io listeners para notificações in-app
+  useEffect(() => {
+    if (!isConsultant || !userConsultantProfile) {
+      return
+    }
+
+    // Importa dinâmicamente para evitar circular dependencies
+    const setupSocketListener = async () => {
+      try {
+        const { ConsultantNotificationService } = await import('../services/ConsultantNotificationService')
+        const notificationService = new ConsultantNotificationService()
+
+        // Handler para chamada recebida
+        const handleIncomingCall = (data) => {
+          const callerName = data.callerName || data.caller?.name || 'Cliente'
+          addInAppNotification({
+            id: `call-${data.sessionId}`,
+            title: '📞 Chamada Recebida',
+            message: `${callerName} está aguardando uma vídeo consulta com você.`,
+            icon: 'phone',
+            contactName: callerName,
+            autoCloseMs: 0, // Não auto-fechar
+            actions: [
+              {
+                id: 'answer',
+                label: 'Responder',
+                primary: true,
+                onClick: () => {
+                  window.location.href = `/video-room/${data.sessionId}`
+                },
+              },
+              {
+                id: 'dismiss',
+                label: 'Ignorar',
+                primary: false,
+              },
+            ],
+          })
+        }
+
+        // Handler para pergunta recebida
+        const handleNewQuestion = (data) => {
+          const questionCount = Number(data.questionCount) || 1
+          addInAppNotification({
+            id: `question-${data.requestId}`,
+            title: `❓ ${questionCount} Pergunta${questionCount > 1 ? 's' : ''} Recebida${questionCount > 1 ? 's' : ''}`,
+            message: data.preview || `Você recebeu uma consulta de perguntas para responder.`,
+            icon: 'message',
+            contactName: data.clientName || 'Cliente',
+            autoCloseMs: 10000,
+            actions: [
+              {
+                id: 'answer',
+                label: 'Responder Agora',
+                primary: true,
+                onClick: () => {
+                  window.location.href = '/area-consultor?tab=questions'
+                },
+              },
+            ],
+          })
+        }
+
+        // Monitora conexão do socket
+        if (notificationService.socket) {
+          notificationService.socket.on('incoming_call', handleIncomingCall)
+          notificationService.socket.on('new_question', handleNewQuestion)
+        }
+
+        return () => {
+          if (notificationService.socket) {
+            notificationService.socket.off('incoming_call', handleIncomingCall)
+            notificationService.socket.off('new_question', handleNewQuestion)
+          }
+        }
+      } catch (err) {
+        console.error('[PlatformContext] Erro ao setup socket listeners:', err)
+      }
+    }
+
+    setupSocketListener()
+  }, [isConsultant, userConsultantProfile, addInAppNotification])
 
   const persistCredentialsOnApi = async (nextMpCredentials, nextDailyCredentials) => {
     const response = await fetch(buildApiUrl('/api/credentials'), {
@@ -1516,6 +1631,9 @@ export function PlatformProvider({ children }) {
     paymentResult,
     systemNotice,
     setSystemNotice,
+    inAppNotifications,
+    addInAppNotification,
+    removeInAppNotification,
     ensurePushSubscription,
     billing,
     roomUrl,
