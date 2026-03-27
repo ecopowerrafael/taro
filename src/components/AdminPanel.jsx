@@ -392,6 +392,7 @@ export function AdminPanel({
       name: consultant.name ?? '',
       email: consultant.email ?? '',
       tagline: consultant.tagline ?? '',
+      baseConsultations: consultant.baseConsultations?.toString() ?? '0',
       pricePerMinute: consultant.pricePerMinute?.toString() ?? '0',
       priceThreeQuestions: consultant.priceThreeQuestions?.toString() ?? '0',
       priceFiveQuestions: consultant.priceFiveQuestions?.toString() ?? '0',
@@ -412,6 +413,7 @@ export function AdminPanel({
       name: editForm.name.trim(),
       email: editForm.email.trim().toLowerCase(),
       tagline: editForm.tagline.trim(),
+      baseConsultations: Number(editForm.baseConsultations) || 0,
       pricePerMinute: Number(editForm.pricePerMinute) || 0,
       priceThreeQuestions: Number(editForm.priceThreeQuestions) || 0,
       priceFiveQuestions: Number(editForm.priceFiveQuestions) || 0,
@@ -1765,6 +1767,21 @@ export function AdminPanel({
                 onChange={(event) => setEditForm((prev) => ({ ...prev, tagline: event.target.value }))}
                 className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
                 placeholder="Tagline"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-amber-100">Consultas Base</span>
+              <span className="text-[11px] text-ethereal-silver/65">Quantidade manual usada no total exibido do consultor</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={editForm.baseConsultations ?? '0'}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, baseConsultations: event.target.value }))
+                }
+                className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                placeholder="Consultas base"
               />
             </label>
             <label className="flex flex-col gap-1">
