@@ -6,6 +6,8 @@ import crypto from 'crypto'
 export const createVideoSessionsRouter = (pool) => {
   const router = Router()
 
+  const roundCurrency = (value) => Number((Number(value) || 0).toFixed(2))
+
   router.use(authenticate)
 
   router.post('/', async (request, response) => {
@@ -327,9 +329,9 @@ export const createVideoSessionsRouter = (pool) => {
   // Rota para finalizar sessão com duração e compensação ao consultor
   router.patch('/:sessionId/finish', async (request, response) => {
     const { sessionId } = request.params
-    const { status, durationSeconds, totalConsumption, consultantEarnings } = request.body
+    const { durationSeconds } = request.body
 
-    console.log('[videoSessions /finish] Recebido: sessionId=', sessionId, 'durationSeconds=', durationSeconds, 'totalConsumption=', totalConsumption, 'consultantEarnings=', consultantEarnings)
+    console.log('[videoSessions /finish] Recebido: sessionId=', sessionId, 'durationSeconds=', durationSeconds)
 
     const connection = await pool.getConnection()
     try {
@@ -347,6 +349,24 @@ export const createVideoSessionsRouter = (pool) => {
       }
 
       const session = sessions[0]
+
+      // Idempotência: evita débito/crédito duplicado quando os dois lados encerram quase juntos.
+      if (session.status === 'finished') {
+        const [userRows] = await connection.query(
+          'SELECT minutesBalance FROM users WHERE id = ?',
+          [session.userId]
+        )
+        const existingUserBalance = userRows.length > 0 ? Number(userRows[0].minutesBalance) || 0 : 0
+
+        await connection.rollback()
+        console.log('[videoSessions /finish] Sessão já finalizada anteriormente. Ignorando reprocessamento:', sessionId)
+        return response.json({
+          ok: true,
+          alreadyFinished: true,
+          earnings: Number(session.consultantEarnings) || 0,
+          newUserBalance: existingUserBalance,
+        })
+      }
       
       // Buscar pricePerMinute do consultor
       const [consultantRows] = await connection.query(
@@ -355,18 +375,22 @@ export const createVideoSessionsRouter = (pool) => {
       )
       const pricePerMinute = consultantRows.length > 0 ? Number(consultantRows[0].pricePerMinute) || 0 : 0
       
-      const duration = Math.max(0, parseInt(durationSeconds) || 0)
-      const consumption = Math.max(0, parseFloat(totalConsumption) || 0)
-      const earnings = Math.max(0, parseFloat(consultantEarnings) || 0)
+      const providedDuration = Math.max(0, parseInt(durationSeconds, 10) || 0)
+      const startedAtMs = session.startedAt ? new Date(session.startedAt).getTime() : null
+      const derivedDuration = startedAtMs ? Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)) : 0
+      const duration = startedAtMs ? derivedDuration : providedDuration
+
+      // Cálculo autoritativo do backend: não confiar em consumo/ganho enviados pelo frontend.
+      const grossConsumption = roundCurrency((duration / 60) * pricePerMinute)
 
       // Atualizar sessão com duração e ganho
       await connection.query(
         `UPDATE video_sessions SET status = 'finished', finishedAt = NOW(), durationSeconds = ?, consultantEarnings = ? WHERE id = ?`,
-        [duration, earnings, sessionId]
+        [duration, grossConsumption, sessionId]
       )
 
       // DÉBITO DO USUÁRIO (consumo total da sessão - aquilo que vai sair da carteira)
-      console.log('[videoSessions /finish] Debitando usuario. userId:', session.userId, 'consumption:', consumption)
+      console.log('[videoSessions /finish] Debitando usuario. userId:', session.userId, 'grossConsumption:', grossConsumption)
       
       // Verificar saldo antes de debitar
       const [userRows] = await connection.query(
@@ -375,8 +399,9 @@ export const createVideoSessionsRouter = (pool) => {
       )
       
       if (userRows.length > 0) {
-        const currentBalance = userRows[0].minutesBalance
-        const newBalance = Math.max(0, currentBalance - consumption)
+        const currentBalance = Number(userRows[0].minutesBalance) || 0
+        const effectiveConsumption = Math.min(currentBalance, grossConsumption)
+        const newBalance = roundCurrency(currentBalance - effectiveConsumption)
         
         // Debitar do usuário
         await connection.query(
@@ -384,11 +409,20 @@ export const createVideoSessionsRouter = (pool) => {
           [newBalance, session.userId]
         )
         
-        console.log('[videoSessions /finish] Usuario debitado. Saldo anterior: R$', currentBalance.toFixed(2), ' Novo saldo: R$', newBalance.toFixed(2))
+        console.log('[videoSessions /finish] Usuario debitado. Saldo anterior: R$', currentBalance.toFixed(2), ' Novo saldo: R$', newBalance.toFixed(2), ' Consumo efetivo: R$', effectiveConsumption.toFixed(2))
+
+        // Ganho bruto da sessão passa a ser exatamente o valor efetivamente debitado do usuário.
+        session.consultantEarnings = effectiveConsumption
       }
 
+      // Garantir persistência do mesmo valor econômico usado no débito/crédito.
+      await connection.query(
+        `UPDATE video_sessions SET consultantEarnings = ? WHERE id = ?`,
+        [Number(session.consultantEarnings) || 0, sessionId]
+      )
+
       // Se houve ganho, criar registro na carteira do consultor
-      if (earnings > 0) {
+      if ((Number(session.consultantEarnings) || 0) > 0) {
         // Obter dados do consultor (incluindo commissionOverride)
         const [consultants] = await connection.query(
           `SELECT id, commissionOverride FROM consultants WHERE id = ?`,
@@ -401,9 +435,10 @@ export const createVideoSessionsRouter = (pool) => {
           consultantPercentage = Math.min(1, Math.max(0, Number(consultants[0].commissionOverride) / 100))
         }
         const commissionRate = consultantPercentage
-        
-        const commissionEarnings = earnings * commissionRate
-        const platformShare = earnings - commissionEarnings
+
+        const earnings = Number(session.consultantEarnings) || 0
+        const commissionEarnings = roundCurrency(earnings * commissionRate)
+        const platformShare = roundCurrency(earnings - commissionEarnings)
         
         console.log('[videoSessions /finish] Processando ganhos para consultor. totalEarnings:', earnings, 'commissionRate:', (commissionRate * 100).toFixed(0) + '%', 'consultantGain:', commissionEarnings.toFixed(2), 'platformShare:', platformShare.toFixed(2), 'consultantId:', session.consultantId)
         
@@ -422,7 +457,8 @@ export const createVideoSessionsRouter = (pool) => {
 
         // Criar registro de transação
         const txId = `tx_video_${sessionId}`
-        const txDescription = `Ganho de videoconsulta (${Math.floor(duration / 60)} min à R$ ${pricePerMinute.toFixed(2)}/min)`
+        const billedMinutes = (duration / 60).toFixed(2)
+        const txDescription = `Ganho de videoconsulta (${billedMinutes} min à R$ ${pricePerMinute.toFixed(2)}/min)`
         
         await connection.query(
           `INSERT INTO wallet_transactions (id, consultantId, type, amount, commissionValue, createdAt, description)
@@ -443,8 +479,9 @@ export const createVideoSessionsRouter = (pool) => {
       const newUserBalance = updatedUser.length > 0 ? updatedUser[0].minutesBalance : 0
 
       await connection.commit()
-      console.log('[videoSessions /finish] Sessão finalizada com sucesso. sessionId=', sessionId, 'earnings=', earnings, 'newUserBalance=', newUserBalance)
-      response.json({ ok: true, earnings, newUserBalance })
+      const finalEarnings = Number(session.consultantEarnings) || 0
+      console.log('[videoSessions /finish] Sessão finalizada com sucesso. sessionId=', sessionId, 'earnings=', finalEarnings, 'newUserBalance=', newUserBalance)
+      response.json({ ok: true, earnings: finalEarnings, newUserBalance })
 
     } catch (error) {
       await connection.rollback()
