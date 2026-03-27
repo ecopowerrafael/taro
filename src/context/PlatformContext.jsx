@@ -343,6 +343,15 @@ export function PlatformProvider({ children }) {
     }
   }, [profile?.id])
 
+  const ensurePushSubscription = async () => {
+    if (!profile?.id) {
+      return false
+    }
+
+    await registerPushSubscription(profile.id)
+    return true
+  }
+
   const debitMinutes = async (minutes) => {
     const result = await debitMinutesFromAuth(minutes)
     if (!result.ok) {
@@ -1507,6 +1516,7 @@ export function PlatformProvider({ children }) {
     paymentResult,
     systemNotice,
     setSystemNotice,
+    ensurePushSubscription,
     billing,
     roomUrl,
     minutePackages,

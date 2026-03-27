@@ -6,6 +6,7 @@ import { GlassCard } from '../components/GlassCard'
 import { WalletStatement } from '../components/WalletStatement'
 import { usePlatformContext } from '../context/platform-context'
 import { notificationService } from '../services/ConsultantNotificationService'
+import { canPromptPwaInstall, promptPwaInstall } from '../services/pwaService'
 
 export function AreaConsultorPage() {
   const {
@@ -23,6 +24,7 @@ export function AreaConsultorPage() {
     requestConsultantWithdrawal,
     minWithdrawalAmount,
     updateConsultantAvailability,
+    ensurePushSubscription,
     authLoading,
     token,
   } = usePlatformContext()
@@ -42,6 +44,7 @@ export function AreaConsultorPage() {
   const [pendingStatusModal, setPendingStatusModal] = useState(false)
   const [questionAlertVisible, setQuestionAlertVisible] = useState(true)
   const [questionInboxModalOpen, setQuestionInboxModalOpen] = useState(false)
+  const [pwaInstallAvailable, setPwaInstallAvailable] = useState(canPromptPwaInstall())
 
   // Polling para novas chamadas de v\u00eddeo
   useEffect(() => {
@@ -233,6 +236,38 @@ export function AreaConsultorPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!selectedConsultantId || isAdmin) {
+      return
+    }
+
+    if (!isSelectedConsultantOnline) {
+      notificationService.disconnect()
+      return
+    }
+
+    notificationService.connect(selectedConsultantId, (data) => {
+      setPanelNotice(
+        `Chamada recebida de ${data?.customerName ?? 'cliente'} (sessão ${data?.sessionId}).`,
+      )
+    })
+
+    return () => {
+      notificationService.disconnect()
+    }
+  }, [isAdmin, isSelectedConsultantOnline, selectedConsultantId])
+
+  useEffect(() => {
+    const syncInstallAvailability = () => setPwaInstallAvailable(canPromptPwaInstall())
+    syncInstallAvailability()
+    window.addEventListener('beforeinstallprompt', syncInstallAvailability)
+    window.addEventListener('appinstalled', syncInstallAvailability)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', syncInstallAvailability)
+      window.removeEventListener('appinstalled', syncInstallAvailability)
+    }
+  }, [])
+
   const handleSelectConsultant = async (consultantId) => {
     // Apenas permitir trocar se for admin
     if (!isAdmin) return
@@ -282,6 +317,7 @@ export function AreaConsultorPage() {
         return
       }
 
+      await ensurePushSubscription()
       notificationService.connect(selectedConsultantId, (data) => {
         setPanelNotice(
           `Chamada recebida de ${data?.customerName ?? 'cliente'} (sessão ${data?.sessionId}).`,
@@ -454,6 +490,23 @@ export function AreaConsultorPage() {
       console.error('[handleSaveProfile] Error:', err)
       setProfileNotice('Erro ao salvar perfil: ' + err.message)
     }
+  }
+
+  const handleInstallPwa = async () => {
+    const result = await promptPwaInstall()
+    if (result.ok) {
+      setPanelNotice('Instalação iniciada com sucesso.')
+      setConfirmResponseModal(null)
+      setPwaInstallAvailable(false)
+      return
+    }
+
+    if (result.reason === 'unavailable') {
+      setPanelNotice('Instalação indisponível neste navegador agora. Use o menu do navegador para instalar o app.')
+      return
+    }
+
+    setPanelNotice('A instalação do app foi cancelada.')
   }
 
   const renderPendingRequestsList = () => (
@@ -955,26 +1008,26 @@ export function AreaConsultorPage() {
               <button
                 onClick={() => {
                   if (/iPhone|iPad|iOS/.test(navigator.userAgent)) {
-                    // iPhone: mostrar instruções PWA ou redirecionar
-                    alert('Toque em Compartilhar > Adicionar à Tela Inicial para instalar o app PWA.')
-                  } else {
-                    alert('A instalação do PWA no iOS é feita através de Compartilhar > Adicionar à Tela Inicial.')
+                    setPanelNotice('No iPhone/iPad, use Compartilhar > Adicionar à Tela de Início para instalar o app.')
+                    setConfirmResponseModal(null)
+                    return
                   }
-                  setConfirmResponseModal(null)
+
+                  void handleInstallPwa()
                 }}
                 className="rounded-lg bg-blue-600/90 py-3 font-bold text-white transition hover:bg-blue-500"
               >
-                📱 iPhone / iPad
+                📱 Instalar PWA
               </button>
               <button
                 onClick={() => {
-                  // Android: download APK
-                  window.location.href = '/astria-app.apk'
-                  setConfirmResponseModal(null)
+                  setPanelNotice('Se a instalação não abrir automaticamente, use o menu do navegador e escolha Instalar aplicativo.')
+                  void handleInstallPwa()
                 }}
                 className="rounded-lg bg-green-600/90 py-3 font-bold text-white transition hover:bg-green-500"
+                disabled={!pwaInstallAvailable}
               >
-                🤖 Android (Baixar APK)
+                🤖 Android / Desktop
               </button>
               <button
                 onClick={() => setConfirmResponseModal(null)}
