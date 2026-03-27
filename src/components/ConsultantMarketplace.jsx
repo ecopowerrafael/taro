@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { CircleDollarSign, Star, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { motion as Motion } from 'framer-motion'
 import { GlassCard } from './GlassCard'
 
@@ -109,7 +110,14 @@ export function ConsultantMarketplace({
                 className="h-16 w-16 rounded-full border-2 border-mystic-gold/80 object-cover"
               />
               <div className="flex-1">
-                <h3 className="font-text font-bold text-xl text-mystic-goldSoft">{consultant.name}</h3>
+                <h3 className="font-text font-bold text-xl text-mystic-goldSoft">
+                  <Link
+                    to={`/consultor/${consultant.id}`}
+                    className="hover:underline decoration-mystic-gold/40"
+                  >
+                    {consultant.name}
+                  </Link>
+                </h3>
                 <p className="text-sm text-amber-50/85">{consultant.tagline}</p>
               </div>
               <span

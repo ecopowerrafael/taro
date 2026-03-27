@@ -307,5 +307,82 @@ export const createConsultantsRouter = (pool) => {
     response.json({ ok: true })
   })
 
+  // GET /:id/public — perfil público com avaliações (sem autenticação)
+  router.get('/:id/public', async (request, response) => {
+    const { id } = request.params
+    const [rows] = await pool.query(
+      `SELECT id, name, tagline, description, photo, status, pricePerMinute, priceThreeQuestions,
+              priceFiveQuestions, baseConsultations, realSessions, ratingAverage
+       FROM consultants WHERE id = ?`,
+      [id],
+    )
+    if (!rows.length) {
+      return response.status(404).json({ message: 'Consultor não encontrado.' })
+    }
+    const consultant = rows[0]
+    const [reviews] = await pool.query(
+      `SELECT cr.id, cr.rating, cr.comment, cr.sessionType, cr.createdAt, u.name as userName
+       FROM consultant_reviews cr
+       JOIN users u ON cr.userId = u.id
+       WHERE cr.consultantId = ?
+       ORDER BY cr.createdAt DESC
+       LIMIT 50`,
+      [id],
+    )
+    response.json({ ...consultant, reviews })
+  })
+
+  // POST /reviews — submeter avaliação (requer autenticação)
+  router.post('/reviews', authenticate, async (request, response) => {
+    const { consultantId, referenceId, sessionType, rating, comment } = request.body ?? {}
+    const userId = request.user.id
+
+    if (!consultantId || !referenceId || !sessionType || !rating) {
+      return response.status(400).json({ message: 'consultantId, referenceId, sessionType e rating são obrigatórios.' })
+    }
+    const numRating = Math.min(5, Math.max(1, Math.floor(Number(rating))))
+    if (!['video', 'question'].includes(sessionType)) {
+      return response.status(400).json({ message: 'sessionType inválido.' })
+    }
+
+    // Verificar se já avaliou esta referência
+    const [existing] = await pool.query(
+      'SELECT id FROM consultant_reviews WHERE referenceId = ? AND userId = ?',
+      [referenceId, userId],
+    )
+    if (existing.length > 0) {
+      return response.status(409).json({ message: 'Você já avaliou esta consulta.' })
+    }
+
+    const reviewId = `rev_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+    await pool.query(
+      `INSERT INTO consultant_reviews (id, consultantId, userId, sessionType, referenceId, rating, comment, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [reviewId, consultantId, userId, sessionType, referenceId, numRating, comment?.trim() || null],
+    )
+
+    // Atualizar ratingAverage do consultor
+    const [[avgRow]] = await pool.query(
+      'SELECT AVG(rating) as avg FROM consultant_reviews WHERE consultantId = ?',
+      [consultantId],
+    )
+    const newAvg = Number(Number(avgRow.avg || 0).toFixed(2))
+    await pool.query('UPDATE consultants SET ratingAverage = ? WHERE id = ?', [newAvg, consultantId])
+
+    response.status(201).json({ ok: true, reviewId, newRatingAverage: newAvg })
+  })
+
+  // GET /reviews/check — verifica se o usuário já avaliou um referenceId (requer autenticação)
+  router.get('/reviews/check', authenticate, async (request, response) => {
+    const { referenceId } = request.query
+    const userId = request.user.id
+    if (!referenceId) return response.status(400).json({ message: 'referenceId é obrigatório.' })
+    const [rows] = await pool.query(
+      'SELECT id FROM consultant_reviews WHERE referenceId = ? AND userId = ?',
+      [referenceId, userId],
+    )
+    response.json({ reviewed: rows.length > 0 })
+  })
+
   return router
 }

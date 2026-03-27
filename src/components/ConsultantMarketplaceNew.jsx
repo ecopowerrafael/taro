@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Star, ChevronLeft, ChevronRight, ArrowUpDown, MessageCircle, Eye, Search, Sparkles } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { GlassCard } from './GlassCard'
 
 const statusStyles = {
@@ -157,9 +158,13 @@ export function ConsultantMarketplaceNew({
 
             {/* Info */}
             <div className="text-center relative z-10 flex-1">
-              <h3 className="font-playfair text-2xl text-white mb-1 group-hover:text-mystic-gold transition-colors line-clamp-2">
+              <Link
+                to={`/consultor/${consultant.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="font-playfair text-2xl text-white mb-1 group-hover:text-mystic-gold transition-colors line-clamp-2 hover:underline decoration-mystic-gold/40"
+              >
                 {consultant.name}
-              </h3>
+              </Link>
               
               <div className="flex items-center justify-center gap-1 mb-3">
                 <Star className="w-3.5 h-3.5 fill-mystic-gold text-mystic-gold" />

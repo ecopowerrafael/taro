@@ -6,6 +6,7 @@ import { Loader2, Video, PhoneOff, Clock3, Wallet, XCircle } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
 import { io } from 'socket.io-client'
 import DailyIframe from '@daily-co/daily-js'
+import { ReviewModal } from '../components/ReviewModal'
 
 export function VideoRoomPage() {
   const { sessionId } = useParams()
@@ -19,6 +20,7 @@ export function VideoRoomPage() {
   const [localElapsedSeconds, setLocalElapsedSeconds] = useState(0)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [endModal, setEndModal] = useState(null)
+  const [reviewModal, setReviewModal] = useState({ isOpen: false, consultantId: '', consultantName: '', sessionId: '' })
   const callFrameRef = useRef(null)
   const containerRef = useRef(null)
   const socketRef = useRef(null)
@@ -811,8 +813,18 @@ export function VideoRoomPage() {
       socketRef.current.emit('user_leaving_call', { sessionId })
     }
 
-    navigate(session?.isConsultant ? '/area-consultor' : '/consultores')
-    setSystemNotice('Chamada encerrada com sucesso.')
+    if (session?.isConsultant) {
+      navigate('/area-consultor')
+      setSystemNotice('Chamada encerrada com sucesso.')
+    } else {
+      // Mostrar modal de avaliação para o cliente antes de navegar
+      setReviewModal({
+        isOpen: true,
+        consultantId: session?.consultantId ?? '',
+        consultantName: session?.consultantName ?? 'Consultor',
+        sessionId,
+      })
+    }
   }
 
   const handleCancelWaiting = async () => {
@@ -1006,6 +1018,23 @@ export function VideoRoomPage() {
           </div>
         </div>
       )}
+
+      <ReviewModal
+        isOpen={reviewModal.isOpen}
+        consultantName={reviewModal.consultantName}
+        consultantId={reviewModal.consultantId}
+        referenceId={reviewModal.sessionId}
+        sessionType="video"
+        token={token}
+        onClose={() => {
+          setReviewModal(r => ({ ...r, isOpen: false }))
+          navigate('/consultores')
+          setSystemNotice('Chamada encerrada com sucesso.')
+        }}
+        onSubmitted={() => {
+          setSystemNotice('Avaliação enviada! Obrigado pelo feedback.')
+        }}
+      />
     </PageShell>
   )
 }

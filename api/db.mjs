@@ -333,6 +333,24 @@ export const initializeSchema = async (pool) => {
     ) VALUES (1, NULL, NULL, NULL, NULL, 'demo.daily.co', 'hello')
   `)
 
+  // Tabela de avaliações dos consultores
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS consultant_reviews (
+      id VARCHAR(80) PRIMARY KEY,
+      consultantId VARCHAR(50) NOT NULL,
+      userId VARCHAR(50) NOT NULL,
+      sessionType ENUM('video', 'question') NOT NULL,
+      referenceId VARCHAR(80) NOT NULL,
+      rating TINYINT NOT NULL,
+      comment TEXT NULL,
+      createdAt DATETIME NOT NULL,
+      INDEX idx_review_consultant (consultantId),
+      CONSTRAINT fk_review_consultant FOREIGN KEY (consultantId) REFERENCES consultants(id) ON DELETE CASCADE,
+      CONSTRAINT fk_review_user FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY uk_review_reference (referenceId, userId)
+    )
+  `)
+
   // Criar admin se não existir
   const [admins] = await pool.query('SELECT id FROM users WHERE role = "admin"')
   if (admins.length === 0) {

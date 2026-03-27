@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Star } from 'lucide-react'
 import { ClientDashboard } from '../components/ClientDashboard'
 import { AuthProfileForm } from '../components/AuthProfileForm'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
+import { ReviewModal } from '../components/ReviewModal'
 import { usePlatformContext } from '../context/platform-context'
 
 export function PerfilPage() {
@@ -18,10 +19,13 @@ export function PerfilPage() {
     authLoading,
     isAuthenticated,
     questionRequests,
+    token,
   } = usePlatformContext()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('perfil')
   const [expandedAnswerId, setExpandedAnswerId] = useState(null)
+  const [reviewModal, setReviewModal] = useState({ isOpen: false, consultantId: '', consultantName: '', referenceId: '' })
+  const [reviewedIds, setReviewedIds] = useState(new Set())
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -169,12 +173,46 @@ export function PerfilPage() {
                       />
                     </button>
                   </div>
+                  {/* Botão de avaliação */}
+                  {!reviewedIds.has(answer.id) && (
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() =>
+                          setReviewModal({
+                            isOpen: true,
+                            consultantId: answer.consultantId,
+                            consultantName: answer.consultantName,
+                            referenceId: answer.id,
+                          })
+                        }
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-stardust-gold/40 bg-black/30 px-3 py-1.5 text-xs text-stardust-gold transition hover:bg-stardust-gold/10"
+                      >
+                        <Star size={12} /> Avaliar consultor
+                      </button>
+                    </div>
+                  )}
+                  {reviewedIds.has(answer.id) && (
+                    <p className="mt-2 text-right text-xs text-emerald-400/80">✓ Avaliado</p>
+                  )}
                 </article>
               ))}
             </div>
           )}
         </GlassCard>
       )}
+
+      <ReviewModal
+        isOpen={reviewModal.isOpen}
+        consultantName={reviewModal.consultantName}
+        consultantId={reviewModal.consultantId}
+        referenceId={reviewModal.referenceId}
+        sessionType="question"
+        token={token}
+        onClose={() => setReviewModal(r => ({ ...r, isOpen: false }))}
+        onSubmitted={() => {
+          setReviewedIds(prev => new Set([...prev, reviewModal.referenceId]))
+        }}
+      />
     </PageShell>
   )
 }

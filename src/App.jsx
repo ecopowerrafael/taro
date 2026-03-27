@@ -21,6 +21,7 @@ import { SuportePage } from './pages/SuportePage'
 import { BlogPage } from './pages/BlogPage'
 import { AjudaPage } from './pages/AjudaPage'
 import { ContatoPage } from './pages/ContatoPage'
+import { ConsultorPerfilPage } from './pages/ConsultorPerfilPage'
 import { PageTransition } from './components/PageTransition'
 import { MobileBottomNav } from './components/MobileBottomNav'
 
@@ -69,6 +70,7 @@ function App() {
           <Route path="/cadastro" element={wrapWithTransition(<CadastroPage />)} />
           <Route path="/entrar" element={wrapWithTransition(<EntrarPage />)} />
           <Route path="/consultores" element={wrapWithTransition(<ConsultoresPage />)} />
+          <Route path="/consultor/:consultantId" element={wrapWithTransition(<ConsultorPerfilPage />)} />
           <Route path="/seja-consultor" element={wrapWithTransition(<SejaConsultorPage />)} />
           <Route path="/sala/:sessionId" element={wrapWithTransition(<VideoRoomPage />)} />
           <Route 
