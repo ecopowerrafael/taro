@@ -106,18 +106,19 @@ const initialConsultantWallets = initialConsultants.reduce((acc, consultant) => 
   return acc
 }, {})
 
-const adminDashboardStats = {
-  totalBilled: 215,
-  totalCommission: 43,
-  consultantEarnings: 172,
-  todayRevenue: 0,
-  todayCommission: 0,
-  monthRevenue: 0,
-  monthCommission: 0,
-  totalSessions: 44,
-  totalUsers: 18,
-  astrologersCount: 10,
-  clientsCount: 8,
+const initialAdminDashboardStats = {
+  totalBilled: 0,
+  totalCommission: 0,
+  totalQuestions3: 0,
+  totalQuestions5: 0,
+  totalVideoCalls: 0,
+  todayTotal: 0,
+  currentMonthTotal: 0,
+  previousMonthTotal: 0,
+  monthOverMonthPercent: 0,
+  dailyTotals: [],
+  monthlyTotals: [],
+  topConsultants: [],
 }
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
@@ -469,6 +470,7 @@ export function PlatformProvider({ children }) {
 
   const [rechargeRequests, setRechargeRequests] = useState([])
   const [adminUsers, setAdminUsers] = useState([])
+  const [adminDashboardStats, setAdminDashboardStats] = useState(initialAdminDashboardStats)
 
   const fetchPendingRecharges = async () => {
     try {
@@ -590,6 +592,40 @@ export function PlatformProvider({ children }) {
     } catch (error) {
       console.error('[updateAdminUser] Erro ao atualizar usuário:', error)
       return { ok: false, message: 'Falha de conexão ao atualizar usuário.' }
+    }
+  }
+
+  const fetchAdminDashboardStats = async () => {
+    if (!token) {
+      return
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('/api/auth/admin/dashboard-metrics'), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (!response.ok) {
+        return
+      }
+
+      const payload = await response.json()
+      setAdminDashboardStats({
+        totalBilled: Number(payload?.totalBilled) || 0,
+        totalCommission: Number(payload?.totalCommission) || 0,
+        totalQuestions3: Number(payload?.totalQuestions3) || 0,
+        totalQuestions5: Number(payload?.totalQuestions5) || 0,
+        totalVideoCalls: Number(payload?.totalVideoCalls) || 0,
+        todayTotal: Number(payload?.todayTotal) || 0,
+        currentMonthTotal: Number(payload?.currentMonthTotal) || 0,
+        previousMonthTotal: Number(payload?.previousMonthTotal) || 0,
+        monthOverMonthPercent: Number(payload?.monthOverMonthPercent) || 0,
+        dailyTotals: Array.isArray(payload?.dailyTotals) ? payload.dailyTotals : [],
+        monthlyTotals: Array.isArray(payload?.monthlyTotals) ? payload.monthlyTotals : [],
+        topConsultants: Array.isArray(payload?.topConsultants) ? payload.topConsultants : [],
+      })
+    } catch (error) {
+      console.error('[fetchAdminDashboardStats] Erro ao buscar métricas:', error)
     }
   }
 
@@ -1461,6 +1497,7 @@ export function PlatformProvider({ children }) {
     adminUsers,
     fetchAdminUsers,
     updateAdminUser,
+    fetchAdminDashboardStats,
   }
 
   if (process.env.NODE_ENV === 'development') {

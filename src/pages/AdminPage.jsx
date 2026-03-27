@@ -31,11 +31,14 @@ export function AdminPage() {
     adminUsers,
     fetchAdminUsers,
     updateAdminUser,
+    adminDashboardStats,
+    fetchAdminDashboardStats,
   } = usePlatformContext()
 
   useEffect(() => {
     fetchPendingRecharges()
     fetchAdminUsers()
+    fetchAdminDashboardStats()
   }, [])
 
   return (
@@ -67,6 +70,8 @@ export function AdminPage() {
         adminUsers={adminUsers}
         onRefreshAdminUsers={fetchAdminUsers}
         onUpdateAdminUser={updateAdminUser}
+        adminDashboardStats={adminDashboardStats}
+        onRefreshAdminDashboard={fetchAdminDashboardStats}
       />
     </PageShell>
   )

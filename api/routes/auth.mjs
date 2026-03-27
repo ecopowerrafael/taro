@@ -438,5 +438,121 @@ export const createAuthRouter = (pool) => {
     }
   })
 
+  // Admin: métricas do dashboard
+  router.get('/admin/dashboard-metrics', authenticate, authorizeAdmin, async (_request, response) => {
+    try {
+      const [[rechargeTotalsRow]] = await pool.query(
+        `SELECT
+          COALESCE(SUM(CASE WHEN status IN ('approved', 'completed') THEN amount ELSE 0 END), 0) AS totalBilled
+         FROM recharge_requests`
+      )
+
+      const [[commissionRow]] = await pool.query(
+        `SELECT COALESCE(SUM(commissionValue), 0) AS totalCommission
+         FROM wallet_transactions`
+      )
+
+      const [[countsRow]] = await pool.query(
+        `SELECT
+          (SELECT COUNT(*) FROM question_requests WHERE questionCount = 3) AS totalQuestions3,
+          (SELECT COUNT(*) FROM question_requests WHERE questionCount = 5) AS totalQuestions5,
+          (SELECT COUNT(*) FROM video_sessions) AS totalVideoCalls`
+      )
+
+      const [[monthComparisonRow]] = await pool.query(
+        `SELECT
+          COALESCE(SUM(CASE
+            WHEN rr.status IN ('approved', 'completed')
+             AND YEAR(COALESCE(rr.updatedAt, rr.createdAt)) = YEAR(CURDATE())
+             AND MONTH(COALESCE(rr.updatedAt, rr.createdAt)) = MONTH(CURDATE())
+            THEN rr.amount ELSE 0 END), 0) AS currentMonthTotal,
+          COALESCE(SUM(CASE
+            WHEN rr.status IN ('approved', 'completed')
+             AND YEAR(COALESCE(rr.updatedAt, rr.createdAt)) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+             AND MONTH(COALESCE(rr.updatedAt, rr.createdAt)) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+            THEN rr.amount ELSE 0 END), 0) AS previousMonthTotal,
+          COALESCE(SUM(CASE
+            WHEN rr.status IN ('approved', 'completed')
+             AND DATE(COALESCE(rr.updatedAt, rr.createdAt)) = CURDATE()
+            THEN rr.amount ELSE 0 END), 0) AS todayTotal
+         FROM recharge_requests rr`
+      )
+
+      const [dailyRows] = await pool.query(
+        `SELECT
+          DATE(COALESCE(updatedAt, createdAt)) AS day,
+          COALESCE(SUM(amount), 0) AS total
+         FROM recharge_requests
+         WHERE status IN ('approved', 'completed')
+           AND DATE(COALESCE(updatedAt, createdAt)) >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+         GROUP BY DATE(COALESCE(updatedAt, createdAt))
+         ORDER BY day ASC`
+      )
+
+      const [monthlyRows] = await pool.query(
+        `SELECT
+          DATE_FORMAT(COALESCE(updatedAt, createdAt), '%Y-%m') AS month,
+          COALESCE(SUM(amount), 0) AS total
+         FROM recharge_requests
+         WHERE status IN ('approved', 'completed')
+           AND COALESCE(updatedAt, createdAt) >= DATE_SUB(CURDATE(), INTERVAL 11 MONTH)
+         GROUP BY DATE_FORMAT(COALESCE(updatedAt, createdAt), '%Y-%m')
+         ORDER BY month ASC`
+      )
+
+      const [topConsultantsRows] = await pool.query(
+        `SELECT
+          c.id,
+          c.name,
+          COALESCE(SUM(CASE WHEN wt.type = 'credit' THEN wt.amount ELSE 0 END), 0) AS totalEarnings
+         FROM consultants c
+         LEFT JOIN wallet_transactions wt ON wt.consultantId = c.id
+         GROUP BY c.id, c.name
+         ORDER BY totalEarnings DESC
+         LIMIT 10`
+      )
+
+      const totalBilled = Number(rechargeTotalsRow?.totalBilled) || 0
+      const totalCommission = Number(commissionRow?.totalCommission) || 0
+      const currentMonthTotal = Number(monthComparisonRow?.currentMonthTotal) || 0
+      const previousMonthTotal = Number(monthComparisonRow?.previousMonthTotal) || 0
+
+      let monthOverMonthPercent = 0
+      if (previousMonthTotal > 0) {
+        monthOverMonthPercent = ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100
+      } else if (currentMonthTotal > 0) {
+        monthOverMonthPercent = 0
+      }
+
+      response.json({
+        totalBilled,
+        totalCommission,
+        totalQuestions3: Number(countsRow?.totalQuestions3) || 0,
+        totalQuestions5: Number(countsRow?.totalQuestions5) || 0,
+        totalVideoCalls: Number(countsRow?.totalVideoCalls) || 0,
+        todayTotal: Number(monthComparisonRow?.todayTotal) || 0,
+        currentMonthTotal,
+        previousMonthTotal,
+        monthOverMonthPercent: Number(monthOverMonthPercent.toFixed(2)),
+        dailyTotals: dailyRows.map((row) => ({
+          label: row.day,
+          total: Number(row.total) || 0,
+        })),
+        monthlyTotals: monthlyRows.map((row) => ({
+          label: row.month,
+          total: Number(row.total) || 0,
+        })),
+        topConsultants: topConsultantsRows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          totalEarnings: Number(row.totalEarnings) || 0,
+        })),
+      })
+    } catch (error) {
+      console.error('[Admin Dashboard] Erro ao carregar métricas:', error)
+      response.status(500).json({ message: 'Erro ao carregar métricas do dashboard.' })
+    }
+  })
+
   return router
 }

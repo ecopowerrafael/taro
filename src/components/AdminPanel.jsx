@@ -61,8 +61,10 @@ export function AdminPanel({
   adminUsers,
   onRefreshAdminUsers,
   onUpdateAdminUser,
+  adminDashboardStats,
+  onRefreshAdminDashboard,
 }) {
-  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'financeiro' | 'credenciais' | 'recharges' | 'saques'
+  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'usuarios' | 'financeiro' | 'credenciais' | 'recharges' | 'saques'
   const [searchQuery, setSearchSearchQuery] = useState('')
   const [editingConsultantId, setEditingConsultantId] = useState(null)
   const [editForm, setEditForm] = useState(null)
@@ -461,6 +463,13 @@ export function AdminPanel({
   }
 
   const totalPendingWithdrawals = getPendingWithdrawals().length
+  const dailyTotals = Array.isArray(adminDashboardStats?.dailyTotals) ? adminDashboardStats.dailyTotals : []
+  const monthlyTotals = Array.isArray(adminDashboardStats?.monthlyTotals) ? adminDashboardStats.monthlyTotals : []
+  const topConsultants = Array.isArray(adminDashboardStats?.topConsultants)
+    ? adminDashboardStats.topConsultants
+    : []
+  const maxDailyTotal = Math.max(1, ...dailyTotals.map((item) => Number(item.total) || 0))
+  const maxMonthlyTotal = Math.max(1, ...monthlyTotals.map((item) => Number(item.total) || 0))
 
   const openEditUser = (user) => {
     const rawBirthDate = user.birthDate ? String(user.birthDate).slice(0, 10) : ''
@@ -514,6 +523,10 @@ export function AdminPanel({
       subtitle="Gestão de consultores, financeiro e regras de comissão."
     >
       <div className="mb-4 flex flex-wrap gap-2">
+        <button className={tabButtonClass('dashboard')} onClick={() => setActiveTab('dashboard')}>
+          <LayoutDashboard size={14} />
+          Dashboard
+        </button>
         <button className={tabButtonClass('consultores')} onClick={() => setActiveTab('consultores')}>
           <Check size={14} />
           Consultores
@@ -558,23 +571,166 @@ export function AdminPanel({
       <div className="grid gap-5">
         {activeTab === 'dashboard' && (
           <div className="grid gap-6">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-ethereal-silver/70">Visão consolidada com dados reais da plataforma.</p>
+              <button
+                onClick={() => onRefreshAdminDashboard?.()}
+                className="rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 px-3 py-1.5 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/20"
+              >
+                Atualizar dashboard
+              </button>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-4">
               <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Total Faturado</p>
-                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">R$ 0.00</p>
+                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">
+                  R$ {Number(adminDashboardStats?.totalBilled || 0).toFixed(2)}
+                </p>
               </article>
               <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Comissão Astria</p>
-                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">R$ 0.00</p>
+                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">
+                  R$ {Number(adminDashboardStats?.totalCommission || 0).toFixed(2)}
+                </p>
               </article>
               <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Sessões</p>
-                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">0</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Total Diário</p>
+                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">
+                  R$ {Number(adminDashboardStats?.todayTotal || 0).toFixed(2)}
+                </p>
               </article>
               <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Consultores</p>
-                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">{consultants.length}</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Total Mensal</p>
+                <p className="mt-1 font-display text-3xl text-mystic-goldSoft">
+                  R$ {Number(adminDashboardStats?.currentMonthTotal || 0).toFixed(2)}
+                </p>
               </article>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-4">
+              <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Mês Anterior</p>
+                <p className="mt-1 font-display text-2xl text-mystic-goldSoft">
+                  R$ {Number(adminDashboardStats?.previousMonthTotal || 0).toFixed(2)}
+                </p>
+              </article>
+              <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Comparação M/M</p>
+                <p className="mt-1 font-display text-2xl text-mystic-goldSoft">
+                  {Number(adminDashboardStats?.monthOverMonthPercent || 0).toFixed(2)}%
+                </p>
+              </article>
+              <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Perguntas (3)</p>
+                <p className="mt-1 font-display text-2xl text-mystic-goldSoft">
+                  {Number(adminDashboardStats?.totalQuestions3 || 0)}
+                </p>
+              </article>
+              <article className="rounded-lg border border-mystic-gold/25 bg-black/25 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60">Perguntas (5)</p>
+                <p className="mt-1 font-display text-2xl text-mystic-goldSoft">
+                  {Number(adminDashboardStats?.totalQuestions5 || 0)}
+                </p>
+              </article>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
+              <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+                <h4 className="font-display text-lg text-mystic-goldSoft">Faturamento Diário</h4>
+                <p className="text-xs text-ethereal-silver/65">Últimos registros por dia</p>
+                <div className="mt-4 flex h-56 items-end gap-2 overflow-x-auto">
+                  {dailyTotals.length === 0 ? (
+                    <p className="text-sm text-ethereal-silver/70">Sem dados diários no período.</p>
+                  ) : (
+                    dailyTotals.map((item) => {
+                      const total = Number(item.total) || 0
+                      const height = Math.max(6, Math.round((total / maxDailyTotal) * 180))
+                      return (
+                        <div key={item.label} className="flex min-w-[48px] flex-col items-center gap-2">
+                          <div className="text-[10px] text-amber-100/75">R$ {total.toFixed(0)}</div>
+                          <div
+                            className="w-8 rounded-t-md bg-gradient-to-t from-mystic-gold/80 to-amber-200/80"
+                            style={{ height: `${height}px` }}
+                            title={`${item.label}: R$ ${total.toFixed(2)}`}
+                          />
+                          <div className="text-[10px] text-ethereal-silver/70">{String(item.label).slice(5)}</div>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </section>
+
+              <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+                <h4 className="font-display text-lg text-mystic-goldSoft">Resumo de Uso</h4>
+                <div className="mt-4 grid gap-3">
+                  <div className="rounded-lg border border-mystic-gold/20 bg-black/30 p-3">
+                    <p className="text-xs text-amber-100/65">Total de chamadas de vídeo</p>
+                    <p className="font-display text-2xl text-mystic-goldSoft">
+                      {Number(adminDashboardStats?.totalVideoCalls || 0)}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-mystic-gold/20 bg-black/30 p-3">
+                    <p className="text-xs text-amber-100/65">Perguntas totais (3 + 5)</p>
+                    <p className="font-display text-2xl text-mystic-goldSoft">
+                      {Number(adminDashboardStats?.totalQuestions3 || 0) + Number(adminDashboardStats?.totalQuestions5 || 0)}
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-[1.2fr_1fr]">
+              <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+                <h4 className="font-display text-lg text-mystic-goldSoft">Faturamento Mensal</h4>
+                <p className="text-xs text-ethereal-silver/65">Comparativo por mês</p>
+                <div className="mt-4 flex h-56 items-end gap-2 overflow-x-auto">
+                  {monthlyTotals.length === 0 ? (
+                    <p className="text-sm text-ethereal-silver/70">Sem dados mensais no período.</p>
+                  ) : (
+                    monthlyTotals.map((item) => {
+                      const total = Number(item.total) || 0
+                      const height = Math.max(6, Math.round((total / maxMonthlyTotal) * 180))
+                      const monthLabel = String(item.label).slice(5)
+                      return (
+                        <div key={item.label} className="flex min-w-[58px] flex-col items-center gap-2">
+                          <div className="text-[10px] text-amber-100/75">R$ {total.toFixed(0)}</div>
+                          <div
+                            className="w-9 rounded-t-md bg-gradient-to-t from-emerald-500/80 to-emerald-200/80"
+                            style={{ height: `${height}px` }}
+                            title={`${item.label}: R$ ${total.toFixed(2)}`}
+                          />
+                          <div className="text-[10px] text-ethereal-silver/70">{monthLabel}</div>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </section>
+
+              <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+                <h4 className="font-display text-lg text-mystic-goldSoft">Top 10 Consultores (Ganhos)</h4>
+                <div className="mt-3 grid gap-2">
+                  {topConsultants.length === 0 ? (
+                    <p className="text-sm text-ethereal-silver/70">Sem dados de ganhos ainda.</p>
+                  ) : (
+                    topConsultants.map((consultant, index) => (
+                      <div
+                        key={consultant.id}
+                        className="flex items-center justify-between rounded-lg border border-mystic-gold/20 bg-black/30 px-3 py-2"
+                      >
+                        <p className="text-sm text-amber-50">
+                          {index + 1}. {consultant.name}
+                        </p>
+                        <p className="text-sm font-semibold text-mystic-goldSoft">
+                          R$ {Number(consultant.totalEarnings || 0).toFixed(2)}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
             </div>
           </div>
         )}
