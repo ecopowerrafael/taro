@@ -248,7 +248,7 @@ export const initializeSchema = async (pool) => {
       amount DECIMAL(10,2) NOT NULL,
       minutes INT NOT NULL,
       method ENUM('pix', 'card') NOT NULL,
-      status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+      status ENUM('pending', 'approved', 'completed', 'rejected') NOT NULL DEFAULT 'pending',
       createdAt DATETIME NOT NULL,
       updatedAt DATETIME NULL,
       CONSTRAINT fk_recharge_user
@@ -256,6 +256,10 @@ export const initializeSchema = async (pool) => {
         ON DELETE CASCADE
     )
   `)
+
+  try {
+    await pool.query("ALTER TABLE recharge_requests MODIFY COLUMN status ENUM('pending', 'approved', 'completed', 'rejected') NOT NULL DEFAULT 'pending'")
+  } catch (e) {}
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS recharge_packages (

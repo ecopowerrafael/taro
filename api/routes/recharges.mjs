@@ -278,7 +278,7 @@ export const createRechargesRouter = (pool) => {
 
       await pool.query(
         `INSERT INTO recharge_requests (id, userId, amount, minutes, method, status, createdAt)
-         VALUES (?, ?, ?, ?, 'stripe', 'pending', ?)`,
+         VALUES (?, ?, ?, ?, 'card', 'pending', ?)`,
         [rechargeId, userId, amount, minutes, createdAt]
       )
 
