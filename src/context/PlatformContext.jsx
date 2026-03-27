@@ -423,12 +423,12 @@ export function PlatformProvider({ children }) {
       })
 
       if (response.ok) {
-        // Atualiza o estado local dependendo do tipo
-        if (type === 'mp') setMpCredentialsState((prev) => ({ ...prev, ...data }))
-        if (type === 'daily') setDailyCredentialsState((prev) => ({ ...prev, ...data }))
-        if (type === 'pix') setMpCredentialsState((prev) => ({ ...prev, ...data }))
-        if (type === 'stripe') setStripeCredentialsState((prev) => ({ ...prev, ...data }))
-        if (type === 'smtp') setMpCredentialsState((prev) => ({ ...prev, ...data }))
+        // Atualiza o estado local dependendo do tipo (usa funções normalizadoras)
+        if (type === 'mp') setMpCredentials(data)
+        if (type === 'daily') setDailyCredentials(data)
+        if (type === 'pix') setMpCredentials(data)
+        if (type === 'stripe') setStripeCredentials(data)
+        if (type === 'smtp') setMpCredentials(data)
         setSystemNotice(`Configurações de ${type || 'credenciais'} salvas com sucesso.`)
         return { ok: true }
       } else {
