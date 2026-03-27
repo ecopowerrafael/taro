@@ -1213,6 +1213,8 @@ export function AdminPanel({
             </div>
           </section>
         )}
+
+        {activeTab === 'financeiro' && (
           <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
             <h3 className="font-display text-xl text-mystic-goldSoft">Pacotes de Recarga</h3>
             <p className="mt-1 text-xs text-amber-100/65">
