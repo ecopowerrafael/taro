@@ -42,13 +42,71 @@ export const createCredentialsRouter = (pool) => {
     })
   })
 
+  // Teste de salvamento no banco (admin only)
+  router.post('/test-save', authenticate, authorizeAdmin, async (request, response) => {
+    try {
+      const testValue = `test-${Date.now()}`
+      console.log(`[API/Credentials] TEST: Tentando salvar valor de teste: ${testValue}`)
+      
+      // Tentar salvar
+      const [updateResult] = await pool.query(
+        'UPDATE platform_credentials SET stripePublicKey = ? WHERE id = 1',
+        [testValue]
+      )
+      console.log(`[API/Credentials] TEST: Update result:`, updateResult)
+      
+      // Se não atualizou, inserir
+      if (updateResult.affectedRows === 0) {
+        console.log(`[API/Credentials] TEST: Nenhuma linha encontrada, inserindo...`)
+        await pool.query('INSERT IGNORE INTO platform_credentials (id) VALUES (1)')
+        const [retryResult] = await pool.query(
+          'UPDATE platform_credentials SET stripePublicKey = ? WHERE id = 1',
+          [testValue]
+        )
+        console.log(`[API/Credentials] TEST: Retry update result:`, retryResult)
+      }
+      
+      // Ler de volta
+      const [rows] = await pool.query('SELECT stripePublicKey FROM platform_credentials WHERE id = 1')
+      const savedValue = rows[0]?.stripePublicKey
+      
+      console.log(`[API/Credentials] TEST: Valor salvo:`, savedValue)
+      console.log(`[API/Credentials] TEST: Match esperado (${testValue}) === salvo (${savedValue}):`, testValue === savedValue)
+      
+      response.json({
+        ok: true,
+        testValue,
+        savedValue,
+        match: testValue === savedValue,
+        message: testValue === savedValue ? 'Banco está salvando corretamente!' : 'ERRO: Banco não está salvando!'
+      })
+    } catch (error) {
+      console.error(`[API/Credentials] TEST ERROR:`, error)
+      response.status(500).json({
+        ok: false,
+        error: error.message,
+        stack: error.stack
+      })
+    }
+  })
+      message: 'Se você vê isso, o backend V4 está ativo.'
+    })
+  })
+
   // GET - Qualquer usuário autenticado pode ler (não precisa ser admin)
   router.get('/', authenticate, async (_request, response) => {
     try {
       const [rows] = await pool.query('SELECT * FROM platform_credentials WHERE id = 1')
-      response.json(rows[0] || {})
+      const credentials = rows[0] || {}
+      console.log(`[API/Credentials] GET: Retornando credenciais:`, {
+        id: credentials.id,
+        stripePublicKey: credentials.stripePublicKey ? `[${credentials.stripePublicKey.length} chars]` : 'VAZIO',
+        stripeSecretKey: credentials.stripeSecretKey ? `[${credentials.stripeSecretKey.length} chars]` : 'VAZIO',
+        mpPublicKey: credentials.mpPublicKey ? `[${credentials.mpPublicKey.length} chars]` : 'VAZIO',
+      })
+      response.json(credentials)
     } catch (error) {
-      console.error('Erro ao buscar credenciais:', error)
+      console.error('[API/Credentials] Erro ao buscar credenciais:', error)
       response.status(500).json({ message: 'Erro ao buscar credenciais.' })
     }
   })
