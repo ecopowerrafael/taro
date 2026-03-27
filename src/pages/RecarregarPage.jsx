@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { WalletCards, QrCode, CreditCard, Copy, CheckCircle2, Loader2 } from 'lucide-react'
+import { WalletCards, QrCode, CreditCard, Copy, CheckCircle2, Loader2, Smartphone } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { QRCodeSVG } from 'qrcode.react'
 import { GlassCard } from '../components/GlassCard'
@@ -86,6 +86,7 @@ export function RecarregarPage() {
   const [copied, setCopied] = useState(false)
   const [requesting, setRequesting] = useState(false)
   const [stripeSuccess, setStripeSuccess] = useState(false)
+  const [cardVariant, setCardVariant] = useState('card')
 
   // Gerar Pix Copia e Cola dinâmico baseado no pacote
   const pixData = useMemo(() => {
@@ -285,6 +286,44 @@ export function RecarregarPage() {
 
           {paymentMethod === 'card' && (
             <>
+              <GlassCard title="Escolha como deseja pagar" subtitle="Você pode digitar o cartão ou usar carteiras aprovadas na sua conta Stripe.">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <button
+                    onClick={() => setCardVariant('card')}
+                    className={`flex flex-col items-start gap-3 rounded-xl border p-5 text-left transition ${
+                      cardVariant === 'card'
+                        ? 'border-mystic-gold bg-mystic-gold/10'
+                        : 'border-mystic-gold/30 bg-black/30 hover:bg-black/50'
+                    }`}
+                  >
+                    <div className="rounded-full bg-mystic-gold/10 p-3 text-mystic-gold">
+                      <CreditCard size={24} />
+                    </div>
+                    <div>
+                      <h3 className="font-display text-lg text-mystic-goldSoft">Cartão digitado</h3>
+                      <p className="mt-1 text-xs text-amber-100/60">Número, validade e CVC em campos separados.</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setCardVariant('wallets')}
+                    className={`flex flex-col items-start gap-3 rounded-xl border p-5 text-left transition ${
+                      cardVariant === 'wallets'
+                        ? 'border-mystic-gold bg-mystic-gold/10'
+                        : 'border-mystic-gold/30 bg-black/30 hover:bg-black/50'
+                    }`}
+                  >
+                    <div className="rounded-full bg-mystic-gold/10 p-3 text-mystic-gold">
+                      <Smartphone size={24} />
+                    </div>
+                    <div>
+                      <h3 className="font-display text-lg text-mystic-goldSoft">Apple Pay, Google Pay e Link</h3>
+                      <p className="mt-1 text-xs text-amber-100/60">Os botões exibidos dependem do navegador e do dispositivo do usuário.</p>
+                    </div>
+                  </button>
+                </div>
+              </GlassCard>
+
               {stripeSuccess ? (
                 <GlassCard title="Pagamento Confirmado" subtitle="Seu pagamento foi processado com sucesso!">
                   <div className="flex flex-col items-center gap-4 py-8">
@@ -296,10 +335,10 @@ export function RecarregarPage() {
                     <div className="text-center">
                       <p className="text-lg font-semibold text-mystic-goldSoft mb-2">Pagamento Recebido!</p>
                       <p className="text-sm text-amber-100/70 mb-4">
-                        Seu saldo será creditado após a aprovação do administrador.
+                        Seus créditos foram processados e a confirmação do Stripe foi concluída.
                       </p>
                       <p className="text-xs text-amber-100/50">
-                        This typically takes a few minutes.
+                        Você já pode voltar e conferir o saldo atualizado.
                       </p>
                     </div>
                   </div>
@@ -307,6 +346,7 @@ export function RecarregarPage() {
               ) : (
                 <RechargeStripeForm
                   packageData={selectedPack}
+                  variant={cardVariant}
                   onSuccess={(result) => {
                     setStripeSuccess(true)
                     // Após sucesso, usar rechargePackage para adicionar ao contexto
