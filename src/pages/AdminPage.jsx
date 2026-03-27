@@ -22,6 +22,7 @@ export function AdminPage() {
     mpCredentials,
     savePlatformCredentials,
     dailyCredentials,
+    stripeCredentials,
     rechargeRequests,
     fetchPendingRecharges,
     processRechargeAction,
@@ -52,6 +53,8 @@ export function AdminPage() {
         onMpCredentialsChange={savePlatformCredentials}
         dailyCredentials={dailyCredentials}
         onDailyCredentialsChange={savePlatformCredentials}
+        stripeCredentials={stripeCredentials}
+        onStripeCredentialsChange={savePlatformCredentials}
         rechargeRequests={rechargeRequests}
         onRechargeAction={processRechargeAction}
         updateWithdrawalStatus={updateWithdrawalStatus}

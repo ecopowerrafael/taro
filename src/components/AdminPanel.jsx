@@ -55,6 +55,8 @@ export function AdminPanel({
   rechargeRequests,
   onRechargeAction,
   updateWithdrawalStatus,
+  stripeCredentials,
+  onStripeCredentialsChange,
 }) {
   const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'financeiro' | 'credenciais' | 'recharges' | 'saques'
   const [searchQuery, setSearchSearchQuery] = useState('')
@@ -81,6 +83,8 @@ export function AdminPanel({
     dailyApiKey: '',
     dailyDomain: '',
     dailyRoomName: '',
+    stripePublicKey: '',
+    stripeSecretKey: '',
     pixKey: '',
     pixReceiverName: '',
     pixReceiverCity: '',
@@ -92,7 +96,7 @@ export function AdminPanel({
   })
 
   useEffect(() => {
-    if (mpCredentials || dailyCredentials) {
+    if (mpCredentials || dailyCredentials || stripeCredentials) {
       setCredentialsDraft({
         mpPublicKey: mpCredentials?.publicKey || '',
         mpAccessToken: mpCredentials?.accessToken || '',
@@ -100,6 +104,8 @@ export function AdminPanel({
         dailyApiKey: dailyCredentials?.apiKey || '',
         dailyDomain: dailyCredentials?.domain || '',
         dailyRoomName: dailyCredentials?.roomName || '',
+        stripePublicKey: stripeCredentials?.publicKey || '',
+        stripeSecretKey: stripeCredentials?.secretKey || '',
         pixKey: mpCredentials?.pixKey || '',
         pixReceiverName: mpCredentials?.pixReceiverName || '',
         pixReceiverCity: mpCredentials?.pixReceiverCity || '',
@@ -110,7 +116,7 @@ export function AdminPanel({
         smtpFrom: dailyCredentials?.smtpFrom || '',
       })
     }
-  }, [mpCredentials, dailyCredentials])
+  }, [mpCredentials, dailyCredentials, stripeCredentials])
 
   const handleSavePartial = (type) => {
     let data = {}
@@ -131,6 +137,11 @@ export function AdminPanel({
         pixKey: credentialsDraft.pixKey,
         pixReceiverName: credentialsDraft.pixReceiverName,
         pixReceiverCity: credentialsDraft.pixReceiverCity,
+      }
+    } else if (type === 'stripe') {
+      data = {
+        stripePublicKey: credentialsDraft.stripePublicKey,
+        stripeSecretKey: credentialsDraft.stripeSecretKey,
       }
     } else if (type === 'smtp') {
       data = {
@@ -769,6 +780,43 @@ export function AdminPanel({
                     value={credentialsDraft.pixReceiverCity}
                     onChange={(e) => setCredentialsDraft({ ...credentialsDraft, pixReceiverCity: e.target.value })}
                     placeholder="Ex: Sao Paulo"
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-xl text-mystic-goldSoft">Stripe (Cartão de Crédito)</h3>
+                  <p className="text-xs text-ethereal-silver/70">Credenciais para pagamentos com cartão via Stripe.</p>
+                </div>
+                <button
+                  onClick={() => handleSavePartial('stripe')}
+                  className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110"
+                >
+                  <Save size={14} />
+                  Salvar Stripe
+                </button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Chave Pública (Publishable Key)
+                  <input
+                    value={credentialsDraft.stripePublicKey}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, stripePublicKey: e.target.value })}
+                    placeholder="pk_live_... ou pk_test_..."
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Chave Secreta (Secret Key)
+                  <input
+                    type="password"
+                    value={credentialsDraft.stripeSecretKey}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, stripeSecretKey: e.target.value })}
+                    placeholder="sk_live_... ou sk_test_..."
                     className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
                   />
                 </label>

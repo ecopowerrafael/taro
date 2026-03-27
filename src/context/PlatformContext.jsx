@@ -229,6 +229,10 @@ export function PlatformProvider({ children }) {
     domain: 'demo.daily.co',
     roomName: 'hello',
   })
+  const [stripeCredentials, setStripeCredentialsState] = useState({
+    publicKey: '',
+    secretKey: '',
+  })
   const [questionRequests, setQuestionRequests] = useState([])
   const [videoSessions, setVideoSessions] = useState([])
   const [consultantWallets, setConsultantWallets] = useState(initialConsultantWallets)
@@ -236,6 +240,7 @@ export function PlatformProvider({ children }) {
   const [systemNotice, setSystemNotice] = useState('')
   const mpCredentialsRef = useRef(mpCredentials)
   const dailyCredentialsRef = useRef(dailyCredentials)
+  const stripeCredentialsRef = useRef(stripeCredentials)
 
   const minutesBalance = profile?.minutesBalance || 0
 
@@ -340,6 +345,10 @@ export function PlatformProvider({ children }) {
     dailyCredentialsRef.current = dailyCredentials
   }, [dailyCredentials])
 
+  useEffect(() => {
+    stripeCredentialsRef.current = stripeCredentials
+  }, [stripeCredentials])
+
   const persistCredentialsOnApi = async (nextMpCredentials, nextDailyCredentials) => {
     const response = await fetch(buildApiUrl('/api/credentials'), {
       method: 'PUT',
@@ -383,6 +392,18 @@ export function PlatformProvider({ children }) {
     })
   }
 
+  const setStripeCredentials = (updater) => {
+    setStripeCredentialsState((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      const normalized = {
+        publicKey: next?.publicKey ?? next?.stripePublicKey ?? '',
+        secretKey: next?.secretKey ?? next?.stripeSecretKey ?? '',
+      }
+      stripeCredentialsRef.current = normalized
+      return normalized
+    })
+  }
+
   const savePlatformCredentials = async (type, data) => {
     try {
       const response = await fetch(buildApiUrl('/api/credentials'), {
@@ -399,6 +420,7 @@ export function PlatformProvider({ children }) {
         if (type === 'mp') setMpCredentialsState((prev) => ({ ...prev, ...data }))
         if (type === 'daily') setDailyCredentialsState((prev) => ({ ...prev, ...data }))
         if (type === 'pix') setMpCredentialsState((prev) => ({ ...prev, ...data }))
+        if (type === 'stripe') setStripeCredentialsState((prev) => ({ ...prev, ...data }))
         setSystemNotice('Configurações salvas com sucesso.')
         return { ok: true }
       } else {
@@ -1241,6 +1263,8 @@ export function PlatformProvider({ children }) {
     savePlatformCredentials,
     dailyCredentials,
     setDailyCredentials,
+    stripeCredentials,
+    setStripeCredentials,
     submitQuestionConsultation,
     questionRequests,
     respondToQuestionRequest,
