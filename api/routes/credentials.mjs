@@ -170,10 +170,14 @@ export const createCredentialsRouter = (pool) => {
         await pool.query(sql, values)
       }
 
-      response.json({ message: `Credenciais de '${type}' atualizadas com sucesso.` })
+      response.json({ 
+        ok: true,
+        message: `Credenciais de '${type}' atualizadas com sucesso.` 
+      })
     } catch (error) {
       console.error(`[API/Credentials] Erro ao atualizar ${request.params.type}:`, error)
       response.status(503).json({
+        ok: false,
         message: `Erro ao salvar credenciais de ${request.params.type}.`,
         error: error.message,
       })
