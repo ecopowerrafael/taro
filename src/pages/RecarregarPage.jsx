@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti'
 import { QRCodeSVG } from 'qrcode.react'
 import { GlassCard } from '../components/GlassCard'
 import { PageShell } from '../components/PageShell'
+import { RechargeStripeForm } from '../components/RechargeStripeForm'
 import { usePlatformContext } from '../context/platform-context'
 
 // Manual BRCode (PIX) Generator to avoid Node.js buffer issues
@@ -79,11 +80,12 @@ function generatePixPayload({ key, name, city, amount, description }) {
 }
 
 export function RecarregarPage() {
-  const { minutePackages, rechargePackage, paymentResult, minutesBalance, mpCredentials, requestRecharge } = usePlatformContext()
+  const { minutePackages, rechargePackage, paymentResult, minutesBalance, mpCredentials, requestRecharge, stripeCredentials } = usePlatformContext()
   const [paymentMethod, setPaymentMethod] = useState(null) // 'pix' | 'card'
   const [selectedPack, setSelectedPack] = useState(null)
   const [copied, setCopied] = useState(false)
   const [requesting, setRequesting] = useState(false)
+  const [stripeSuccess, setStripeSuccess] = useState(false)
 
   // Gerar Pix Copia e Cola dinâmico baseado no pacote
   const pixData = useMemo(() => {
@@ -105,7 +107,7 @@ export function RecarregarPage() {
   }, [selectedPack, mpCredentials])
 
   useEffect(() => {
-    if (paymentResult?.status !== 'approved') {
+    if (paymentResult?.status !== 'approved' && !stripeSuccess) {
       return
     }
 
@@ -118,7 +120,7 @@ export function RecarregarPage() {
       colors: ['#C5A059', '#FFFFFF'],
       origin: { y: 0.62 },
     })
-  }, [paymentResult?.status])
+  }, [paymentResult?.status, stripeSuccess])
 
   const handleCopyPix = () => {
     if (pixData) {
@@ -284,16 +286,21 @@ export function RecarregarPage() {
           )}
 
           {paymentMethod === 'card' && (
-            <div className="flex flex-col items-center py-8">
-              <button
-                onClick={() => rechargePackage(selectedPack)}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-mystic-gold/70 bg-gradient-to-r from-mystic-gold/90 to-amber-500/85 px-12 py-4 font-bold text-black transition hover:brightness-110"
-              >
-                <WalletCards size={20} />
-                Pagar R$ {(selectedPack.promoPrice ?? selectedPack.price).toFixed(2)} com Mercado Pago
-              </button>
-              <p className="mt-4 text-xs text-amber-100/60">Você será redirecionado para o ambiente seguro do Mercado Pago.</p>
-            </div>
+            <RechargeStripeForm
+              packageData={selectedPack}
+              onSuccess={(result) => {
+                setStripeSuccess(true)
+                // Após sucesso, usar rechargePackage para adicionar ao contexto
+                setTimeout(() => {
+                  setSelectedPack(null)
+                  setPaymentMethod(null)
+                  setStripeSuccess(false)
+                }, 2000)
+              }}
+              onError={(error) => {
+                console.error('Erro no Stripe:', error)
+              }}
+            />
           )}
         </div>
       )}

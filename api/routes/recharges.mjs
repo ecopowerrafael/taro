@@ -1,5 +1,9 @@
 import { Router } from 'express'
+import express from 'express'
 import { authenticate, authorizeAdmin } from '../middleware/auth.mjs'
+import Stripe from 'stripe'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
 
 export const createRechargesRouter = (pool) => {
   const router = Router()
@@ -95,6 +99,105 @@ export const createRechargesRouter = (pool) => {
       response.status(500).json({ message: 'Erro ao processar recarga.' })
     } finally {
       connection.release()
+    }
+  })
+
+  // Criar Payment Intent para Stripe
+  router.post('/stripe-payment-intent', authenticate, async (request, response) => {
+    const { amount, minutes, packageId, customerEmail } = request.body
+    const userId = request.user.id
+
+    if (!amount || !minutes || !packageId) {
+      return response.status(400).json({ message: 'Dados incompletos para pagamento.' })
+    }
+
+    // Validar chave Secret do Stripe
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return response.status(500).json({ message: 'Stripe não está configurado no servidor.' })
+    }
+
+    try {
+      // Criar Payment Intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Stripe usa centavos
+        currency: 'brl',
+        metadata: {
+          userId,
+          packageId,
+          minutes,
+          customerEmail,
+        },
+        receipt_email: customerEmail,
+      })
+
+      // Registrar tentativa de recarga
+      const rechargeId = 'stripe_' + paymentIntent.id
+      const createdAt = new Date()
+
+      await pool.query(
+        `INSERT INTO recharge_requests (id, userId, amount, minutes, method, status, createdAt)
+         VALUES (?, ?, ?, ?, 'stripe', 'pending', ?)`,
+        [rechargeId, userId, amount, minutes, createdAt]
+      )
+
+      response.json({
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+      })
+    } catch (error) {
+      console.error('[Stripe] Erro ao criar payment intent:', error)
+      response.status(500).json({ 
+        message: 'Erro ao criar sessão de pagamento.',
+        error: error.message 
+      })
+    }
+  })
+
+  // Webhook para confirmar pagamento (quando Stripe notifica o servidor)
+  router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async (request, response) => {
+    const sig = request.headers['stripe-signature']
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
+
+    if (!endpointSecret) {
+      return response.status(400).json({ message: 'Webhook não configurado' })
+    }
+
+    try {
+      const event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret)
+
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object
+        const { userId, packageId, minutes } = paymentIntent.metadata
+
+        // Atualizar status da recarga para 'approved'
+        await pool.query(
+          `UPDATE recharge_requests SET status = 'approved', updatedAt = ? WHERE id = ?`,
+          [new Date(), `stripe_${paymentIntent.id}`]
+        )
+
+        // Adicionar minutos ao usuário
+        await pool.query(
+          `UPDATE users SET minutesBalance = minutesBalance + ? WHERE id = ?`,
+          [minutes, userId]
+        )
+
+        console.log('[Stripe] Pagamento confirmado:', paymentIntent.id)
+      } else if (event.type === 'payment_intent.payment_failed') {
+        const paymentIntent = event.data.object
+
+        // Marcar como rejeitado
+        await pool.query(
+          `UPDATE recharge_requests SET status = 'rejected', updatedAt = ? WHERE id = ?`,
+          [new Date(), `stripe_${paymentIntent.id}`]
+        )
+
+        console.log('[Stripe] Pagamento falhou:', paymentIntent.id)
+      }
+
+      response.json({ received: true })
+    } catch (error) {
+      console.error('[Stripe Webhook] Erro:', error)
+      response.status(400).json({ message: 'Erro ao processar webhook' })
     }
   })
 
