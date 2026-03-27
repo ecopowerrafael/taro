@@ -180,6 +180,8 @@ export const initializeSchema = async (pool) => {
       pixKey VARCHAR(255) NULL,
       pixReceiverName VARCHAR(120) NULL,
       pixReceiverCity VARCHAR(120) NULL,
+      stripePublicKey VARCHAR(255) NULL,
+      stripeSecretKey VARCHAR(255) NULL,
       smtpHost VARCHAR(255) NULL,
       smtpPort INT NULL,
       smtpUser VARCHAR(255) NULL,
@@ -229,6 +231,14 @@ export const initializeSchema = async (pool) => {
   } catch (e) {}
   try {
     await pool.query('ALTER TABLE platform_credentials ADD COLUMN pixReceiverCity VARCHAR(120) NULL')
+  } catch (e) {}
+
+  // Garantir colunas de Stripe para bancos antigos
+  try {
+    await pool.query('ALTER TABLE platform_credentials ADD COLUMN stripePublicKey VARCHAR(255) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE platform_credentials ADD COLUMN stripeSecretKey VARCHAR(255) NULL')
   } catch (e) {}
 
   await pool.query(`
