@@ -11,6 +11,7 @@ export function AdminPage() {
     minutePackages,
     updateMinutePackage,
     setFeaturedPackage,
+    saveMinutePackages,
     updateConsultantBaseConsultations,
     consultantWallets,
     questionRequests,
@@ -41,6 +42,7 @@ export function AdminPage() {
         minutePackages={minutePackages}
         updateMinutePackage={updateMinutePackage}
         setFeaturedPackage={setFeaturedPackage}
+        onSaveMinutePackages={saveMinutePackages}
         updateConsultantBaseConsultations={updateConsultantBaseConsultations}
         consultantWallets={consultantWallets}
         questionRequests={questionRequests}

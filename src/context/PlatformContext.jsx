@@ -160,6 +160,14 @@ const normalizeQuestionRequest = (request) => ({
   answerSummary: request.answerSummary ?? '',
 })
 
+const normalizeMinutePackage = (pack) => ({
+  ...pack,
+  minutes: Number(pack.minutes) || 0,
+  price: Number(pack.price) || 0,
+  promoPrice: pack.promoPrice === null || pack.promoPrice === undefined || pack.promoPrice === '' ? null : Number(pack.promoPrice) || 0,
+  isFeatured: Boolean(pack.isFeatured),
+})
+
 const normalizeWalletState = (walletRows, fallback = {}) => {
   const next = { ...fallback }
   walletRows.forEach((wallet) => {
@@ -725,6 +733,26 @@ export function PlatformProvider({ children }) {
   }, [token])
 
   useEffect(() => {
+    const loadMinutePackages = async () => {
+      try {
+        const response = await fetch(buildApiUrl('/api/recharges/packages'))
+        if (!response.ok) {
+          return
+        }
+        const payload = await response.json()
+        if (!Array.isArray(payload) || payload.length === 0) {
+          return
+        }
+        setMinutePackages(payload.map(normalizeMinutePackage))
+      } catch {
+        return
+      }
+    }
+
+    void loadMinutePackages()
+  }, [])
+
+  useEffect(() => {
     const loadQuestionRequests = async () => {
       try {
         const response = await fetch(buildApiUrl('/api/question-requests'))
@@ -963,6 +991,39 @@ export function PlatformProvider({ children }) {
     setMinutePackages((prev) =>
       prev.map((pack) => ({ ...pack, isFeatured: pack.id === id })),
     )
+  }
+
+  const saveMinutePackages = async (packages) => {
+    try {
+      const response = await fetch(buildApiUrl('/api/recharges/packages'), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ packages }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        const message = payload.message || 'Erro ao salvar pacotes de recarga.'
+        setSystemNotice(message)
+        return { ok: false, message }
+      }
+
+      const nextPackages = Array.isArray(payload.packages)
+        ? payload.packages.map(normalizeMinutePackage)
+        : packages.map(normalizeMinutePackage)
+
+      setMinutePackages(nextPackages)
+      setSystemNotice(payload.message || 'Pacotes de recarga salvos com sucesso.')
+      return { ok: true, packages: nextPackages }
+    } catch (error) {
+      console.error('[saveMinutePackages] Error:', error)
+      const message = 'Erro de conexão ao salvar pacotes de recarga.'
+      setSystemNotice(message)
+      return { ok: false, message }
+    }
   }
 
   const submitQuestionConsultation = async ({ consultant, questionCount, price, entries }) => {
@@ -1276,6 +1337,7 @@ export function PlatformProvider({ children }) {
     setMinutePackages,
     updateMinutePackage,
     setFeaturedPackage,
+    saveMinutePackages,
     mpCredentials,
     setMpCredentials,
     savePlatformCredentials,

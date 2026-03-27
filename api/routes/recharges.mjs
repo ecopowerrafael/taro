@@ -2,6 +2,15 @@ import { Router } from 'express'
 import { authenticate, authorizeAdmin } from '../middleware/auth.mjs'
 import Stripe from 'stripe'
 
+const normalizePackage = (row) => ({
+  ...row,
+  minutes: Number(row.minutes) || 0,
+  price: Number(row.price) || 0,
+  promoPrice: row.promoPrice === null || row.promoPrice === undefined ? null : Number(row.promoPrice) || 0,
+  isFeatured: Boolean(row.isFeatured),
+  sortOrder: Number(row.sortOrder) || 0,
+})
+
 // Inicializar Stripe apenas se a chave estiver disponível
 let stripe = null
 const initializeStripe = () => {
@@ -22,6 +31,90 @@ const initializeStripe = () => {
 
 export const createRechargesRouter = (pool) => {
   const router = Router()
+
+  router.get('/packages', async (_request, response) => {
+    try {
+      const [rows] = await pool.query(
+        `SELECT id, minutes, price, promoPrice, isFeatured, sortOrder
+         FROM recharge_packages
+         ORDER BY sortOrder ASC, minutes ASC`
+      )
+      response.json(Array.isArray(rows) ? rows.map(normalizePackage) : [])
+    } catch (error) {
+      console.error('[RechargePackages] Erro ao buscar pacotes:', error)
+      response.status(500).json({ message: 'Erro ao buscar pacotes de recarga.' })
+    }
+  })
+
+  router.put('/packages', authenticate, authorizeAdmin, async (request, response) => {
+    const packages = Array.isArray(request.body?.packages) ? request.body.packages : []
+
+    if (packages.length === 0) {
+      return response.status(400).json({ message: 'Nenhum pacote enviado para salvar.' })
+    }
+
+    const normalizedPackages = packages.map((pack, index) => ({
+      id: String(pack.id || '').trim(),
+      minutes: Number(pack.minutes),
+      price: Number(pack.price),
+      promoPrice: pack.promoPrice === '' || pack.promoPrice === undefined ? null : Number(pack.promoPrice),
+      isFeatured: Boolean(pack.isFeatured),
+      sortOrder: index + 1,
+    }))
+
+    const invalidPackage = normalizedPackages.find(
+      (pack) => !pack.id || !Number.isFinite(pack.minutes) || pack.minutes <= 0 || !Number.isFinite(pack.price) || pack.price <= 0 || (pack.promoPrice !== null && (!Number.isFinite(pack.promoPrice) || pack.promoPrice < 0)),
+    )
+
+    if (invalidPackage) {
+      return response.status(400).json({ message: 'Há pacotes com dados inválidos.' })
+    }
+
+    const featuredCount = normalizedPackages.filter((pack) => pack.isFeatured).length
+    if (featuredCount !== 1) {
+      return response.status(400).json({ message: 'Defina exatamente um pacote como mais escolhido.' })
+    }
+
+    const connection = await pool.getConnection()
+    try {
+      await connection.beginTransaction()
+
+      for (const pack of normalizedPackages) {
+        await connection.query(
+          `INSERT INTO recharge_packages (id, minutes, price, promoPrice, isFeatured, sortOrder, updatedAt)
+           VALUES (?, ?, ?, ?, ?, ?, NOW())
+           ON DUPLICATE KEY UPDATE
+             minutes = VALUES(minutes),
+             price = VALUES(price),
+             promoPrice = VALUES(promoPrice),
+             isFeatured = VALUES(isFeatured),
+             sortOrder = VALUES(sortOrder),
+             updatedAt = VALUES(updatedAt)`,
+          [pack.id, pack.minutes, pack.price, pack.promoPrice, pack.isFeatured ? 1 : 0, pack.sortOrder],
+        )
+      }
+
+      await connection.commit()
+
+      const [rows] = await pool.query(
+        `SELECT id, minutes, price, promoPrice, isFeatured, sortOrder
+         FROM recharge_packages
+         ORDER BY sortOrder ASC, minutes ASC`
+      )
+
+      response.json({
+        ok: true,
+        packages: Array.isArray(rows) ? rows.map(normalizePackage) : [],
+        message: 'Pacotes de recarga salvos com sucesso.',
+      })
+    } catch (error) {
+      await connection.rollback()
+      console.error('[RechargePackages] Erro ao salvar pacotes:', error)
+      response.status(500).json({ message: 'Erro ao salvar pacotes de recarga.' })
+    } finally {
+      connection.release()
+    }
+  })
 
   // Solicitar recarga (PIX ou Card)
   router.post('/request', authenticate, async (request, response) => {

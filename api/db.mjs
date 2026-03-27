@@ -258,6 +258,26 @@ export const initializeSchema = async (pool) => {
   `)
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS recharge_packages (
+      id VARCHAR(20) PRIMARY KEY,
+      minutes INT NOT NULL,
+      price DECIMAL(10,2) NOT NULL,
+      promoPrice DECIMAL(10,2) NULL,
+      isFeatured TINYINT(1) NOT NULL DEFAULT 0,
+      sortOrder INT NOT NULL DEFAULT 0,
+      updatedAt DATETIME NULL
+    )
+  `)
+
+  await pool.query(`
+    INSERT IGNORE INTO recharge_packages (id, minutes, price, promoPrice, isFeatured, sortOrder, updatedAt)
+    VALUES
+      ('p1', 10, 50, NULL, 0, 1, NOW()),
+      ('p2', 30, 135, 119, 1, 2, NOW()),
+      ('p3', 60, 240, NULL, 0, 3, NOW())
+  `)
+
+  await pool.query(`
     INSERT IGNORE INTO consultant_wallets (consultantId, availableBalance, pixKey)
     SELECT id, 0, NULL
     FROM consultants

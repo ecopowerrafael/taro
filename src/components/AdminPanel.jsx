@@ -39,6 +39,7 @@ export function AdminPanel({
   minutePackages,
   updateMinutePackage,
   setFeaturedPackage,
+  onSaveMinutePackages,
   updateConsultantBaseConsultations,
   consultantWallets,
   questionRequests,
@@ -96,6 +97,8 @@ export function AdminPanel({
   })
   const [mercadoPagoAvailable, setMercadoPagoAvailable] = useState(false)
   const [paymentMethodsChecked, setPaymentMethodsChecked] = useState(false)
+  const [financeSaving, setFinanceSaving] = useState(false)
+  const [financeFeedback, setFinanceFeedback] = useState('')
 
   // Verificar disponibilidade de métodos de pagamento
   useEffect(() => {
@@ -136,6 +139,19 @@ export function AdminPanel({
       })
     }
   }, [mpCredentials, dailyCredentials, stripeCredentials])
+
+  useEffect(() => {
+    setFinanceDraft(
+      minutePackages.map((pack) => ({
+        id: pack.id,
+        minutes: pack.minutes,
+        price: pack.price?.toString() ?? '0',
+        promoPrice: pack.promoPrice?.toString() ?? '',
+        isFeatured: pack.isFeatured,
+      })),
+    )
+    setFeaturedFinanceId(minutePackages.find((pack) => pack.isFeatured)?.id ?? null)
+  }, [minutePackages])
 
   const handleSavePartial = async (type) => {
     setCredentialsSaving(true)
@@ -267,13 +283,37 @@ export function AdminPanel({
     setCommissionDraft(parsed.toString())
   }
 
-  const saveFinance = () => {
+  const saveFinance = async () => {
+    setFinanceSaving(true)
+    setFinanceFeedback('')
     const normalizedFinance = financeDraft.map((pack) => ({
       ...pack,
       price: parseNumberValue(pack.price).toString(),
       promoPrice: parseNullableNumberValue(pack.promoPrice)?.toString() ?? '',
+      isFeatured: pack.id === featuredFinanceId,
     }))
     setFinanceDraft(normalizedFinance)
+
+    const payload = normalizedFinance.map((pack, index) => ({
+      id: pack.id,
+      minutes: Number(pack.minutes),
+      price: parseNumberValue(pack.price),
+      promoPrice: parseNullableNumberValue(pack.promoPrice),
+      isFeatured: pack.id === featuredFinanceId,
+      sortOrder: index + 1,
+    }))
+
+    if (typeof onSaveMinutePackages === 'function') {
+      const result = await onSaveMinutePackages(payload)
+      if (result?.ok) {
+        setFinanceFeedback('Pacotes salvos com sucesso.')
+      } else {
+        setFinanceFeedback(result?.message || 'Nao foi possivel salvar os pacotes.')
+      }
+      setFinanceSaving(false)
+      return
+    }
+
     financeDraft.forEach((pack) => {
       updateMinutePackage(pack.id, {
         price: parseNumberValue(pack.price),
@@ -283,6 +323,8 @@ export function AdminPanel({
     if (featuredFinanceId) {
       setFeaturedPackage(featuredFinanceId)
     }
+    setFinanceFeedback('Pacotes atualizados localmente.')
+    setFinanceSaving(false)
   }
 
   const saveCredentials = async () => {
@@ -727,11 +769,12 @@ export function AdminPanel({
             </div>
             <button
               onClick={saveFinance}
-              disabled={!financeDirty}
+              disabled={!financeDirty || financeSaving}
               className="mt-3 rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200 transition enabled:hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Salvar pacotes
+              {financeSaving ? 'Salvando pacotes...' : 'Salvar pacotes'}
             </button>
+            {financeFeedback && <p className="mt-2 text-xs text-amber-100/80">{financeFeedback}</p>}
           </section>
         )}
 
