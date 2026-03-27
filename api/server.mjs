@@ -265,6 +265,17 @@ app.use((_req, res, next) => {
   next()
 })
 
+// 404 handler para APIs não encontradas
+app.use('/api', (_req, res) => {
+  console.warn('[API] Rota não encontrada:', _req.path)
+  res.status(404).json({
+    ok: false,
+    message: 'Endpoint da API não encontrado',
+    path: _req.path,
+    method: _req.method
+  })
+})
+
 // Roteamento SPA: Qualquer rota que não comece com /api deve retornar o index.html
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
