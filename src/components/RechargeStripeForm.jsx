@@ -1,9 +1,34 @@
 import { useEffect, useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
-import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
+import {
+  CardCvcElement,
+  CardExpiryElement,
+  CardNumberElement,
+  Elements,
+  useElements,
+  useStripe,
+} from '@stripe/react-stripe-js'
 import { usePlatformContext } from '../context/platform-context'
 import { GlassCard } from './GlassCard'
 import { Wallet, AlertCircle } from 'lucide-react'
+
+const stripeElementOptions = {
+  style: {
+    base: {
+      fontSize: '15px',
+      color: '#fef3c7',
+      fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+      letterSpacing: '0.02em',
+      '::placeholder': {
+        color: '#a8a29e',
+      },
+    },
+    invalid: {
+      color: '#f87171',
+      iconColor: '#f87171',
+    },
+  },
+}
 
 // Componente interno que usa Stripe
 function StripeCheckoutForm({ packageData, onSuccess, onError }) {
@@ -45,7 +70,12 @@ function StripeCheckoutForm({ packageData, onSuccess, onError }) {
       const { clientSecret } = await intentResponse.json()
 
       // 2. Confirmar pagamento com Stripe
-      const cardElement = elements.getElement(CardElement)
+      const cardElement = elements.getElement(CardNumberElement)
+
+      if (!cardElement) {
+        throw new Error('Campo de numero do cartao nao esta disponivel.')
+      }
+
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: cardElement,
@@ -98,26 +128,32 @@ function StripeCheckoutForm({ packageData, onSuccess, onError }) {
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
-      <div className="rounded-lg border border-mystic-gold/30 bg-black/30 p-4">
-        <label className="block text-sm font-semibold text-amber-100 mb-3">Dados do Cartão</label>
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '14px',
-                color: '#fef3c7',
-                '::placeholder': {
-                  color: '#d1d5db',
-                },
-                fontFamily: 'sans-serif',
-              },
-              invalid: {
-                color: '#ef4444',
-              },
-            },
-          }}
-          className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-3"
-        />
+      <div className="grid gap-3 rounded-2xl border border-mystic-gold/25 bg-gradient-to-b from-black/40 to-black/20 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
+        <div>
+          <p className="text-sm font-semibold tracking-[0.18em] text-mystic-goldSoft uppercase">Cartao</p>
+          <p className="mt-1 text-xs text-ethereal-silver/70">Preencha os dados abaixo em campos separados para uma leitura mais clara.</p>
+        </div>
+
+        <label className="grid gap-2">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/80">Numero do cartao</span>
+          <div className="rounded-xl border border-mystic-gold/30 bg-black/35 px-4 py-4 transition focus-within:border-mystic-gold/70 focus-within:bg-black/50 focus-within:shadow-[0_0_0_1px_rgba(212,175,55,0.22)]">
+            <CardNumberElement options={stripeElementOptions} />
+          </div>
+        </label>
+
+        <label className="grid gap-2">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/80">Validade</span>
+          <div className="rounded-xl border border-mystic-gold/30 bg-black/35 px-4 py-4 transition focus-within:border-mystic-gold/70 focus-within:bg-black/50 focus-within:shadow-[0_0_0_1px_rgba(212,175,55,0.22)]">
+            <CardExpiryElement options={stripeElementOptions} />
+          </div>
+        </label>
+
+        <label className="grid gap-2">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/80">CVC</span>
+          <div className="rounded-xl border border-mystic-gold/30 bg-black/35 px-4 py-4 transition focus-within:border-mystic-gold/70 focus-within:bg-black/50 focus-within:shadow-[0_0_0_1px_rgba(212,175,55,0.22)]">
+            <CardCvcElement options={stripeElementOptions} />
+          </div>
+        </label>
       </div>
 
       {errorMessage && (
