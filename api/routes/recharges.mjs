@@ -195,19 +195,14 @@ export const createRechargesRouter = (pool) => {
         const paymentIntent = event.data.object
         const { userId, packageId, minutes } = paymentIntent.metadata
 
-        // Atualizar status da recarga para 'approved'
+        // Marcar como 'pending' ao invés de 'approved' para exigir aprovação manual do admin
+        // Isso mantém o fluxo consistente com PIX (não adiciona saldo automaticamente)
         await pool.query(
-          `UPDATE recharge_requests SET status = 'approved', updatedAt = ? WHERE id = ?`,
+          `UPDATE recharge_requests SET status = 'pending', updatedAt = ? WHERE id = ?`,
           [new Date(), `stripe_${paymentIntent.id}`]
         )
 
-        // Adicionar minutos ao usuário
-        await pool.query(
-          `UPDATE users SET minutesBalance = minutesBalance + ? WHERE id = ?`,
-          [minutes, userId]
-        )
-
-        console.log('[Stripe] Pagamento confirmado:', paymentIntent.id)
+        console.log('[Stripe] Pagamento confirmado e pendente de aprovação:', paymentIntent.id)
       } else if (event.type === 'payment_intent.payment_failed') {
         const paymentIntent = event.data.object
 

@@ -168,7 +168,6 @@ export function RecarregarPage() {
                 >
                   <div className="mb-3 flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-display text-3xl text-mystic-goldSoft">{pack.minutes} min</p>
                       <p className="text-lg text-amber-50">R$ {finalPrice.toFixed(2)}</p>
                     </div>
                     {pack.isFeatured && (
@@ -232,7 +231,6 @@ export function RecarregarPage() {
                 </div>
                 <div className="text-center">
                   <h3 className="font-display text-lg text-mystic-goldSoft">Cartão de Crédito</h3>
-                  <p className="text-[10px] text-amber-100/60 uppercase">Mercado Pago</p>
                 </div>
               </button>
             </div>
@@ -286,21 +284,44 @@ export function RecarregarPage() {
           )}
 
           {paymentMethod === 'card' && (
-            <RechargeStripeForm
-              packageData={selectedPack}
-              onSuccess={(result) => {
-                setStripeSuccess(true)
-                // Após sucesso, usar rechargePackage para adicionar ao contexto
-                setTimeout(() => {
-                  setSelectedPack(null)
-                  setPaymentMethod(null)
-                  setStripeSuccess(false)
-                }, 2000)
-              }}
-              onError={(error) => {
-                console.error('Erro no Stripe:', error)
-              }}
-            />
+            <>
+              {stripeSuccess ? (
+                <GlassCard title="Pagamento Confirmado" subtitle="Seu pagamento foi processado com sucesso!">
+                  <div className="flex flex-col items-center gap-4 py-8">
+                    <div className="rounded-full bg-emerald-500/20 p-4 text-emerald-400">
+                      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-semibold text-mystic-goldSoft mb-2">Pagamento Recebido!</p>
+                      <p className="text-sm text-amber-100/70 mb-4">
+                        Seu saldo será creditado após a aprovação do administrador.
+                      </p>
+                      <p className="text-xs text-amber-100/50">
+                        This typically takes a few minutes.
+                      </p>
+                    </div>
+                  </div>
+                </GlassCard>
+              ) : (
+                <RechargeStripeForm
+                  packageData={selectedPack}
+                  onSuccess={(result) => {
+                    setStripeSuccess(true)
+                    // Após sucesso, usar rechargePackage para adicionar ao contexto
+                    setTimeout(() => {
+                      setSelectedPack(null)
+                      setPaymentMethod(null)
+                      setStripeSuccess(false)
+                    }, 3000)
+                  }}
+                  onError={(error) => {
+                    console.error('Erro no Stripe:', error)
+                  }}
+                />
+              )}
+            </>
           )}
         </div>
       )}
