@@ -127,6 +127,7 @@ export const createCredentialsRouter = (pool) => {
         pixReceiverCity: 'pixReceiverCity',
         stripePublicKey: 'stripePublicKey',
         stripeSecretKey: 'stripeSecretKey',
+        globalCommission: 'globalCommission',
         smtpHost: 'smtpHost',
         smtpPort: 'smtpPort',
         smtpUser: 'smtpUser',
@@ -190,6 +191,7 @@ export const createCredentialsRouter = (pool) => {
         daily: ['dailyApiKey', 'dailyDomain', 'dailyRoomName'],
         pix: ['pixKey', 'pixReceiverName', 'pixReceiverCity'],
         stripe: ['stripePublicKey', 'stripeSecretKey'],
+        commission: ['globalCommission'],
         smtp: ['smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpFrom'],
       }
 

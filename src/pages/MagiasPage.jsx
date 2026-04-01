@@ -1,47 +1,15 @@
-import { useEffect, useState } from 'react'
-import { Star, Sparkles, Zap } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { ArrowRight, CreditCard, QrCode, Sparkles } from 'lucide-react'
 import { PageShell } from '../components/PageShell'
+import { SpellPurchaseModal } from '../components/SpellPurchaseModal'
 import { SacredGeometry } from '../components/SacredGeometry'
-
-const services = [
-  {
-    id: 1,
-    title: 'Amarração',
-    subtitle: 'Trago seu amor de volta em 7 dias',
-    description: 'Poderoso ritual de amarração com técnicas ancestrais para reconectar você com o amor que deseja. Efeitos notáveis em 7 dias.',
-    price: 450,
-    duration: 'Ritual de 7 dias',
-    icon: '💝',
-  },
-  {
-    id: 2,
-    title: 'Prosperidade',
-    subtitle: 'Abrir as portas da Prosperidade',
-    description: 'Trabalho espiritual para atrair abundância, sucesso financeiro e oportunidades em sua vida. Abra as portas para a prosperidade.',
-    price: 620,
-    duration: 'Trabalho contínuo',
-    icon: '🪙',
-  },
-  {
-    id: 3,
-    title: 'Quebra de Olho Gordo',
-    subtitle: 'Retirar mal que fizeram sobre você',
-    description: 'Proteção espiritual contra inveja e mau olhado. Ritual poderoso para neutralizar energias negativas direcionadas a você.',
-    price: 590,
-    duration: 'Ritual completo',
-    icon: '🛡️',
-  },
-]
+import { usePlatformContext } from '../context/platform-context'
 
 export function MagiasPage() {
-  const [scrolled, setScrolled] = useState(false)
+  const [selectedSpell, setSelectedSpell] = useState(null)
+  const { spells } = usePlatformContext()
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  const highlightedSpells = useMemo(() => spells.slice(0, 3), [spells])
 
   return (
     <div className="min-h-screen bg-mystic-black text-white overflow-x-hidden font-lato selection:bg-mystic-gold/30 selection:text-mystic-gold">
@@ -50,93 +18,98 @@ export function MagiasPage() {
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")' }} />
       <SacredGeometry />
 
-      {/* PAGE SHELL */}
-      <PageShell title="Serviços Mágicos" subtitle="Escolha o ritual que melhor se alinha com suas necessidades e desejos.">
-        {/* HERO SECTION */}
+      <PageShell title="Magias" subtitle="Uma vitrine de produtos espirituais com pagamento via PIX ou cartão.">
         <section className="mb-20">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-mystic-purple-light/30 bg-mystic-purple-light/10 backdrop-blur-sm mb-8">
             <Sparkles className="w-4 h-4 text-mystic-gold" />
-            <span className="text-xs uppercase tracking-widest text-mystic-purple-light">Poder Ancestral</span>
+            <span className="text-xs uppercase tracking-widest text-mystic-purple-light">Produtos Espirituais</span>
           </div>
-          
+
           <h1 className="font-playfair text-5xl md:text-6xl leading-[1.1] mb-6 drop-shadow-2xl">
-            Trabalhos <br/>
-            <span className="text-gradient-gold italic">Mágicos</span> de <br/>
-            Poder Comprovado
+            Magias com <br/>
+            <span className="text-gradient-gold italic">consultor definido</span> e <br/>
+            checkout integrado
           </h1>
-          
+
           <p className="text-lg md:text-xl text-mystic-purple-light mb-8 max-w-2xl leading-relaxed font-light">
-            Nossos especialistas realizam rituais ancestrais com poder comprovado. Escolha o trabalho que melhor se alinha com seus objetivos e deixe as energias do universo atuarem em sua verdade.
+            Cada magia funciona como um produto: a vitrine mostra quem executa o trabalho, o investimento e a descrição completa, enquanto o pagamento entra por PIX ou Stripe.
           </p>
-        </section>
 
-        {/* SERVICES GRID */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-          {services.map((service) => (
-            <div key={service.id} className="group relative rounded-2xl glass-panel p-8 border border-mystic-purple-light/20 hover:border-mystic-gold/50 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
-              
-              {/* Background Glow on Hover */}
-              <div className="absolute inset-0 bg-gradient-to-b from-mystic-gold/0 to-mystic-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              {/* Icon */}
-              <div className="relative z-10 text-5xl mb-4 group-hover:scale-110 transition-transform duration-500">
-                {service.icon}
-              </div>
-              
-              {/* Title */}
-              <h3 className="relative font-playfair text-3xl text-white mb-2 group-hover:text-mystic-gold transition-colors">
-                {service.title}
-              </h3>
-              
-              {/* Subtitle */}
-              <p className="relative text-mystic-gold text-sm font-semibold mb-3 italic">
-                {service.subtitle}
-              </p>
-              
-              {/* Description */}
-              <p className="relative text-mystic-purple-light text-sm mb-6 leading-relaxed">
-                {service.description}
-              </p>
-              
-              {/* Duration */}
-              <p className="relative text-xs text-mystic-purple-light/60 uppercase tracking-widest mb-8">
-                {service.duration}
-              </p>
-
-              {/* Divider */}
-              <div className="relative w-12 h-px bg-gradient-to-r from-mystic-gold to-transparent mb-6" />
-
-              {/* Price & Button */}
-              <div className="relative flex items-end justify-between">
-                <div>
-                  <p className="text-xs text-mystic-purple-light uppercase tracking-widest">Investimento</p>
-                  <p className="font-playfair text-3xl text-mystic-gold font-bold">
-                    R$ {service.price.toLocaleString('pt-BR')}
-                  </p>
-                </div>
-                <Link
-                  to="/cadastro"
-                  className="rounded-full px-6 py-3 bg-mystic-gold text-mystic-black font-bold text-sm uppercase tracking-widest hover:bg-mystic-gold-light transition-colors shadow-gold-glow group-hover:shadow-gold-glow-lg"
-                >
-                  Contratar
-                </Link>
-              </div>
+          <div className="grid gap-3 sm:grid-cols-3 max-w-3xl">
+            <div className="rounded-2xl border border-mystic-gold/25 bg-black/25 p-4">
+              <p className="text-xs uppercase tracking-[0.22em] text-amber-100/55">Magias ativas</p>
+              <p className="mt-2 font-playfair text-3xl text-mystic-gold">{spells.length}</p>
             </div>
-          ))}
+            <div className="rounded-2xl border border-mystic-gold/25 bg-black/25 p-4">
+              <p className="text-xs uppercase tracking-[0.22em] text-amber-100/55">Pagamento PIX</p>
+              <p className="mt-2 text-sm text-amber-100/75">QR Code com validação manual</p>
+            </div>
+            <div className="rounded-2xl border border-mystic-gold/25 bg-black/25 p-4">
+              <p className="text-xs uppercase tracking-[0.22em] text-amber-100/55">Pagamento cartão</p>
+              <p className="mt-2 text-sm text-amber-100/75">Stripe com confirmação automática</p>
+            </div>
+          </div>
         </section>
 
-        {/* INFO SECTION */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+          {spells.length === 0 ? (
+            <div className="md:col-span-3 rounded-2xl border border-mystic-gold/25 bg-black/25 p-10 text-center text-amber-100/70">
+              Nenhuma magia publicada ainda. Cadastre os produtos na nova guia Magias do admin.
+            </div>
+          ) : (
+            spells.map((spell) => (
+              <article key={spell.id} className="group relative overflow-hidden rounded-3xl border border-mystic-purple-light/20 bg-black/25 p-4 transition-all duration-500 hover:-translate-y-2 hover:border-mystic-gold/50">
+                <div className="absolute inset-0 bg-gradient-to-b from-mystic-gold/0 via-transparent to-mystic-gold/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="relative z-10 grid gap-4">
+                  <div className="overflow-hidden rounded-2xl border border-mystic-gold/15 bg-black/35">
+                    {spell.imageUrl ? (
+                      <img src={spell.imageUrl} alt={spell.title} className="h-56 w-full object-cover transition duration-700 group-hover:scale-105" />
+                    ) : (
+                      <div className="flex h-56 items-center justify-center text-sm text-ethereal-silver/40">Imagem não informada</div>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-mystic-goldSoft/75">Feita por {spell.consultantName}</p>
+                    <h3 className="mt-2 font-playfair text-3xl text-white transition-colors group-hover:text-mystic-gold">{spell.title}</h3>
+                    <p className="mt-3 text-sm leading-relaxed text-mystic-purple-light">{spell.shortDescription || spell.description}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-amber-100/55">
+                    <QrCode className="h-4 w-4" /> PIX
+                    <CreditCard className="ml-3 h-4 w-4" /> Stripe
+                  </div>
+
+                  <div className="flex items-end justify-between gap-3 border-t border-mystic-gold/15 pt-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-mystic-purple-light/70">Investimento</p>
+                      <p className="font-playfair text-3xl text-mystic-gold">R$ {Number(spell.price).toFixed(2)}</p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedSpell(spell)}
+                      className="inline-flex items-center gap-2 rounded-full bg-mystic-gold px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-black transition hover:brightness-110"
+                    >
+                      Comprar
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
+        </section>
+
         <section className="rounded-2xl glass-panel border border-mystic-purple-light/20 p-12 mb-20">
           <h2 className="font-playfair text-4xl text-white mb-8 flex items-center gap-3">
-            Como Nossos <span className="text-gradient-gold italic">Rituais</span> Funcionam
+            Como a compra <span className="text-gradient-gold italic">funciona</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { step: '01', title: 'Contrate', description: 'Escolha o ritual que deseja receber' },
-              { step: '02', title: 'Consulta', description: 'Nosso especialista faz uma leitura energética' },
-              { step: '03', title: 'Execução', description: 'Ritual é executado conforme seus objetivos' },
-              { step: '04', title: 'Acompanhamento', description: 'Receba atualizações durante o processo' },
+              { step: '01', title: 'Escolha', description: 'Selecione a magia disponível na vitrine' },
+              { step: '02', title: 'Pague', description: 'Finalize em PIX ou cartão com Stripe' },
+              { step: '03', title: 'Validação', description: 'PIX entra em aprovação manual; cartão confirma automaticamente' },
+              { step: '04', title: 'Repasse', description: 'O consultor recebe o valor líquido conforme a comissão configurada' },
             ].map((item, idx) => (
               <div key={idx} className="rounded-xl border border-mystic-gold/30 bg-mystic-purple-dark/30 p-6 text-center">
                 <p className="font-playfair text-4xl text-mystic-gold mb-3">{item.step}</p>
@@ -147,22 +120,28 @@ export function MagiasPage() {
           </div>
         </section>
 
-        {/* CTA SECTION */}
-        <section className="text-center">
-          <h2 className="font-playfair text-4xl text-white mb-4">Pronto para Transformar sua Vida?</h2>
-          <p className="text-mystic-purple-light text-lg mb-8 max-w-2xl mx-auto">
-            Contratar um de nossos serviços mágicos é o primeiro passo para atrair as mudanças que você deseja.
-          </p>
-          <Link
-            to="/cadastro"
-            className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-gradient-to-r from-mystic-gold to-mystic-gold-light text-mystic-black font-bold uppercase tracking-widest text-sm hover:shadow-gold-glow-lg transition-shadow group"
-          >
-            Começar Agora
-            <Zap className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-          </Link>
-        </section>
-
+        {highlightedSpells.length > 0 && (
+          <section className="text-center">
+            <h2 className="font-playfair text-4xl text-white mb-4">Selecione a magia ideal</h2>
+            <p className="mx-auto mb-8 max-w-2xl text-lg text-mystic-purple-light">
+              A vitrine agora é alimentada diretamente pelo admin, então preço, consultor e descrição sempre refletem o cadastro ativo.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {highlightedSpells.map((spell) => (
+                <button
+                  key={spell.id}
+                  onClick={() => setSelectedSpell(spell)}
+                  className="rounded-full border border-mystic-gold/35 bg-black/30 px-5 py-3 text-sm text-amber-100/85 transition hover:bg-mystic-gold/10"
+                >
+                  {spell.title}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
       </PageShell>
+
+      {selectedSpell && <SpellPurchaseModal spell={selectedSpell} onClose={() => setSelectedSpell(null)} />}
     </div>
   )
 }

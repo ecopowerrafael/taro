@@ -31,8 +31,10 @@ import {
   Landmark,
   Pencil,
   ShieldBan,
+  Sparkles,
 } from 'lucide-react'
 import { GlassCard } from './GlassCard'
+import { AdminMagicPanel } from './AdminMagicPanel'
 
 export function AdminPanel({
   consultants,
@@ -66,8 +68,14 @@ export function AdminPanel({
   adminDashboardStats,
   onRefreshAdminDashboard,
   token,
+  spells = [],
+  pendingSpellOrders = [],
+  adminSpellOrders = [],
+  onSaveSpell,
+  onDeleteSpell,
+  onSpellOrderAction,
 }) {
-  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'usuarios' | 'financeiro' | 'credenciais' | 'notificacoes' | 'recharges' | 'saques'
+  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'usuarios' | 'financeiro' | 'magias' | 'credenciais' | 'notificacoes' | 'recharges' | 'saques'
   const [searchQuery, setSearchSearchQuery] = useState('')
   const [editingConsultantId, setEditingConsultantId] = useState(null)
   const [editForm, setEditForm] = useState(null)
@@ -624,6 +632,15 @@ export function AdminPanel({
         <button className={tabButtonClass('financeiro')} onClick={() => setActiveTab('financeiro')}>
           <CreditCard size={14} />
           Recarga
+        </button>
+        <button className={tabButtonClass('magias')} onClick={() => setActiveTab('magias')}>
+          <Sparkles size={14} />
+          Magias
+          {pendingSpellOrders.length > 0 && (
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+              {pendingSpellOrders.length}
+            </span>
+          )}
         </button>
         <button className={tabButtonClass('credenciais')} onClick={() => setActiveTab('credenciais')}>
           <Landmark size={14} />
@@ -1342,6 +1359,18 @@ export function AdminPanel({
             </button>
             {financeFeedback && <p className="mt-2 text-xs text-amber-100/80">{financeFeedback}</p>}
           </section>
+        )}
+
+        {activeTab === 'magias' && (
+          <AdminMagicPanel
+            spells={spells}
+            consultants={consultants}
+            pendingSpellOrders={pendingSpellOrders}
+            adminSpellOrders={adminSpellOrders}
+            onSaveSpell={onSaveSpell}
+            onDeleteSpell={onDeleteSpell}
+            onSpellOrderAction={onSpellOrderAction}
+          />
         )}
 
         {activeTab === 'credenciais' && (

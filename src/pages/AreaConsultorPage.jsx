@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BellRing, SendHorizontal, Wallet, Lock, UserPlus, Info, XCircle } from 'lucide-react'
+import { BellRing, Loader2, SendHorizontal, Sparkles, Wallet, Lock, UserPlus, Info, XCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
@@ -65,6 +65,8 @@ export function AreaConsultorPage() {
   const [pushDebugStatus, setPushDebugStatus] = useState(null)
   const [pushDebugLoading, setPushDebugLoading] = useState(false)
   const [pushDebugActionResult, setPushDebugActionResult] = useState(null)
+  const [consultantSpellOrders, setConsultantSpellOrders] = useState([])
+  const [spellOrdersLoading, setSpellOrdersLoading] = useState(false)
   const seenPendingSessionIdsRef = useRef(new Set())
   const seenPendingQuestionIdsRef = useRef(new Set())
 
@@ -169,6 +171,32 @@ export function AreaConsultorPage() {
 
   const selectedConsultant = consultants.find((consultant) => consultant.id === selectedConsultantId)
 
+  const loadConsultantSpellOrders = async () => {
+    if (!token || (!isConsultant && !isAdmin)) {
+      return
+    }
+
+    setSpellOrdersLoading(true)
+    try {
+      const response = await fetch(buildApiUrl('/api/spells/orders/mine'), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        return
+      }
+
+      const payload = await response.json()
+      setConsultantSpellOrders(Array.isArray(payload) ? payload : [])
+    } catch (error) {
+      console.error('[AreaConsultorPage] Erro ao buscar pedidos de magias:', error)
+    } finally {
+      setSpellOrdersLoading(false)
+    }
+  }
+
   // Renderização condicional para quem não é consultor
   if (!authLoading && !isConsultant && !isAdmin) {
     return (
@@ -223,6 +251,10 @@ export function AreaConsultorPage() {
   )
   const canAnswerQuestions =
     isAdmin || !selectedConsultant || (selectedConsultant.status !== 'pending' && selectedConsultant.status !== 'Pendente')
+
+  useEffect(() => {
+    void loadConsultantSpellOrders()
+  }, [token, isConsultant, isAdmin])
 
   useEffect(() => {
     if (!isAdmin && pendingRequests.length > 0) {
@@ -852,6 +884,72 @@ export function AreaConsultorPage() {
               )}
             </div>
           )}
+        </GlassCard>
+      )}
+
+      {!isAdmin && canAnswerQuestions && (
+        <GlassCard title="Pedidos de Magias" subtitle="Pedidos atribuídos a você com status, cliente e repasse líquido.">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <p className="text-xs text-ethereal-silver/70">Compras aprovadas ou pendentes de validação vinculadas ao seu perfil.</p>
+            <button
+              onClick={() => {
+                void loadConsultantSpellOrders()
+              }}
+              disabled={spellOrdersLoading}
+              className="rounded-lg border border-mystic-gold/45 bg-mystic-gold/10 px-3 py-1.5 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/20 disabled:opacity-40"
+            >
+              {spellOrdersLoading ? 'Atualizando...' : 'Atualizar pedidos'}
+            </button>
+          </div>
+
+          <div className="grid gap-3">
+            {spellOrdersLoading && consultantSpellOrders.length === 0 ? (
+              <div className="flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/30 p-4 text-sm text-ethereal-silver/70">
+                <Loader2 size={16} className="animate-spin" />
+                Carregando pedidos de magias...
+              </div>
+            ) : consultantSpellOrders.length === 0 ? (
+              <p className="rounded-lg border border-mystic-gold/20 bg-black/30 p-4 text-sm text-ethereal-silver/70">
+                Nenhum pedido de magia atribuído a você até agora.
+              </p>
+            ) : (
+              consultantSpellOrders.map((order) => (
+                <article key={order.id} className="rounded-xl border border-mystic-gold/30 bg-black/30 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={15} className="text-mystic-goldSoft" />
+                        <p className="text-sm text-amber-50">{order.spellTitle}</p>
+                      </div>
+                      <p className="mt-1 text-xs text-amber-100/65">Cliente: {order.userName} • {order.userEmail}</p>
+                      <p className="mt-1 text-[11px] text-ethereal-silver/55">Pedido criado em {new Date(order.createdAt).toLocaleString('pt-BR')}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-display text-2xl text-mystic-goldSoft">R$ {Number(order.consultantNetValue).toFixed(2)}</p>
+                      <p className="text-[11px] text-ethereal-silver/65">Repasse líquido</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded-full border border-mystic-gold/25 bg-black/35 px-2 py-1 text-amber-100/75 uppercase tracking-wide">
+                      {order.method}
+                    </span>
+                    <span className={`rounded-full px-2 py-1 uppercase tracking-wide ${
+                      order.status === 'completed'
+                        ? 'bg-emerald-500/15 text-emerald-300'
+                        : order.status === 'pending' || order.status === 'processing' || order.status === 'approved'
+                          ? 'bg-amber-500/15 text-amber-200'
+                          : 'bg-red-500/15 text-red-300'
+                    }`}>
+                      {order.status}
+                    </span>
+                    <span className="text-ethereal-silver/60">Valor bruto: R$ {Number(order.price).toFixed(2)}</span>
+                    <span className="text-ethereal-silver/60">Comissão plataforma: R$ {Number(order.commissionValue).toFixed(2)}</span>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
         </GlassCard>
       )}
 

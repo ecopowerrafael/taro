@@ -201,6 +201,7 @@ export const initializeSchema = async (pool) => {
       pixReceiverCity VARCHAR(120) NULL,
       stripePublicKey VARCHAR(255) NULL,
       stripeSecretKey VARCHAR(255) NULL,
+      globalCommission DECIMAL(5,2) NOT NULL DEFAULT 30,
       smtpHost VARCHAR(255) NULL,
       smtpPort INT NULL,
       smtpUser VARCHAR(255) NULL,
@@ -281,6 +282,9 @@ export const initializeSchema = async (pool) => {
   try {
     await pool.query('ALTER TABLE platform_credentials ADD COLUMN stripeSecretKey VARCHAR(255) NULL')
   } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE platform_credentials ADD COLUMN globalCommission DECIMAL(5,2) NOT NULL DEFAULT 30')
+  } catch (e) {}
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS recharge_requests (
@@ -356,8 +360,59 @@ export const initializeSchema = async (pool) => {
       mpWebhookSecret,
       dailyApiKey,
       dailyDomain,
-      dailyRoomName
-    ) VALUES (1, NULL, NULL, NULL, NULL, 'demo.daily.co', 'hello')
+      dailyRoomName,
+      globalCommission
+    ) VALUES (1, NULL, NULL, NULL, NULL, 'demo.daily.co', 'hello', 30)
+  `)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS spells (
+      id VARCHAR(80) PRIMARY KEY,
+      title VARCHAR(180) NOT NULL,
+      shortDescription VARCHAR(280) NULL,
+      description TEXT NOT NULL,
+      imageUrl LONGTEXT NULL,
+      consultantId VARCHAR(50) NOT NULL,
+      price DECIMAL(10,2) NOT NULL DEFAULT 0,
+      isActive TINYINT(1) NOT NULL DEFAULT 1,
+      sortOrder INT NOT NULL DEFAULT 0,
+      createdAt DATETIME NOT NULL,
+      updatedAt DATETIME NOT NULL,
+      INDEX idx_spells_active_order (isActive, sortOrder),
+      CONSTRAINT fk_spells_consultant
+        FOREIGN KEY (consultantId) REFERENCES consultants(id)
+        ON DELETE RESTRICT
+    )
+  `)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS spell_orders (
+      id VARCHAR(90) PRIMARY KEY,
+      userId VARCHAR(50) NOT NULL,
+      spellId VARCHAR(80) NULL,
+      consultantId VARCHAR(50) NOT NULL,
+      spellTitle VARCHAR(180) NOT NULL,
+      consultantName VARCHAR(120) NOT NULL,
+      price DECIMAL(10,2) NOT NULL,
+      method ENUM('pix', 'card') NOT NULL,
+      status ENUM('pending', 'processing', 'approved', 'completed', 'rejected') NOT NULL DEFAULT 'pending',
+      commissionRate DECIMAL(5,2) NOT NULL DEFAULT 30,
+      commissionValue DECIMAL(10,2) NOT NULL DEFAULT 0,
+      consultantNetValue DECIMAL(10,2) NOT NULL DEFAULT 0,
+      stripePaymentIntentId VARCHAR(80) NULL,
+      stripeChargeId VARCHAR(80) NULL,
+      stripeBalanceTransactionId VARCHAR(80) NULL,
+      stripeFeeAmount DECIMAL(10,2) NULL,
+      stripeNetAmount DECIMAL(10,2) NULL,
+      paidAt DATETIME NULL,
+      createdAt DATETIME NOT NULL,
+      updatedAt DATETIME NOT NULL,
+      INDEX idx_spell_orders_status (status, method, createdAt),
+      INDEX idx_spell_orders_user (userId, createdAt),
+      CONSTRAINT fk_spell_orders_user FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      CONSTRAINT fk_spell_orders_spell FOREIGN KEY (spellId) REFERENCES spells(id) ON DELETE SET NULL,
+      CONSTRAINT fk_spell_orders_consultant FOREIGN KEY (consultantId) REFERENCES consultants(id) ON DELETE RESTRICT
+    )
   `)
 
   // Tabela de avaliações dos consultores

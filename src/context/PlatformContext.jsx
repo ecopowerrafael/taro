@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { getZodiacSign } from '../utils/zodiac'
 import { useBilling } from '../hooks/useBilling'
-import { createRechargePreference } from '../services/mercadoPagoMock'
 import { notificationService } from '../services/ConsultantNotificationService'
 import { PlatformContext } from './platform-context'
 
@@ -217,6 +216,21 @@ const normalizeMinutePackage = (pack) => ({
   isFeatured: Boolean(pack.isFeatured),
 })
 
+const normalizeSpell = (spell) => ({
+  ...spell,
+  price: Number(spell.price) || 0,
+  isActive: spell.isActive === undefined ? true : Boolean(spell.isActive),
+  sortOrder: Number(spell.sortOrder) || 0,
+})
+
+const normalizeSpellOrder = (order) => ({
+  ...order,
+  price: Number(order.price) || 0,
+  commissionRate: Number(order.commissionRate) || 0,
+  commissionValue: Number(order.commissionValue) || 0,
+  consultantNetValue: Number(order.consultantNetValue) || 0,
+})
+
 const normalizeWalletState = (walletRows, fallback = {}) => {
   const next = { ...fallback }
   walletRows.forEach((wallet) => {
@@ -272,8 +286,11 @@ export function PlatformProvider({ children }) {
   const [pendingConsultants, setPendingConsultants] = useState(initialPendingConsultants)
   const [statusFilter, setStatusFilter] = useState('Todos')
   const [selectedConsultant, setSelectedConsultant] = useState(null)
-  const [globalCommission, setGlobalCommission] = useState(30)
+  const [globalCommission, setGlobalCommissionState] = useState(30)
   const [minutePackages, setMinutePackages] = useState(initialMinutePackages)
+  const [spells, setSpells] = useState([])
+  const [pendingSpellOrders, setPendingSpellOrders] = useState([])
+  const [adminSpellOrders, setAdminSpellOrders] = useState([])
   const [mpCredentials, setMpCredentialsState] = useState({
     publicKey: '',
     accessToken: '',
@@ -292,9 +309,8 @@ export function PlatformProvider({ children }) {
     secretKey: '',
   })
   const [questionRequests, setQuestionRequests] = useState([])
-  const [videoSessions, setVideoSessions] = useState([])
   const [consultantWallets, setConsultantWallets] = useState(initialConsultantWallets)
-  const [paymentResult, setPaymentResult] = useState(null)
+  const [paymentResult] = useState(null)
   const [systemNotice, setSystemNotice] = useState('')
   const [inAppNotifications, setInAppNotifications] = useState([])
   const [notificationHistory, setNotificationHistory] = useState([])
@@ -516,11 +532,6 @@ export function PlatformProvider({ children }) {
     return true
   }
 
-  const creditMinutes = async (minutes) => {
-    // In a real app, this would be an API call
-    console.log(`Creditando ${minutes} minutos`)
-  }
-
   const ensureWalletsForConsultants = (consultantList) => {
     setConsultantWallets((prev) => {
       let changed = false
@@ -655,20 +666,6 @@ export function PlatformProvider({ children }) {
     }
   }, [])
 
-  const persistCredentialsOnApi = async (nextMpCredentials, nextDailyCredentials) => {
-    const response = await fetch(buildApiUrl('/api/credentials'), {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        mpCredentials: nextMpCredentials,
-        dailyCredentials: nextDailyCredentials,
-      }),
-    })
-    return response.ok
-  }
-
   const setMpCredentials = (updater) => {
     setMpCredentialsState((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater
@@ -738,6 +735,12 @@ export function PlatformProvider({ children }) {
         if (type === 'pix') setMpCredentials(data)
         if (type === 'stripe') setStripeCredentials(data)
         if (type === 'smtp') setMpCredentials(data)
+        if (type === 'commission') {
+          const nextCommission = Number(data?.globalCommission)
+          if (Number.isFinite(nextCommission)) {
+            setGlobalCommissionState(nextCommission)
+          }
+        }
         setSystemNotice(`Configurações de ${type || 'credenciais'} salvas com sucesso.`)
         console.log(`[PlatformContext] Sucesso ao salvar ${type}`)
         return { ok: true }
@@ -760,6 +763,22 @@ export function PlatformProvider({ children }) {
   const [rechargeRequests, setRechargeRequests] = useState([])
   const [adminUsers, setAdminUsers] = useState([])
   const [adminDashboardStats, setAdminDashboardStats] = useState(initialAdminDashboardStats)
+
+  const setGlobalCommission = async (nextValue) => {
+    const parsed = Number(nextValue)
+    const safeValue = Number.isFinite(parsed) ? Math.min(100, Math.max(0, parsed)) : 30
+    setGlobalCommissionState(safeValue)
+
+    if (!token) {
+      return { ok: true }
+    }
+
+    const result = await savePlatformCredentials('commission', { globalCommission: safeValue })
+    if (!result?.ok) {
+      setSystemNotice(result?.message || 'Não foi possível salvar a comissão global.')
+    }
+    return result
+  }
 
   const fetchPendingRecharges = async () => {
     try {
@@ -810,6 +829,236 @@ export function PlatformProvider({ children }) {
     } catch (error) {
       console.error('Erro ao processar recarga:', error)
       return false
+    }
+  }
+
+  const fetchPendingSpellOrders = async () => {
+    if (!token) {
+      return
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('/api/spells/orders/pending'), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) {
+        return
+      }
+      const payload = await response.json()
+      if (!Array.isArray(payload)) {
+        return
+      }
+      setPendingSpellOrders(payload.map(normalizeSpellOrder))
+    } catch (error) {
+      console.error('[fetchPendingSpellOrders] Erro ao buscar pedidos PIX:', error)
+    }
+  }
+
+  const fetchAdminSpellOrders = async () => {
+    if (!token) {
+      return
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('/api/spells/orders/admin'), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) {
+        return
+      }
+      const payload = await response.json()
+      if (!Array.isArray(payload)) {
+        return
+      }
+      setAdminSpellOrders(payload.map(normalizeSpellOrder))
+    } catch (error) {
+      console.error('[fetchAdminSpellOrders] Erro ao buscar histórico admin de magias:', error)
+    }
+  }
+
+  const saveSpell = async (spellData) => {
+    if (!token) {
+      return { ok: false, message: 'Faça login como admin para salvar a magia.' }
+    }
+
+    const isEdit = Boolean(spellData?.id)
+    const url = isEdit
+      ? buildApiUrl(`/api/spells/${spellData.id}`)
+      : buildApiUrl('/api/spells')
+
+    try {
+      const response = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(spellData),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao salvar magia.' }
+      }
+
+      const nextSpell = normalizeSpell(payload)
+      setSpells((prev) => {
+        const withoutCurrent = prev.filter((item) => item.id !== nextSpell.id)
+        return [...withoutCurrent, nextSpell].sort((a, b) => {
+          if ((a.sortOrder || 0) !== (b.sortOrder || 0)) {
+            return (a.sortOrder || 0) - (b.sortOrder || 0)
+          }
+          return String(a.title || '').localeCompare(String(b.title || ''))
+        })
+      })
+
+      return {
+        ok: true,
+        spell: nextSpell,
+        message: isEdit ? 'Magia atualizada com sucesso.' : 'Magia criada com sucesso.',
+      }
+    } catch (error) {
+      console.error('[saveSpell] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao salvar magia.' }
+    }
+  }
+
+  const deleteSpell = async (spellId) => {
+    if (!token) {
+      return { ok: false, message: 'Faça login como admin para remover a magia.' }
+    }
+
+    try {
+      const response = await fetch(buildApiUrl(`/api/spells/${spellId}`), {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao remover magia.' }
+      }
+
+      setSpells((prev) => prev.filter((item) => item.id !== spellId))
+      setPendingSpellOrders((prev) => prev.filter((item) => item.spellId !== spellId))
+      return { ok: true, message: payload.message || 'Magia removida com sucesso.' }
+    } catch (error) {
+      console.error('[deleteSpell] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao remover magia.' }
+    }
+  }
+
+  const createSpellPixOrder = async ({ spellId }) => {
+    if (!token) {
+      return { ok: false, message: 'Entre na sua conta para comprar uma magia.' }
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('/api/spells/orders/pix'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ spellId }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao iniciar pagamento PIX.' }
+      }
+
+      return payload
+    } catch (error) {
+      console.error('[createSpellPixOrder] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao iniciar pagamento PIX.' }
+    }
+  }
+
+  const createSpellStripePaymentIntent = async ({ spellId }) => {
+    if (!token) {
+      return { ok: false, message: 'Entre na sua conta para pagar com cartão.' }
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('/api/spells/orders/stripe-payment-intent'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          spellId,
+          customerEmail: profile?.email || '',
+        }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao iniciar pagamento com cartão.' }
+      }
+
+      return { ok: true, ...payload }
+    } catch (error) {
+      console.error('[createSpellStripePaymentIntent] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao iniciar pagamento com cartão.' }
+    }
+  }
+
+  const confirmSpellStripeOrder = async ({ paymentIntentId }) => {
+    if (!token) {
+      return { ok: false, message: 'Entre na sua conta para concluir o pagamento.' }
+    }
+
+    try {
+      const response = await fetch(buildApiUrl(`/api/spells/orders/stripe-confirm/${paymentIntentId}`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao confirmar pagamento.' }
+      }
+
+      return { ok: true, ...payload }
+    } catch (error) {
+      console.error('[confirmSpellStripeOrder] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao confirmar pagamento.' }
+    }
+  }
+
+  const processSpellOrderAction = async (orderId, action) => {
+    if (!token) {
+      return { ok: false, message: 'Faça login como admin para processar o pedido.' }
+    }
+
+    try {
+      const response = await fetch(buildApiUrl(`/api/spells/orders/${orderId}/action`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao processar pedido PIX.' }
+      }
+
+      setPendingSpellOrders((prev) => prev.filter((item) => item.id !== orderId))
+      await fetchAdminSpellOrders()
+      return { ok: true, ...payload }
+    } catch (error) {
+      console.error('[processSpellOrderAction] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao processar pedido PIX.' }
     }
   }
 
@@ -1200,18 +1449,42 @@ export function PlatformProvider({ children }) {
           publicKey: payload?.stripePublicKey ?? '',
           secretKey: payload?.stripeSecretKey ?? '',
         }
+        const nextGlobalCommission = Number(payload?.globalCommission)
         mpCredentialsRef.current = mp
         dailyCredentialsRef.current = daily
         stripeCredentialsRef.current = stripe
         setMpCredentialsState(mp)
         setDailyCredentialsState(daily)
         setStripeCredentialsState(stripe)
+        setGlobalCommissionState(Number.isFinite(nextGlobalCommission) ? nextGlobalCommission : 30)
       } catch {
         return
       }
     }
     void loadCredentials()
   }, [token])
+
+  useEffect(() => {
+    const loadSpells = async () => {
+      try {
+        const response = await fetch(buildApiUrl('/api/spells'))
+        if (!response.ok) {
+          return
+        }
+
+        const payload = await response.json()
+        if (!Array.isArray(payload)) {
+          return
+        }
+
+        setSpells(payload.map(normalizeSpell))
+      } catch {
+        return
+      }
+    }
+
+    void loadSpells()
+  }, [])
 
   useEffect(() => {
     const loadMinutePackages = async () => {
@@ -1835,6 +2108,9 @@ export function PlatformProvider({ children }) {
     billing,
     roomUrl,
     minutePackages,
+    spells,
+    pendingSpellOrders,
+    adminSpellOrders,
     setMinutePackages,
     updateMinutePackage,
     setFeaturedPackage,
@@ -1855,6 +2131,14 @@ export function PlatformProvider({ children }) {
     requestConsultantWithdrawal,
     updateWithdrawalStatus,
     minWithdrawalAmount: MIN_WITHDRAWAL_AMOUNT,
+    saveSpell,
+    deleteSpell,
+    createSpellPixOrder,
+    createSpellStripePaymentIntent,
+    confirmSpellStripeOrder,
+    fetchPendingSpellOrders,
+    fetchAdminSpellOrders,
+    processSpellOrderAction,
     adminDashboardStats,
     selectConsultant,
     setSelectedConsultant,
@@ -1878,10 +2162,10 @@ export function PlatformProvider({ children }) {
     fetchAdminDashboardStats,
   }
 
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     // Verify all functions are valid
     const invalidFuncs = Object.entries(value).filter(
-      ([key, val]) => typeof val === 'undefined' || val === null
+      ([, val]) => typeof val === 'undefined' || val === null
     )
     if (invalidFuncs.length > 0) {
       console.warn('[PlatformContext] Invalid context values:', invalidFuncs.map(([k]) => k))

@@ -14,6 +14,7 @@ import { createWalletsRouter } from './routes/wallets.mjs'
 import { createAuthRouter } from './routes/auth.mjs'
 import { createRechargesRouter } from './routes/recharges.mjs'
 import { createVideoSessionsRouter } from './routes/videoSessions.mjs'
+import { createSpellsRouter } from './routes/spells.mjs'
 import webpush from 'web-push'
 import { authenticate, authorizeAdmin } from './middleware/auth.mjs'
 import { getUserIdsByRole, savePushSubscription, sendPushToUsers } from './push.mjs'
@@ -278,6 +279,9 @@ try {
   
   app.use('/api/video-sessions', createVideoSessionsRouter(pool))
   console.log('[API] Router /video-sessions carregado.')
+
+  app.use('/api/spells', createSpellsRouter(pool))
+  console.log('[API] Router /spells carregado.')
 
   app.post('/api/push/subscribe', authenticate, async (req, res) => {
     if (!pushEnabled) {

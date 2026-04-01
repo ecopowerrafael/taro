@@ -29,6 +29,12 @@ export function PlatformPage() {
     questionRequests,
     globalCommission,
     setGlobalCommission,
+    spells,
+    pendingSpellOrders,
+    adminSpellOrders,
+    saveSpell,
+    deleteSpell,
+    processSpellOrderAction,
     approveConsultant,
     blockConsultant,
     updateConsultantByAdmin,
@@ -100,6 +106,12 @@ export function PlatformPage() {
           questionRequests={questionRequests}
           globalCommission={globalCommission}
           onGlobalCommissionChange={setGlobalCommission}
+          spells={spells}
+          pendingSpellOrders={pendingSpellOrders}
+          adminSpellOrders={adminSpellOrders}
+          onSaveSpell={saveSpell}
+          onDeleteSpell={deleteSpell}
+          onSpellOrderAction={processSpellOrderAction}
           onApprove={approveConsultant}
           onBlock={blockConsultant}
           onSaveConsultant={updateConsultantByAdmin}

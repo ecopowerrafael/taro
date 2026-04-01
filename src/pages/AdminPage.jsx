@@ -34,11 +34,21 @@ export function AdminPage() {
     updateAdminUser,
     adminDashboardStats,
     fetchAdminDashboardStats,
+    spells,
+    pendingSpellOrders,
+    adminSpellOrders,
+    saveSpell,
+    deleteSpell,
+    fetchPendingSpellOrders,
+    fetchAdminSpellOrders,
+    processSpellOrderAction,
     token,
   } = usePlatformContext()
 
   useEffect(() => {
     fetchPendingRecharges()
+    fetchPendingSpellOrders()
+    fetchAdminSpellOrders()
     fetchAdminUsers()
     fetchAdminDashboardStats()
   }, [])
@@ -76,6 +86,12 @@ export function AdminPage() {
         adminDashboardStats={adminDashboardStats}
         onRefreshAdminDashboard={fetchAdminDashboardStats}
         token={token}
+        spells={spells}
+        pendingSpellOrders={pendingSpellOrders}
+        adminSpellOrders={adminSpellOrders}
+        onSaveSpell={saveSpell}
+        onDeleteSpell={deleteSpell}
+        onSpellOrderAction={processSpellOrderAction}
       />
     </PageShell>
   )
