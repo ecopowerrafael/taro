@@ -9,6 +9,7 @@ export function MobileBottomNav() {
 
   const mobileLinks = [
     { to: '/consultores', label: 'Consultores', icon: Moon },
+    { to: '/magias', label: 'Magias', icon: Sparkles },
   ]
 
   if (isAuthenticated) {

@@ -5,6 +5,7 @@ import { usePlatformContext } from '../context/platform-context'
 import { DailyTarotCard } from '../components/DailyTarotCard'
 import { SacredGeometry } from '../components/SacredGeometry'
 import { FloatingCard } from '../components/FloatingCard'
+import { buildHeaderLinks, publicNavLinks } from '../utils/navigation'
 
 const benefits = [
   {
@@ -136,6 +137,7 @@ export function HomePage() {
   ]
 
   const { isAuthenticated } = usePlatformContext()
+  const navLinks = buildHeaderLinks({ isAuthenticated, isConsultant: false, isAdmin: false })
 
   return (
     <div className="min-h-screen bg-mystic-black text-white overflow-x-hidden font-lato selection:bg-mystic-gold/30 selection:text-mystic-gold">
@@ -166,18 +168,12 @@ export function HomePage() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            {['Consultores', 'Serviços', 'Como Funciona', 'Para Profissionais'].map((item) => {
-              const links = {
-                'Consultores': '/consultores',
-                'Serviços': '/magias',
-                'Como Funciona': '/como-funciona',
-                'Para Profissionais': '/seja-consultor'
-              }
+            {publicNavLinks.filter((link) => link.label !== 'Home').map((link) => {
               return (
-                <a key={item} href={links[item]} className="text-sm uppercase tracking-widest text-mystic-purple-light hover:text-mystic-gold transition-colors duration-300 relative group">
-                  {item}
+                <Link key={link.to} to={link.to} className="text-sm uppercase tracking-widest text-mystic-purple-light hover:text-mystic-gold transition-colors duration-300 relative group">
+                  {link.label}
                   <span className="absolute -bottom-2 left-0 w-0 h-px bg-mystic-gold transition-all duration-300 group-hover:w-full"></span>
-                </a>
+                </Link>
               )
             })}
           </nav>
@@ -206,20 +202,14 @@ export function HomePage() {
 
       {/* MOBILE MENU OVERLAY */}
       <div className={`fixed inset-0 z-40 bg-mystic-black/95 backdrop-blur-xl transition-all duration-500 md:hidden flex flex-col items-center justify-center gap-8 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        {['Consultores', 'Serviços', 'Como Funciona', 'Para Profissionais'].map((item) => {
-          const links = {
-            'Consultores': '/consultores',
-            'Serviços': '/magias',
-            'Como Funciona': '/como-funciona',
-            'Para Profissionais': '/seja-consultor'
-          }
+        {navLinks.map((link) => {
           return (
-            <a key={item} href={links[item]} className="font-playfair text-3xl text-white hover:text-gradient-gold transition-colors" onClick={() => setMobileMenuOpen(false)}>
-              {item}
-            </a>
+            <Link key={link.to} to={link.to} className="font-playfair text-3xl text-white hover:text-gradient-gold transition-colors" onClick={() => setMobileMenuOpen(false)}>
+              {link.label}
+            </Link>
           )
         })}
-        <Link to={isAuthenticated ? '/consultores' : '/cadastro'} className="mt-8 rounded-full px-10 py-4 border border-mystic-gold text-gradient-gold font-bold tracking-widest uppercase">
+        <Link to={isAuthenticated ? '/consultores' : '/cadastro'} onClick={() => setMobileMenuOpen(false)} className="mt-8 rounded-full px-10 py-4 border border-mystic-gold text-gradient-gold font-bold tracking-widest uppercase">
           {isAuthenticated ? 'Ver Consultores' : 'Entrar / Agendar'}
         </Link>
       </div>
