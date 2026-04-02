@@ -907,7 +907,7 @@ export function AreaConsultorPage() {
       mobileMenuFooter={<NotificationBadge className="border border-mystic-gold/35 bg-white/10 hover:bg-white/20" />}
     >
       {/* Notification Badge */}
-      <div className="mb-6 hidden justify-end md:flex">
+      <div className="mb-6 flex justify-end">
         <NotificationBadge className="bg-white/10 hover:bg-white/20" />
       </div>
 

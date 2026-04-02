@@ -87,6 +87,7 @@ export function RecarregarPage() {
   const [requesting, setRequesting] = useState(false)
   const [stripeSuccess, setStripeSuccess] = useState(false)
   const [cardModalOpen, setCardModalOpen] = useState(false)
+  const [pixModalOpen, setPixModalOpen] = useState(false)
 
   // Gerar Pix Copia e Cola dinâmico baseado no pacote
   const pixData = useMemo(() => {
@@ -195,6 +196,7 @@ export function RecarregarPage() {
               onClick={() => {
                 setSelectedPack(null)
                 setPaymentMethod(null)
+                setPixModalOpen(false)
               }}
               className="text-sm text-mystic-goldSoft underline transition hover:text-mystic-gold"
             >
@@ -208,7 +210,10 @@ export function RecarregarPage() {
           >
             <div className="grid gap-4 md:grid-cols-2">
               <button
-                onClick={() => setPaymentMethod('pix')}
+                onClick={() => {
+                  setPaymentMethod('pix')
+                  setPixModalOpen(true)
+                }}
                 className={`flex flex-col items-center gap-4 rounded-xl border p-6 transition ${
                   paymentMethod === 'pix' ? 'border-mystic-gold bg-mystic-gold/10' : 'border-mystic-gold/30 bg-black/30 hover:bg-black/50'
                 }`}
@@ -240,9 +245,27 @@ export function RecarregarPage() {
             </div>
           </GlassCard>
 
-          {paymentMethod === 'pix' && (
+        </div>
+      )}
+
+      {pixModalOpen && selectedPack && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg">
+            <div className="mb-3 flex justify-end">
+              <button
+                onClick={() => {
+                  setPixModalOpen(false)
+                  setPaymentMethod(null)
+                }}
+                className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/35 bg-black/40 px-3 py-2 text-sm text-amber-100/80 transition hover:bg-black/60"
+              >
+                <X size={16} />
+                Fechar
+              </button>
+            </div>
+
             <GlassCard title="Pagamento via Pix" subtitle="Escaneie o QR Code ou use o código Copia e Cola.">
-              <div className="flex flex-col items-center gap-6">
+              <div className="flex max-h-[75vh] flex-col items-center gap-6 overflow-y-auto pr-1">
                 {pixData ? (
                   <div className="rounded-xl border-4 border-white bg-white p-2">
                     <QRCodeSVG value={pixData} size={200} />
@@ -252,9 +275,9 @@ export function RecarregarPage() {
                     Erro ao gerar QR Code. Verifique as configurações no admin.
                   </div>
                 )}
-                
+
                 <div className="w-full max-w-sm space-y-3">
-                  <p className="text-center text-sm text-amber-100/70 font-medium">Código Copia e Cola</p>
+                  <p className="text-center text-sm font-medium text-amber-100/70">Código Copia e Cola</p>
                   <div className="relative">
                     <input
                       readOnly
@@ -271,7 +294,7 @@ export function RecarregarPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-4 w-full max-w-sm">
+                <div className="flex w-full max-w-sm flex-col gap-4">
                   <button
                     onClick={handlePixRequest}
                     disabled={requesting || !pixData}
@@ -285,8 +308,7 @@ export function RecarregarPage() {
                 </div>
               </div>
             </GlassCard>
-          )}
-
+          </div>
         </div>
       )}
 
