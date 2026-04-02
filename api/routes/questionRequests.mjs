@@ -147,16 +147,23 @@ export const createQuestionRequestsRouter = (pool) => {
       }
 
       const webpush = request.app.get('webpush')
-      if (webpush && consultantUserId) {
+      const firebaseAdmin = request.app.get('firebaseAdmin')
+      if ((webpush || firebaseAdmin) && consultantUserId) {
         await sendPushToUsers({
           pool,
           webpush,
+          firebaseAdmin,
           userIds: [consultantUserId],
           payload: {
             title: 'Nova Consulta por Perguntas',
             body: `${customerName} enviou ${Math.max(1, Math.floor(parseNumber(questionCount, 1)))} pergunta(s) para você.`,
             url: 'https://appastria.online/area-consultor?tab=questions',
+            nativeRoute: '/area-consultor?tab=questions',
             type: 'new_question',
+            requestId: id,
+            consultantId,
+            customerName,
+            questionCount: Math.max(1, Math.floor(parseNumber(questionCount, 1))),
           },
         })
       }
@@ -315,6 +322,34 @@ export const createQuestionRequestsRouter = (pool) => {
       )
 
       await connection.commit()
+
+      try {
+        const [customerUsers] = await pool.query('SELECT id FROM users WHERE email = ? LIMIT 1', [current.customerEmail])
+        const customerUserId = customerUsers[0]?.id || null
+        const webpush = request.app.get('webpush')
+        const firebaseAdmin = request.app.get('firebaseAdmin')
+
+        if (customerUserId && (webpush || firebaseAdmin)) {
+          await sendPushToUsers({
+            pool,
+            webpush,
+            firebaseAdmin,
+            userIds: [customerUserId],
+            payload: {
+              title: 'Sua consulta foi respondida',
+              body: `${current.consultantName} enviou a resposta da sua consulta por perguntas.`,
+              url: '/perfil?tab=questions',
+              nativeRoute: '/perfil?tab=questions',
+              type: 'question_answered',
+              requestId: id,
+              consultantId,
+              consultantName: current.consultantName,
+            },
+          })
+        }
+      } catch (notificationError) {
+        console.error('[questionRequests answer] erro ao notificar cliente:', notificationError)
+      }
 
       response.json({
         request: {

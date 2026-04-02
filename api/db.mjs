@@ -257,6 +257,29 @@ export const initializeSchema = async (pool) => {
     )
   `)
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS native_push_tokens (
+      id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      userId VARCHAR(50) NOT NULL,
+      token VARCHAR(255) NOT NULL,
+      platform ENUM('android', 'ios', 'web') NOT NULL DEFAULT 'android',
+      provider ENUM('fcm') NOT NULL DEFAULT 'fcm',
+      deviceId VARCHAR(191) NULL,
+      appVersion VARCHAR(64) NULL,
+      isActive TINYINT(1) NOT NULL DEFAULT 1,
+      failureCount INT NOT NULL DEFAULT 0,
+      lastSuccessAt DATETIME NULL,
+      lastFailureAt DATETIME NULL,
+      createdAt DATETIME NOT NULL,
+      updatedAt DATETIME NOT NULL,
+      UNIQUE KEY uniq_native_push_token (token),
+      INDEX idx_native_push_user_active (userId, isActive),
+      CONSTRAINT fk_native_push_token_user
+        FOREIGN KEY (userId) REFERENCES users(id)
+        ON DELETE CASCADE
+    )
+  `)
+
   // Adicionar colunas de duração e earnings se não existirem (para bancos antigos)
   try {
     await pool.query('ALTER TABLE video_sessions ADD COLUMN durationSeconds INT NOT NULL DEFAULT 0')
@@ -266,6 +289,12 @@ export const initializeSchema = async (pool) => {
   } catch (e) {}
   try {
     await pool.query('ALTER TABLE video_sessions ADD COLUMN consultantNotes TEXT NULL')
+  } catch (e) {}
+  try {
+    await pool.query("ALTER TABLE native_push_tokens MODIFY COLUMN platform ENUM('android', 'ios', 'web') NOT NULL DEFAULT 'android'")
+  } catch (e) {}
+  try {
+    await pool.query("ALTER TABLE native_push_tokens MODIFY COLUMN provider ENUM('fcm') NOT NULL DEFAULT 'fcm'")
   } catch (e) {}
 
   // Garantir colunas de PIX para bancos antigos

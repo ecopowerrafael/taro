@@ -195,17 +195,24 @@ export const createVideoSessionsRouter = (pool) => {
       }
 
       const webpush = request.app.get('webpush')
-      if (webpush && consultantUserId) {
+      const firebaseAdmin = request.app.get('firebaseAdmin')
+      if ((webpush || firebaseAdmin) && consultantUserId) {
         const payload = {
           title: 'Nova Chamada de Vídeo',
           body: `O cliente ${user.name} está aguardando na sala!`,
-          url: `https://appastria.online/sala/${sessionId}`,
+          url: `https://appastria.online/area-consultor?tab=video&sessionId=${sessionId}`,
+          nativeRoute: `/area-consultor?tab=video&sessionId=${sessionId}`,
           type: 'incoming_call',
+          sessionId,
+          roomUrl,
+          customerName: user.name,
+          consultantId,
         }
 
         const pushResult = await sendPushToUsers({
           pool,
           webpush,
+          firebaseAdmin,
           userIds: [consultantUserId],
           payload,
         })

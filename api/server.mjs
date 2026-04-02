@@ -17,7 +17,8 @@ import { createVideoSessionsRouter } from './routes/videoSessions.mjs'
 import { createSpellsRouter } from './routes/spells.mjs'
 import webpush from 'web-push'
 import { authenticate, authorizeAdmin } from './middleware/auth.mjs'
-import { getUserIdsByRole, savePushSubscription, sendPushToUsers } from './push.mjs'
+import { initializeFirebaseAdmin } from './firebaseAdmin.mjs'
+import { getUserIdsByRole, saveNativePushToken, savePushSubscription, sendPushToUsers } from './push.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -40,6 +41,8 @@ if (pushEnabled) {
 } else {
   console.warn('[push] Web Push desativado: VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY não configuradas no ambiente.')
 }
+
+const firebaseAdmin = initializeFirebaseAdmin()
 
 // CAPTURA DE ERROS CRÍTICOS (CRASH LOG)
 process.on('uncaughtException', (err) => {
@@ -66,13 +69,33 @@ const io = new Server(httpServer, {
 // Adiciona o socket.io e o webpush ao app para serem acessados nas rotas
 app.set('io', io)
 app.set('webpush', webpush)
+app.set('firebaseAdmin', firebaseAdmin)
 app.set('pushEnabled', pushEnabled)
+app.set('nativePushEnabled', Boolean(firebaseAdmin))
 app.set('sessionPresence', sessionPresence)
 
 const initialCorsOptions = {
   origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
   credentials: true,
 }
+
+const extractNativeRoute = (url) => {
+  if (!url) {
+    return '/'
+  }
+
+  if (url.startsWith('/')) {
+    return url
+  }
+
+  try {
+    const parsed = new URL(url)
+    return `${parsed.pathname}${parsed.search}` || '/'
+  } catch {
+    return '/'
+  }
+}
+
 app.use(cors(initialCorsOptions))
 app.use(express.json({ limit: '4mb' }))
 
@@ -312,6 +335,32 @@ try {
     }
   })
 
+  app.post('/api/push/native/register', authenticate, async (req, res) => {
+    const {
+      token,
+      platform = 'android',
+      provider = 'fcm',
+      deviceId = null,
+      appVersion = null,
+    } = req.body ?? {}
+
+    try {
+      await saveNativePushToken({
+        pool,
+        userId: req.user.id,
+        token,
+        platform,
+        provider,
+        deviceId,
+        appVersion,
+      })
+      res.status(201).json({ ok: true })
+    } catch (error) {
+      console.error('[native push register] erro:', error)
+      res.status(500).json({ ok: false, error: 'Não foi possível salvar o token nativo.' })
+    }
+  })
+
   app.get('/api/push/me/status', authenticate, async (req, res) => {
     try {
       const [rows] = await pool.query(
@@ -323,16 +372,32 @@ try {
         `,
         [req.user.id],
       )
+      const [nativeRows] = await pool.query(
+        `
+          SELECT token, platform, provider, isActive, failureCount, lastSuccessAt, lastFailureAt, createdAt, updatedAt
+          FROM native_push_tokens
+          WHERE userId = ?
+          ORDER BY updatedAt DESC
+        `,
+        [req.user.id],
+      )
 
       res.json({
         ok: true,
         userId: req.user.id,
         vapidConfigured: pushEnabled,
+        nativeConfigured: Boolean(firebaseAdmin),
         totalSubscriptions: rows.length,
         activeSubscriptions: rows.filter((row) => Number(row.isActive) === 1).length,
+        totalNativeTokens: nativeRows.length,
+        activeNativeTokens: nativeRows.filter((row) => Number(row.isActive) === 1).length,
         subscriptions: rows.map((row) => ({
           ...row,
           endpointPreview: `${row.endpoint.slice(0, 48)}...`,
+        })),
+        nativeTokens: nativeRows.map((row) => ({
+          ...row,
+          tokenPreview: `${row.token.slice(0, 24)}...`,
         })),
       })
     } catch (error) {
@@ -342,20 +407,22 @@ try {
   })
 
   app.post('/api/push/me/test', authenticate, async (req, res) => {
-    if (!pushEnabled) {
-      return res.status(503).json({ ok: false, message: 'Web Push desativado no servidor. Configure VAPID no .env.' })
+    if (!pushEnabled && !firebaseAdmin) {
+      return res.status(503).json({ ok: false, message: 'Push desativado no servidor. Configure VAPID ou Firebase Admin.' })
     }
 
     try {
       const result = await sendPushToUsers({
         pool,
         webpush,
+        firebaseAdmin,
         userIds: [req.user.id],
         payload: {
           title: 'Teste de Push Astria',
-          body: 'Se você recebeu isso, o Web Push deste dispositivo está funcionando.',
+          body: 'Se você recebeu isso, o push deste dispositivo está funcionando.',
           url: '/area-consultor',
-          type: 'self_test',
+          nativeRoute: '/area-consultor',
+          type: 'question_answered',
         },
       })
 
@@ -373,8 +440,8 @@ try {
   })
 
   app.post('/api/push/admin/broadcast', authenticate, authorizeAdmin, async (req, res) => {
-    if (!pushEnabled) {
-      return res.status(503).json({ message: 'Web Push desativado no servidor. Configure VAPID no .env.' })
+    if (!pushEnabled && !firebaseAdmin) {
+      return res.status(503).json({ message: 'Push desativado no servidor. Configure VAPID ou Firebase Admin.' })
     }
 
     const { title, body, url, targetRole = 'all' } = req.body ?? {}
@@ -388,11 +455,13 @@ try {
       const result = await sendPushToUsers({
         pool,
         webpush,
+        firebaseAdmin,
         userIds,
         payload: {
           title: title.trim(),
           body: body.trim(),
           url: url?.trim() || '/',
+          nativeRoute: extractNativeRoute(url?.trim() || '/'),
           type: 'admin_broadcast',
         },
       })
