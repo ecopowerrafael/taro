@@ -70,39 +70,37 @@ export function PageShell({ title, subtitle, children, mobileMenuFooter = null }
           </div>
         </header>
         <div
-          className={`fixed inset-0 z-[95] bg-mystic-black/95 px-6 py-24 backdrop-blur-xl transition-all duration-300 md:hidden ${mobileMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+          className={`fixed inset-0 z-[110] bg-mystic-black/95 px-6 py-24 backdrop-blur-xl transition-all duration-300 md:hidden ${mobileMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
         >
-          <div className="mx-auto flex h-full w-full max-w-md flex-col justify-between">
-            <div className="flex flex-col items-center gap-5 text-center">
-              {mainLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="font-display text-2xl text-mystic-goldSoft transition hover:text-white"
-                >
-                  {link.label}
-                </Link>
-              ))}
-              {isAuthenticated && (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    handleLogout()
-                  }}
-                  className="mt-4 flex items-center gap-2 rounded-lg border border-red-500/35 px-4 py-2 text-sm text-red-400 transition hover:bg-red-500/10"
-                >
-                  <LogOut size={16} />
-                  Sair
-                </button>
-              )}
-            </div>
-            {mobileMenuFooter ? (
-              <div className="flex justify-end pb-6">
-                {mobileMenuFooter}
-              </div>
-            ) : null}
+          <div className="mx-auto flex max-w-md flex-col items-center gap-5 text-center">
+            {mainLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-display text-2xl text-mystic-goldSoft transition hover:text-white"
+              >
+                {link.label}
+              </Link>
+            ))}
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  handleLogout()
+                }}
+                className="mt-4 flex items-center gap-2 rounded-lg border border-red-500/35 px-4 py-2 text-sm text-red-400 transition hover:bg-red-500/10"
+              >
+                <LogOut size={16} />
+                Sair
+              </button>
+            )}
           </div>
+          {mobileMenuFooter ? (
+            <div className="absolute bottom-6 right-6 z-[111]">
+              {mobileMenuFooter}
+            </div>
+          ) : null}
         </div>
         {children}
       </div>

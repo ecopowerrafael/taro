@@ -40,8 +40,6 @@ export function AreaConsultorPage() {
     addInAppNotification,
     addToNotificationHistory,
     ensurePushSubscription,
-    getMyPushStatus,
-    sendMyPushTest,
     authLoading,
     token,
   } = usePlatformContext()
@@ -62,9 +60,6 @@ export function AreaConsultorPage() {
   const [questionAlertVisible, setQuestionAlertVisible] = useState(true)
   const [questionInboxModalOpen, setQuestionInboxModalOpen] = useState(false)
   const [pwaInstallAvailable, setPwaInstallAvailable] = useState(canPromptPwaInstall())
-  const [pushDebugStatus, setPushDebugStatus] = useState(null)
-  const [pushDebugLoading, setPushDebugLoading] = useState(false)
-  const [pushDebugActionResult, setPushDebugActionResult] = useState(null)
   const [consultantSpellOrders, setConsultantSpellOrders] = useState([])
   const [spellOrdersLoading, setSpellOrdersLoading] = useState(false)
   const [consultationHistoryLoading, setConsultationHistoryLoading] = useState(false)
@@ -775,75 +770,6 @@ export function AreaConsultorPage() {
     setPanelNotice('A instalação do app foi cancelada.')
   }
 
-  const handleRefreshPushStatus = async ({ silent = false } = {}) => {
-    setPushDebugLoading(true)
-    if (!silent) {
-      setPushDebugActionResult({ type: 'status', message: 'Consultando status no backend...' })
-    }
-    const result = await getMyPushStatus()
-    setPushDebugLoading(false)
-    if (!result?.ok) {
-      if (!silent) {
-        setPushDebugActionResult({ type: 'status', ok: false, message: result?.message || 'Falha ao consultar status.' })
-      }
-      setPanelNotice(result?.message || 'Não foi possível consultar o status do push.')
-      return
-    }
-    setPushDebugStatus(result)
-    if (!silent) {
-      setPushDebugActionResult({
-        type: 'status',
-        ok: true,
-        message: `Status consultado: ${result.activeSubscriptions} ativa(s) de ${result.totalSubscriptions}.`,
-      })
-    }
-    setPanelNotice(
-      `Push status: ${result.activeSubscriptions} subscription(s) ativa(s) de ${result.totalSubscriptions}.`,
-    )
-  }
-
-  const handleReRegisterPush = async () => {
-    setPushDebugLoading(true)
-    setPushDebugActionResult({ type: 'register', message: 'Regravando subscription do dispositivo...' })
-    const result = await ensurePushSubscription()
-    setPushDebugLoading(false)
-    if (!result?.ok) {
-      setPushDebugActionResult({ type: 'register', ok: false, message: result?.message || 'Falha ao registrar push.' })
-      setPanelNotice(result?.message || 'Falha ao reativar push neste dispositivo.')
-      return
-    }
-    setPushDebugActionResult({
-      type: 'register',
-      ok: true,
-      message: `Subscription regravada com sucesso. Endpoint: ${result.endpoint ? `${result.endpoint.slice(0, 48)}...` : 'ok'}`,
-    })
-    setPanelNotice('Subscription push registrada novamente neste dispositivo.')
-    await handleRefreshPushStatus({ silent: true })
-  }
-
-  const handleSendPushTest = async () => {
-    setPushDebugLoading(true)
-    setPushDebugActionResult({ type: 'test', message: 'Enviando push de teste...' })
-    const result = await sendMyPushTest()
-    setPushDebugLoading(false)
-    if (!result?.ok) {
-      setPushDebugActionResult({ type: 'test', ok: false, message: result?.message || 'Falha ao enviar teste push.' })
-      setPanelNotice(result?.message || 'Falha ao enviar push de teste.')
-      return
-    }
-    setPushDebugActionResult({
-      type: 'test',
-      ok: (result.successCount || 0) > 0,
-      message: `Teste enviado: ${result.successCount || 0} sucesso(s), ${result.failureCount || 0} falha(s).`,
-      failureMessages: result.failureMessages || [],
-      results: result.results || [],
-    })
-    setPanelNotice(
-      `Teste push disparado. ${result.successCount || 0} entrega(s) ok em ${result.totalSubscriptions || 0} subscription(s).`,
-    )
-    await handleRefreshPushStatus({ silent: true })
-  }
-
   const renderPendingRequestsList = () => (
     <div className="grid gap-3">
       {pendingRequests.length === 0 && (
@@ -1508,75 +1434,6 @@ export function AreaConsultorPage() {
           </button>
         </div>
 
-        <div className="mt-4 rounded-lg border border-cyan-400/25 bg-cyan-500/5 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-cyan-200">Diagnóstico de Push</p>
-              <p className="text-xs text-cyan-100/70">
-                Regrave a subscription deste aparelho, consulte o backend e dispare um push de teste.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => {
-                  void handleRefreshPushStatus()
-                }}
-                disabled={pushDebugLoading}
-                className="rounded-lg border border-cyan-400/40 bg-black/30 px-3 py-2 text-xs text-cyan-100 transition hover:bg-black/50 disabled:opacity-50"
-              >
-                Ver status
-              </button>
-              <button
-                onClick={() => {
-                  void handleReRegisterPush()
-                }}
-                disabled={pushDebugLoading}
-                className="rounded-lg border border-cyan-400/40 bg-black/30 px-3 py-2 text-xs text-cyan-100 transition hover:bg-black/50 disabled:opacity-50"
-              >
-                Regravar push
-              </button>
-              <button
-                onClick={() => {
-                  void handleSendPushTest()
-                }}
-                disabled={pushDebugLoading}
-                className="rounded-lg bg-cyan-300 px-3 py-2 text-xs font-bold text-black transition hover:brightness-110 disabled:opacity-50"
-              >
-                Testar push
-              </button>
-            </div>
-          </div>
-
-          {pushDebugStatus ? (
-            <div className="mt-3 rounded-lg border border-cyan-400/20 bg-black/20 p-3 text-left text-xs text-cyan-50">
-              <p>VAPID no servidor: {pushDebugStatus.vapidConfigured ? 'configurado via .env' : 'fallback/default'}</p>
-              <p>Subscriptions totais: {pushDebugStatus.totalSubscriptions}</p>
-              <p>Subscriptions ativas: {pushDebugStatus.activeSubscriptions}</p>
-              {pushDebugStatus.subscriptions?.[0] ? (
-                <p>Último endpoint: {pushDebugStatus.subscriptions[0].endpointPreview}</p>
-              ) : null}
-            </div>
-          ) : null}
-
-          {pushDebugActionResult ? (
-            <div className="mt-3 rounded-lg border border-cyan-400/20 bg-black/20 p-3 text-left text-xs text-cyan-50">
-              <p>
-                Última ação: {pushDebugActionResult.type === 'status' ? 'status' : pushDebugActionResult.type === 'register' ? 'regravar push' : 'teste push'}
-              </p>
-              <p>
-                Resultado: {pushDebugActionResult.ok === false ? 'falhou' : pushDebugActionResult.ok === true ? 'ok' : 'em andamento'}
-              </p>
-              <p>{pushDebugActionResult.message}</p>
-              {Array.isArray(pushDebugActionResult.failureMessages) && pushDebugActionResult.failureMessages.length > 0 ? (
-                <div className="mt-2">
-                  {pushDebugActionResult.failureMessages.map((message, index) => (
-                    <p key={`${message}-${index}`}>Falha {index + 1}: {message}</p>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
       </GlassCard>
 
       {/* Modal Confirmação Resposta */}
