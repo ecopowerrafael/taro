@@ -11,12 +11,12 @@ export function NotificationBadge ({ className = '' }) {
     <>
       <button
         onClick={() => setShowCenter(!showCenter)}
-        className={`relative inline-flex items-center justify-center p-2 rounded-lg transition-all hover:bg-purple-100 active:scale-95 ${className}`}
+        className={`relative inline-flex items-center justify-center rounded-lg p-2 transition-all active:scale-95 ${className}`}
         aria-label={`Notificações (${unreadCount} não lidas)`}
         title={`Notificações (${unreadCount} não lidas)`}
       >
         <svg
-          className="w-6 h-6 text-purple-600"
+          className="h-6 w-6 text-current"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -35,7 +35,7 @@ export function NotificationBadge ({ className = '' }) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-              className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full ring-2 ring-white"
+              className="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ring-2 ring-white"
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </motion.div>

@@ -904,11 +904,11 @@ export function AreaConsultorPage() {
     <PageShell
       title="Área do Consultor"
       subtitle="Atendimentos de perguntas, vídeo e carteira do consultor."
-      mobileMenuFooter={<NotificationBadge className="border border-mystic-gold/35 bg-white/10 hover:bg-white/20" />}
+      mobileMenuFooter={<NotificationBadge className="border border-mystic-gold/45 bg-mystic-gold/10 text-mystic-goldSoft shadow-[0_0_20px_rgba(197,160,89,0.18)] hover:bg-mystic-gold/20" />}
     >
       {/* Notification Badge */}
       <div className="mb-6 hidden justify-end md:flex">
-        <NotificationBadge className="bg-white/10 hover:bg-white/20" />
+        <NotificationBadge className="bg-white/10 text-mystic-goldSoft hover:bg-white/20" />
       </div>
 
       {pendingVideoSessions.length > 0 && !isAdmin && (
