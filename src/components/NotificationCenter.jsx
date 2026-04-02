@@ -31,7 +31,7 @@ export function NotificationCenter ({ onClose }) {
         animate="visible"
         exit="exit"
         onClick={onClose}
-        className="fixed inset-0 z-40 bg-black bg-opacity-50"
+        className="fixed inset-0 z-[125] bg-black bg-opacity-50"
       />
 
       {/* Modal */}
@@ -40,7 +40,7 @@ export function NotificationCenter ({ onClose }) {
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="fixed inset-x-3 bottom-24 z-50 flex max-h-[calc(100vh-8rem)] w-auto flex-col overflow-hidden rounded-2xl bg-white shadow-2xl md:left-1/2 md:top-1/2 md:bottom-auto md:w-full md:max-w-lg md:-translate-x-1/2 md:-translate-y-1/2"
+        className="fixed inset-x-3 bottom-24 z-[130] flex max-h-[calc(100vh-8rem)] w-auto flex-col overflow-hidden rounded-2xl bg-white shadow-2xl md:left-1/2 md:top-1/2 md:bottom-auto md:w-full md:max-w-lg md:-translate-x-1/2 md:-translate-y-1/2"
       >
         {/* Header */}
         <div className="flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-4 text-white md:px-6">
