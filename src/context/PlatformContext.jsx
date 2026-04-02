@@ -186,21 +186,35 @@ const normalizeConsultant = (consultant) => ({
       : Number(consultant.commissionOverride) || null,
 })
 
-const normalizeQuestionRequest = (request) => ({
-  ...request,
-  questionCount: Number(request.questionCount) || 0,
-  packagePrice: Number(request.packagePrice) || 0,
-  commissionValue: Number(request.commissionValue) || 0,
-  consultantNetValue: Number(request.consultantNetValue) || 0,
-  entries: (Array.isArray(request.entries) ? request.entries : []).map((entry) => ({
-    ...entry,
-    question:
-      entry?.question ??
-      entry?.text ??
-      (entry?.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada'),
-  })),
-  answerSummary: request.answerSummary ?? '',
-})
+const buildAnswerFallbacks = (answerSummary) => {
+  const lines = String(answerSummary || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  return lines.map((line) => line.replace(/^P\d+:\s*/i, '').trim())
+}
+
+const normalizeQuestionRequest = (request) => {
+  const answerFallbacks = buildAnswerFallbacks(request.answerSummary)
+
+  return {
+    ...request,
+    questionCount: Number(request.questionCount) || 0,
+    packagePrice: Number(request.packagePrice) || 0,
+    commissionValue: Number(request.commissionValue) || 0,
+    consultantNetValue: Number(request.consultantNetValue) || 0,
+    entries: (Array.isArray(request.entries) ? request.entries : []).map((entry, index) => ({
+      ...entry,
+      question:
+        entry?.question ??
+        entry?.text ??
+        (entry?.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada'),
+      answer: entry?.answer?.trim() || answerFallbacks[index] || '',
+    })),
+    answerSummary: request.answerSummary ?? '',
+  }
+}
 
 const normalizeMinutePackage = (pack) => ({
   ...pack,

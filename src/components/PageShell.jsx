@@ -5,7 +5,7 @@ import { StarField } from './StarField'
 import { usePlatformContext } from '../context/platform-context'
 import { buildHeaderLinks } from '../utils/navigation'
 
-export function PageShell({ title, subtitle, children }) {
+export function PageShell({ title, subtitle, children, mobileMenuFooter = null }) {
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { isAdmin, isConsultant, isAuthenticated, logout } = usePlatformContext()
@@ -96,6 +96,11 @@ export function PageShell({ title, subtitle, children }) {
               </button>
             )}
           </div>
+          {mobileMenuFooter ? (
+            <div className="absolute bottom-6 right-6">
+              {mobileMenuFooter}
+            </div>
+          ) : null}
         </div>
         {children}
       </div>

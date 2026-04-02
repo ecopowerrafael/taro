@@ -904,9 +904,10 @@ export function AreaConsultorPage() {
     <PageShell
       title="Área do Consultor"
       subtitle="Atendimentos de perguntas, vídeo e carteira do consultor."
+      mobileMenuFooter={<NotificationBadge className="border border-mystic-gold/35 bg-white/10 hover:bg-white/20" />}
     >
       {/* Notification Badge */}
-      <div className="mb-6 flex justify-end">
+      <div className="mb-6 hidden justify-end md:flex">
         <NotificationBadge className="bg-white/10 hover:bg-white/20" />
       </div>
 

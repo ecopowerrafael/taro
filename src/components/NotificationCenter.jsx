@@ -40,10 +40,10 @@ export function NotificationCenter ({ onClose }) {
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg mx-4 max-h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        className="fixed inset-x-3 bottom-24 z-50 flex max-h-[calc(100vh-8rem)] w-auto flex-col overflow-hidden rounded-2xl bg-white shadow-2xl md:left-1/2 md:top-1/2 md:bottom-auto md:w-full md:max-w-lg md:-translate-x-1/2 md:-translate-y-1/2"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 text-white flex items-center justify-between">
+        <div className="flex items-center justify-between bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-4 text-white md:px-6">
           <div>
             <h2 className="text-lg font-bold">Centro de Notificações</h2>
             <p className="text-sm text-purple-100">
@@ -61,7 +61,7 @@ export function NotificationCenter ({ onClose }) {
         </div>
 
         {/* Toolbar */}
-        <div className="bg-gray-50 px-6 py-3 border-b flex gap-2">
+        <div className="flex flex-wrap gap-2 border-b bg-gray-50 px-4 py-3 md:px-6">
           {unreadCount > 0 && (
             <button
               onClick={() => markAllNotificationsAsRead()}
@@ -85,7 +85,7 @@ export function NotificationCenter ({ onClose }) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overscroll-contain">
           {notificationHistory.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
               <svg
