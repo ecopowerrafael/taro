@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BellRing, Loader2, SendHorizontal, Sparkles, Wallet, Lock, UserPlus, Info, XCircle } from 'lucide-react'
+import { BellRing, Loader2, SendHorizontal, Sparkles, Wallet, Lock, UserPlus, Info, XCircle, History, NotebookPen, Video, MessagesSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
@@ -67,6 +67,10 @@ export function AreaConsultorPage() {
   const [pushDebugActionResult, setPushDebugActionResult] = useState(null)
   const [consultantSpellOrders, setConsultantSpellOrders] = useState([])
   const [spellOrdersLoading, setSpellOrdersLoading] = useState(false)
+  const [consultationHistoryLoading, setConsultationHistoryLoading] = useState(false)
+  const [videoConsultationHistory, setVideoConsultationHistory] = useState([])
+  const [videoNotesDrafts, setVideoNotesDrafts] = useState({})
+  const [historyExpandedCustomer, setHistoryExpandedCustomer] = useState(null)
   const seenPendingSessionIdsRef = useRef(new Set())
   const seenPendingQuestionIdsRef = useRef(new Set())
 
@@ -197,6 +201,71 @@ export function AreaConsultorPage() {
     }
   }
 
+  const loadConsultationHistory = async () => {
+    if (!token || (!isConsultant && !isAdmin)) {
+      return
+    }
+
+    setConsultationHistoryLoading(true)
+    try {
+      const response = await fetch(buildApiUrl('/api/video-sessions/history/mine'), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        return
+      }
+
+      const payload = await response.json()
+      const sessions = Array.isArray(payload) ? payload : []
+      setVideoConsultationHistory(sessions)
+      setVideoNotesDrafts(
+        sessions.reduce((acc, session) => {
+          acc[session.id] = session.consultantNotes || ''
+          return acc
+        }, {}),
+      )
+    } catch (error) {
+      console.error('[AreaConsultorPage] Erro ao buscar histórico de vídeo:', error)
+    } finally {
+      setConsultationHistoryLoading(false)
+    }
+  }
+
+  const saveVideoConsultationNote = async (sessionId) => {
+    try {
+      const response = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/notes`), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          consultantNotes: videoNotesDrafts[sessionId] || '',
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Falha ao salvar observação.')
+      }
+
+      const payload = await response.json()
+      setVideoConsultationHistory((prev) =>
+        prev.map((session) =>
+          session.id === sessionId
+            ? { ...session, consultantNotes: payload.consultantNotes || '' }
+            : session,
+        ),
+      )
+      setPanelNotice('Observação da consulta em vídeo salva com sucesso.')
+    } catch (error) {
+      console.error('[AreaConsultorPage] Erro ao salvar observação do vídeo:', error)
+      setPanelNotice('Não foi possível salvar a observação da consulta em vídeo.')
+    }
+  }
+
   // Renderização condicional para quem não é consultor
   if (!authLoading && !isConsultant && !isAdmin) {
     return (
@@ -254,6 +323,10 @@ export function AreaConsultorPage() {
 
   useEffect(() => {
     void loadConsultantSpellOrders()
+  }, [token, isConsultant, isAdmin])
+
+  useEffect(() => {
+    void loadConsultationHistory()
   }, [token, isConsultant, isAdmin])
 
   useEffect(() => {
@@ -362,6 +435,61 @@ export function AreaConsultorPage() {
       })
       .reduce((sum, item) => sum + item.amount, 0)
   }, [gainFilter, referenceTimestamp, wallet.transactions])
+
+  const consultationHistoryByCustomer = useMemo(() => {
+    const consultantQuestionHistory = questionRequests.filter((request) => request.consultantId === selectedConsultantId)
+    const consultantVideoHistory = videoConsultationHistory.filter((session) => session.consultantId === selectedConsultantId)
+    const grouped = new Map()
+
+    consultantQuestionHistory.forEach((request) => {
+      const customerKey = request.customerEmail || request.customerName || request.id
+      const current = grouped.get(customerKey) || {
+        customerKey,
+        customerName: request.customerName,
+        customerEmail: request.customerEmail,
+        questionRequests: [],
+        videoSessions: [],
+        latestAt: request.answeredAt || request.createdAt,
+      }
+      current.questionRequests.push(request)
+      current.latestAt = new Date(current.latestAt || 0) > new Date(request.answeredAt || request.createdAt || 0)
+        ? current.latestAt
+        : request.answeredAt || request.createdAt
+      grouped.set(customerKey, current)
+    })
+
+    consultantVideoHistory.forEach((session) => {
+      const customerKey = session.userEmail || session.userName || session.id
+      const current = grouped.get(customerKey) || {
+        customerKey,
+        customerName: session.userName,
+        customerEmail: session.userEmail,
+        questionRequests: [],
+        videoSessions: [],
+        latestAt: session.finishedAt || session.startedAt || session.createdAt,
+      }
+      current.videoSessions.push(session)
+      current.latestAt = new Date(current.latestAt || 0) > new Date(session.finishedAt || session.startedAt || session.createdAt || 0)
+        ? current.latestAt
+        : session.finishedAt || session.startedAt || session.createdAt
+      grouped.set(customerKey, current)
+    })
+
+    return Array.from(grouped.values())
+      .map((item) => ({
+        ...item,
+        questionRequests: item.questionRequests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+        videoSessions: item.videoSessions.sort((a, b) => new Date(b.finishedAt || b.startedAt || b.createdAt) - new Date(a.finishedAt || a.startedAt || a.createdAt)),
+      }))
+      .sort((a, b) => new Date(b.latestAt || 0) - new Date(a.latestAt || 0))
+  }, [questionRequests, selectedConsultantId, videoConsultationHistory])
+
+  const formatDurationLabel = (durationSeconds = 0) => {
+    const totalSeconds = Number(durationSeconds) || 0
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    return `${minutes}min ${seconds.toString().padStart(2, '0')}s`
+  }
 
   useEffect(() => {
     return () => {
@@ -507,12 +635,17 @@ export function AreaConsultorPage() {
     })
 
     const answerSummary = filledAnswers.join('\n')
+    const answeredEntries = request.entries.map((entry, index) => ({
+      ...entry,
+      answer: (drafts[index] ?? '').trim(),
+    }))
 
     try {
       await respondToQuestionRequest({
         requestId,
         consultantId: selectedConsultantId,
         answerSummary,
+        answeredEntries,
       })
       setResponseDrafts((prev) => ({ ...prev, [requestId]: [] }))
       setConfirmResponseModal(null)
@@ -948,6 +1081,158 @@ export function AreaConsultorPage() {
                   </div>
                 </article>
               ))
+            )}
+          </div>
+        </GlassCard>
+      )}
+
+      {!isAdmin && canAnswerQuestions && (
+        <GlassCard title="Histórico de Consulta" subtitle="Revise perguntas, respostas e atendimentos em vídeo por cliente.">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <p className="text-xs text-ethereal-silver/70">Os registros ficam agrupados por cliente para facilitar consultas recorrentes e acompanhamento.</p>
+            <button
+              onClick={() => {
+                void loadConsultationHistory()
+              }}
+              disabled={consultationHistoryLoading}
+              className="rounded-lg border border-mystic-gold/45 bg-mystic-gold/10 px-3 py-1.5 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/20 disabled:opacity-40"
+            >
+              {consultationHistoryLoading ? 'Atualizando...' : 'Atualizar histórico'}
+            </button>
+          </div>
+
+          <div className="grid gap-4">
+            {consultationHistoryLoading && consultationHistoryByCustomer.length === 0 ? (
+              <div className="flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/30 p-4 text-sm text-ethereal-silver/70">
+                <Loader2 size={16} className="animate-spin" />
+                Carregando histórico de consultas...
+              </div>
+            ) : consultationHistoryByCustomer.length === 0 ? (
+              <p className="rounded-lg border border-mystic-gold/20 bg-black/30 p-4 text-sm text-ethereal-silver/70">
+                Nenhum histórico encontrado para este consultor até o momento.
+              </p>
+            ) : (
+              consultationHistoryByCustomer.map((customer) => {
+                const isExpanded = historyExpandedCustomer === customer.customerKey
+                return (
+                  <article key={customer.customerKey} className="rounded-2xl border border-mystic-gold/30 bg-black/25 p-4">
+                    <button
+                      onClick={() => setHistoryExpandedCustomer(isExpanded ? null : customer.customerKey)}
+                      className="flex w-full flex-wrap items-start justify-between gap-3 text-left"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-amber-50">{customer.customerName || 'Cliente não identificado'}</p>
+                        <p className="text-xs text-ethereal-silver/65">{customer.customerEmail || 'E-mail não informado'}</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-ethereal-silver/70">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-mystic-gold/20 bg-black/30 px-2 py-1">
+                          <MessagesSquare size={12} className="text-mystic-goldSoft" />
+                          {customer.questionRequests.length} pergunta(s)
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full border border-mystic-gold/20 bg-black/30 px-2 py-1">
+                          <Video size={12} className="text-mystic-goldSoft" />
+                          {customer.videoSessions.length} vídeo(s)
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full border border-mystic-gold/20 bg-black/30 px-2 py-1">
+                          <History size={12} className="text-mystic-goldSoft" />
+                          Último registro em {new Date(customer.latestAt).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                        <section className="rounded-xl border border-mystic-gold/20 bg-black/30 p-4">
+                          <div className="mb-3 flex items-center gap-2">
+                            <MessagesSquare size={16} className="text-mystic-goldSoft" />
+                            <h4 className="text-sm font-semibold text-amber-50">Perguntas e Respostas</h4>
+                          </div>
+                          <div className="grid gap-3">
+                            {customer.questionRequests.length === 0 ? (
+                              <p className="text-sm text-ethereal-silver/65">Nenhuma pergunta registrada para este cliente.</p>
+                            ) : (
+                              customer.questionRequests.map((request) => (
+                                <article key={request.id} className="rounded-xl border border-mystic-gold/15 bg-black/35 p-3">
+                                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                    <span className="text-xs text-ethereal-silver/60">{new Date(request.createdAt).toLocaleString('pt-BR')}</span>
+                                    <span className={`rounded-full px-2 py-1 text-[10px] uppercase tracking-wide ${
+                                      request.status === 'answered'
+                                        ? 'bg-emerald-500/15 text-emerald-300'
+                                        : 'bg-amber-500/15 text-amber-200'
+                                    }`}>
+                                      {request.status === 'answered' ? 'Respondida' : 'Pendente'}
+                                    </span>
+                                  </div>
+                                  <div className="grid gap-3">
+                                    {(request.entries || []).map((entry, index) => (
+                                      <div key={`${request.id}-${index}`} className="rounded-lg border border-white/8 bg-white/5 p-3">
+                                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mystic-goldSoft">Pergunta {index + 1}</p>
+                                        <p className="mt-1 text-sm text-amber-50">{entry.question || entry.text || 'Pergunta sem descrição.'}</p>
+                                        <div className="mt-2 rounded-lg border border-emerald-400/15 bg-emerald-500/5 p-3">
+                                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">Resposta</p>
+                                          <p className="mt-1 whitespace-pre-wrap text-sm text-ethereal-silver/80">{entry.answer || 'Resposta ainda não registrada.'}</p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </article>
+                              ))
+                            )}
+                          </div>
+                        </section>
+
+                        <section className="rounded-xl border border-mystic-gold/20 bg-black/30 p-4">
+                          <div className="mb-3 flex items-center gap-2">
+                            <NotebookPen size={16} className="text-mystic-goldSoft" />
+                            <h4 className="text-sm font-semibold text-amber-50">Consultas em Vídeo</h4>
+                          </div>
+                          <div className="grid gap-3">
+                            {customer.videoSessions.length === 0 ? (
+                              <p className="text-sm text-ethereal-silver/65">Nenhuma consulta em vídeo registrada para este cliente.</p>
+                            ) : (
+                              customer.videoSessions.map((session) => (
+                                <article key={session.id} className="rounded-xl border border-mystic-gold/15 bg-black/35 p-3">
+                                  <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                      <p className="text-sm text-amber-50">Consulta finalizada em {new Date(session.finishedAt || session.startedAt || session.createdAt).toLocaleString('pt-BR')}</p>
+                                      <p className="mt-1 text-xs text-ethereal-silver/65">Duração: {formatDurationLabel(session.durationSeconds)} • Repasse: R$ {Number(session.consultantEarnings || 0).toFixed(2)}</p>
+                                    </div>
+                                    <span className="rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] uppercase tracking-wide text-emerald-300">
+                                      {session.status}
+                                    </span>
+                                  </div>
+
+                                  <label className="mt-3 grid gap-2 text-xs text-amber-100/75">
+                                    Observações do consultor
+                                    <textarea
+                                      rows={3}
+                                      value={videoNotesDrafts[session.id] ?? ''}
+                                      onChange={(event) => setVideoNotesDrafts((prev) => ({ ...prev, [session.id]: event.target.value }))}
+                                      className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                                      placeholder="Escreva observações internas sobre este atendimento."
+                                    />
+                                  </label>
+
+                                  <div className="mt-3 flex justify-end">
+                                    <button
+                                      onClick={() => {
+                                        void saveVideoConsultationNote(session.id)
+                                      }}
+                                      className="rounded-lg bg-mystic-gold/90 px-4 py-2 text-xs font-bold text-black transition hover:brightness-110"
+                                    >
+                                      Salvar observação
+                                    </button>
+                                  </div>
+                                </article>
+                              ))
+                            )}
+                          </div>
+                        </section>
+                      </div>
+                    )}
+                  </article>
+                )
+              })
             )}
           </div>
         </GlassCard>

@@ -184,7 +184,7 @@ export const createQuestionRequestsRouter = (pool) => {
 
   router.patch('/:id/answer', async (request, response) => {
     const { id } = request.params
-    const { consultantId, answerSummary, commissionRate } = request.body ?? {}
+    const { consultantId, answerSummary, commissionRate, answeredEntries } = request.body ?? {}
 
     if (!consultantId || !answerSummary?.trim()) {
       response.status(400).json({ message: 'consultantId e answerSummary são obrigatórios.' })
@@ -219,6 +219,19 @@ export const createQuestionRequestsRouter = (pool) => {
       const answeredAtDate = new Date()
       const txId = `tx_${id}`
       const txDescription = `Ganho de consulta por perguntas`
+      const currentEntries = parseEntries(current.entries)
+      const normalizedAnsweredEntries = Array.isArray(answeredEntries)
+        ? currentEntries.map((entry, index) => ({
+            ...entry,
+            ...(answeredEntries[index] || {}),
+            question:
+              answeredEntries[index]?.question ??
+              entry?.question ??
+              entry?.text ??
+              (entry?.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada'),
+            answer: answeredEntries[index]?.answer ?? entry?.answer ?? '',
+          }))
+        : currentEntries
 
       await connection.query(
         `
@@ -227,11 +240,12 @@ export const createQuestionRequestsRouter = (pool) => {
             status = 'answered',
             answeredAt = ?,
             answerSummary = ?,
+            entries = ?,
             commissionValue = ?,
             consultantNetValue = ?
           WHERE id = ?
         `,
-        [answeredAtDate, answerSummary.trim(), commissionValue, consultantNetValue, id],
+        [answeredAtDate, answerSummary.trim(), JSON.stringify(normalizedAnsweredEntries), commissionValue, consultantNetValue, id],
       )
 
       await connection.query(
@@ -305,7 +319,7 @@ export const createQuestionRequestsRouter = (pool) => {
       response.json({
         request: {
           ...current,
-          entries: parseEntries(current.entries),
+          entries: normalizedAnsweredEntries,
           status: 'answered',
           answeredAt: answeredAtDate.toISOString(),
           answerSummary: answerSummary.trim(),

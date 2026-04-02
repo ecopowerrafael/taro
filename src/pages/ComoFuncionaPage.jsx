@@ -63,8 +63,8 @@ export function ComoFuncionaPage() {
       <PageShell title="Como Funciona" subtitle="Guia completo para usar a plataforma Astria">
         
         {/* INTRO SECTION */}
-        <section className="mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-mystic-purple-light/30 bg-mystic-purple-light/10 backdrop-blur-sm mb-8">
+        <section className="mb-20 text-center">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-mystic-purple-light/30 bg-mystic-purple-light/10 px-4 py-2 backdrop-blur-sm">
             <Sparkles className="w-4 h-4 text-mystic-gold" />
             <span className="text-xs uppercase tracking-widest text-mystic-purple-light">Seu Caminho até as Respostas</span>
           </div>
@@ -74,7 +74,7 @@ export function ComoFuncionaPage() {
             <span className="text-gradient-gold italic">para Transformação</span>
           </h1>
           
-          <p className="text-lg md:text-xl text-mystic-purple-light mb-8 max-w-3xl leading-relaxed font-light">
+          <p className="mx-auto mb-8 max-w-3xl text-lg leading-relaxed font-light text-mystic-purple-light md:text-xl">
             A plataforma Astria foi desenvolvida para ser intuitiva e acessível. Em apenas 6 passos, você terá acesso a consultas personalizadas, leituras de tarot, rituais mágicos e muito mais.
           </p>
         </section>
@@ -84,28 +84,28 @@ export function ComoFuncionaPage() {
           {steps.map((step, idx) => {
             const Icon = step.icon
             return (
-              <div key={idx} className="group relative rounded-2xl glass-panel p-8 border border-mystic-purple-light/20 hover:border-mystic-gold/50 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+              <div key={idx} className="group relative overflow-hidden rounded-2xl border border-mystic-purple-light/20 glass-panel p-8 text-center transition-all duration-500 hover:-translate-y-2 hover:border-mystic-gold/50">
                 
                 {/* Background Accent */}
                 <div className="absolute inset-0 bg-gradient-to-b from-mystic-gold/0 to-mystic-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 {/* Number Badge */}
-                <div className="relative z-10 inline-flex items-center justify-center w-16 h-16 rounded-full border-2 border-mystic-gold/50 bg-mystic-gold/10 mb-6 group-hover:border-mystic-gold group-hover:scale-110 transition-all duration-500">
+                <div className="relative z-10 mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full border-2 border-mystic-gold/50 bg-mystic-gold/10 transition-all duration-500 group-hover:scale-110 group-hover:border-mystic-gold">
                   <span className="font-playfair text-2xl text-mystic-gold font-bold">{step.number}</span>
                 </div>
                 
                 {/* Icon */}
-                <div className="relative z-10 mb-4">
+                <div className="relative z-10 mb-4 flex justify-center">
                   <Icon className="w-10 h-10 text-mystic-gold group-hover:scale-125 transition-transform duration-500" />
                 </div>
                 
                 {/* Title */}
-                <h3 className="relative font-playfair text-2xl text-white mb-3 group-hover:text-mystic-gold transition-colors">
+                <h3 className="relative mb-3 font-playfair text-2xl text-white transition-colors group-hover:text-mystic-gold">
                   {step.title}
                 </h3>
                 
                 {/* Description */}
-                <p className="relative text-mystic-purple-light text-sm leading-relaxed">
+                <p className="relative text-sm leading-relaxed text-mystic-purple-light">
                   {step.description}
                 </p>
               </div>
@@ -158,12 +158,12 @@ export function ComoFuncionaPage() {
                 ]
               }
             ].map((section, idx) => (
-              <div key={idx} className="rounded-xl border border-mystic-gold/30 bg-mystic-purple-dark/30 p-8">
-                <h3 className="font-playfair text-2xl text-mystic-gold mb-6">{section.title}</h3>
+              <div key={idx} className="rounded-xl border border-mystic-gold/30 bg-mystic-purple-dark/30 p-8 text-center">
+                <h3 className="mb-6 font-playfair text-2xl text-mystic-gold">{section.title}</h3>
                 <ul className="space-y-4">
                   {section.items.map((item, i) => (
-                    <li key={i} className="text-mystic-purple-light flex items-start gap-3">
-                      <span className="text-mystic-gold mt-1">→</span>
+                    <li key={i} className="flex items-center justify-center gap-3 text-mystic-purple-light">
+                      <span className="text-mystic-gold">→</span>
                       <span>{item}</span>
                     </li>
                   ))}
@@ -206,9 +206,9 @@ export function ComoFuncionaPage() {
                 a: 'Aceitamos cartões de crédito, débito, PIX, transferência bancária e várias carteiras digitais para sua comodidade.'
               }
             ].map((faq, idx) => (
-              <div key={idx} className="rounded-xl border border-mystic-purple-light/20 hover:border-mystic-gold/50 transition-all bg-mystic-purple/10 p-6">
-                <h3 className="font-playfair text-lg text-mystic-gold mb-3">{faq.q}</h3>
-                <p className="text-mystic-purple-light text-sm leading-relaxed">{faq.a}</p>
+              <div key={idx} className="rounded-xl border border-mystic-purple-light/20 bg-mystic-purple/10 p-6 text-center transition-all hover:border-mystic-gold/50">
+                <h3 className="mb-3 font-playfair text-lg text-mystic-gold">{faq.q}</h3>
+                <p className="text-sm leading-relaxed text-mystic-purple-light">{faq.a}</p>
               </div>
             ))}
           </div>

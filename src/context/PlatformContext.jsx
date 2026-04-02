@@ -1338,7 +1338,7 @@ export function PlatformProvider({ children }) {
     return normalizeQuestionRequest(payload)
   }
 
-  const answerQuestionRequestOnApi = async ({ requestId, consultantId, answerSummary, commissionRate }) => {
+  const answerQuestionRequestOnApi = async ({ requestId, consultantId, answerSummary, commissionRate, answeredEntries }) => {
     const response = await fetch(buildApiUrl(`/api/question-requests/${requestId}/answer`), {
       method: 'PATCH',
       headers: {
@@ -1348,6 +1348,7 @@ export function PlatformProvider({ children }) {
         consultantId,
         answerSummary,
         commissionRate,
+        answeredEntries,
       }),
     })
     if (!response.ok) {
@@ -1846,7 +1847,7 @@ export function PlatformProvider({ children }) {
     }
   }
 
-  const respondToQuestionRequest = async ({ requestId, consultantId, answerSummary }) => {
+  const respondToQuestionRequest = async ({ requestId, consultantId, answerSummary, answeredEntries = [] }) => {
     const request = questionRequests.find((item) => item.id === requestId)
     if (!request || request.status === 'answered') {
       return
@@ -1864,6 +1865,7 @@ export function PlatformProvider({ children }) {
         consultantId,
         answerSummary,
         commissionRate,
+        answeredEntries,
       })
       setQuestionRequests((prev) =>
         prev.map((item) => (item.id === requestId ? { ...item, ...result.request } : item)),
@@ -1888,6 +1890,7 @@ export function PlatformProvider({ children }) {
           ? {
               ...item,
               status: 'answered',
+              entries: answeredEntries.length > 0 ? answeredEntries : item.entries,
               answerSummary,
               answeredAt,
               commissionValue,

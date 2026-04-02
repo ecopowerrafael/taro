@@ -262,6 +262,61 @@ export const createVideoSessionsRouter = (pool) => {
     }
   })
 
+  router.get('/history/mine', async (request, response) => {
+    const userId = request.user.id
+    const userEmail = request.user.email
+
+    try {
+      const [cRows] = await pool.query(
+        'SELECT id FROM consultants WHERE userId = ? OR email = ? ORDER BY userId = ? DESC LIMIT 1',
+        [userId, userEmail || '', userId],
+      )
+
+      if (cRows.length === 0) {
+        return response.json([])
+      }
+
+      const consultantId = cRows[0].id
+      const [rows] = await pool.query(
+        `
+          SELECT
+            vs.id,
+            vs.userId,
+            vs.consultantId,
+            vs.status,
+            vs.roomUrl,
+            vs.createdAt,
+            vs.startedAt,
+            vs.finishedAt,
+            vs.durationSeconds,
+            vs.consultantEarnings,
+            vs.consultantNotes,
+            u.name AS userName,
+            u.email AS userEmail,
+            c.name AS consultantName
+          FROM video_sessions vs
+          JOIN users u ON u.id = vs.userId
+          JOIN consultants c ON c.id = vs.consultantId
+          WHERE vs.consultantId = ?
+          ORDER BY COALESCE(vs.finishedAt, vs.startedAt, vs.createdAt) DESC
+        `,
+        [consultantId],
+      )
+
+      response.json(
+        rows.map((row) => ({
+          ...row,
+          durationSeconds: Number(row.durationSeconds) || 0,
+          consultantEarnings: Number(row.consultantEarnings) || 0,
+          consultantNotes: row.consultantNotes || '',
+        })),
+      )
+    } catch (error) {
+      console.error('Erro ao buscar histórico de vídeo:', error)
+      response.status(500).json({ message: 'Erro ao carregar histórico de vídeo.' })
+    }
+  })
+
   // Buscar detalhes de uma sala pelo sessionId
   router.get('/:sessionId', async (request, response) => {
     const { sessionId } = request.params
@@ -610,6 +665,38 @@ export const createVideoSessionsRouter = (pool) => {
       response.status(500).json({ message: 'Erro ao finalizar sessão.' })
     } finally {
       connection.release()
+    }
+  })
+
+  router.patch('/:sessionId/notes', async (request, response) => {
+    const { sessionId } = request.params
+    const { consultantNotes } = request.body ?? {}
+    const userId = request.user.id
+    const userEmail = request.user.email
+
+    try {
+      const { session, isConsultant } = await resolveSessionActors({
+        pool,
+        sessionId,
+        userId,
+        userEmail,
+      })
+
+      if (!session) {
+        return response.status(404).json({ message: 'Sessão não encontrada.' })
+      }
+
+      if (!isConsultant) {
+        return response.status(403).json({ message: 'Somente o consultor pode registrar observações.' })
+      }
+
+      const normalizedNotes = String(consultantNotes || '').trim()
+      await pool.query('UPDATE video_sessions SET consultantNotes = ? WHERE id = ?', [normalizedNotes, sessionId])
+
+      response.json({ ok: true, sessionId, consultantNotes: normalizedNotes })
+    } catch (error) {
+      console.error('Erro ao salvar observação da sessão:', error)
+      response.status(500).json({ message: 'Erro ao salvar observação da sessão.' })
     }
   })
 

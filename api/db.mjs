@@ -229,6 +229,7 @@ export const initializeSchema = async (pool) => {
       finishedAt DATETIME NULL,
       durationSeconds INT NOT NULL DEFAULT 0,
       consultantEarnings DECIMAL(10,2) NOT NULL DEFAULT 0,
+      consultantNotes TEXT NULL,
       CONSTRAINT fk_vs_user FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
       CONSTRAINT fk_vs_consultant FOREIGN KEY (consultantId) REFERENCES consultants(id) ON DELETE CASCADE
     )
@@ -262,6 +263,9 @@ export const initializeSchema = async (pool) => {
   } catch (e) {}
   try {
     await pool.query('ALTER TABLE video_sessions ADD COLUMN consultantEarnings DECIMAL(10,2) NOT NULL DEFAULT 0')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE video_sessions ADD COLUMN consultantNotes TEXT NULL')
   } catch (e) {}
 
   // Garantir colunas de PIX para bancos antigos
