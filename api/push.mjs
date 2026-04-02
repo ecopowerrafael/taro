@@ -1,6 +1,6 @@
 const PUSH_PROFILES = {
   incoming_call: {
-    channelId: 'incoming_calls',
+    channelId: 'incoming_calls_v2',
     deliveryPriority: 'high',
     urgency: 'call',
     requireInteraction: true,
@@ -371,6 +371,8 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
           android: {
             priority: payload.deliveryPriority === 'high' ? 'high' : 'normal',
             ttl: payload.ttlMs,
+            directBootOk: true,
+            restrictedPackageName: 'com.astria.taromobile',
           },
         })
 
