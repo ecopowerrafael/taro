@@ -106,34 +106,28 @@ export function SpellPurchaseModal({ spell, onClose }) {
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  <div className="grid gap-3 md:grid-cols-2">
+                  <div className="flex flex-col justify-center gap-3 sm:flex-row">
                     <button
                       onClick={() => setPaymentMethod('pix')}
-                      className={`flex flex-col items-center gap-3 rounded-2xl border p-5 transition ${
+                      className={`inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] transition ${
                         paymentMethod === 'pix'
-                          ? 'border-mystic-gold bg-mystic-gold/10'
-                          : 'border-mystic-gold/25 bg-black/25 hover:bg-black/35'
+                          ? 'border-mystic-gold bg-mystic-gold text-black'
+                          : 'border-mystic-gold/35 bg-black/25 text-mystic-goldSoft hover:bg-mystic-gold/10'
                       }`}
                     >
-                      <QrCode size={28} className="text-mystic-goldSoft" />
-                      <div className="text-center">
-                        <p className="font-display text-lg text-mystic-goldSoft">PIX</p>
-                        <p className="text-[11px] text-amber-100/60">Pagamento por QR Code</p>
-                      </div>
+                      <QrCode size={18} />
+                      PIX
                     </button>
                     <button
                       onClick={() => setPaymentMethod('card')}
-                      className={`flex flex-col items-center gap-3 rounded-2xl border p-5 transition ${
+                      className={`inline-flex items-center justify-center gap-2 rounded-full border px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] transition ${
                         paymentMethod === 'card'
-                          ? 'border-mystic-gold bg-mystic-gold/10'
-                          : 'border-mystic-gold/25 bg-black/25 hover:bg-black/35'
+                          ? 'border-mystic-gold bg-mystic-gold text-black'
+                          : 'border-mystic-gold/35 bg-black/25 text-mystic-goldSoft hover:bg-mystic-gold/10'
                       }`}
                     >
-                      <CreditCard size={28} className="text-mystic-goldSoft" />
-                      <div className="text-center">
-                        <p className="font-display text-lg text-mystic-goldSoft">Cartão de crédito</p>
-                        <p className="text-[11px] text-amber-100/60">Confirmação automática com Stripe</p>
-                      </div>
+                      <CreditCard size={18} />
+                      Cartão de crédito
                     </button>
                   </div>
 

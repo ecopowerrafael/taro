@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowRight, CreditCard, QrCode, Sparkles } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import { PageShell } from '../components/PageShell'
 import { SpellPurchaseModal } from '../components/SpellPurchaseModal'
 import { SacredGeometry } from '../components/SacredGeometry'
@@ -18,37 +18,22 @@ export function MagiasPage() {
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")' }} />
       <SacredGeometry />
 
-      <PageShell title="Magias" subtitle="Uma vitrine de produtos espirituais com pagamento via PIX ou cartão.">
+      <PageShell title="Magias" subtitle="Conecte-se às forças do cosmos através de rituais personalizados. Onde a precisão astronômica encontra a magia ancestral para transformar sua realidade.">
         <section className="mb-20">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-mystic-purple-light/30 bg-mystic-purple-light/10 backdrop-blur-sm mb-8">
             <Sparkles className="w-4 h-4 text-mystic-gold" />
-            <span className="text-xs uppercase tracking-widest text-mystic-purple-light">Produtos Espirituais</span>
+            <span className="text-xs uppercase tracking-widest text-mystic-purple-light">Alquimia Espiritual</span>
           </div>
 
           <h1 className="font-playfair text-5xl md:text-6xl leading-[1.1] mb-6 drop-shadow-2xl">
-            Magias com <br/>
-            <span className="text-gradient-gold italic">consultor definido</span> e <br/>
-            checkout integrado
+            Rituais sob Medida <br/>
+            <span className="text-gradient-gold italic">com Mentores de Elite</span> <br/>
+            e Fluxo Unificado
           </h1>
 
           <p className="text-lg md:text-xl text-mystic-purple-light mb-8 max-w-2xl leading-relaxed font-light">
-            Cada magia funciona como um produto: a vitrine mostra quem executa o trabalho, o investimento e a descrição completa, enquanto o pagamento entra por PIX ou Stripe.
+            Explore nossa seleção de rituais exclusivos, conduzidos por mestres da tradição. Escolha sua linhagem, alinhe sua intenção e ative sua transformação com fluidez imediata.
           </p>
-
-          <div className="grid gap-3 sm:grid-cols-3 max-w-3xl">
-            <div className="rounded-2xl border border-mystic-gold/25 bg-black/25 p-4">
-              <p className="text-xs uppercase tracking-[0.22em] text-amber-100/55">Magias ativas</p>
-              <p className="mt-2 font-playfair text-3xl text-mystic-gold">{spells.length}</p>
-            </div>
-            <div className="rounded-2xl border border-mystic-gold/25 bg-black/25 p-4">
-              <p className="text-xs uppercase tracking-[0.22em] text-amber-100/55">Pagamento PIX</p>
-              <p className="mt-2 text-sm text-amber-100/75">QR Code com validação manual</p>
-            </div>
-            <div className="rounded-2xl border border-mystic-gold/25 bg-black/25 p-4">
-              <p className="text-xs uppercase tracking-[0.22em] text-amber-100/55">Pagamento cartão</p>
-              <p className="mt-2 text-sm text-amber-100/75">Stripe com confirmação automática</p>
-            </div>
-          </div>
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
@@ -75,11 +60,6 @@ export function MagiasPage() {
                     <p className="mt-3 text-sm leading-relaxed text-mystic-purple-light">{spell.shortDescription || spell.description}</p>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-amber-100/55">
-                    <QrCode className="h-4 w-4" /> PIX
-                    <CreditCard className="ml-3 h-4 w-4" /> Stripe
-                  </div>
-
                   <div className="flex items-end justify-between gap-3 border-t border-mystic-gold/15 pt-4">
                     <div>
                       <p className="text-xs uppercase tracking-[0.18em] text-mystic-purple-light/70">Investimento</p>
@@ -89,7 +69,7 @@ export function MagiasPage() {
                       onClick={() => setSelectedSpell(spell)}
                       className="inline-flex items-center gap-2 rounded-full bg-mystic-gold px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-black transition hover:brightness-110"
                     >
-                      Comprar
+                      Ativar Ritual
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
@@ -101,15 +81,15 @@ export function MagiasPage() {
 
         <section className="rounded-2xl glass-panel border border-mystic-purple-light/20 p-12 mb-20">
           <h2 className="font-playfair text-4xl text-white mb-8 flex items-center gap-3">
-            Como a compra <span className="text-gradient-gold italic">funciona</span>
+            Como o Ritual <span className="text-gradient-gold italic">funciona</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
               { step: '01', title: 'Escolha', description: 'Selecione a magia disponível na vitrine' },
-              { step: '02', title: 'Pague', description: 'Finalize em PIX ou cartão com Stripe' },
-              { step: '03', title: 'Validação', description: 'PIX entra em aprovação manual; cartão confirma automaticamente' },
-              { step: '04', title: 'Repasse', description: 'O consultor recebe o valor líquido conforme a comissão configurada' },
+              { step: '02', title: 'Pague', description: 'Finalize em PIX ou cartão de crédito' },
+              { step: '03', title: 'Contato', description: 'O Profissional responsável pelo Ritual entrará em contato para solicitar informações adicionais caso necessário' },
+              { step: '04', title: 'Resultado', description: 'O Ritual é feito e você notará o Resultado em poucos dias conforme a demanda solicitada.' },
             ].map((item, idx) => (
               <div key={idx} className="rounded-xl border border-mystic-gold/30 bg-mystic-purple-dark/30 p-6 text-center">
                 <p className="font-playfair text-4xl text-mystic-gold mb-3">{item.step}</p>
