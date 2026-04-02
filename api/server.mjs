@@ -59,9 +59,17 @@ process.on('unhandledRejection', (reason, promise) => {
 const app = express()
 const httpServer = createServer(app)
 const sessionPresence = new Map()
+const allowedOrigins = [
+  'https://appastria.online',
+  'http://localhost:5173',
+  'https://peru-jay-760583.hostingersite.com',
+  'https://localhost',
+  'http://localhost',
+  'capacitor://localhost',
+]
 const io = new Server(httpServer, {
   cors: {
-    origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
   }
 })
@@ -75,7 +83,7 @@ app.set('nativePushEnabled', Boolean(firebaseAdmin))
 app.set('sessionPresence', sessionPresence)
 
 const initialCorsOptions = {
-  origin: ['https://appastria.online', 'http://localhost:5173', 'https://peru-jay-760583.hostingersite.com'],
+  origin: allowedOrigins,
   credentials: true,
 }
 
