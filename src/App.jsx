@@ -16,6 +16,7 @@ import { PrivacidadePage } from './pages/PrivacidadePage'
 import { RecarregarPage } from './pages/RecarregarPage'
 import { VideoRoomPage } from './pages/VideoRoomPage'
 import { MagiasPage } from './pages/MagiasPage'
+import { MagiaProdutoPage } from './pages/MagiaProdutoPage'
 import { ComoFuncionaPage } from './pages/ComoFuncionaPage'
 import { SuportePage } from './pages/SuportePage'
 import { BlogPage } from './pages/BlogPage'
@@ -86,6 +87,7 @@ function AppContent() {
           <Route path="/termos" element={wrapWithTransition(<TermosPage />)} />
           <Route path="/privacidade" element={wrapWithTransition(<PrivacidadePage />)} />
           <Route path="/magias" element={wrapWithTransition(<MagiasPage />)} />
+          <Route path="/magias/:spellId" element={wrapWithTransition(<MagiaProdutoPage />)} />
           <Route path="/como-funciona" element={wrapWithTransition(<ComoFuncionaPage />)} />
           <Route path="/suporte" element={wrapWithTransition(<SuportePage />)} />
           <Route path="/blog" element={wrapWithTransition(<BlogPage />)} />

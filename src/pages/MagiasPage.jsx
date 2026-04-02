@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { PageShell } from '../components/PageShell'
 import { SpellPurchaseModal } from '../components/SpellPurchaseModal'
@@ -56,21 +57,25 @@ export function MagiasPage() {
 
                   <div>
                     <p className="text-xs uppercase tracking-[0.24em] text-mystic-goldSoft/75">Feita por {spell.consultantName}</p>
-                    <h3 className="mt-2 font-playfair text-3xl text-white transition-colors group-hover:text-mystic-gold">{spell.title}</h3>
+                    <h3 className="mt-2 font-playfair text-3xl text-white transition-colors group-hover:text-mystic-gold">
+                      <Link to={`/magias/${spell.id}`} className="transition hover:text-mystic-gold">
+                        {spell.title}
+                      </Link>
+                    </h3>
                     <p className="mt-3 text-sm leading-relaxed text-mystic-purple-light">{spell.shortDescription || spell.description}</p>
                   </div>
 
                   <div className="flex items-end justify-between gap-3 border-t border-mystic-gold/15 pt-4">
                     <div>
                       <p className="text-xs uppercase tracking-[0.18em] text-mystic-purple-light/70">Investimento</p>
-                      <p className="font-playfair text-3xl text-mystic-gold">R$ {Number(spell.price).toFixed(2)}</p>
+                      <p className="mt-1 font-playfair text-2xl text-mystic-gold/88">R$ {Number(spell.price).toFixed(2)}</p>
                     </div>
                     <button
                       onClick={() => setSelectedSpell(spell)}
-                      className="inline-flex items-center gap-2 rounded-full bg-mystic-gold px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-black transition hover:brightness-110"
+                      className="group inline-flex items-center gap-3 rounded-full border border-mystic-gold/60 bg-[linear-gradient(135deg,#f6df91_0%,#c79a37_52%,#f8e8ae_100%)] px-6 py-3 text-sm font-bold uppercase tracking-[0.22em] text-black shadow-[0_14px_32px_rgba(197,160,89,0.24)] transition hover:-translate-y-0.5 hover:brightness-110"
                     >
                       Ativar Ritual
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
                     </button>
                   </div>
                 </div>
@@ -104,7 +109,7 @@ export function MagiasPage() {
           <section className="text-center">
             <h2 className="font-playfair text-4xl text-white mb-4">Selecione a magia ideal</h2>
             <p className="mx-auto mb-8 max-w-2xl text-lg text-mystic-purple-light">
-              A vitrine agora é alimentada diretamente pelo admin, então preço, consultor e descrição sempre refletem o cadastro ativo.
+              Os rituais e consultas oferecidos são ferramentas de autoconhecimento e auxílio espiritual. O sucesso de cada intervenção depende da ressonância vibracional e do livre-arbítrio dos envolvidos.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               {highlightedSpells.map((spell) => (
