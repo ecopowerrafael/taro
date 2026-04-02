@@ -5,8 +5,16 @@ import { GlassCard } from '../components/GlassCard'
 import { Loader2, Video, PhoneOff, Clock3, Wallet, XCircle } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
 import { io } from 'socket.io-client'
-import DailyIframe from '@daily-co/daily-js'
 import { ReviewModal } from '../components/ReviewModal'
+
+let dailyIframeModulePromise = null
+
+const loadDailyIframe = async () => {
+  if (!dailyIframeModulePromise) {
+    dailyIframeModulePromise = import('@daily-co/daily-js').then((module) => module.default || module)
+  }
+  return dailyIframeModulePromise
+}
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
 
@@ -282,6 +290,12 @@ export function VideoRoomPage() {
 
     // Usar createCallObject ao invés de createFrame para controle 100% via código
     // Isso elimina completamente a UI de prejoin do Daily
+    const DailyIframe = await loadDailyIframe()
+
+    if (!DailyIframe || typeof DailyIframe.createCallObject !== 'function') {
+      throw new Error('Nao foi possivel carregar o SDK de video.')
+    }
+
     const callFrame = DailyIframe.createCallObject({
       userName: profile?.name || sessionData.consultantName || 'Usuário',
       videoSource: true,

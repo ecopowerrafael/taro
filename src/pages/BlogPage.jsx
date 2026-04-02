@@ -1,66 +1,66 @@
 import { PageShell } from '../components/PageShell'
+import { SeoHead } from '../components/SeoHead'
 import { SacredGeometry } from '../components/SacredGeometry'
+import { buildAbsoluteUrl } from '../data/siteConfig'
+import { blogPosts } from '../data/blogPosts'
 import { Calendar, User, ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
-const blogPosts = [
-  {
-    id: 1,
-    title: 'Os Segredos do Tarot Revelados',
-    excerpt: 'Descubra como funciona a leitura de tarot e como conectar com suas energias pessoais.',
-    date: '15 de março de 2026',
-    author: 'Mestra Luna',
-    category: 'Tarot'
-  },
-  {
-    id: 2,
-    title: '5 Rituais de Prosperidade que Funcionam',
-    excerpt: 'Aprenda rituais comprovados para atrair abundância e sucesso financeiro em sua vida.',
-    date: '12 de março de 2026',
-    author: 'Consultor Antonio',
-    category: 'Rituais'
-  },
-  {
-    id: 3,
-    title: 'Energia Lunar e seus Impactos',
-    excerpt: 'Entenda como as fases da lua influenciam suas decisões e energia pessoal.',
-    date: '10 de março de 2026',
-    author: 'Clarissa Solar',
-    category: 'Energia'
-  },
-  {
-    id: 4,
-    title: 'Proteção Espiritual Diária',
-    excerpt: 'Técnicas simples para se proteger de energias negativas no dia a dia.',
-    date: '8 de março de 2026',
-    author: 'Mestra Luna',
-    category: 'Proteção'
-  },
-  {
-    id: 5,
-    title: 'Como Interpretar seus Sonhos',
-    excerpt: 'Desvende o significado dos seus sonhos e mensagens do universo.',
-    date: '5 de março de 2026',
-    author: 'Vidente Maria',
-    category: 'Espiritualidade'
-  },
-  {
-    id: 6,
-    title: 'Astrologia para Iniciantes',
-    excerpt: 'Introdução completa ao mundo da astrologia e seu mapa astral.',
-    date: '1 de março de 2026',
-    author: 'Astróloga Iris',
-    category: 'Astrologia'
+function formatDate(dateString) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${dateString}T12:00:00`))
+}
+
+function buildBlogCollectionSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Blog Astria',
+    description: 'Artigos sobre tarot online, astrologia, sonhos, rituais, protecao espiritual e magias personalizadas.',
+    url: buildAbsoluteUrl('/blog'),
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: blogPosts.map((post, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: buildAbsoluteUrl(`/blog/${post.slug}`),
+        name: post.title,
+      })),
+    },
   }
-]
+}
 
 export function BlogPage() {
   return (
     <div className="min-h-screen bg-mystic-black text-white overflow-x-hidden font-lato">
+      <SeoHead
+        title="Blog Astria | Tarot, astrologia, protecao espiritual, sonhos e rituais"
+        description="Leia conteudos estrategicos sobre tarot online, astrologia, sonhos, protecao espiritual e rituais com foco em autoconhecimento e conversao."
+        keywords={[
+          'blog tarot online',
+          'blog astrologia',
+          'rituais espirituais',
+          'protecao espiritual',
+          'significado dos sonhos',
+        ]}
+        path="/blog"
+        structuredData={buildBlogCollectionSchema()}
+      />
       <div className="fixed inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-mystic-purple-dark/40 via-mystic-black to-mystic-black" />
       <SacredGeometry />
 
-      <PageShell title="Blog Astria" subtitle="Conhecimento espiritual e dicas para transformação pessoal">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <PageShell title="Blog Astria" subtitle="Conteudo estrategico sobre tarot online, astrologia, sonhos, rituais, protecao espiritual e magias personalizadas.">
+        <div className="mb-8 rounded-3xl border border-mystic-gold/20 bg-black/20 p-6 text-center shadow-glow backdrop-blur-sm md:p-8">
+          <h2 className="font-playfair text-3xl text-mystic-goldSoft">Conteudo pensado para atrair, educar e converter</h2>
+          <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-amber-50/85">
+            Cada artigo abaixo foi estruturado com palavras-chave relevantes para tarot online, astrologia, rituais, protecao espiritual e autoconhecimento. Explore os temas e avance para uma consulta, uma magia ou seu cadastro na Astria.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {blogPosts.map((post) => (
             <article key={post.id} className="group rounded-2xl glass-panel border border-mystic-purple-light/20 hover:border-mystic-gold/50 transition-all overflow-hidden hover:-translate-y-2">
               <div className="p-8 h-full flex flex-col">
@@ -68,9 +68,11 @@ export function BlogPage() {
                   {post.category}
                 </div>
                 
-                <h3 className="font-playfair text-2xl text-white mb-3 group-hover:text-mystic-gold transition-colors line-clamp-2">
-                  {post.title}
-                </h3>
+                <Link to={`/blog/${post.slug}`} className="block">
+                  <h3 className="font-playfair text-2xl text-white mb-3 group-hover:text-mystic-gold transition-colors line-clamp-2">
+                    {post.title}
+                  </h3>
+                </Link>
                 
                 <p className="text-mystic-purple-light text-sm mb-6 line-clamp-3 flex-grow">
                   {post.excerpt}
@@ -79,7 +81,7 @@ export function BlogPage() {
                 <div className="flex items-center justify-between text-xs text-mystic-purple-light/70 border-t border-mystic-purple-light/20 pt-4 mb-4">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    {post.date}
+                    {formatDate(post.publishedAt)}
                   </div>
                   <div className="flex items-center gap-1">
                     <User className="w-3 h-3" />
@@ -87,10 +89,10 @@ export function BlogPage() {
                   </div>
                 </div>
                 
-                <button className="w-full rounded-full border border-mystic-gold/50 hover:border-mystic-gold bg-mystic-gold/10 hover:bg-mystic-gold/20 text-mystic-gold px-4 py-2 text-sm font-semibold transition-all flex items-center justify-center gap-2 group">
+                <Link to={`/blog/${post.slug}`} className="w-full rounded-full border border-mystic-gold/50 hover:border-mystic-gold bg-mystic-gold/10 hover:bg-mystic-gold/20 text-mystic-gold px-4 py-2 text-sm font-semibold transition-all flex items-center justify-center gap-2 group">
                   Ler Artigo
                   <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </Link>
               </div>
             </article>
           ))}

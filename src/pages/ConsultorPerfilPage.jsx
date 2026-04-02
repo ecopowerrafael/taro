@@ -4,7 +4,9 @@ import { AlertTriangle, Star, ArrowLeft, MessageCircle, Video, Users, Loader2, W
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
 import { QuestionFlowModal } from '../components/QuestionFlowModal'
+import { SeoHead } from '../components/SeoHead'
 import { usePlatformContext } from '../context/platform-context'
+import { buildAbsoluteUrl } from '../data/siteConfig'
 
 const statusStyles = {
   Online: 'border-emerald-400/70 bg-emerald-500/15 text-emerald-300',
@@ -68,6 +70,49 @@ export function ConsultorPerfilPage() {
     }
     fetchProfile()
   }, [consultantId])
+
+  const buildConsultantStructuredData = () => {
+    if (!consultant) {
+      return null
+    }
+
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: consultant.name,
+        description: consultant.description || consultant.tagline || `Consultor espiritual online da Astria: ${consultant.name}.`,
+        image: consultant.photo || buildAbsoluteUrl('/logoastria.png'),
+        url: buildAbsoluteUrl(`/consultor/${consultant.id}`),
+        knowsAbout: ['tarot online', 'consulta espiritual', 'astrologia', 'orientacao energetica'],
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        name: `Consulta espiritual com ${consultant.name}`,
+        description:
+          consultant.description ||
+          consultant.tagline ||
+          `Agende uma consulta espiritual online com ${consultant.name} na Astria.`,
+        provider: {
+          '@type': 'Person',
+          name: consultant.name,
+        },
+        areaServed: 'BR',
+        offers: [
+          Number(consultant.pricePerMinute) > 0
+            ? {
+                '@type': 'Offer',
+                price: Number(consultant.pricePerMinute).toFixed(2),
+                priceCurrency: 'BRL',
+                availability: 'https://schema.org/InStock',
+                url: buildAbsoluteUrl(`/consultor/${consultant.id}`),
+              }
+            : null,
+        ].filter(Boolean),
+      },
+    ]
+  }
 
   if (loading) {
     return (
@@ -196,6 +241,24 @@ export function ConsultorPerfilPage() {
 
   return (
     <PageShell title="Perfil do Consultor" subtitle="Conheça o especialista antes de iniciar sua consulta.">
+      <SeoHead
+        title={`${consultant.name} | Consultor espiritual online na Astria`}
+        description={
+          consultant.tagline ||
+          consultant.description ||
+          `Conheca ${consultant.name}, consultor espiritual online na Astria, e escolha a melhor forma de atendimento para sua consulta.`
+        }
+        keywords={[
+          consultant.name,
+          'consultor espiritual online',
+          'tarot online',
+          'consulta espiritual',
+          consultant.tagline || 'orientacao espiritual',
+        ]}
+        path={`/consultor/${consultant.id}`}
+        image={consultant.photo || '/logoastria.png'}
+        structuredData={buildConsultantStructuredData()}
+      />
       {systemNotice && (
         <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-amber-400/50 bg-amber-500/10 px-4 py-2 text-sm text-amber-200">
           <AlertTriangle size={16} />

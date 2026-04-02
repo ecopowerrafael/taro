@@ -1,0 +1,366 @@
+export const blogPosts = [
+  {
+    id: 1,
+    slug: 'tarot-online-como-funciona-leitura-espiritual',
+    title: 'Como funciona uma leitura de tarot online e o que perguntar',
+    seoTitle: 'Tarot online: como funciona a leitura espiritual e o que perguntar | Blog Astria',
+    description:
+      'Entenda como funciona o tarot online, quais perguntas levam a respostas melhores e como aproveitar sua consulta espiritual com mais clareza e seguranca.',
+    excerpt:
+      'Descubra como funciona uma leitura de tarot online, quais perguntas fazem sentido e como transformar sua consulta espiritual em direcao pratica.',
+    category: 'Tarot',
+    tags: ['tarot online', 'leitura de tarot', 'consulta espiritual', 'perguntas para tarot'],
+    keywords: ['tarot online', 'como funciona leitura de tarot', 'perguntas para tarot', 'consulta espiritual online'],
+    author: 'Mestra Luna',
+    publishedAt: '2026-03-15',
+    readTime: '6 min de leitura',
+    intro:
+      'A leitura de tarot online se tornou uma das formas mais praticas de buscar orientacao espiritual sem abrir mao de profundidade. Quando a consulta e conduzida por um consultor experiente, o tarot ajuda a organizar sentimentos, identificar padroes e enxergar caminhos com mais consciencia.',
+    sections: [
+      {
+        title: 'O que acontece em uma consulta de tarot online',
+        paragraphs: [
+          'Na pratica, o atendimento acontece em tempo real por video ou dentro da plataforma, com um consultor interpretando a tiragem de acordo com seu momento atual. A consulta nao e apenas sobre prever acontecimentos; ela serve para ler tendencias, conflitos internos, oportunidades e alertas energeticos.',
+          'O grande diferencial do tarot online esta na rapidez com que voce consegue se conectar a um especialista, tirar duvidas urgentes e receber uma leitura objetiva sem precisar esperar dias por atendimento presencial.',
+        ],
+      },
+      {
+        title: 'Quais perguntas trazem respostas mais claras',
+        paragraphs: [
+          'Perguntas abertas geram leituras mais profundas. Em vez de perguntar apenas se algo vai acontecer, prefira questoes como: o que preciso compreender sobre meu relacionamento, como posso melhorar minha vida financeira ou qual energia envolve esta decisao profissional.',
+          'Quando voce formula uma pergunta com contexto, o consultor consegue interpretar as cartas de forma mais estrategica. Isso aumenta a qualidade da consulta e melhora sua tomada de decisao depois da leitura.',
+        ],
+      },
+      {
+        title: 'Quando o tarot online pode ajudar mais',
+        paragraphs: [
+          'O tarot online costuma ser especialmente util em fases de duvida, encerramentos de ciclos, conflitos afetivos, bloqueios financeiros e momentos em que a pessoa sente que perdeu a direcao. A leitura ajuda a sair da confusao e voltar a agir com mais seguranca.',
+          'Tambem e uma ferramenta poderosa para quem deseja confirmar intuicoes, entender repeticoes e alinhar escolhas com o proprio momento energetico.',
+        ],
+      },
+      {
+        title: 'Como aproveitar melhor sua leitura espiritual',
+        paragraphs: [
+          'Antes da consulta, vale anotar os temas mais urgentes e entrar com a mente aberta. Depois da leitura, registre os principais pontos e observe como as orientacoes se conectam com sua rotina, seus relacionamentos e suas proximas decisoes.',
+          'O tarot funciona melhor quando gera movimento. Ou seja: a consulta esclarece, mas a transformacao acontece quando voce age com mais consciencia a partir do que foi revelado.',
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: 'Tarot online funciona mesmo?',
+        answer:
+          'Sim. O resultado depende mais da experiencia do consultor e da qualidade da interpretacao do que da distancia fisica. Com atendimento ao vivo, a leitura pode ser profunda, clara e muito objetiva.',
+      },
+      {
+        question: 'Posso fazer perguntas sobre amor e dinheiro na mesma consulta?',
+        answer:
+          'Pode, desde que haja tempo suficiente para aprofundar os temas. O ideal e priorizar as questoes mais urgentes para nao deixar a leitura superficial.',
+      },
+    ],
+  },
+  {
+    id: 2,
+    slug: 'rituais-de-prosperidade-espiritual-que-fortalecem-resultados',
+    title: 'Rituais de prosperidade espiritual que fortalecem seus resultados',
+    seoTitle: 'Rituais de prosperidade: como fortalecer abundancia e destravar caminhos | Blog Astria',
+    description:
+      'Veja como os rituais de prosperidade podem fortalecer sua energia financeira, destravar bloqueios e apoiar metas de abundancia com mais intencao.',
+    excerpt:
+      'Aprenda como rituais de prosperidade ajudam a alinhar energia, foco e movimento para abrir caminhos financeiros e profissionais.',
+    category: 'Rituais',
+    tags: ['ritual de prosperidade', 'abundancia', 'energia financeira', 'magia para dinheiro'],
+    keywords: ['ritual de prosperidade', 'como atrair abundancia', 'energia financeira', 'magia para prosperidade'],
+    author: 'Consultor Antonio',
+    publishedAt: '2026-03-12',
+    readTime: '7 min de leitura',
+    intro:
+      'Prosperidade nao depende apenas de sorte. Em muitas tradicoes espirituais, abundancia esta ligada a alinhamento interno, limpeza de bloqueios e fortalecimento da intencao. Por isso, rituais de prosperidade continuam sendo buscados por quem deseja destravar a vida material com consciencia.',
+    sections: [
+      {
+        title: 'O que um ritual de prosperidade realmente faz',
+        paragraphs: [
+          'Um ritual de prosperidade nao substitui acao pratica, mas pode fortalecer foco, disciplina, confianca e abertura energetica. Quando a pessoa esta presa em medo, culpa ou repeticao de escassez, o ritual atua como suporte simbolico e espiritual para reorganizar esse campo.',
+          'Na Astria, as magias e rituais personalizados sao pensados para cada objetivo. Isso evita trabalhos genericos e aumenta a coerencia entre sua meta e a energia movimentada.',
+        ],
+      },
+      {
+        title: 'Sinais de bloqueio financeiro e energetico',
+        paragraphs: [
+          'Dificuldade constante em manter dinheiro, medo de cobrar pelo proprio trabalho, atrasos repetidos, sabotagem em oportunidades e sensacao de estagnacao sao sinais comuns de bloqueio. Nem sempre a origem e espiritual, mas o campo energetico pode reforcar o problema.',
+          'Quando existe repeticao de padroes negativos, unir orientacao de consultores com um ritual estrategico costuma trazer mais clareza sobre o que precisa ser mudado na rotina e na postura.',
+        ],
+      },
+      {
+        title: 'Como potencializar um trabalho de prosperidade',
+        paragraphs: [
+          'O melhor resultado aparece quando o ritual vem acompanhado de decisoes concretas: organizar gastos, melhorar oferta profissional, revisar metas e sustentar constancia. Espiritualidade forte sem movimento vira expectativa; movimento sem alinhamento vira desgaste.',
+          'Por isso, o ideal e usar o ritual como catalisador de uma nova fase. Ele fortalece sua intencao, enquanto voce cria espaco real para a abundancia entrar.',
+        ],
+      },
+      {
+        title: 'Quando contratar uma magia personalizada',
+        paragraphs: [
+          'Se voce sente que ja tentou varias estrategias e continua preso na mesma estagnacao, uma magia personalizada pode ser o proximo passo. O diferencial esta na leitura do seu caso, na escolha do consultor e na definicao do objetivo exato do trabalho.',
+          'Isso faz com que a energia do ritual tenha direcao, aumentando o potencial de conversao em atitudes, oportunidades e percepcoes mais favoraveis.',
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: 'Ritual de prosperidade garante dinheiro imediato?',
+        answer:
+          'Nao existe garantia automatica. O ritual fortalece caminhos, percepcao e energia, mas precisa caminhar junto com atitude pratica e estrategia no mundo material.',
+      },
+      {
+        question: 'Qual a diferenca entre consulta e magia de prosperidade?',
+        answer:
+          'A consulta ajuda a diagnosticar o momento, enquanto a magia personalizada e um trabalho focado em movimentar energeticamente um objetivo especifico.',
+      },
+    ],
+  },
+  {
+    id: 3,
+    slug: 'energia-lunar-fases-da-lua-e-como-afetam-sua-vida',
+    title: 'Energia lunar: como as fases da lua afetam sua vida e suas decisoes',
+    seoTitle: 'Energia lunar: fases da lua, emocao, intuicao e ciclos pessoais | Blog Astria',
+    description:
+      'Entenda como as fases da lua influenciam emocao, intuicao, descanso, ciclos de encerramento e novos comecos na vida amorosa e profissional.',
+    excerpt:
+      'Veja como a energia lunar influencia seu emocional, sua intuicao e a forma como voce lida com comecos, pausas e encerramentos.',
+    category: 'Energia',
+    tags: ['energia lunar', 'fases da lua', 'lua nova', 'lua cheia'],
+    keywords: ['energia lunar', 'fases da lua', 'lua cheia significado', 'lua nova espiritualidade'],
+    author: 'Clarissa Solar',
+    publishedAt: '2026-03-10',
+    readTime: '6 min de leitura',
+    intro:
+      'Mesmo quem nao acompanha astrologia percebe que alguns dias parecem mais intensos, emotivos ou introspectivos. As fases da lua estao ligadas a ciclos de expansao, recolhimento, limpeza e renovacao, influenciando a forma como sentimos e decidimos.',
+    sections: [
+      {
+        title: 'Por que a lua influencia tanto o campo emocional',
+        paragraphs: [
+          'Na linguagem simbolica da astrologia, a lua representa emocao, memoria, intuicao e necessidades internas. Quando as fases mudam, muitos processos internos tambem ganham mais volume, principalmente para quem ja esta vivendo conflitos, mudancas ou encerramentos.',
+          'Observar esses ciclos ajuda a parar de brigar com o proprio ritmo. Em vez de exigir produtividade maxima o tempo todo, voce passa a agir com mais inteligencia energetica.',
+        ],
+      },
+      {
+        title: 'O que cada fase da lua favorece',
+        paragraphs: [
+          'A lua nova costuma favorecer intencoes, planejamento e novos comecos. A lua crescente fortalece acao, construcao e consistencia. A lua cheia amplia percepcoes, emocao e revelacoes. Ja a lua minguante e excelente para encerramentos, limpeza e desapego.',
+          'Quando voce sincroniza pequenas decisoes com essas fases, ganha mais clareza sobre quando iniciar, insistir, pausar ou concluir algo importante.',
+        ],
+      },
+      {
+        title: 'Como usar a energia lunar com mais consciencia',
+        paragraphs: [
+          'Voce nao precisa transformar a lua em regra rigida. O mais inteligente e observar padroes: em quais fases voce fica mais sensivel, produtivo, intuitivo ou cansado. Esse autoconhecimento melhora seu planejamento emocional e espiritual.',
+          'Consultas com astrologos e especialistas energeticos ajudam a cruzar seu mapa astral com os ciclos lunares, criando orientacoes mais personalizadas para amor, carreira e bem-estar.',
+        ],
+      },
+      {
+        title: 'Quando buscar orientacao espiritual sobre ciclos',
+        paragraphs: [
+          'Se voce sente que repete as mesmas decisoes em fases intensas, uma consulta pode ajudar a entender gatilhos, oportunidades e pontos de atencao. Isso evita impulsividade e aumenta sua capacidade de agir no tempo certo.',
+          'Na Astria, e possivel combinar leitura espiritual, astrologia e rituais para alinhar intencao com momento energetico.',
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: 'Lua cheia sempre deixa tudo mais intenso?',
+        answer:
+          'Em geral, sim. A lua cheia tende a ampliar o que ja esta em movimento, por isso muitas pessoas sentem mais clareza, ansiedade ou emotividade nessa fase.',
+      },
+      {
+        question: 'Preciso conhecer meu mapa astral para usar os ciclos da lua?',
+        answer:
+          'Nao e obrigatorio, mas conhecer seu mapa ajuda bastante. Com ele, o consultor entende em quais areas da vida cada fase lunar pode reverberar com mais forca.',
+      },
+    ],
+  },
+  {
+    id: 4,
+    slug: 'protecao-espiritual-diaria-como-manter-sua-energia-firme',
+    title: 'Protecao espiritual diaria: como manter sua energia firme',
+    seoTitle: 'Protecao espiritual diaria: tecnicas, rotina energetica e limpeza | Blog Astria',
+    description:
+      'Aprenda praticas simples de protecao espiritual diaria para reduzir desgaste energetico, fortalecer limites e manter sua vibracao mais firme.',
+    excerpt:
+      'Veja tecnicas simples de protecao espiritual diaria para reduzir peso energetico, reforcar limites e manter sua vibracao equilibrada.',
+    category: 'Protecao',
+    tags: ['protecao espiritual', 'limpeza energetica', 'energia negativa', 'banho espiritual'],
+    keywords: ['protecao espiritual diaria', 'limpeza energetica', 'como se proteger de energia negativa', 'banho espiritual'],
+    author: 'Mestra Luna',
+    publishedAt: '2026-03-08',
+    readTime: '6 min de leitura',
+    intro:
+      'Proteger a propria energia nao e exagero nem supersticao. Em rotinas intensas, convivencias desgastantes e ambientes carregados, pequenas praticas de protecao espiritual ajudam a preservar foco, leveza e estabilidade emocional.',
+    sections: [
+      {
+        title: 'O que enfraquece sua protecao espiritual no dia a dia',
+        paragraphs: [
+          'Excesso de contato com ambientes tensos, falta de descanso, desgaste emocional e dificuldade de impor limites costumam deixar o campo energetico mais vulneravel. Isso pode se manifestar como cansaco sem motivo claro, irritacao, peso mental ou sensacao de drenagem constante.',
+          'Nem tudo e influencia externa, mas a rotina energetica pode piorar o que ja esta fragilizado internamente. Por isso, protecao espiritual tambem envolve autocuidado e consciencia emocional.',
+        ],
+      },
+      {
+        title: 'Praticas simples que ajudam de verdade',
+        paragraphs: [
+          'Banhos de ervas indicados com criterio, oracoes, visualizacoes de fechamento de campo, organizacao do ambiente e pausas de silencio ajudam a reduzir acúmulo energetico. O segredo esta na constancia, nao no excesso de tecnicas.',
+          'Criar uma rotina curta e funcional costuma ser mais poderoso do que fazer dezenas de praticas sem presenca. Protecao espiritual precisa caber na sua vida real.',
+        ],
+      },
+      {
+        title: 'Limite emocional tambem e protecao',
+        paragraphs: [
+          'Muita gente busca limpeza energetica sem perceber que continua abrindo espaco para relacoes invasivas, ambientes toxicos e conversas drenantes. Limite e uma das formas mais importantes de protecao espiritual.',
+          'Quando voce fortalece sua postura, a energia deixa de vazar com tanta facilidade. O trabalho espiritual fica mais efetivo porque encontra um comportamento coerente para sustenta-lo.',
+        ],
+      },
+      {
+        title: 'Quando vale buscar um consultor ou ritual de defesa',
+        paragraphs: [
+          'Se a sensacao de peso e persistente, se ha repeticao de conflitos ou queda energetica frequente, uma consulta pode ajudar a diferenciar cansaco emocional de bloqueios mais profundos. Em alguns casos, um ritual de protecao personalizado faz sentido como reforco.',
+          'Na Astria, voce pode primeiro consultar um especialista para entender seu momento e depois decidir se precisa apenas de orientacao ou de um trabalho espiritual mais direcionado.',
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: 'Banho espiritual pode ser feito todos os dias?',
+        answer:
+          'Depende da erva e do objetivo. O ideal e seguir orientacao adequada para nao exagerar e transformar uma pratica de cuidado em sobrecarga energetica.',
+      },
+      {
+        question: 'Protecao espiritual substitui terapia ou descanso?',
+        answer:
+          'Nao. Protecao espiritual complementa seu cuidado, mas nao substitui descanso, limites, terapia ou suporte medico quando necessario.',
+      },
+    ],
+  },
+  {
+    id: 5,
+    slug: 'significado-dos-sonhos-como-interpretar-mensagens',
+    title: 'Significado dos sonhos: como interpretar mensagens espirituais e emocionais',
+    seoTitle: 'Significado dos sonhos: como interpretar sinais, simbolos e mensagens | Blog Astria',
+    description:
+      'Entenda como interpretar sonhos recorrentes, simbolos marcantes, mensagens emocionais e pistas espirituais para sua vida desperta.',
+    excerpt:
+      'Aprenda a interpretar sonhos recorrentes, simbolos intensos e mensagens do inconsciente com mais clareza espiritual e emocional.',
+    category: 'Espiritualidade',
+    tags: ['significado dos sonhos', 'interpretacao dos sonhos', 'sonhos recorrentes', 'mensagens espirituais'],
+    keywords: ['significado dos sonhos', 'como interpretar sonhos', 'sonhos recorrentes', 'mensagens espirituais nos sonhos'],
+    author: 'Vidente Maria',
+    publishedAt: '2026-03-05',
+    readTime: '7 min de leitura',
+    intro:
+      'Sonhos nao sao apenas imagens aleatorias. Muitas vezes, eles revelam medos, desejos, alertas e percepcoes que passam despercebidas durante o dia. Quando um sonho se repete ou deixa uma impressao muito forte, vale investigar com mais cuidado.',
+    sections: [
+      {
+        title: 'Por que alguns sonhos parecem tao importantes',
+        paragraphs: [
+          'Certos sonhos concentram uma carga emocional ou simbolica incomum. Isso acontece quando o inconsciente tenta elaborar algo urgente, ou quando sua intuicao percebe sinais que ainda nao foram racionalizados.',
+          'Nem todo sonho precisa ser levado ao pe da letra. O mais importante e observar repeticao, sensacao ao acordar, simbolos centrais e relacao com sua vida atual.',
+        ],
+      },
+      {
+        title: 'Como comecar a interpretar seus sonhos',
+        paragraphs: [
+          'Anote o sonho assim que acordar, destacando pessoas, lugares, objetos e a emocao predominante. Depois, pergunte o que cada simbolo representa para voce, e nao apenas seu significado generico.',
+          'Essa leitura pessoal e essencial porque um mesmo simbolo pode carregar sentidos diferentes para pessoas diferentes. O contexto interno muda tudo.',
+        ],
+      },
+      {
+        title: 'Sonhos recorrentes e mensagens de repeticao',
+        paragraphs: [
+          'Quando um sonho volta varias vezes, geralmente ha uma licao nao assimilada ou uma tensao que continua ativa. Sonhos com perseguicao, queda, ex-relacionamentos ou perda de controle costumam apontar para temas emocionais ainda abertos.',
+          'Nesses casos, uma consulta espiritual ou intuitiva pode ajudar a cruzar a simbologia do sonho com o momento atual, abrindo uma interpretacao mais precisa.',
+        ],
+      },
+      {
+        title: 'Quando buscar ajuda para interpretar',
+        paragraphs: [
+          'Se os sonhos estao mexendo muito com seu emocional, sinalizando duvidas afetivas ou repetindo temas ligados a escolhas importantes, vale conversar com um especialista. A leitura pode transformar confusao em clareza e direcionamento.',
+          'Na Astria, voce encontra consultores para interpretar sinais, alinhar intuicao e ate identificar se existe necessidade de reforco energetico ou ritual.',
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: 'Todo sonho tem significado espiritual?',
+        answer:
+          'Nem sempre. Muitos sonhos sao emocionais ou simbolicos, mas alguns carregam sinais intuitivos importantes. O contexto da sua vida ajuda a diferenciar melhor.',
+      },
+      {
+        question: 'Sonhar varias vezes com a mesma pessoa significa algo?',
+        answer:
+          'Pode indicar vinculo emocional, assunto pendente ou simbolo de uma fase da sua vida. O ideal e analisar o contexto do sonho e o que essa pessoa representa para voce.',
+      },
+    ],
+  },
+  {
+    id: 6,
+    slug: 'astrologia-para-iniciantes-mapa-astral-e-primeiros-passos',
+    title: 'Astrologia para iniciantes: mapa astral e primeiros passos para se conhecer melhor',
+    seoTitle: 'Astrologia para iniciantes: mapa astral, signos, casas e autoconhecimento | Blog Astria',
+    description:
+      'Aprenda os fundamentos da astrologia para iniciantes, entenda mapa astral, signos, casas e como usar essa leitura no autoconhecimento.',
+    excerpt:
+      'Conheca os conceitos basicos da astrologia, entenda seu mapa astral e descubra como essa leitura ajuda no autoconhecimento.',
+    category: 'Astrologia',
+    tags: ['astrologia para iniciantes', 'mapa astral', 'signos', 'casas astrologicas'],
+    keywords: ['astrologia para iniciantes', 'mapa astral', 'como ler mapa astral', 'signos e casas astrologicas'],
+    author: 'Astrologa Iris',
+    publishedAt: '2026-03-01',
+    readTime: '8 min de leitura',
+    intro:
+      'Astrologia vai muito alem do signo solar. Quando voce entende mapa astral, planetas, casas e aspectos, passa a enxergar comportamentos, talentos e desafios com muito mais profundidade. Para iniciantes, o ideal e comecar pelo essencial e evitar excesso de informacao solta.',
+    sections: [
+      {
+        title: 'O que e um mapa astral',
+        paragraphs: [
+          'O mapa astral e um retrato simbolico do ceu no momento do seu nascimento. Ele mostra a posicao dos planetas, os signos e as casas astrologicas que descrevem diferentes areas da sua vida.',
+          'Essa leitura ajuda a compreender estilo emocional, forma de pensar, relacoes, vocacao, desafios e potenciais. Por isso, astrologia e uma ferramenta forte de autoconhecimento.',
+        ],
+      },
+      {
+        title: 'Os tres pilares para quem esta comecando',
+        paragraphs: [
+          'Para nao se perder, comece por signo solar, ascendente e lua. O signo solar mostra identidade e expressao. O ascendente fala sobre postura e forma de agir no mundo. A lua revela necessidades emocionais e modo de sentir.',
+          'So esse trio ja entrega muita informacao util. Depois, faz sentido olhar Mercurio, Venus, Marte e as casas mais sensiveis para amor, trabalho e dinheiro.',
+        ],
+      },
+      {
+        title: 'Por que a astrologia ajuda nas decisoes',
+        paragraphs: [
+          'Astrologia nao serve para tirar sua autonomia. Ela funciona melhor quando mostra padroes, tendencias e janelas de oportunidade, ajudando voce a decidir com mais consciencia.',
+          'Muita gente usa o mapa astral para compreender relacionamentos, transicoes profissionais, fases de recolhimento e momentos mais favoraveis para iniciar projetos.',
+        ],
+      },
+      {
+        title: 'Quando vale contratar uma leitura astrologica',
+        paragraphs: [
+          'Se voce quer ir alem de conteudo superficial, uma leitura com especialista acelera o processo. O consultor interpreta seu mapa a partir das suas perguntas, do seu momento e dos ciclos atuais.',
+          'Na Astria, isso pode ser combinado com tarot e orientacao energetica para quem busca uma visao ainda mais completa da propria jornada.',
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: 'Astrologia e so sobre signo solar?',
+        answer:
+          'Nao. O signo solar e apenas uma parte do mapa. Ascendente, lua, planetas e casas astrologicas completam a leitura e deixam tudo muito mais preciso.',
+      },
+      {
+        question: 'Preciso saber a hora exata de nascimento?',
+        answer:
+          'Para um mapa astral mais preciso, sim. A hora influencia o ascendente e a distribuicao das casas, que sao pontos essenciais da interpretacao.',
+      },
+    ],
+  },
+]
+
+export function getBlogPostBySlug(slug) {
+  return blogPosts.find((post) => post.slug === slug)
+}

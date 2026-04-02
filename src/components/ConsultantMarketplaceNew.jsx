@@ -203,9 +203,9 @@ export function ConsultantMarketplaceNew({
                   e.stopPropagation()
                   onChooseService && onChooseService(consultant, '3-questions')
                 }}
-                className="w-full py-2 rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 hover:bg-mystic-gold/20 text-mystic-gold font-bold text-xs uppercase transition-colors"
+                className="w-full rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 px-2 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-mystic-gold transition-colors hover:bg-mystic-gold/20 sm:text-xs sm:tracking-[0.12em]"
               >
-                3 Pergs • R$ {consultant.priceThreeQuestions.toFixed(0)}
+                3 Perguntas • R$ {consultant.priceThreeQuestions.toFixed(0)}
               </button>
               
               {/* 5 Perguntas */}
@@ -214,9 +214,9 @@ export function ConsultantMarketplaceNew({
                   e.stopPropagation()
                   onChooseService && onChooseService(consultant, '5-questions')
                 }}
-                className="w-full py-2 rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 hover:bg-mystic-gold/20 text-mystic-gold font-bold text-xs uppercase transition-colors"
+                className="w-full rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 px-2 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-mystic-gold transition-colors hover:bg-mystic-gold/20 sm:text-xs sm:tracking-[0.12em]"
               >
-                5 Pergs • R$ {consultant.priceFiveQuestions.toFixed(0)}
+                5 Perguntas • R$ {consultant.priceFiveQuestions.toFixed(0)}
               </button>
             </div>
           </div>

@@ -4,7 +4,9 @@ import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react'
 import { PageShell } from '../components/PageShell'
 import { SacredGeometry } from '../components/SacredGeometry'
 import { SpellPurchaseModal } from '../components/SpellPurchaseModal'
+import { SeoHead } from '../components/SeoHead'
 import { usePlatformContext } from '../context/platform-context'
+import { buildAbsoluteImageUrl, buildAbsoluteUrl } from '../data/siteConfig'
 
 export function MagiaProdutoPage() {
   const { spellId } = useParams()
@@ -15,6 +17,45 @@ export function MagiaProdutoPage() {
     () => spells.find((entry) => String(entry.id) === String(spellId)) ?? null,
     [spellId, spells],
   )
+
+  const buildSpellStructuredData = () => {
+    if (!spell) {
+      return null
+    }
+
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: spell.title,
+        description: spell.shortDescription || spell.description,
+        image: buildAbsoluteImageUrl(spell.imageUrl),
+        brand: {
+          '@type': 'Brand',
+          name: 'Astria',
+        },
+        offers: {
+          '@type': 'Offer',
+          priceCurrency: 'BRL',
+          price: Number(spell.price).toFixed(2),
+          availability: 'https://schema.org/InStock',
+          url: buildAbsoluteUrl(`/magias/${spell.id}`),
+        },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        name: `${spell.title} com ${spell.consultantName}`,
+        description: spell.shortDescription || spell.description,
+        provider: {
+          '@type': 'Person',
+          name: spell.consultantName,
+        },
+        areaServed: 'BR',
+        url: buildAbsoluteUrl(`/magias/${spell.id}`),
+      },
+    ]
+  }
 
   if (spells.length > 0 && !spell) {
     return <Navigate to="/magias" replace />
@@ -37,6 +78,24 @@ export function MagiaProdutoPage() {
 
   return (
     <div className="min-h-screen bg-mystic-black text-white overflow-x-hidden font-lato selection:bg-mystic-gold/30 selection:text-mystic-gold">
+      <SeoHead
+        title={`${spell.title} | Magia personalizada na Astria`}
+        description={
+          spell.shortDescription ||
+          spell.description ||
+          `Conheca os detalhes da magia ${spell.title} com ${spell.consultantName} na Astria.`
+        }
+        keywords={[
+          spell.title,
+          'magia personalizada',
+          'ritual espiritual',
+          spell.consultantName || 'mentor espiritual',
+          'Astria magias',
+        ]}
+        path={`/magias/${spell.id}`}
+        image={spell.imageUrl || '/logoastria.png'}
+        structuredData={buildSpellStructuredData()}
+      />
       <div className="fixed inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-mystic-purple-dark/40 via-mystic-black to-mystic-black" />
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")' }} />
       <SacredGeometry />

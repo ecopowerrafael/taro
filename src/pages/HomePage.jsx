@@ -266,7 +266,7 @@ export function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {benefits.map((benefit) => {
               return (
-                <div key={benefit.title} className="group relative rounded-2xl glass-panel p-6 border border-mystic-purple-light/20 hover:border-mystic-gold/50 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+                <div key={benefit.title} className="group relative flex flex-col items-center text-center rounded-2xl glass-panel p-6 border border-mystic-purple-light/20 hover:border-mystic-gold/50 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
                   
                   {/* Background Glow on Hover */}
                   <div className="absolute inset-0 bg-gradient-to-b from-mystic-gold/0 to-mystic-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -306,18 +306,18 @@ export function HomePage() {
 
         {/* PROFESSIONALS SECTION */}
         <section className="container mx-auto px-6 md:px-12 mb-32">
-          <div className="rounded-2xl glass-panel border border-mystic-purple-light/20 p-12">
-            <h2 className="font-playfair text-4xl text-white mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          <div className="rounded-2xl glass-panel border border-mystic-purple-light/20 p-12 text-center">
+            <h2 className="font-playfair text-4xl text-white mb-4 flex flex-col items-center justify-center sm:flex-row sm:items-center gap-2 sm:gap-3">
               <span>Transforme seu Dom em</span> <span className="text-gradient-gold italic">Carreira</span>
             </h2>
-            <p className="text-mystic-purple-light max-w-2xl mb-12">
+            <p className="text-mystic-purple-light max-w-2xl mb-12 mx-auto">
               Horários flexíveis, pagamentos semanais via PIX e suporte total ao profissional. Junte-se a nossa elite de consultores.
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
               {professionalBenefits.map((benefit) => {
                 return (
-                  <div key={benefit.title} className="group rounded-xl border border-mystic-gold/30 bg-mystic-purple-dark/30 p-6 hover:bg-mystic-purple-dark/60 hover:border-mystic-gold transition-all">
+                  <div key={benefit.title} className="group flex flex-col items-center text-center rounded-xl border border-mystic-gold/30 bg-mystic-purple-dark/30 p-6 hover:bg-mystic-purple-dark/60 hover:border-mystic-gold transition-all">
                     <div className="mb-4 inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-mystic-gold/35 bg-black/20 p-2 shadow-[0_0_20px_rgba(197,160,89,0.12)] transition-transform group-hover:scale-105">
                       <img src={benefit.image} alt={benefit.title} className="h-full w-full object-contain" />
                     </div>
@@ -328,7 +328,7 @@ export function HomePage() {
               })}
             </div>
 
-            <Link to="/seja-consultor" className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-mystic-gold to-mystic-gold-light text-mystic-black font-bold uppercase tracking-widest text-sm hover:shadow-gold-glow-lg transition-shadow group">
+            <Link to="/seja-consultor" className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-mystic-gold to-mystic-gold-light text-mystic-black font-bold uppercase tracking-widest text-sm hover:shadow-gold-glow-lg transition-shadow group mx-auto">
               Quero Ser Consultor
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
