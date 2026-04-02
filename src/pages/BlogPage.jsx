@@ -53,13 +53,6 @@ export function BlogPage() {
       <SacredGeometry />
 
       <PageShell title="Blog Astria" subtitle="Conteudo estrategico sobre tarot online, astrologia, sonhos, rituais, protecao espiritual e magias personalizadas.">
-        <div className="mb-8 rounded-3xl border border-mystic-gold/20 bg-black/20 p-6 text-center shadow-glow backdrop-blur-sm md:p-8">
-          <h2 className="font-playfair text-3xl text-mystic-goldSoft">Conteudo pensado para atrair, educar e converter</h2>
-          <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-amber-50/85">
-            Cada artigo abaixo foi estruturado com palavras-chave relevantes para tarot online, astrologia, rituais, protecao espiritual e autoconhecimento. Explore os temas e avance para uma consulta, uma magia ou seu cadastro na Astria.
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {blogPosts.map((post) => (
             <article key={post.id} className="group rounded-2xl glass-panel border border-mystic-purple-light/20 hover:border-mystic-gold/50 transition-all overflow-hidden hover:-translate-y-2">
