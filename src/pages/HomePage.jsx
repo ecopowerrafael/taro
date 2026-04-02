@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { LockKeyhole, Wallet, Users, Zap, Star, Clock3, ShieldCheck, Sparkles, Moon, ArrowRight, Sun, Eye, Menu, X } from 'lucide-react'
+import { Sparkles, Moon, ArrowRight, Sun, Eye, Menu, X } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
 import { DailyTarotCard } from '../components/DailyTarotCard'
 import { SacredGeometry } from '../components/SacredGeometry'
@@ -11,29 +11,29 @@ const benefits = [
   {
     title: 'Clareza Imediata',
     description: 'Respostas rápidas para dúvidas que tiram seu sono.',
-    icon: Zap,
+    image: '/clareza-imediata.png',
   },
   {
     title: 'Especialistas Reais',
     description: 'Profissionais avaliados pela comunidade e pela plataforma.',
-    icon: Users,
+    image: '/especialistas-reais.png',
   },
   {
     title: 'Privacidade Total',
     description: 'Consultas 100% anônimas e seguras via vídeo.',
-    icon: LockKeyhole,
+    image: '/privacidade-total.png',
   },
   {
     title: 'Economia',
     description: 'Você paga apenas pelos minutos que utilizar.',
-    icon: Wallet,
+    image: '/economia.png',
   },
 ]
 
 const professionalBenefits = [
-  { title: 'Flexibilidade Total', description: 'Trabalhe quando e onde quiser', icon: Clock3 },
-  { title: 'Pagamento Semanal', description: 'Receba via PIX toda semana', icon: Sparkles },
-  { title: 'Suporte Dedicado', description: 'Equipe pronta para te ajudar', icon: ShieldCheck },
+  { title: 'Flexibilidade Total', description: 'Trabalhe quando e onde quiser', image: '/flexibilidade-total.png' },
+  { title: 'Pagamento Semanal', description: 'Receba via PIX toda semana', image: '/pagamento-semanal.png' },
+  { title: 'Suporte Dedicado', description: 'Equipe pronta para te ajudar', image: '/suporte-dedicado.png' },
 ]
 
 function useCountAnimation({ start, end, duration, shouldStart }) {
@@ -265,15 +265,14 @@ export function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {benefits.map((benefit) => {
-              const Icon = benefit.icon
               return (
                 <div key={benefit.title} className="group relative rounded-2xl glass-panel p-6 border border-mystic-purple-light/20 hover:border-mystic-gold/50 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
                   
                   {/* Background Glow on Hover */}
                   <div className="absolute inset-0 bg-gradient-to-b from-mystic-gold/0 to-mystic-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   
-                  <div className="relative z-10 inline-flex rounded-full border border-mystic-gold/50 bg-mystic-gold/10 p-3 mb-4">
-                    <Icon className="text-mystic-gold w-6 h-6" />
+                  <div className="relative z-10 mb-4 inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-mystic-gold/35 bg-black/20 p-2 shadow-[0_0_20px_rgba(197,160,89,0.12)]">
+                    <img src={benefit.image} alt={benefit.title} className="h-full w-full object-contain" />
                   </div>
                   
                   <h3 className="relative font-playfair text-2xl text-white mb-2 group-hover:text-mystic-gold transition-colors">
@@ -317,10 +316,11 @@ export function HomePage() {
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
               {professionalBenefits.map((benefit) => {
-                const Icon = benefit.icon
                 return (
                   <div key={benefit.title} className="group rounded-xl border border-mystic-gold/30 bg-mystic-purple-dark/30 p-6 hover:bg-mystic-purple-dark/60 hover:border-mystic-gold transition-all">
-                    <Icon className="w-8 h-8 text-mystic-gold mb-3 group-hover:scale-120 transition-transform" />
+                    <div className="mb-4 inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-mystic-gold/35 bg-black/20 p-2 shadow-[0_0_20px_rgba(197,160,89,0.12)] transition-transform group-hover:scale-105">
+                      <img src={benefit.image} alt={benefit.title} className="h-full w-full object-contain" />
+                    </div>
                     <h3 className="font-playfair text-xl text-white mb-2">{benefit.title}</h3>
                     <p className="text-mystic-purple-light text-sm">{benefit.description}</p>
                   </div>
