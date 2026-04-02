@@ -72,29 +72,36 @@ export function PageShell({ title, subtitle, children, mobileMenuFooter = null }
         <div
           className={`fixed inset-0 z-[110] bg-mystic-black/95 px-6 py-24 backdrop-blur-xl transition-all duration-300 md:hidden ${mobileMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
         >
-          <div className="mx-auto flex max-w-md flex-col items-center gap-5 text-center">
-            {mainLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMobileMenuOpen(false)}
-                className="font-display text-2xl text-mystic-goldSoft transition hover:text-white"
-              >
-                {link.label}
-              </Link>
-            ))}
-            {isAuthenticated && (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false)
-                  handleLogout()
-                }}
-                className="mt-4 flex items-center gap-2 rounded-lg border border-red-500/35 px-4 py-2 text-sm text-red-400 transition hover:bg-red-500/10"
-              >
-                <LogOut size={16} />
-                Sair
-              </button>
-            )}
+          <div className="mx-auto max-w-md">
+            <div className="rounded-[28px] border border-mystic-gold/25 bg-[linear-gradient(180deg,rgba(33,18,54,0.96),rgba(10,7,18,0.94))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45),0_0_30px_rgba(197,160,89,0.12)]">
+              <div className="mb-5 flex items-center justify-between gap-3 border-b border-mystic-gold/15 pb-4">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-amber-100/50">Navegação</p>
+                  <p className="mt-1 font-display text-2xl text-mystic-goldSoft">Menu</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-mystic-gold/30 bg-black/25 px-3 py-2 text-sm text-mystic-goldSoft transition hover:bg-mystic-gold/10"
+                >
+                  <X size={16} />
+                  Fechar
+                </button>
+              </div>
+
+              <div className="grid gap-3">
+                {mainLinks.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-2xl border border-mystic-gold/15 bg-white/5 px-4 py-3 text-left font-display text-xl text-mystic-goldSoft transition hover:border-mystic-gold/40 hover:bg-mystic-gold/10 hover:text-white"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
           {mobileMenuFooter ? (
             <div className="absolute bottom-6 right-6 z-[111]">
