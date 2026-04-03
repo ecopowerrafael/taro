@@ -14,6 +14,8 @@ const statusStyles = {
   Offline: 'border-zinc-400/70 bg-zinc-500/10 text-zinc-300',
 }
 
+const isConsultantOnline = (consultant) => consultant?.status === 'Online'
+
 function StarRating({ value }) {
   return (
     <div className="flex items-center gap-0.5">
@@ -152,6 +154,11 @@ export function ConsultorPerfilPage() {
         return
       }
 
+      if (!isConsultantOnline(consultant)) {
+        setSystemNotice('Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.')
+        return
+      }
+
       const minRequired = Number(consultant.pricePerMinute) * 5
       if (minutesBalance < minRequired) {
         setInsufficientBalanceModal({ isOpen: true, minRequired })
@@ -202,6 +209,12 @@ export function ConsultorPerfilPage() {
 
   const handleStartVideoConsultation = async () => {
     if (!confirmCallModal.consultant) {
+      return
+    }
+
+    if (!isConsultantOnline(confirmCallModal.consultant)) {
+      setConfirmCallModal({ isOpen: false, consultant: null })
+      setSystemNotice('Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.')
       return
     }
 
@@ -326,7 +339,8 @@ export function ConsultorPerfilPage() {
                 <button
                   type="button"
                   onClick={() => handleChooseService('video')}
-                  className="group rounded-2xl border border-emerald-400/45 bg-emerald-500/10 p-4 text-left transition hover:border-emerald-300/70 hover:bg-emerald-500/15"
+                  disabled={!isConsultantOnline(consultant)}
+                  className="group rounded-2xl border border-emerald-400/45 bg-emerald-500/10 p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:border-emerald-300/70 enabled:hover:bg-emerald-500/15"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -336,9 +350,13 @@ export function ConsultorPerfilPage() {
                         <span className="ml-1 text-sm font-normal text-emerald-200/70">/ min</span>
                       </p>
                     </div>
-                    <Video size={20} className="text-emerald-300 transition group-hover:scale-110" />
+                    <Video size={20} className="text-emerald-300 transition group-enabled:hover:scale-110" />
                   </div>
-                  <p className="mt-3 text-sm text-emerald-100/80">Iniciar chamada de vídeo com este consultor.</p>
+                  <p className="mt-3 text-sm text-emerald-100/80">
+                    {isConsultantOnline(consultant)
+                      ? 'Iniciar chamada de vídeo com este consultor.'
+                      : 'Chamada ao vivo disponível apenas quando o consultor estiver online.'}
+                  </p>
                 </button>
               )}
               {Number(consultant.priceThreeQuestions) > 0 && (

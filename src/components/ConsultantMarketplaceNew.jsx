@@ -9,6 +9,47 @@ const statusStyles = {
   Offline: 'border-zinc-400/70 bg-zinc-500/10 text-zinc-300',
 }
 
+const getConsultantPriority = (consultant) => {
+  if (consultant.status === 'Online') {
+    return 0
+  }
+  if (consultant.status === 'Ocupado') {
+    return 1
+  }
+  return 2
+}
+
+const getTotalConsultations = (consultant) =>
+  Number(consultant.baseConsultations ?? 0) + Number(consultant.realSessions ?? 0)
+
+const compareConsultants = (a, b, sortOrder = 'none') => {
+  const statusDiff = getConsultantPriority(a) - getConsultantPriority(b)
+  if (statusDiff !== 0) {
+    return statusDiff
+  }
+
+  const consultationsDiff = getTotalConsultations(b) - getTotalConsultations(a)
+  if (consultationsDiff !== 0) {
+    return consultationsDiff
+  }
+
+  if (sortOrder === 'asc') {
+    const priceDiff = Number(a.pricePerMinute ?? 0) - Number(b.pricePerMinute ?? 0)
+    if (priceDiff !== 0) {
+      return priceDiff
+    }
+  }
+
+  if (sortOrder === 'desc') {
+    const priceDiff = Number(b.pricePerMinute ?? 0) - Number(a.pricePerMinute ?? 0)
+    if (priceDiff !== 0) {
+      return priceDiff
+    }
+  }
+
+  return a.name.localeCompare(b.name, 'pt-BR')
+}
+
 export function ConsultantMarketplaceNew({
   consultants,
   statusFilter,
@@ -35,11 +76,7 @@ export function ConsultantMarketplaceNew({
       )
     }
 
-    if (sortOrder === 'asc') {
-      result = [...result].sort((a, b) => a.pricePerMinute - b.pricePerMinute)
-    } else if (sortOrder === 'desc') {
-      result = [...result].sort((a, b) => b.pricePerMinute - a.pricePerMinute)
-    }
+    result = [...result].sort((a, b) => compareConsultants(a, b, sortOrder))
 
     return result
   }, [consultants, statusFilter, sortOrder, searchQuery])
@@ -172,7 +209,7 @@ export function ConsultantMarketplaceNew({
                   {(consultant.ratingAverage || 5).toFixed(1)}
                 </span>
                 <span className="text-xs text-mystic-purple-light">
-                  ({consultant.baseConsultations || 0})
+                  ({getTotalConsultations(consultant)})
                 </span>
               </div>
               
@@ -192,7 +229,8 @@ export function ConsultantMarketplaceNew({
                   e.stopPropagation()
                   onChooseService && onChooseService(consultant, 'video')
                 }}
-                className="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 text-white font-bold tracking-wide text-sm uppercase hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-shadow"
+                disabled={consultant.status !== 'Online'}
+                className="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 text-white font-bold tracking-wide text-sm uppercase transition-shadow disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:shadow-[0_0_20px_rgba(16,185,129,0.5)]"
               >
                 Vídeo • R$ {consultant.pricePerMinute.toFixed(2)}/min
               </button>

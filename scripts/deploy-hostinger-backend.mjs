@@ -1,8 +1,16 @@
 import fs from 'node:fs'
+import path from 'node:path'
 import { Client } from 'basic-ftp'
 import dotenv from 'dotenv'
 
-dotenv.config()
+const localEnvPath = path.resolve(process.cwd(), '.env')
+const fallbackEnvPath = path.resolve(process.cwd(), '..', 'taro-mobile', '.env')
+
+if (fs.existsSync(localEnvPath)) {
+  dotenv.config({ path: localEnvPath })
+} else if (fs.existsSync(fallbackEnvPath)) {
+  dotenv.config({ path: fallbackEnvPath })
+}
 
 const requiredEnvVars = ['BACK_FTP_HOST', 'BACK_FTP_USER', 'BACK_FTP_PASSWORD']
 
@@ -17,6 +25,8 @@ const resolveBoolean = (value, fallback) => {
 
 const uploadItems = [
   { local: 'api', remote: 'api' },
+  { local: 'api/.env', remote: 'api/.env' },
+  { local: 'api/firebase-service-account.json', remote: 'api/firebase-service-account.json' },
   { local: 'package.json', remote: 'package.json' },
   { local: 'package-lock.json', remote: 'package-lock.json' },
   { local: '.env', remote: '.env' },
@@ -40,11 +50,10 @@ const run = async () => {
   try {
     console.log(`Conectando ao FTP do Backend (${process.env.BACK_FTP_HOST})...`)
     const rawPassword = process.env.BACK_FTP_PASSWORD.trim().replace(/^["']|["']$/g, '')
-    const ftpPassword = `"${rawPassword}"`
     await client.access({
       host: process.env.BACK_FTP_HOST.trim(),
       user: process.env.BACK_FTP_USER.trim(),
-      password: ftpPassword,
+      password: rawPassword,
       secure,
     })
 

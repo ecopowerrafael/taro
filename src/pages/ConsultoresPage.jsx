@@ -7,6 +7,8 @@ import { VideoConsultationRoom } from '../components/VideoConsultationRoom'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
 
+const isConsultantOnline = (consultant) => consultant?.status === 'Online'
+
 export function ConsultoresPage() {
   const navigate = useNavigate()
   const {
@@ -41,6 +43,11 @@ export function ConsultoresPage() {
     if (mode === 'video') {
       if (!profile) {
         setSystemNotice('Faça login ou cadastre-se para iniciar a consulta.')
+        return
+      }
+
+      if (!isConsultantOnline(consultant)) {
+        setSystemNotice('Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.')
         return
       }
 
@@ -94,6 +101,13 @@ export function ConsultoresPage() {
 
   const handleStartVideoConsultation = async () => {
     if (!confirmCallModal.consultant) return
+
+    if (!isConsultantOnline(confirmCallModal.consultant)) {
+      setConfirmCallModal({ isOpen: false, consultant: null })
+      setSystemNotice('Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.')
+      return
+    }
+
     const consultantId = confirmCallModal.consultant.id
     
     // Fechar modal de confirmação

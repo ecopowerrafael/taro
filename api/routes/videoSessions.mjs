@@ -67,11 +67,18 @@ export const createVideoSessionsRouter = (pool) => {
       const user = users[0]
 
       // Obter informações do consultor (incluindo userId para push/webpush)
-      const [consultants] = await pool.query('SELECT id, name, email, userId FROM consultants WHERE id = ?', [consultantId])
+      const [consultants] = await pool.query('SELECT id, name, email, userId, status FROM consultants WHERE id = ?', [consultantId])
       if (consultants.length === 0) {
         return response.status(404).json({ message: 'Consultor não encontrado.' })
       }
       const consultant = consultants[0]
+
+      if (consultant.status !== 'Online') {
+        return response.status(409).json({
+          message: 'Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.',
+        })
+      }
+
       let consultantUserId = consultant.userId || null
 
       // Fallback para contas legadas sem userId vinculado no consultor.
