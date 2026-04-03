@@ -150,7 +150,7 @@ export function ConsultantMarketplaceNew({
             <div className="relative w-24 h-24 mx-auto mb-4 z-10">
               <div className="absolute inset-0 rounded-full border-2 border-mystic-gold animate-[spin_10s_linear_infinite] group-hover:border-dashed" />
               <img 
-                src={consultant.photo || 'https://via.placeholder.com/150'} 
+                src={consultant.photo || '/logoastria.png'} 
                 alt={consultant.name} 
                 className="w-full h-full object-cover rounded-full p-1 bg-mystic-purple-dark" 
               />

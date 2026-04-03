@@ -196,6 +196,14 @@ export const createVideoSessionsRouter = (pool) => {
 
       const webpush = request.app.get('webpush')
       const firebaseAdmin = request.app.get('firebaseAdmin')
+      
+      console.log('[videoSessions POST] ** DEBUG PUSH **', {
+        webpushAvailable: Boolean(webpush),
+        firebaseAdminAvailable: Boolean(firebaseAdmin),
+        consultantUserId,
+        sessionId,
+      })
+      
       if ((webpush || firebaseAdmin) && consultantUserId) {
         const payload = {
           title: 'Nova Chamada de Vídeo',
@@ -209,6 +217,8 @@ export const createVideoSessionsRouter = (pool) => {
           consultantId,
         }
 
+        console.log('[videoSessions POST] ✓ Enviando push FCM...', { userIds: [consultantUserId] })
+        
         const pushResult = await sendPushToUsers({
           pool,
           webpush,
@@ -217,18 +227,27 @@ export const createVideoSessionsRouter = (pool) => {
           payload,
         })
 
+        console.log('[videoSessions POST] Push result:', {
+          totalSubscriptions: pushResult.totalSubscriptions,
+          successCount: pushResult.successCount,
+          failureCount: pushResult.failureCount,
+        })
+
         if (!pushResult.totalSubscriptions) {
-          console.warn('[videoSessions POST] Nenhuma subscription ativa para consultor', {
+          console.warn('[videoSessions POST] ⚠️ Nenhuma subscription ativa para consultor', {
             consultantId,
             consultantEmail: consultant.email,
             consultantUserId,
           })
         }
       } else {
-        console.warn('[videoSessions POST] Push não enviado: subscription ausente para consultor', {
+        console.error('[videoSessions POST] ❌ PUSH NÃO ENVIADO!', {
+          webpushAvailable: Boolean(webpush),
+          firebaseAdminAvailable: Boolean(firebaseAdmin),
+          hasConsultantUserId: Boolean(consultantUserId),
           consultantId,
           consultantEmail: consultant.email,
-          consultantUserId,
+          message: 'Configure FIREBASE_SERVICE_ACCOUNT_JSON ou webpush VAPID keys',
         })
       }
 

@@ -350,6 +350,7 @@ const sendWebPushToUsers = async ({ pool, webpush, userIds, payload }) => {
 
 const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) => {
   if (!firebaseAdmin) {
+    console.warn('[sendNativePushToUsers] ⚠️ Firebase Admin não disponível')
     return {
       totalSubscriptions: 0,
       successCount: 0,
@@ -359,12 +360,29 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
   }
 
   const registrations = await getActiveNativeTokensByUserIds({ pool, userIds })
+  console.log(`[sendNativePushToUsers] 🔍 Encontrados ${registrations.length} tokens nativos para userIds:`, userIds)
+  
+  if (registrations.length === 0) {
+    console.warn('[sendNativePushToUsers] ⚠️ Nenhum token nativo encontrado para:', userIds)
+    return {
+      totalSubscriptions: 0,
+      successCount: 0,
+      failureCount: 0,
+      results: [],
+    }
+  }
+
   const results = []
   const data = toFirebaseDataMap(payload)
+  
+  console.log('[sendNativePushToUsers] 📦 Data map keys:', Object.keys(data))
 
   await Promise.all(
     registrations.map(async ({ userId, token, platform, provider }) => {
       try {
+        console.log(`[sendNativePushToUsers] 📤 Enviando FCM para ${userId} (${platform}/${provider})`)
+        console.log(`[sendNativePushToUsers]   Token: ${token.slice(0, 40)}...`)
+        
         const messageId = await firebaseAdmin.messaging().send({
           token,
           data,
@@ -376,6 +394,8 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
           },
         })
 
+        console.log(`[sendNativePushToUsers] ✅ FCM enviado com sucesso! messageId: ${messageId}`)
+        
         await markNativePushTokenSuccess({ pool, token })
         results.push({
           ok: true,
@@ -387,12 +407,19 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
         })
       } catch (error) {
         const errorCode = error?.errorInfo?.code || error?.code || null
+        console.error(`[sendNativePushToUsers] ❌ Erro FCM para ${userId}:`, {
+          code: errorCode,
+          message: error?.message,
+          fullError: JSON.stringify(error, null, 2),
+        })
+        
         const shouldDisableToken = [
           'messaging/registration-token-not-registered',
           'messaging/invalid-registration-token',
         ].includes(errorCode)
 
         if (shouldDisableToken) {
+          console.warn(`[sendNativePushToUsers] 🔴 Token inválido detectado, marcando como inativo`)
           await markNativePushTokenFailure({ pool, token })
         }
 
@@ -411,12 +438,20 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
     }),
   )
 
-  return {
+  const summary = {
     totalSubscriptions: registrations.length,
     successCount: results.filter((item) => item.ok).length,
     failureCount: results.filter((item) => !item.ok).length,
     results,
   }
+  
+  console.log(`[sendNativePushToUsers] 📊 RESUMO:`, {
+    total: summary.totalSubscriptions,
+    sucesso: summary.successCount,
+    falhas: summary.failureCount,
+  })
+
+  return summary
 }
 
 export const sendPushToUsers = async ({ pool, webpush, firebaseAdmin, userIds, payload }) => {
