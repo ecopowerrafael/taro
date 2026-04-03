@@ -10,6 +10,7 @@
     "start": "node server.js",
     "build:backend": "node -e \"console.log('Backend pronto para deploy')\"",
     "build:ui": "vite build && npm run generate:sitemap && npm run generate:prerender",
+    "build:mobile": "vite build",
     "generate:prerender": "node scripts/generate-prerender.mjs",
     "generate:sitemap": "node scripts/generate-sitemap.mjs",
     "generate:vapid": "node scripts/generate-vapid.mjs",
@@ -17,10 +18,17 @@
     "deploy:frontend": "npm run build:ui && node scripts/deploy-hostinger.mjs",
     "deploy:backend": "node scripts/deploy-hostinger-backend.mjs",
     "deploy:all": "npm run build:ui && node scripts/deploy-hostinger.mjs && node scripts/deploy-hostinger-backend.mjs",
+    "android:sync": "npm run build:mobile && npx cap sync android",
+    "android:open": "npx cap open android",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^7.6.1",
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/core": "^7.6.1",
+    "@capacitor/push-notifications": "^7.0.6",
+    "@capacitor/splash-screen": "^7.0.5",
     "@daily-co/daily-js": "^0.87.0",
     "@stripe/react-stripe-js": "^6.0.0",
     "@stripe/stripe-js": "^9.0.0",
@@ -53,6 +61,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.6.1",
     "@eslint/js": "^9.39.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

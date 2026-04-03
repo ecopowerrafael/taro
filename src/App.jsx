@@ -1,13 +1,15 @@
-import { lazy, Suspense } from 'react'
+import { createElement, lazy, Suspense, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { usePlatformContext } from './context/platform-context'
 import { PlatformProvider } from './context/PlatformContext'
 import { SeoHead } from './components/SeoHead'
 import { PageTransition } from './components/PageTransition'
+import { PermissionPromptModal } from './components/PermissionPromptModal'
 import { getRouteSeo } from './data/siteConfig'
 import { MobileBottomNav } from './components/MobileBottomNav'
 import { NotificationToast } from './components/NotificationToast'
+import { attachNativeAppUrlListener } from './services/nativeMobilePush'
 
 const lazyNamed = (factory, exportName) => lazy(() => factory().then((module) => ({ default: module[exportName] })))
 
@@ -45,7 +47,7 @@ function RouteFallback() {
 const wrapWithTransition = (Component) => (
   <Suspense fallback={<RouteFallback />}>
     <PageTransition>
-      <Component />
+      {createElement(Component)}
     </PageTransition>
   </Suspense>
 )
@@ -78,8 +80,11 @@ function ProtectedRoute({ children, role }) {
 
 function AppContent() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { inAppNotifications, removeInAppNotification } = usePlatformContext()
   const routeSeo = getRouteSeo(location.pathname)
+
+  useEffect(() => attachNativeAppUrlListener((route) => navigate(route)), [navigate])
 
   return (
     <>
@@ -132,6 +137,7 @@ function AppContent() {
         notifications={inAppNotifications}
         onClose={removeInAppNotification}
       />
+      <PermissionPromptModal />
     </>
   )
 }

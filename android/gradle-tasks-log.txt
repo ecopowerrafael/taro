@@ -1,0 +1,2 @@
+Downloading https://services.gradle.org/distributions/gradle-8.11.1-all.zip
+.....................10%...Deseja finalizar o arquivo em lotes (S/N)? Deseja finalizar o arquivo em lotes (S/N)? 

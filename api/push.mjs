@@ -387,7 +387,7 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
           token,
           data,
           android: {
-            priority: payload.deliveryPriority === 'high' ? 'high' : 'normal',
+            priority: (payload.deliveryPriority === 'high' || data.type === 'incoming_call') ? 'high' : 'normal',
             ttl: payload.ttlMs,
             directBootOk: true,
             restrictedPackageName: 'com.astria.taromobile',

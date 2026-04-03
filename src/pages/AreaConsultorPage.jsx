@@ -487,9 +487,7 @@ export function AreaConsultorPage() {
   }
 
   useEffect(() => {
-    return () => {
-      notificationService.disconnect()
-    }
+    // Removido disconnect limpo (agora delegado para o PlatformContext)
   }, [])
 
   useEffect(() => {
@@ -497,21 +495,18 @@ export function AreaConsultorPage() {
       return
     }
 
-    if (!isSelectedConsultantOnline) {
-      notificationService.disconnect()
-      return
-    }
-
-    notificationService.connect(selectedConsultantId, (data) => {
+    const handleIncomingCall = (data) => {
       setPanelNotice(
         `Chamada recebida de ${data?.customerName ?? 'cliente'} (sessão ${data?.sessionId}).`,
       )
-    })
+    }
+
+    notificationService.on('incoming_call', handleIncomingCall)
 
     return () => {
-      notificationService.disconnect()
+      notificationService.off('incoming_call', handleIncomingCall)
     }
-  }, [isAdmin, isSelectedConsultantOnline, selectedConsultantId])
+  }, [isAdmin, selectedConsultantId])
 
   useEffect(() => {
     const syncInstallAvailability = () => setPwaInstallAvailable(canPromptPwaInstall())
@@ -532,7 +527,6 @@ export function AreaConsultorPage() {
     if (previousConsultantId && previousConsultantId !== consultantId) {
       const previousConsultant = consultants.find((item) => item.id === previousConsultantId)
       if (previousConsultant?.status === 'Online') {
-        notificationService.disconnect()
         updateConsultantAvailability(previousConsultantId, false)
       }
     }
@@ -567,23 +561,16 @@ export function AreaConsultorPage() {
 
     try {
       if (isSelectedConsultantOnline) {
-        notificationService.disconnect()
         updateConsultantAvailability(selectedConsultantId, false)
         setPanelNotice('Você ficou offline e não receberá novas chamadas.')
         return
       }
 
       await ensurePushSubscription()
-      notificationService.connect(selectedConsultantId, (data) => {
-        setPanelNotice(
-          `Chamada recebida de ${data?.customerName ?? 'cliente'} (sessão ${data?.sessionId}).`,
-        )
-      })
-
+      
       updateConsultantAvailability(selectedConsultantId, true)
       setPanelNotice('Você ficou online. Aguardando chamadas de vídeo.')
     } catch (error) {
-      notificationService.disconnect()
       updateConsultantAvailability(selectedConsultantId, false)
       setPanelNotice('Não foi possível ativar o modo online no momento.')
       console.error('[AreaConsultorPage] erro ao alterar disponibilidade:', error)

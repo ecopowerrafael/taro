@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Astria</string>
+    <string name="title_activity_main">Astria</string>
+    <string name="package_name">com.astria.taromobile</string>
+    <string name="custom_url_scheme">com.astria.taromobile</string>
+</resources>

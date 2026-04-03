@@ -5,8 +5,13 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import { registerPwaServiceWorker } from './services/pwaService'
+import { installNativeFetchBridge, isNativeApp } from './utils/runtimeConfig'
 
-registerPwaServiceWorker()
+installNativeFetchBridge()
+
+if (!isNativeApp()) {
+  registerPwaServiceWorker()
+}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

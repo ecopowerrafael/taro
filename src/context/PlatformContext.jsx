@@ -3,6 +3,12 @@ import { useAuth } from '../hooks/useAuth'
 import { getZodiacSign } from '../utils/zodiac'
 import { useBilling } from '../hooks/useBilling'
 import { notificationService } from '../services/ConsultantNotificationService'
+import {
+  initializeNativePush,
+  isNativeAndroidApp,
+  openCriticalNotificationSettings,
+} from '../services/nativeMobilePush'
+import { buildApiUrl } from '../utils/runtimeConfig'
 import { PlatformContext } from './platform-context'
 
 const horoscopeBySign = {
@@ -135,17 +141,6 @@ const initialAdminDashboardStats = {
   dailyTotals: [],
   monthlyTotals: [],
   topConsultants: [],
-}
-
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
-
-const buildApiUrl = (resource) => {
-  if (!API_BASE_URL) {
-    return resource
-  }
-  const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL
-  const path = resource.startsWith('/') ? resource : `/${resource}`
-  return `${base}${path}`
 }
 
 const uint8ArrayToBase64Url = (value) => {
@@ -326,10 +321,12 @@ export function PlatformProvider({ children }) {
   const [consultantWallets, setConsultantWallets] = useState(initialConsultantWallets)
   const [paymentResult] = useState(null)
   const [systemNotice, setSystemNotice] = useState('')
+  const [permissionPrompt, setPermissionPrompt] = useState({ active: false, warnings: [] })
   const [inAppNotifications, setInAppNotifications] = useState([])
   const [notificationHistory, setNotificationHistory] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const notificationCounterRef = useRef(0)
+  const pushWarningPromptedRef = useRef(false)
   const mpCredentialsRef = useRef(mpCredentials)
   const dailyCredentialsRef = useRef(dailyCredentials)
   const stripeCredentialsRef = useRef(stripeCredentials)
@@ -345,8 +342,13 @@ export function PlatformProvider({ children }) {
 
   // Registra Service Worker e Push Subscription.
   const registerPushSubscription = async (userId) => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
     if (!token) return
+
+    if (isNativeAndroidApp()) {
+      return initializeNativePush({ authToken: token, userId })
+    }
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
 
     try {
       if (!('Notification' in window)) {
@@ -413,8 +415,36 @@ export function PlatformProvider({ children }) {
   }
 
   useEffect(() => {
-    if (profile?.id && token) {
-      registerPushSubscription(profile.id)
+    if (!profile?.id || !token) {
+      return
+    }
+
+    let cancelled = false
+
+    const syncPushSubscription = async () => {
+      const result = await registerPushSubscription(profile.id)
+      const shouldGuardIncomingCalls = profile.role === 'consultant' || profile.role === 'admin'
+
+      if (
+        cancelled ||
+        !isNativeAndroidApp() ||
+        !shouldGuardIncomingCalls ||
+        !Array.isArray(result?.warnings) ||
+        result.warnings.length === 0 ||
+        pushWarningPromptedRef.current
+      ) {
+        return
+      }
+
+      pushWarningPromptedRef.current = true
+      setSystemNotice(result.warningMessage || 'Ajuste as permissoes de notificacao para receber chamadas com a tela apagada.')
+      setPermissionPrompt({ active: true, warnings: result.warnings })
+    }
+
+    void syncPushSubscription()
+
+    return () => {
+      cancelled = true
     }
   }, [profile?.id, token])
 
@@ -596,6 +626,14 @@ export function PlatformProvider({ children }) {
     if (!isConsultant || !userConsultantProfile) {
       return
     }
+
+    // Se o consultor estiver online, conecta o socket globalmente
+    if (userConsultantProfile.status === 'online' || userConsultantProfile.status === 'Online') {
+      notificationService.connect(userConsultantProfile.id)
+    } else {
+      notificationService.disconnect()
+    }
+
     const handleIncomingCall = (data) => {
       const callerName = data.customerName || data.callerName || data.caller?.name || 'Cliente'
       const notification = {
@@ -1166,6 +1204,15 @@ export function PlatformProvider({ children }) {
       console.error('[sendMyPushTest] Erro:', error)
       return { ok: false, message: 'Erro de conexão ao enviar teste push.' }
     }
+  }
+
+  const handlePermissionPromptConfirm = async () => {
+    await openCriticalNotificationSettings(permissionPrompt.warnings)
+    setPermissionPrompt({ active: false, warnings: [] })
+  }
+
+  const handlePermissionPromptCancel = () => {
+    setPermissionPrompt({ active: false, warnings: [] })
   }
 
   const updateAdminUser = async ({
@@ -2110,6 +2157,9 @@ export function PlatformProvider({ children }) {
     paymentResult,
     systemNotice,
     setSystemNotice,
+    permissionPrompt,
+    handlePermissionPromptConfirm,
+    handlePermissionPromptCancel,
     inAppNotifications,
     addInAppNotification,
     removeInAppNotification,
