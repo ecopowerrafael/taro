@@ -67,6 +67,38 @@ const toFirebaseDataMap = (payload) => {
     ...payload.data,
   }
 
+  // Se for notificação de chamada, injetar a key "call" que o capacitor-incoming-call-kit intercepta nativamente.
+  if (payload.type === 'incoming_call') {
+    const callData = {
+      id: payload.sessionId || `call-${Date.now()}`,
+      nameCaller: payload.customerName || 'Cliente Astria',
+      appName: 'Astria Tarot',
+      avatar: 'https://appastria.online/pwa-192x192.png',
+      handle: 'Consulta por Vídeo',
+      type: 1, // 0 = Áudio, 1 = Vídeo
+      duration: 30000,
+      textAccept: 'Atender',
+      textDecline: 'Recusar',
+      missedCallColor: '#F44336',
+      extra: {
+        sessionId: payload.sessionId,
+        roomUrl: payload.roomUrl,
+        consultantId: payload.consultantId
+      },
+      android: {
+        isCustomNotification: true,
+        isShowLogo: true,
+        ringtonePath: 'system_ringtone_default',
+        backgroundColor: '#1E1E2F', // Tema do Astria
+        backgroundUrl: '',
+        actionColor: '#4CAF50',
+        textColor: '#FFFFFF',
+        isShowFullLockedScreen: true
+      }
+    }
+    rawData.call = JSON.stringify(callData)
+  }
+
   return Object.entries(rawData).reduce((accumulator, [key, value]) => {
     if (value === undefined || value === null) {
       return accumulator
@@ -383,23 +415,33 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
         console.log(`[sendNativePushToUsers] 📤 Enviando FCM para ${userId} (${platform}/${provider})`)
         console.log(`[sendNativePushToUsers]   Token: ${token.slice(0, 40)}...`)
         
-        const messageId = await firebaseAdmin.messaging().send({
-          token,
+        const fcmPayload = { token, data }
+
+        if (payload.type !== 'incoming_call') {
+          fcmPayload.notification = {
+            title: data.title,
+            body: data.body,
+          }
+          fcmPayload.android = {
             notification: {
-              title: data.title,
-              body: data.body,
+              channelId: data.channelId,
+              clickAction: 'FCM_PLUGIN_ACTIVITY',
+              sound: 'default',
             },
-            data,
-            android: {
-              notification: {
-                channelId: data.channelId,
-                clickAction: 'FCM_PLUGIN_ACTIVITY',
-                sound: 'default'
-              },
             directBootOk: true,
             restrictedPackageName: 'com.astria.taromobile',
-          },
-        })
+            priority: 'high'
+          }
+        } else {
+          // Chamadas DEVEM ser apenas data-messages para acordar o app em background
+          fcmPayload.android = {
+            priority: 'high',
+            directBootOk: true,
+            restrictedPackageName: 'com.astria.taromobile',
+          }
+        }
+
+        const messageId = await firebaseAdmin.messaging().send(fcmPayload)
 
         console.log(`[sendNativePushToUsers] ✅ FCM enviado com sucesso! messageId: ${messageId}`)
         
