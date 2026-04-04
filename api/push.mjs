@@ -385,10 +385,17 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
         
         const messageId = await firebaseAdmin.messaging().send({
           token,
-          data,
-          android: {
-            priority: (payload.deliveryPriority === 'high' || data.type === 'incoming_call') ? 'high' : 'normal',
-            ttl: payload.ttlMs,
+            notification: {
+              title: data.title,
+              body: data.body,
+            },
+            data,
+            android: {
+              notification: {
+                channelId: data.channelId,
+                clickAction: 'FCM_PLUGIN_ACTIVITY',
+                sound: 'default'
+              },
             directBootOk: true,
             restrictedPackageName: 'com.astria.taromobile',
           },
