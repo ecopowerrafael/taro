@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ChevronDown, RefreshCcw, Send, Smartphone, Star } from 'lucide-react'
 import { ClientDashboard } from '../components/ClientDashboard'
@@ -69,7 +69,7 @@ export function PerfilPage() {
       const status = await getMyPushStatus()
       setPushStatus(status)
       if (status?.ok === false) {
-        setPushNotice(status.message || 'NÃ£o foi possÃ­vel obter o status do push.')
+        setPushNotice(status.message || 'Não foi possível obter o status do push.')
       } else {
         setPushNotice('Status do push atualizado.')
       }
@@ -90,7 +90,7 @@ export function PerfilPage() {
       if (result?.ok === false) {
         setPushNotice(result.message || 'Falha ao enviar push de teste.')
       } else {
-        setPushNotice('Push de teste enviado. Confira se a notificaÃ§Ã£o chegou no dispositivo.')
+        setPushNotice('Push de teste enviado. Confira se a notificação chegou no dispositivo.')
       }
 
       const status = await getMyPushStatus()
@@ -171,7 +171,7 @@ export function PerfilPage() {
         <GlassCard title="Respostas Recebidas" subtitle="Confira as respostas de seus consulentes.">
           {myAnswers.length === 0 ? (
             <p className="rounded-lg border border-mystic-gold/25 bg-black/30 p-3 text-sm text-ethereal-silver/80">
-              VocÃª ainda nÃ£o recebeu respostas de consultas.
+              Você ainda não recebeu respostas de consultas.
             </p>
           ) : (
             <div className="grid gap-3">
@@ -185,7 +185,7 @@ export function PerfilPage() {
                       <div className="flex items-center justify-between mb-1">
                         <p className="font-semibold text-mystic-goldSoft">{answer.consultantName}</p>
                         <span className="text-xs text-ethereal-silver/70">
-                          {new Date(answer.answeredAt).toLocaleDateString('pt-BR')} Ã s{' '}
+                          {new Date(answer.answeredAt).toLocaleDateString('pt-BR')} às{' '}
                           {new Date(answer.answeredAt).toLocaleTimeString('pt-BR', {
                             hour: '2-digit',
                             minute: '2-digit',
@@ -193,7 +193,7 @@ export function PerfilPage() {
                         </span>
                       </div>
                       <p className="text-xs text-amber-100/70 mb-2">
-                        Pacote: {answer.questionCount} pergunta(s) â€¢ R$ {answer.packagePrice.toFixed(2)}
+                        Pacote: {answer.questionCount} pergunta(s) • R$ {answer.packagePrice.toFixed(2)}
                       </p>
                       {expandedAnswerId === answer.id ? (
                         <div className="mt-3 space-y-3">
@@ -204,7 +204,7 @@ export function PerfilPage() {
                               {answer.entries.map((entry, idx) => (
                                 <div key={entry.id || idx} className="text-xs text-amber-100/80 pb-2 border-b border-mystic-gold/15 last:border-b-0">
                                   <span className="text-mystic-gold font-semibold">P{idx + 1}:</span>{' '}
-                                  <span className="text-amber-50">{entry.question || entry.text || 'Pergunta nÃ£o especificada'}</span>
+                                  <span className="text-amber-50">{entry.question || entry.text || 'Pergunta não especificada'}</span>
                                 </div>
                               ))}
                             </div>
@@ -237,7 +237,7 @@ export function PerfilPage() {
                       />
                     </button>
                   </div>
-                  {/* BotÃ£o de avaliaÃ§Ã£o */}
+                  {/* Botão de avaliação */}
                   {!reviewedIds.has(answer.id) && (
                     <div className="mt-3 flex justify-end">
                       <button
@@ -256,7 +256,7 @@ export function PerfilPage() {
                     </div>
                   )}
                   {reviewedIds.has(answer.id) && (
-                    <p className="mt-2 text-right text-xs text-emerald-400/80">âœ“ Avaliado</p>
+                    <p className="mt-2 text-right text-xs text-emerald-400/80">✓ Avaliado</p>
                   )}
                 </article>
               ))}
@@ -264,8 +264,6 @@ export function PerfilPage() {
           )}
         </GlassCard>
       )}
-
-      
 
       <ReviewModal
         isOpen={reviewModal.isOpen}
@@ -282,5 +280,3 @@ export function PerfilPage() {
     </PageShell>
   )
 }
-
-

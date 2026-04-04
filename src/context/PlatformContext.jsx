@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { getZodiacSign } from '../utils/zodiac'
 import { useBilling } from '../hooks/useBilling'
@@ -12,18 +12,18 @@ import { buildApiUrl } from '../utils/runtimeConfig'
 import { PlatformContext } from './platform-context'
 
 const horoscopeBySign = {
-  Ãries: 'Hoje Ã© dia de lideranÃ§a intuitiva e decisÃµes rÃ¡pidas.',
-  Touro: 'Seu poder estÃ¡ na constÃ¢ncia e no foco em prosperidade.',
-  GÃªmeos: 'Conversas estratÃ©gicas trarÃ£o boas oportunidades.',
-  CÃ¢ncer: 'Escute sua sensibilidade para proteger o que importa.',
-  LeÃ£o: 'Sua presenÃ§a magnÃ©tica abre portas profissionais.',
-  Virgem: 'A organizaÃ§Ã£o emocional destrava um novo ciclo.',
+  Áries: 'Hoje é dia de liderança intuitiva e decisões rápidas.',
+  Touro: 'Seu poder está na constância e no foco em prosperidade.',
+  Gêmeos: 'Conversas estratégicas trarão boas oportunidades.',
+  Câncer: 'Escute sua sensibilidade para proteger o que importa.',
+  Leão: 'Sua presença magnética abre portas profissionais.',
+  Virgem: 'A organização emocional destrava um novo ciclo.',
   Libra: 'Parcerias harmoniosas elevam sua energia.',
-  EscorpiÃ£o: 'TransformaÃ§Ãµes profundas trazem ganhos concretos.',
-  SagitÃ¡rio: 'ExpansÃ£o espiritual e coragem caminham juntos.',
-  CapricÃ³rnio: 'Disciplina com propÃ³sito gera crescimento sustentÃ¡vel.',
-  AquÃ¡rio: 'InovaÃ§Ã£o e visÃ£o de futuro serÃ£o diferenciais.',
-  Peixes: 'Sua intuiÃ§Ã£o estÃ¡ afiada para escolhas certeiras.',
+  Escorpião: 'Transformações profundas trazem ganhos concretos.',
+  Sagitário: 'Expansão espiritual e coragem caminham juntos.',
+  Capricórnio: 'Disciplina com propósito gera crescimento sustentável.',
+  Aquário: 'Inovação e visão de futuro serão diferenciais.',
+  Peixes: 'Sua intuição está afiada para escolhas certeiras.',
 }
 
 const initialConsultants = [
@@ -32,7 +32,7 @@ const initialConsultants = [
     name: 'Aurora Luz',
     email: 'aurora@taro.com',
     tagline: 'Leio energias de amor com objetividade.',
-    description: 'Especialista em Tarot terapÃªutico, relaÃ§Ãµes e alinhamento emocional.',
+    description: 'Especialista em Tarot terapêutico, relações e alinhamento emocional.',
     status: 'Online',
     pricePerMinute: 8.5,
     priceThreeQuestions: 24,
@@ -50,7 +50,7 @@ const initialConsultants = [
     name: 'Noah Arcano',
     email: 'noah@taro.com',
     tagline: 'Mapeio ciclos profissionais e financeiros.',
-    description: 'Consultas com foco em carreira, propÃ³sito e planejamento estratÃ©gico.',
+    description: 'Consultas com foco em carreira, propósito e planejamento estratégico.',
     status: 'Ocupado',
     pricePerMinute: 12,
     priceThreeQuestions: 32,
@@ -67,8 +67,8 @@ const initialConsultants = [
     id: 'c3',
     name: 'Maya Estelar',
     email: 'maya@taro.com',
-    tagline: 'Direcionamento espiritual com clareza prÃ¡tica.',
-    description: 'Atendimento para decisÃµes de vida, espiritualidade e desbloqueios.',
+    tagline: 'Direcionamento espiritual com clareza prática.',
+    description: 'Atendimento para decisões de vida, espiritualidade e desbloqueios.',
     status: 'Online',
     pricePerMinute: 9.75,
     priceThreeQuestions: 28,
@@ -204,7 +204,7 @@ const normalizeQuestionRequest = (request) => {
       question:
         entry?.question ??
         entry?.text ??
-        (entry?.fileName ? `Ãudio: ${entry.fileName}` : 'Pergunta nÃ£o informada'),
+        (entry?.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada'),
       answer: entry?.answer?.trim() || answerFallbacks[index] || '',
     })),
     answerSummary: request.answerSummary ?? '',
@@ -289,7 +289,7 @@ export function PlatformProvider({ children }) {
 
   const dailyHoroscope = sign
     ? horoscopeBySign[sign]
-    : 'Finalize seu cadastro para receber seu horÃ³scopo diÃ¡rio.'
+    : 'Finalize seu cadastro para receber seu horóscopo diário.'
 
   const [consultants, setConsultants] = useState(initialConsultants)
   const [pendingConsultants, setPendingConsultants] = useState(initialPendingConsultants)
@@ -367,7 +367,7 @@ export function PlatformProvider({ children }) {
       const registration = await navigator.serviceWorker.register('/sw.js')
       const publicVapidKeyRes = await fetch(buildApiUrl('/api/push/public-key'))
       if (!publicVapidKeyRes.ok) {
-        throw new Error('NÃ£o foi possÃ­vel obter a chave pÃºblica de push.')
+        throw new Error('Não foi possível obter a chave pública de push.')
       }
       const publicVapidKey = await publicVapidKeyRes.text()
 
@@ -450,18 +450,18 @@ export function PlatformProvider({ children }) {
 
   const ensurePushSubscription = async () => {
     if (!profile?.id) {
-      return { ok: false, message: 'UsuÃ¡rio nÃ£o autenticado.' }
+      return { ok: false, message: 'Usuário não autenticado.' }
     }
 
     return registerPushSubscription(profile.id)
   }
 
-  // Sistema de notificaÃ§Ãµes in-app (Toast/Overlay)
+  // Sistema de notificações in-app (Toast/Overlay)
   const addInAppNotification = (notification) => {
     const id = `notif-${Date.now()}-${++notificationCounterRef.current}`
     const notif = {
       id,
-      title: notification.title || 'NotificaÃ§Ã£o',
+      title: notification.title || 'Notificação',
       message: notification.message || '',
       icon: notification.icon || 'message',
       contactName: notification.contactName || null,
@@ -486,13 +486,13 @@ export function PlatformProvider({ children }) {
     setInAppNotifications((prev) => prev.filter((n) => n.id !== id))
   }
 
-  // PersistÃªncia de notificaÃ§Ãµes em localStorage
+  // Persistência de notificações em localStorage
   const saveNotificationsToStorage = (notifications) => {
     try {
       const key = `taro_notifications_${profile?.id}`
       localStorage.setItem(key, JSON.stringify(notifications))
     } catch (err) {
-      console.warn('[PlatformContext] Erro ao salvar notificaÃ§Ãµes:', err)
+      console.warn('[PlatformContext] Erro ao salvar notificações:', err)
     }
   }
 
@@ -502,12 +502,12 @@ export function PlatformProvider({ children }) {
       const stored = localStorage.getItem(key)
       return stored ? JSON.parse(stored) : []
     } catch (err) {
-      console.warn('[PlatformContext] Erro ao carregar notificaÃ§Ãµes:', err)
+      console.warn('[PlatformContext] Erro ao carregar notificações:', err)
       return []
     }
   }
 
-  // Marcar notificaÃ§Ã£o como lida/nÃ£o lida
+  // Marcar notificação como lida/não lida
   const markNotificationAsRead = (id) => {
     setNotificationHistory((prev) => {
       const updated = prev.map((n) => (n.id === id ? { ...n, read: true } : n))
@@ -530,7 +530,7 @@ export function PlatformProvider({ children }) {
     })
   }
 
-  // Adicionar ao histÃ³rico
+  // Adicionar ao histórico
   const addToNotificationHistory = (notification) => {
     const historyEntry = {
       id: notification.id,
@@ -544,7 +544,7 @@ export function PlatformProvider({ children }) {
     }
 
     setNotificationHistory((prev) => {
-      const updated = [historyEntry, ...prev].slice(0, 100) // Manter Ãºltimas 100
+      const updated = [historyEntry, ...prev].slice(0, 100) // Manter últimas 100
       saveNotificationsToStorage(updated)
       setUnreadCount((c) => c + 1)
       return updated
@@ -557,7 +557,7 @@ export function PlatformProvider({ children }) {
     saveNotificationsToStorage([])
   }
 
-  // Carregar notificaÃ§Ãµes ao montar componente
+  // Carregar notificações ao montar componente
   useEffect(() => {
     if (profile?.id) {
       const loaded = loadNotificationsFromStorage()
@@ -621,7 +621,7 @@ export function PlatformProvider({ children }) {
     stripeCredentialsRef.current = stripeCredentials
   }, [stripeCredentials])
 
-  // Setup socket.io listeners para notificaÃ§Ãµes in-app
+  // Setup socket.io listeners para notificações in-app
   useEffect(() => {
     if (!isConsultant || !userConsultantProfile) {
       return
@@ -638,8 +638,8 @@ export function PlatformProvider({ children }) {
       const questionCount = Number(data.questionCount) || 1
       const notification = {
         id: `question-${data.requestId}`,
-        title: `â“ ${questionCount} Pergunta${questionCount > 1 ? 's' : ''} Recebida${questionCount > 1 ? 's' : ''}`,
-        message: data.preview || 'VocÃª recebeu uma consulta de perguntas para responder.',
+        title: `❓ ${questionCount} Pergunta${questionCount > 1 ? 's' : ''} Recebida${questionCount > 1 ? 's' : ''}`,
+        message: data.preview || 'Você recebeu uma consulta de perguntas para responder.',
         icon: 'message',
         contactName: data.clientName || 'Cliente',
         type: 'question',
@@ -659,24 +659,22 @@ export function PlatformProvider({ children }) {
       addToNotificationHistory(notification)
     }
 
-    
     notificationService.on('new_question', handleNewQuestion)
 
     return () => {
-      
       notificationService.off('new_question', handleNewQuestion)
     }
   }, [isConsultant, userConsultantProfile, addInAppNotification, addToNotificationHistory])
 
-  // Monitor window blur/focus para marcar notificaÃ§Ãµes ao voltar
+  // Monitor window blur/focus para marcar notificações ao voltar
   useEffect(() => {
     const handleFocus = () => {
-      // Quando volta para a aba, poderia sincronizar com backend se necessÃ¡rio
+      // Quando volta para a aba, poderia sincronizar com backend se necessário
       console.log('[PlatformContext] Janela voltou ao foco')
     }
 
     const handleBlur = () => {
-      console.log('[PlatformContext] Janela perdeu foco, notificaÃ§Ãµes podem nÃ£o ser visÃ­veis')
+      console.log('[PlatformContext] Janela perdeu foco, notificações podem não ser visíveis')
     }
 
     window.addEventListener('focus', handleFocus)
@@ -732,7 +730,7 @@ export function PlatformProvider({ children }) {
   const savePlatformCredentials = async (type, data) => {
     try {
       // Use PATCH para salvar credenciais individuais por tipo
-      // Use PUT para salvar tudo (compatibilidade com cÃ³digo antigo)
+      // Use PUT para salvar tudo (compatibilidade com código antigo)
       const method = type ? 'PATCH' : 'PUT'
       const url = type ? buildApiUrl(`/api/credentials/${type}`) : buildApiUrl('/api/credentials')
 
@@ -751,7 +749,7 @@ export function PlatformProvider({ children }) {
       console.log(`[PlatformContext] Resposta recebida: status=${response.status}, ok=${response.ok}`)
 
       if (response.ok) {
-        // Atualiza o estado local dependendo do tipo (usa funÃ§Ãµes normalizadoras)
+        // Atualiza o estado local dependendo do tipo (usa funções normalizadoras)
         if (type === 'mp') setMpCredentials(data)
         if (type === 'daily') setDailyCredentials(data)
         if (type === 'pix') setMpCredentials(data)
@@ -763,11 +761,11 @@ export function PlatformProvider({ children }) {
             setGlobalCommissionState(nextCommission)
           }
         }
-        setSystemNotice(`ConfiguraÃ§Ãµes de ${type || 'credenciais'} salvas com sucesso.`)
+        setSystemNotice(`Configurações de ${type || 'credenciais'} salvas com sucesso.`)
         console.log(`[PlatformContext] Sucesso ao salvar ${type}`)
         return { ok: true }
       } else {
-        const errData = await response.json().catch(() => ({ message: 'Resposta invÃ¡lida do servidor (HTML ou Vazio)' }))
+        const errData = await response.json().catch(() => ({ message: 'Resposta inválida do servidor (HTML ou Vazio)' }))
         const errorMsg = errData.message || 'Erro ao salvar credenciais.'
         console.error(`[PlatformContext] Erro no salvamento de ${type}:`, errData)
         alert(`Falha no salvamento: ${errorMsg}\n\nDetalhes: ${JSON.stringify(errData, null, 2)}`)
@@ -776,8 +774,8 @@ export function PlatformProvider({ children }) {
       }
     } catch (error) {
       console.error('[PlatformContext] Erro fatal no salvamento:', error)
-      alert(`Erro crÃ­tico de conexÃ£o ou script:\n${error.message}`)
-      setSystemNotice('Erro de conexÃ£o ao salvar.')
+      alert(`Erro crítico de conexão ou script:\n${error.message}`)
+      setSystemNotice('Erro de conexão ao salvar.')
       return { ok: false }
     }
   }
@@ -797,7 +795,7 @@ export function PlatformProvider({ children }) {
 
     const result = await savePlatformCredentials('commission', { globalCommission: safeValue })
     if (!result?.ok) {
-      setSystemNotice(result?.message || 'NÃ£o foi possÃ­vel salvar a comissÃ£o global.')
+      setSystemNotice(result?.message || 'Não foi possível salvar a comissão global.')
     }
     return result
   }
@@ -894,13 +892,13 @@ export function PlatformProvider({ children }) {
       }
       setAdminSpellOrders(payload.map(normalizeSpellOrder))
     } catch (error) {
-      console.error('[fetchAdminSpellOrders] Erro ao buscar histÃ³rico admin de magias:', error)
+      console.error('[fetchAdminSpellOrders] Erro ao buscar histórico admin de magias:', error)
     }
   }
 
   const saveSpell = async (spellData) => {
     if (!token) {
-      return { ok: false, message: 'FaÃ§a login como admin para salvar a magia.' }
+      return { ok: false, message: 'Faça login como admin para salvar a magia.' }
     }
 
     const isEdit = Boolean(spellData?.id)
@@ -941,13 +939,13 @@ export function PlatformProvider({ children }) {
       }
     } catch (error) {
       console.error('[saveSpell] Erro:', error)
-      return { ok: false, message: 'Erro de conexÃ£o ao salvar magia.' }
+      return { ok: false, message: 'Erro de conexão ao salvar magia.' }
     }
   }
 
   const deleteSpell = async (spellId) => {
     if (!token) {
-      return { ok: false, message: 'FaÃ§a login como admin para remover a magia.' }
+      return { ok: false, message: 'Faça login como admin para remover a magia.' }
     }
 
     try {
@@ -968,7 +966,7 @@ export function PlatformProvider({ children }) {
       return { ok: true, message: payload.message || 'Magia removida com sucesso.' }
     } catch (error) {
       console.error('[deleteSpell] Erro:', error)
-      return { ok: false, message: 'Erro de conexÃ£o ao remover magia.' }
+      return { ok: false, message: 'Erro de conexão ao remover magia.' }
     }
   }
 
@@ -995,13 +993,13 @@ export function PlatformProvider({ children }) {
       return payload
     } catch (error) {
       console.error('[createSpellPixOrder] Erro:', error)
-      return { ok: false, message: 'Erro de conexÃ£o ao iniciar pagamento PIX.' }
+      return { ok: false, message: 'Erro de conexão ao iniciar pagamento PIX.' }
     }
   }
 
   const createSpellStripePaymentIntent = async ({ spellId }) => {
     if (!token) {
-      return { ok: false, message: 'Entre na sua conta para pagar com cartÃ£o.' }
+      return { ok: false, message: 'Entre na sua conta para pagar com cartão.' }
     }
 
     try {
@@ -1019,13 +1017,13 @@ export function PlatformProvider({ children }) {
 
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {
-        return { ok: false, message: payload.message || 'Erro ao iniciar pagamento com cartÃ£o.' }
+        return { ok: false, message: payload.message || 'Erro ao iniciar pagamento com cartão.' }
       }
 
       return { ok: true, ...payload }
     } catch (error) {
       console.error('[createSpellStripePaymentIntent] Erro:', error)
-      return { ok: false, message: 'Erro de conexÃ£o ao iniciar pagamento com cartÃ£o.' }
+      return { ok: false, message: 'Erro de conexão ao iniciar pagamento com cartão.' }
     }
   }
 
@@ -1051,13 +1049,13 @@ export function PlatformProvider({ children }) {
       return { ok: true, ...payload }
     } catch (error) {
       console.error('[confirmSpellStripeOrder] Erro:', error)
-      return { ok: false, message: 'Erro de conexÃ£o ao confirmar pagamento.' }
+      return { ok: false, message: 'Erro de conexão ao confirmar pagamento.' }
     }
   }
 
   const processSpellOrderAction = async (orderId, action) => {
     if (!token) {
-      return { ok: false, message: 'FaÃ§a login como admin para processar o pedido.' }
+      return { ok: false, message: 'Faça login como admin para processar o pedido.' }
     }
 
     try {
@@ -1080,7 +1078,7 @@ export function PlatformProvider({ children }) {
       return { ok: true, ...payload }
     } catch (error) {
       console.error('[processSpellOrderAction] Erro:', error)
-      return { ok: false, message: 'Erro de conexÃ£o ao processar pedido PIX.' }
+      return { ok: false, message: 'Erro de conexão ao processar pedido PIX.' }
     }
   }
 
@@ -1112,7 +1110,7 @@ export function PlatformProvider({ children }) {
         })),
       )
     } catch (error) {
-      console.error('[fetchAdminUsers] Erro ao buscar usuÃ¡rios:', error)
+      console.error('[fetchAdminUsers] Erro ao buscar usuários:', error)
     }
   }
 
@@ -1135,7 +1133,7 @@ export function PlatformProvider({ children }) {
       return { ok: true, ...payload }
     } catch (error) {
       console.error('[sendAdminPushBroadcast] Erro ao enviar broadcast:', error)
-      return { ok: false, message: 'Erro de conexÃ£o ao enviar broadcast push.' }
+      return { ok: false, message: 'Erro de conexão ao enviar broadcast push.' }
     }
   }
 
@@ -1153,7 +1151,7 @@ export function PlatformProvider({ children }) {
       return payload
     } catch (error) {
       console.error('[getMyPushStatus] Erro:', error)
-      return { ok: false, message: 'Erro de conexÃ£o ao consultar push.' }
+      return { ok: false, message: 'Erro de conexão ao consultar push.' }
     }
   }
 
@@ -1172,7 +1170,7 @@ export function PlatformProvider({ children }) {
       return payload
     } catch (error) {
       console.error('[sendMyPushTest] Erro:', error)
-      return { ok: false, message: 'Erro de conexÃ£o ao enviar teste push.' }
+      return { ok: false, message: 'Erro de conexão ao enviar teste push.' }
     }
   }
 
@@ -1213,14 +1211,14 @@ export function PlatformProvider({ children }) {
 
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {
-        return { ok: false, message: payload.message || 'Erro ao atualizar usuÃ¡rio.' }
+        return { ok: false, message: payload.message || 'Erro ao atualizar usuário.' }
       }
 
       await fetchAdminUsers()
-      return { ok: true, message: payload.message || 'UsuÃ¡rio atualizado com sucesso.' }
+      return { ok: true, message: payload.message || 'Usuário atualizado com sucesso.' }
     } catch (error) {
-      console.error('[updateAdminUser] Erro ao atualizar usuÃ¡rio:', error)
-      return { ok: false, message: 'Falha de conexÃ£o ao atualizar usuÃ¡rio.' }
+      console.error('[updateAdminUser] Erro ao atualizar usuário:', error)
+      return { ok: false, message: 'Falha de conexão ao atualizar usuário.' }
     }
   }
 
@@ -1269,14 +1267,14 @@ export function PlatformProvider({ children }) {
         topConsultants: Array.isArray(payload?.topConsultants) ? payload.topConsultants : [],
       })
     } catch (error) {
-      console.error('[fetchAdminDashboardStats] Erro ao buscar mÃ©tricas:', error)
+      console.error('[fetchAdminDashboardStats] Erro ao buscar métricas:', error)
     }
   }
 
   const upsertConsultantOnApi = async (consultant, isSelfEdit = false) => {
     console.log('[upsertConsultantOnApi] Attempting with isSelfEdit:', isSelfEdit, 'consultant:', consultant.id)
     
-    // Se for auto-ediÃ§Ã£o, usar endpoint POST /consultants/profile/:id
+    // Se for auto-edição, usar endpoint POST /consultants/profile/:id
     if (isSelfEdit) {
       console.log('[upsertConsultantOnApi] Using POST /profile endpoint for self-edit')
       const response = await fetch(buildApiUrl(`/api/consultants/profile/${consultant.id}`), {
@@ -1323,13 +1321,13 @@ export function PlatformProvider({ children }) {
       const ok = await upsertConsultantOnApi(consultant, isSelfEdit)
       console.log('[persistConsultant] Result:', ok)
       if (!ok) {
-        setSystemNotice('NÃ£o foi possÃ­vel salvar alteraÃ§Ãµes do consultor no backend.')
+        setSystemNotice('Não foi possível salvar alterações do consultor no backend.')
         return false
       }
       return true
     } catch (err) {
       console.error('[persistConsultant] Error:', err)
-      setSystemNotice('Falha de conexÃ£o ao salvar dados do consultor.')
+      setSystemNotice('Falha de conexão ao salvar dados do consultor.')
       return false
     }
   }
@@ -1345,10 +1343,10 @@ export function PlatformProvider({ children }) {
         body: JSON.stringify({ status }),
       })
       if (!response.ok) {
-        setSystemNotice('NÃ£o foi possÃ­vel sincronizar o status do consultor no backend.')
+        setSystemNotice('Não foi possível sincronizar o status do consultor no backend.')
       }
     } catch {
-      setSystemNotice('Falha de conexÃ£o ao atualizar status do consultor.')
+      setSystemNotice('Falha de conexão ao atualizar status do consultor.')
     }
   }
 
@@ -1363,7 +1361,7 @@ export function PlatformProvider({ children }) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       console.error('[createQuestionRequestOnApi] Erro na resposta:', response.status, errorData)
-      throw new Error(errorData.message || `Erro ${response.status}: Falha ao registrar solicitaÃ§Ã£o de perguntas no backend.`)
+      throw new Error(errorData.message || `Erro ${response.status}: Falha ao registrar solicitação de perguntas no backend.`)
     }
     const payload = await response.json()
     return normalizeQuestionRequest(payload)
@@ -1420,7 +1418,7 @@ export function PlatformProvider({ children }) {
     }
     return {
       ok: true,
-      message: payload.message || 'SolicitaÃ§Ã£o de saque registrada com sucesso.',
+      message: payload.message || 'Solicitação de saque registrada com sucesso.',
       wallet: normalizeWalletState([payload.wallet])[payload.wallet.consultantId],
     }
   }
@@ -1624,7 +1622,7 @@ export function PlatformProvider({ children }) {
         ...pending,
         status: 'Online',
         tagline: 'Novo consultor aprovado pela plataforma.',
-        description: 'Consultor recÃ©m aprovado e disponÃ­vel para atendimentos.',
+        description: 'Consultor recém aprovado e disponível para atendimentos.',
         baseConsultations: 0,
         realSessions: 0,
         ratingAverage: 5,
@@ -1807,21 +1805,21 @@ export function PlatformProvider({ children }) {
       return { ok: true, packages: nextPackages }
     } catch (error) {
       console.error('[saveMinutePackages] Error:', error)
-      const message = 'Erro de conexÃ£o ao salvar pacotes de recarga.'
+      const message = 'Erro de conexão ao salvar pacotes de recarga.'
       setSystemNotice(message)
       return { ok: false, message }
     }
   }
 
   const submitQuestionConsultation = async ({ consultant, questionCount, price, entries }) => {
-    // ValidaÃ§Ã£o de perfil
+    // Validação de perfil
     if (!profile || !profile.email) {
-      setSystemNotice('Erro: Sua conta nÃ£o tem email vÃ¡lido. Atualize seu perfil e tente novamente.')
+      setSystemNotice('Erro: Sua conta não tem email válido. Atualize seu perfil e tente novamente.')
       return
     }
 
     if (!consultant || !consultant.id) {
-      setSystemNotice('Erro: Consultor invÃ¡lido. Por favor, selecione novamente.')
+      setSystemNotice('Erro: Consultor inválido. Por favor, selecione novamente.')
       return
     }
 
@@ -1832,7 +1830,7 @@ export function PlatformProvider({ children }) {
       question:
         entry?.question ??
         entry?.text ??
-        (entry?.file?.name ? `Ãudio: ${entry.file.name}` : ''),
+        (entry?.file?.name ? `Áudio: ${entry.file.name}` : ''),
       fileName: entry.file?.name ?? '',
       durationSeconds: entry.durationSeconds ?? 0,
     }))
@@ -1860,7 +1858,7 @@ export function PlatformProvider({ children }) {
       const savedRequest = await createQuestionRequestOnApi(request)
       setQuestionRequests((prev) => [savedRequest, ...prev.filter((item) => item.id !== savedRequest.id)])
       
-      // Debita minutos APÃ“S sucesso do envio
+      // Debita minutos APÓS sucesso do envio
       const debitSuccess = await debitMinutes(price)
       if (debitSuccess) {
         setSystemNotice(
@@ -1912,7 +1910,7 @@ export function PlatformProvider({ children }) {
       )
       return
     } catch {
-      setSystemNotice('NÃ£o foi possÃ­vel sincronizar a resposta no servidor. Aplicando modo local.')
+      setSystemNotice('Não foi possível sincronizar a resposta no servidor. Aplicando modo local.')
     }
 
     setQuestionRequests((prev) =>
@@ -1997,16 +1995,16 @@ export function PlatformProvider({ children }) {
   const requestConsultantWithdrawal = async ({ consultantId, amount }) => {
     const wallet = consultantWallets[consultantId]
     if (!wallet) {
-      return { ok: false, message: 'Carteira do consultor nÃ£o encontrada.' }
+      return { ok: false, message: 'Carteira do consultor não encontrada.' }
     }
     if (!wallet.pixKey) {
       return { ok: false, message: 'Cadastre uma chave PIX antes de solicitar saque.' }
     }
     if (!wallet.pixBeneficiaryName) {
-      return { ok: false, message: 'Cadastre o nome do beneficiÃ¡rio antes de solicitar saque.' }
+      return { ok: false, message: 'Cadastre o nome do beneficiário antes de solicitar saque.' }
     }
     if (amount < MIN_WITHDRAWAL_AMOUNT) {
-      return { ok: false, message: `Saque mÃ­nimo: R$ ${MIN_WITHDRAWAL_AMOUNT.toFixed(2)}.` }
+      return { ok: false, message: `Saque mínimo: R$ ${MIN_WITHDRAWAL_AMOUNT.toFixed(2)}.` }
     }
     if (amount > wallet.availableBalance) {
       return { ok: false, message: 'Saldo insuficiente para saque.' }
@@ -2053,7 +2051,7 @@ export function PlatformProvider({ children }) {
               type: 'debit',
               amount,
               createdAt,
-              description: 'SolicitaÃ§Ã£o de saque',
+              description: 'Solicitação de saque',
             },
             ...current.transactions,
           ],
@@ -2061,7 +2059,7 @@ export function PlatformProvider({ children }) {
       }
     })
 
-    return { ok: true, message: 'SolicitaÃ§Ã£o de saque registrada com sucesso.' }
+    return { ok: true, message: 'Solicitação de saque registrada com sucesso.' }
   }
 
   const updateWithdrawalStatusOnApi = async ({ consultantId, withdrawalId, newStatus }) => {
@@ -2211,4 +2209,3 @@ export function PlatformProvider({ children }) {
 
   return <PlatformContext.Provider value={value}>{children}</PlatformContext.Provider>
 }
-

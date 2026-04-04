@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BellRing, Loader2, SendHorizontal, Sparkles, Wallet, Lock, UserPlus, Info, XCircle, History, NotebookPen, Video, MessagesSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
@@ -87,7 +87,7 @@ export function AreaConsultorPage() {
               const createdAt = new Date(session.createdAt).getTime()
               const ageMs = now - createdAt
               if (ageMs > 15 * 60 * 1000) {
-                // Remove sessÃµes antigas automaticamente e marca como cancelled
+                // Remove sessões antigas automaticamente e marca como cancelled
                 await fetch(buildApiUrl(`/api/video-sessions/${session.id}/status`), {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -118,16 +118,16 @@ export function AreaConsultorPage() {
   }
 
   const formatRelativeTime = (createdAt) => {
-    if (!createdAt) return 'Solicitado hÃ¡ poucos instantes'
+    if (!createdAt) return 'Solicitado há poucos instantes'
     const created = new Date(createdAt)
     const diffMs = Date.now() - created.getTime()
     const diffSec = Math.floor(diffMs / 1000)
 
-    if (diffSec < 60) return `Solicitado hÃ¡ ${diffSec}s`
+    if (diffSec < 60) return `Solicitado há ${diffSec}s`
     const diffMin = Math.floor(diffSec / 60)
-    if (diffMin < 60) return `Solicitado hÃ¡ ${diffMin} min`
+    if (diffMin < 60) return `Solicitado há ${diffMin} min`
     const diffH = Math.floor(diffMin / 60)
-    return `Solicitado hÃ¡ ${diffH} h`
+    return `Solicitado há ${diffH} h`
   }
 
   const handleRejectVideoCall = async (sessionId) => {
@@ -163,7 +163,7 @@ export function AreaConsultorPage() {
         priceFiveQuestions: formatInitialCurrency(userConsultantProfile.priceFiveQuestions),
       })
     } else if (isAdmin && consultants.length > 0) {
-      // Se for admin mas nÃ£o tiver perfil de consultor, mostra o primeiro da lista
+      // Se for admin mas não tiver perfil de consultor, mostra o primeiro da lista
       setSelectedConsultantId(consultants[0].id)
     }
   }, [userConsultantProfile, isAdmin, consultants])
@@ -223,7 +223,7 @@ export function AreaConsultorPage() {
         }, {}),
       )
     } catch (error) {
-      console.error('[AreaConsultorPage] Erro ao buscar histÃ³rico de vÃ­deo:', error)
+      console.error('[AreaConsultorPage] Erro ao buscar histórico de vídeo:', error)
     } finally {
       setConsultationHistoryLoading(false)
     }
@@ -243,7 +243,7 @@ export function AreaConsultorPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Falha ao salvar observaÃ§Ã£o.')
+        throw new Error('Falha ao salvar observação.')
       }
 
       const payload = await response.json()
@@ -254,17 +254,17 @@ export function AreaConsultorPage() {
             : session,
         ),
       )
-      setPanelNotice('ObservaÃ§Ã£o da consulta em vÃ­deo salva com sucesso.')
+      setPanelNotice('Observação da consulta em vídeo salva com sucesso.')
     } catch (error) {
-      console.error('[AreaConsultorPage] Erro ao salvar observaÃ§Ã£o do vÃ­deo:', error)
-      setPanelNotice('NÃ£o foi possÃ­vel salvar a observaÃ§Ã£o da consulta em vÃ­deo.')
+      console.error('[AreaConsultorPage] Erro ao salvar observação do vídeo:', error)
+      setPanelNotice('Não foi possível salvar a observação da consulta em vídeo.')
     }
   }
 
-  // RenderizaÃ§Ã£o condicional para quem nÃ£o Ã© consultor
+  // Renderização condicional para quem não é consultor
   if (!authLoading && !isConsultant && !isAdmin) {
     return (
-      <PageShell title="Ãrea do Consultor" subtitle="Painel Restrito">
+      <PageShell title="Área do Consultor" subtitle="Painel Restrito">
         <div className="flex flex-col items-center justify-center py-12">
           <GlassCard className="max-w-md text-center">
             <div className="mb-6 flex justify-center">
@@ -274,7 +274,7 @@ export function AreaConsultorPage() {
             </div>
             <h2 className="mb-4 font-display text-3xl text-mystic-goldSoft">Acesso Restrito</h2>
             <p className="mb-8 text-amber-100/70">
-              Esta Ã¡rea Ã© exclusiva para nossos consultores. Se vocÃª Ã© um tarÃ³logo experiente, 
+              Esta área é exclusiva para nossos consultores. Se você é um tarólogo experiente, 
               venha fazer parte do nosso time!
             </p>
             <div className="flex flex-col gap-4">
@@ -347,8 +347,8 @@ export function AreaConsultorPage() {
       seenPendingSessionIdsRef.current.add(session.id)
       const notification = {
         id: `poll-call-${session.id}`,
-        title: 'ðŸ“ž Chamada detectada no painel',
-        message: `${session.userName || 'Cliente'} estÃ¡ aguardando sua entrada na sala.`,
+        title: '📞 Chamada detectada no painel',
+        message: `${session.userName || 'Cliente'} está aguardando sua entrada na sala.`,
         icon: 'phone',
         contactName: session.userName || 'Cliente',
         type: 'call',
@@ -387,8 +387,8 @@ export function AreaConsultorPage() {
       seenPendingQuestionIdsRef.current.add(request.id)
       const notification = {
         id: `poll-question-${request.id}`,
-        title: `â“ ${request.questionCount} pergunta(s) pendente(s)`,
-        message: `${request.customerName || 'Cliente'} enviou uma nova consulta para vocÃª.`,
+        title: `❓ ${request.questionCount} pergunta(s) pendente(s)`,
+        message: `${request.customerName || 'Cliente'} enviou uma nova consulta para você.`,
         icon: 'message',
         contactName: request.customerName || 'Cliente',
         type: 'question',
@@ -491,16 +491,6 @@ export function AreaConsultorPage() {
   }, [])
 
   useEffect(() => {
-    if (!selectedConsultantId || isAdmin) {
-      return
-    }
-
-    return () => {
-      
-    }
-  }, [isAdmin, selectedConsultantId])
-
-  useEffect(() => {
     const syncInstallAvailability = () => setPwaInstallAvailable(canPromptPwaInstall())
     syncInstallAvailability()
     window.addEventListener('beforeinstallprompt', syncInstallAvailability)
@@ -545,7 +535,7 @@ export function AreaConsultorPage() {
       return
     }
 
-    // Verificar se consultor estÃ¡ pendente
+    // Verificar se consultor está pendente
     if (selectedConsultant.status === 'pending' || selectedConsultant.status === 'Pendente') {
       setPendingStatusModal(true)
       return
@@ -554,17 +544,17 @@ export function AreaConsultorPage() {
     try {
       if (isSelectedConsultantOnline) {
         updateConsultantAvailability(selectedConsultantId, false)
-        setPanelNotice('VocÃª ficou offline e nÃ£o receberÃ¡ novas chamadas.')
+        setPanelNotice('Você ficou offline e não receberá novas chamadas.')
         return
       }
 
       await ensurePushSubscription()
       
       updateConsultantAvailability(selectedConsultantId, true)
-      setPanelNotice('VocÃª ficou online. Aguardando chamadas de vÃ­deo.')
+      setPanelNotice('Você ficou online. Aguardando chamadas de vídeo.')
     } catch (error) {
       updateConsultantAvailability(selectedConsultantId, false)
-      setPanelNotice('NÃ£o foi possÃ­vel ativar o modo online no momento.')
+      setPanelNotice('Não foi possível ativar o modo online no momento.')
       console.error('[AreaConsultorPage] erro ao alterar disponibilidade:', error)
     }
   }
@@ -585,7 +575,7 @@ export function AreaConsultorPage() {
   const handleSubmitResponse = (requestId) => {
     const request = questionRequests.find((item) => item.id === requestId)
     if (!request) {
-      setPanelNotice('SolicitaÃ§Ã£o nÃ£o encontrada.')
+      setPanelNotice('Solicitação não encontrada.')
       return
     }
 
@@ -595,7 +585,7 @@ export function AreaConsultorPage() {
       return
     }
 
-    // Abre modal de confirmaÃ§Ã£o
+    // Abre modal de confirmação
     setConfirmResponseModal({ requestId, request, drafts })
   }
 
@@ -623,20 +613,20 @@ export function AreaConsultorPage() {
       })
       setResponseDrafts((prev) => ({ ...prev, [requestId]: [] }))
       setConfirmResponseModal(null)
-      setPanelNotice('Resposta enviada e valor lÃ­quido creditado na carteira do consultor.')
+      setPanelNotice('Resposta enviada e valor líquido creditado na carteira do consultor.')
     } catch (error) {
       console.error('[AreaConsultorPage] Erro ao responder pergunta:', error)
-      setPanelNotice('Falha ao responder a solicitaÃ§Ã£o. Tente novamente.')
+      setPanelNotice('Falha ao responder a solicitação. Tente novamente.')
     }
   }
 
   const handleSavePix = () => {
     if (!pixDraft.trim()) {
-      setPanelNotice('Informe uma chave PIX vÃ¡lida.')
+      setPanelNotice('Informe uma chave PIX válida.')
       return
     }
     if (!pixBeneficiaryDraft.trim()) {
-      setPanelNotice('Informe o nome do beneficiÃ¡rio da chave PIX.')
+      setPanelNotice('Informe o nome do beneficiário da chave PIX.')
       return
     }
     setConsultantPixKey({
@@ -646,13 +636,13 @@ export function AreaConsultorPage() {
     })
     setPixDraft('')
     setPixBeneficiaryDraft('')
-    setPanelNotice('Chave PIX e beneficiÃ¡rio salvos com sucesso.')
+    setPanelNotice('Chave PIX e beneficiário salvos com sucesso.')
   }
 
   const handleRequestWithdrawal = async () => {
     const amount = Number(withdrawAmount)
     if (!amount || amount <= 0) {
-      setPanelNotice('Informe um valor de saque vÃ¡lido.')
+      setPanelNotice('Informe um valor de saque válido.')
       return
     }
     const result = await requestConsultantWithdrawal({ consultantId: selectedConsultantId, amount })
@@ -668,7 +658,7 @@ export function AreaConsultorPage() {
       return
     }
     if (!file.type.startsWith('image/')) {
-      setPanelNotice('Selecione um arquivo de imagem vÃ¡lido.')
+      setPanelNotice('Selecione um arquivo de imagem válido.')
       return
     }
     const reader = new FileReader()
@@ -706,7 +696,7 @@ export function AreaConsultorPage() {
     }
     try {
       console.log('[handleSaveProfile] Starting save with:', { selectedConsultantId, persistConsultantWithResult })
-      // Este Ã© auto-ediÃ§Ã£o se o consultor estÃ¡ editando seu prÃ³prio perfil
+      // Este é auto-edição se o consultor está editando seu próprio perfil
       const isSelfEdit = selectedConsultantId === userConsultantProfile?.id
       console.log('[handleSaveProfile] Is self edit:', isSelfEdit)
       
@@ -724,7 +714,7 @@ export function AreaConsultorPage() {
       if (success) {
         setProfileNotice('Perfil do consultor atualizado com sucesso.')
       } else {
-        setProfileNotice('Erro ao salvar perfil. Verifique sua conexÃ£o e tente novamente.')
+        setProfileNotice('Erro ao salvar perfil. Verifique sua conexão e tente novamente.')
       }
     } catch (err) {
       console.error('[handleSaveProfile] Error:', err)
@@ -735,42 +725,42 @@ export function AreaConsultorPage() {
   const handleInstallPwa = async () => {
     const result = await promptPwaInstall()
     if (result.ok) {
-      setPanelNotice('InstalaÃ§Ã£o iniciada com sucesso.')
+      setPanelNotice('Instalação iniciada com sucesso.')
       setConfirmResponseModal(null)
       setPwaInstallAvailable(false)
       return
     }
 
     if (result.reason === 'unavailable') {
-      setPanelNotice('InstalaÃ§Ã£o indisponÃ­vel neste navegador agora. Use o menu do navegador para instalar o app.')
+      setPanelNotice('Instalação indisponível neste navegador agora. Use o menu do navegador para instalar o app.')
       return
     }
 
-    setPanelNotice('A instalaÃ§Ã£o do app foi cancelada.')
+    setPanelNotice('A instalação do app foi cancelada.')
   }
 
   const renderPendingRequestsList = () => (
     <div className="grid gap-3">
       {pendingRequests.length === 0 && (
         <p className="rounded-lg border border-mystic-gold/25 bg-black/30 p-3 text-sm text-ethereal-silver/80">
-          VocÃª nÃ£o possui mensagens pendentes.
+          Você não possui mensagens pendentes.
         </p>
       )}
       {pendingRequests.map((request) => (
         <article key={request.id} className="rounded-xl border border-mystic-gold/35 bg-black/30 p-4">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-amber-50">
-              Cliente: {request.customerName} â€¢ Pacote {request.questionCount} perguntas
+              Cliente: {request.customerName} • Pacote {request.questionCount} perguntas
             </p>
-            <span className="text-xs text-mystic-goldSoft">ComissÃ£o estimada: R$ {(request.packagePrice * 0.7).toFixed(2)}</span>
+            <span className="text-xs text-mystic-goldSoft">Comissão estimada: R$ {(request.packagePrice * 0.7).toFixed(2)}</span>
           </div>
           <div className="mt-2 text-xs text-amber-100/70">
-            <p>Nascimento: {request.customerBirthDate || 'NÃ£o informado'} â€¢ Signo: {request.customerZodiac || 'NÃ£o informado'}</p>
+            <p>Nascimento: {request.customerBirthDate || 'Não informado'} • Signo: {request.customerZodiac || 'Não informado'}</p>
           </div>
           <div className="mt-4 grid gap-4 border-t border-mystic-gold/20 pt-4">
             {request.entries.map((entry, index) => {
               const questionText =
-                entry.question || entry.text || (entry.fileName ? `Ãudio: ${entry.fileName}` : 'Pergunta nÃ£o informada')
+                entry.question || entry.text || (entry.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada')
               return (
                 <div key={index} className="grid gap-2">
                   <p className="text-sm text-amber-50">
@@ -807,8 +797,8 @@ export function AreaConsultorPage() {
 
   return (
     <PageShell
-      title="Ãrea do Consultor"
-      subtitle="Atendimentos de perguntas, vÃ­deo e carteira do consultor."
+      title="Área do Consultor"
+      subtitle="Atendimentos de perguntas, vídeo e carteira do consultor."
       mobileMenuFooter={<NotificationBadge className="border border-mystic-gold/45 bg-mystic-gold/10 text-mystic-goldSoft shadow-[0_0_20px_rgba(197,160,89,0.18)] hover:bg-mystic-gold/20" />}
     >
       {/* Notification Badge */}
@@ -817,7 +807,7 @@ export function AreaConsultorPage() {
       </div>
 
       {pendingVideoSessions.length > 0 && !isAdmin && (
-        <GlassCard title="Chamadas de VÃ­deo Pendentes" subtitle="Clientes aguardando vocÃª entrar na sala.">
+        <GlassCard title="Chamadas de Vídeo Pendentes" subtitle="Clientes aguardando você entrar na sala.">
           <div className="grid gap-3">
             {pendingVideoSessions.map((session) => (
               <article key={session.id} className="flex items-center justify-between rounded-xl border border-mystic-gold/35 bg-black/30 p-4">
@@ -845,12 +835,12 @@ export function AreaConsultorPage() {
         </GlassCard>
       )}
 
-      {/* Aviso se consultor estÃ¡ pendente */}
+      {/* Aviso se consultor está pendente */}
       {!isAdmin && selectedConsultant && (selectedConsultant.status === 'pending' || selectedConsultant.status === 'Pendente') && (
-        <GlassCard title="Cadastro em AnÃ¡lise" subtitle="Seu cadastro estÃ¡ sendo revisado.">
+        <GlassCard title="Cadastro em Análise" subtitle="Seu cadastro está sendo revisado.">
           <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-center">
-            <p className="mb-3 text-sm text-amber-100">Seu cadastro estÃ¡ pendente de aprovaÃ§Ã£o.</p>
-            <p className="text-xs text-amber-100/70">VocÃª poderÃ¡ responder perguntas e fazer atendimentos assim que seu cadastro for aprovado pela equipe.</p>
+            <p className="mb-3 text-sm text-amber-100">Seu cadastro está pendente de aprovação.</p>
+            <p className="text-xs text-amber-100/70">Você poderá responder perguntas e fazer atendimentos assim que seu cadastro for aprovado pela equipe.</p>
           </div>
         </GlassCard>
       )}
@@ -879,7 +869,7 @@ export function AreaConsultorPage() {
               </span>
             )}
             <span className="text-xs text-ethereal-silver/80">
-              Pendentes: {pendingRequests.length} â€¢ Respondidas: {answeredRequests.length}
+              Pendentes: {pendingRequests.length} • Respondidas: {answeredRequests.length}
             </span>
             <div className="flex items-center gap-3">
               <span className={`text-xs font-bold ${isSelectedConsultantOnline ? 'text-emerald-400' : 'text-ethereal-silver/60'}`}>
@@ -907,7 +897,7 @@ export function AreaConsultorPage() {
             <div className="rounded-lg border border-mystic-gold/25 bg-black/30 p-3">
               {pendingRequests.length > 0 ? (
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-amber-50">VocÃª tem perguntas para responder.</p>
+                  <p className="text-sm text-amber-50">Você tem perguntas para responder.</p>
                   <button
                     onClick={() => {
                       setQuestionInboxModalOpen(true)
@@ -919,7 +909,7 @@ export function AreaConsultorPage() {
                   </button>
                 </div>
               ) : (
-                <p className="text-sm text-ethereal-silver/80">VocÃª nÃ£o possui mensagens pendentes.</p>
+                <p className="text-sm text-ethereal-silver/80">Você não possui mensagens pendentes.</p>
               )}
             </div>
           )}
@@ -927,9 +917,9 @@ export function AreaConsultorPage() {
       )}
 
       {!isAdmin && canAnswerQuestions && (
-        <GlassCard title="Pedidos de Magias" subtitle="Pedidos atribuÃ­dos a vocÃª com status, cliente e repasse lÃ­quido.">
+        <GlassCard title="Pedidos de Magias" subtitle="Pedidos atribuídos a você com status, cliente e repasse líquido.">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <p className="text-xs text-ethereal-silver/70">Compras aprovadas ou pendentes de validaÃ§Ã£o vinculadas ao seu perfil.</p>
+            <p className="text-xs text-ethereal-silver/70">Compras aprovadas ou pendentes de validação vinculadas ao seu perfil.</p>
             <button
               onClick={() => {
                 void loadConsultantSpellOrders()
@@ -949,7 +939,7 @@ export function AreaConsultorPage() {
               </div>
             ) : consultantSpellOrders.length === 0 ? (
               <p className="rounded-lg border border-mystic-gold/20 bg-black/30 p-4 text-sm text-ethereal-silver/70">
-                Nenhum pedido de magia atribuÃ­do a vocÃª atÃ© agora.
+                Nenhum pedido de magia atribuído a você até agora.
               </p>
             ) : (
               consultantSpellOrders.map((order) => (
@@ -960,12 +950,12 @@ export function AreaConsultorPage() {
                         <Sparkles size={15} className="text-mystic-goldSoft" />
                         <p className="text-sm text-amber-50">{order.spellTitle}</p>
                       </div>
-                      <p className="mt-1 text-xs text-amber-100/65">Cliente: {order.userName} â€¢ {order.userEmail}</p>
+                      <p className="mt-1 text-xs text-amber-100/65">Cliente: {order.userName} • {order.userEmail}</p>
                       <p className="mt-1 text-[11px] text-ethereal-silver/55">Pedido criado em {new Date(order.createdAt).toLocaleString('pt-BR')}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-display text-2xl text-mystic-goldSoft">R$ {Number(order.consultantNetValue).toFixed(2)}</p>
-                      <p className="text-[11px] text-ethereal-silver/65">Repasse lÃ­quido</p>
+                      <p className="text-[11px] text-ethereal-silver/65">Repasse líquido</p>
                     </div>
                   </div>
 
@@ -983,7 +973,7 @@ export function AreaConsultorPage() {
                       {order.status}
                     </span>
                     <span className="text-ethereal-silver/60">Valor bruto: R$ {Number(order.price).toFixed(2)}</span>
-                    <span className="text-ethereal-silver/60">ComissÃ£o plataforma: R$ {Number(order.commissionValue).toFixed(2)}</span>
+                    <span className="text-ethereal-silver/60">Comissão plataforma: R$ {Number(order.commissionValue).toFixed(2)}</span>
                   </div>
                 </article>
               ))
@@ -993,7 +983,7 @@ export function AreaConsultorPage() {
       )}
 
       {!isAdmin && canAnswerQuestions && (
-        <GlassCard title="HistÃ³rico de Consulta" subtitle="Revise perguntas, respostas e atendimentos em vÃ­deo por cliente.">
+        <GlassCard title="Histórico de Consulta" subtitle="Revise perguntas, respostas e atendimentos em vídeo por cliente.">
           <div className="mb-4 flex items-center justify-between gap-3">
             <p className="text-xs text-ethereal-silver/70">Os registros ficam agrupados por cliente para facilitar consultas recorrentes e acompanhamento.</p>
             <button
@@ -1003,7 +993,7 @@ export function AreaConsultorPage() {
               disabled={consultationHistoryLoading}
               className="rounded-lg border border-mystic-gold/45 bg-mystic-gold/10 px-3 py-1.5 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/20 disabled:opacity-40"
             >
-              {consultationHistoryLoading ? 'Atualizando...' : 'Atualizar histÃ³rico'}
+              {consultationHistoryLoading ? 'Atualizando...' : 'Atualizar histórico'}
             </button>
           </div>
 
@@ -1011,11 +1001,11 @@ export function AreaConsultorPage() {
             {consultationHistoryLoading && consultationHistoryByCustomer.length === 0 ? (
               <div className="flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/30 p-4 text-sm text-ethereal-silver/70">
                 <Loader2 size={16} className="animate-spin" />
-                Carregando histÃ³rico de consultas...
+                Carregando histórico de consultas...
               </div>
             ) : consultationHistoryByCustomer.length === 0 ? (
               <p className="rounded-lg border border-mystic-gold/20 bg-black/30 p-4 text-sm text-ethereal-silver/70">
-                Nenhum histÃ³rico encontrado para este consultor atÃ© o momento.
+                Nenhum histórico encontrado para este consultor até o momento.
               </p>
             ) : (
               consultationHistoryByCustomer.map((customer) => {
@@ -1027,8 +1017,8 @@ export function AreaConsultorPage() {
                       className="flex w-full flex-wrap items-start justify-between gap-3 text-left"
                     >
                       <div>
-                        <p className="text-sm font-semibold text-amber-50">{customer.customerName || 'Cliente nÃ£o identificado'}</p>
-                        <p className="text-xs text-ethereal-silver/65">{customer.customerEmail || 'E-mail nÃ£o informado'}</p>
+                        <p className="text-sm font-semibold text-amber-50">{customer.customerName || 'Cliente não identificado'}</p>
+                        <p className="text-xs text-ethereal-silver/65">{customer.customerEmail || 'E-mail não informado'}</p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-[11px] text-ethereal-silver/70">
                         <span className="inline-flex items-center gap-1 rounded-full border border-mystic-gold/20 bg-black/30 px-2 py-1">
@@ -1037,11 +1027,11 @@ export function AreaConsultorPage() {
                         </span>
                         <span className="inline-flex items-center gap-1 rounded-full border border-mystic-gold/20 bg-black/30 px-2 py-1">
                           <Video size={12} className="text-mystic-goldSoft" />
-                          {customer.videoSessions.length} vÃ­deo(s)
+                          {customer.videoSessions.length} vídeo(s)
                         </span>
                         <span className="inline-flex items-center gap-1 rounded-full border border-mystic-gold/20 bg-black/30 px-2 py-1">
                           <History size={12} className="text-mystic-goldSoft" />
-                          Ãšltimo registro em {new Date(customer.latestAt).toLocaleDateString('pt-BR')}
+                          Último registro em {new Date(customer.latestAt).toLocaleDateString('pt-BR')}
                         </span>
                       </div>
                     </button>
@@ -1073,10 +1063,10 @@ export function AreaConsultorPage() {
                                     {(request.entries || []).map((entry, index) => (
                                       <div key={`${request.id}-${index}`} className="rounded-lg border border-white/8 bg-white/5 p-3">
                                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mystic-goldSoft">Pergunta {index + 1}</p>
-                                        <p className="mt-1 text-sm text-amber-50">{entry.question || entry.text || 'Pergunta sem descriÃ§Ã£o.'}</p>
+                                        <p className="mt-1 text-sm text-amber-50">{entry.question || entry.text || 'Pergunta sem descrição.'}</p>
                                         <div className="mt-2 rounded-lg border border-emerald-400/15 bg-emerald-500/5 p-3">
                                           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">Resposta</p>
-                                          <p className="mt-1 whitespace-pre-wrap text-sm text-ethereal-silver/80">{entry.answer || 'Resposta ainda nÃ£o registrada.'}</p>
+                                          <p className="mt-1 whitespace-pre-wrap text-sm text-ethereal-silver/80">{entry.answer || 'Resposta ainda não registrada.'}</p>
                                         </div>
                                       </div>
                                     ))}
@@ -1090,18 +1080,18 @@ export function AreaConsultorPage() {
                         <section className="rounded-xl border border-mystic-gold/20 bg-black/30 p-4">
                           <div className="mb-3 flex items-center gap-2">
                             <NotebookPen size={16} className="text-mystic-goldSoft" />
-                            <h4 className="text-sm font-semibold text-amber-50">Consultas em VÃ­deo</h4>
+                            <h4 className="text-sm font-semibold text-amber-50">Consultas em Vídeo</h4>
                           </div>
                           <div className="grid gap-3">
                             {customer.videoSessions.length === 0 ? (
-                              <p className="text-sm text-ethereal-silver/65">Nenhuma consulta em vÃ­deo registrada para este cliente.</p>
+                              <p className="text-sm text-ethereal-silver/65">Nenhuma consulta em vídeo registrada para este cliente.</p>
                             ) : (
                               customer.videoSessions.map((session) => (
                                 <article key={session.id} className="rounded-xl border border-mystic-gold/15 bg-black/35 p-3">
                                   <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
                                       <p className="text-sm text-amber-50">Consulta finalizada em {new Date(session.finishedAt || session.startedAt || session.createdAt).toLocaleString('pt-BR')}</p>
-                                      <p className="mt-1 text-xs text-ethereal-silver/65">DuraÃ§Ã£o: {formatDurationLabel(session.durationSeconds)} â€¢ Repasse: R$ {Number(session.consultantEarnings || 0).toFixed(2)}</p>
+                                      <p className="mt-1 text-xs text-ethereal-silver/65">Duração: {formatDurationLabel(session.durationSeconds)} • Repasse: R$ {Number(session.consultantEarnings || 0).toFixed(2)}</p>
                                     </div>
                                     <span className="rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] uppercase tracking-wide text-emerald-300">
                                       {session.status}
@@ -1109,13 +1099,13 @@ export function AreaConsultorPage() {
                                   </div>
 
                                   <label className="mt-3 grid gap-2 text-xs text-amber-100/75">
-                                    ObservaÃ§Ãµes do consultor
+                                    Observações do consultor
                                     <textarea
                                       rows={3}
                                       value={videoNotesDrafts[session.id] ?? ''}
                                       onChange={(event) => setVideoNotesDrafts((prev) => ({ ...prev, [session.id]: event.target.value }))}
                                       className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                                      placeholder="Escreva observaÃ§Ãµes internas sobre este atendimento."
+                                      placeholder="Escreva observações internas sobre este atendimento."
                                     />
                                   </label>
 
@@ -1126,7 +1116,7 @@ export function AreaConsultorPage() {
                                       }}
                                       className="rounded-lg bg-mystic-gold/90 px-4 py-2 text-xs font-bold text-black transition hover:brightness-110"
                                     >
-                                      Salvar observaÃ§Ã£o
+                                      Salvar observação
                                     </button>
                                   </div>
                                 </article>
@@ -1149,8 +1139,8 @@ export function AreaConsultorPage() {
           <div className="mb-3 flex items-start gap-3">
             <BellRing size={18} className="text-mystic-goldSoft" />
             <div>
-              <p className="text-sm font-semibold text-amber-50">VocÃª tem perguntas para responder</p>
-              <p className="text-xs text-amber-100/70">HÃ¡ {pendingRequests.length} solicitaÃ§Ã£o(Ãµes) pendente(s).</p>
+              <p className="text-sm font-semibold text-amber-50">Você tem perguntas para responder</p>
+              <p className="text-xs text-amber-100/70">Há {pendingRequests.length} solicitação(ões) pendente(s).</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -1192,12 +1182,12 @@ export function AreaConsultorPage() {
 
       {/* Editar Meu Perfil - Oculto se consultor pendente */}
       {(isAdmin || !selectedConsultant || (selectedConsultant.status !== 'pending' && selectedConsultant.status !== 'Pendente')) && (
-        <GlassCard title="Editar Meu Perfil" subtitle="Atualize dados pÃºblicos e preÃ§os do seu atendimento.">
+        <GlassCard title="Editar Meu Perfil" subtitle="Atualize dados públicos e preços do seu atendimento.">
         {profileDraft && (
           <div className="grid gap-3 md:grid-cols-2">
             <label className="grid gap-1 text-xs text-amber-100/75 md:col-span-2">
               Imagem de perfil
-              <span className="text-[11px] text-ethereal-silver/65">Envie uma imagem do seu dispositivo para atualizar o card pÃºblico.</span>
+              <span className="text-[11px] text-ethereal-silver/65">Envie uma imagem do seu dispositivo para atualizar o card público.</span>
               <input
                 type="file"
                 accept="image/*"
@@ -1207,14 +1197,14 @@ export function AreaConsultorPage() {
               <div className="mt-1 flex items-center gap-3 rounded-lg border border-mystic-gold/20 bg-black/30 p-2">
                 <img
                   src={profileDraft.photo || selectedConsultant?.photo}
-                  alt="PrÃ©via da foto do perfil"
+                  alt="Prévia da foto do perfil"
                   className="h-14 w-14 rounded-full border border-mystic-gold/55 object-cover"
                 />
-                <p className="text-[11px] text-ethereal-silver/70">PrÃ©via da imagem exibida para clientes.</p>
+                <p className="text-[11px] text-ethereal-silver/70">Prévia da imagem exibida para clientes.</p>
               </div>
             </label>
             <label className="grid gap-1 text-xs text-amber-100/75">
-              Nome pÃºblico
+              Nome público
               <span className="text-[11px] text-ethereal-silver/65">Nome exibido para os clientes no card e perfil.</span>
               <input
                 value={profileDraft.name}
@@ -1225,7 +1215,7 @@ export function AreaConsultorPage() {
             </label>
             <label className="grid gap-1 text-xs text-amber-100/75">
               E-mail de contato
-              <span className="text-[11px] text-ethereal-silver/65">Usado para identificaÃ§Ã£o administrativa do consultor.</span>
+              <span className="text-[11px] text-ethereal-silver/65">Usado para identificação administrativa do consultor.</span>
               <input
                 value={profileDraft.email}
                 onChange={(event) => setProfileDraft((prev) => ({ ...prev, email: event.target.value }))}
@@ -1244,19 +1234,19 @@ export function AreaConsultorPage() {
               />
             </label>
             <label className="grid gap-1 text-xs text-amber-100/75 md:col-span-2">
-              DescriÃ§Ã£o completa
+              Descrição completa
               <span className="text-[11px] text-ethereal-silver/65">Explique sua abordagem, especialidades e diferenciais.</span>
               <textarea
                 rows={3}
                 value={profileDraft.description}
                 onChange={(event) => setProfileDraft((prev) => ({ ...prev, description: event.target.value }))}
                 className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                placeholder="DescriÃ§Ã£o"
+                placeholder="Descrição"
               />
             </label>
             <label className="grid gap-1 text-xs text-amber-100/75">
-              PreÃ§o por minuto (R$)
-              <span className="text-[11px] text-ethereal-silver/65">Valor cobrado no atendimento por vÃ­deo.</span>
+              Preço por minuto (R$)
+              <span className="text-[11px] text-ethereal-silver/65">Valor cobrado no atendimento por vídeo.</span>
               <input
                 type="text"
                 value={profileDraft.pricePerMinute}
@@ -1301,10 +1291,10 @@ export function AreaConsultorPage() {
         </GlassCard>
       )}
 
-      <GlassCard title="Carteira do Consultor" subtitle="Controle de ganhos, PIX e solicitaÃ§Ã£o de saque.">
+      <GlassCard title="Carteira do Consultor" subtitle="Controle de ganhos, PIX e solicitação de saque.">
         <div className="grid gap-4 md:grid-cols-2">
           <article className="rounded-xl border border-mystic-gold/30 bg-black/30 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-ethereal-silver/70">Saldo disponÃ­vel</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-ethereal-silver/70">Saldo disponível</p>
             <p className="mt-2 font-display text-3xl text-mystic-goldSoft">
               R$ {wallet.availableBalance.toFixed(2)}
             </p>
@@ -1327,18 +1317,18 @@ export function AreaConsultorPage() {
             <input
               value={pixBeneficiaryDraft}
               onChange={(event) => setPixBeneficiaryDraft(event.target.value)}
-              placeholder={wallet.pixBeneficiaryName ? `BeneficiÃ¡rio atual: ${wallet.pixBeneficiaryName}` : 'Nome do beneficiÃ¡rio'}
+              placeholder={wallet.pixBeneficiaryName ? `Beneficiário atual: ${wallet.pixBeneficiaryName}` : 'Nome do beneficiário'}
               className="mt-2 w-full rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
             />
             <button
               onClick={handleSavePix}
               className="mt-2 rounded-lg border border-mystic-gold/60 px-3 py-2 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/10"
             >
-              Salvar chave Pix e beneficiÃ¡rio
+              Salvar chave Pix e beneficiário
             </button>
             {(wallet.pixKey || wallet.pixBeneficiaryName) && (
               <p className="mt-2 text-[11px] text-amber-100/60">
-                Chave atual: {wallet.pixKey || 'nÃ£o informada'} | BeneficiÃ¡rio: {wallet.pixBeneficiaryName || 'nÃ£o informado'}
+                Chave atual: {wallet.pixKey || 'não informada'} | Beneficiário: {wallet.pixBeneficiaryName || 'não informado'}
               </p>
             )}
           </div>
@@ -1351,7 +1341,7 @@ export function AreaConsultorPage() {
               step="0.5"
               value={withdrawAmount}
               onChange={(event) => setWithdrawAmount(event.target.value)}
-              placeholder={`MÃ­nimo R$ ${minWithdrawalAmount.toFixed(2)}`}
+              placeholder={`Mínimo R$ ${minWithdrawalAmount.toFixed(2)}`}
               className="mt-2 w-full rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
             />
             <button
@@ -1376,7 +1366,7 @@ export function AreaConsultorPage() {
               }`}
             >
               {filter === 'total' && 'Total'}
-              {filter === 'daily' && 'DiÃ¡rio'}
+              {filter === 'daily' && 'Diário'}
               {filter === 'weekly' && 'Semanal'}
               {filter === 'monthly' && 'Mensal'}
             </button>
@@ -1389,9 +1379,9 @@ export function AreaConsultorPage() {
           </p>
         )}
 
-        {/* Separador e Extrato de MovimentaÃ§Ãµes */}
+        {/* Separador e Extrato de Movimentações */}
         <div className="mt-8 border-t border-mystic-gold/20 pt-6">
-          <h3 className="mb-4 font-display text-lg text-mystic-goldSoft">Extrato de MovimentaÃ§Ãµes</h3>
+          <h3 className="mb-4 font-display text-lg text-mystic-goldSoft">Extrato de Movimentações</h3>
           {userConsultantProfile && (
             <WalletStatement
               consultantId={userConsultantProfile.id}
@@ -1400,10 +1390,10 @@ export function AreaConsultorPage() {
           )}
         </div>
 
-        {/* BotÃ£o Instalar App */}
+        {/* Botão Instalar App */}
         <div className="mt-6 rounded-lg border border-mystic-gold/30 bg-black/30 p-4 text-center">
           <p className="mb-3 text-sm text-amber-100/80">
-            Para melhor receber notificaÃ§Ãµes de novas chamadas instale nosso aplicativo.
+            Para melhor receber notificações de novas chamadas instale nosso aplicativo.
           </p>
           <button
             onClick={() => setConfirmResponseModal({ isInstallPrompt: true })}
@@ -1415,7 +1405,7 @@ export function AreaConsultorPage() {
 
       </GlassCard>
 
-      {/* Modal ConfirmaÃ§Ã£o Resposta */}
+      {/* Modal Confirmação Resposta */}
       {confirmResponseModal && !confirmResponseModal.isInstallPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
@@ -1423,7 +1413,7 @@ export function AreaConsultorPage() {
             <div className="mb-6 grid gap-3 rounded-lg border border-mystic-gold/30 bg-black/30 p-4">
               {confirmResponseModal.request?.entries.map((entry, index) => {
                 const questionText =
-                  entry.question || entry.text || (entry.fileName ? `Ãudio: ${entry.fileName}` : 'Pergunta nÃ£o informada')
+                  entry.question || entry.text || (entry.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada')
                 const answerText = (confirmResponseModal.drafts[index] ?? '').trim()
                 return (
                   <div key={index} className="border-b border-mystic-gold/20 pb-3 last:border-b-0">
@@ -1467,13 +1457,13 @@ export function AreaConsultorPage() {
               Instalar Aplicativo
             </h3>
             <p className="mb-6 text-center text-sm text-amber-100/80">
-              Escolha o seu dispositivo para instalar e receber notificaÃ§Ãµes em tempo real:
+              Escolha o seu dispositivo para instalar e receber notificações em tempo real:
             </p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
                   if (/iPhone|iPad|iOS/.test(navigator.userAgent)) {
-                    setPanelNotice('No iPhone/iPad, use Compartilhar > Adicionar Ã  Tela de InÃ­cio para instalar o app.')
+                    setPanelNotice('No iPhone/iPad, use Compartilhar > Adicionar à Tela de Início para instalar o app.')
                     setConfirmResponseModal(null)
                     return
                   }
@@ -1482,17 +1472,17 @@ export function AreaConsultorPage() {
                 }}
                 className="rounded-lg bg-blue-600/90 py-3 font-bold text-white transition hover:bg-blue-500"
               >
-                ðŸ“± Instalar PWA
+                📱 Instalar PWA
               </button>
               <button
                 onClick={() => {
-                  setPanelNotice('Se a instalaÃ§Ã£o nÃ£o abrir automaticamente, use o menu do navegador e escolha Instalar aplicativo.')
+                  setPanelNotice('Se a instalação não abrir automaticamente, use o menu do navegador e escolha Instalar aplicativo.')
                   void handleInstallPwa()
                 }}
                 className="rounded-lg bg-green-600/90 py-3 font-bold text-white transition hover:bg-green-500"
                 disabled={!pwaInstallAvailable}
               >
-                ðŸ¤– Android / Desktop
+                🤖 Android / Desktop
               </button>
               <button
                 onClick={() => setConfirmResponseModal(null)}
@@ -1515,7 +1505,7 @@ export function AreaConsultorPage() {
               Recusar chamada?
             </h3>
             <p className="mb-6 text-center text-amber-100/80">
-              Tem certeza que deseja recusar a chamada de <strong>{rejectModal.userName}</strong>? O cliente serÃ¡ notificado.
+              Tem certeza que deseja recusar a chamada de <strong>{rejectModal.userName}</strong>? O cliente será notificado.
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -1543,10 +1533,10 @@ export function AreaConsultorPage() {
               Cadastro Pendente
             </h3>
             <p className="mb-6 text-center text-sm text-amber-100/80">
-              Seu cadastro estÃ¡ pendente de aprovaÃ§Ã£o pela equipe.
+              Seu cadastro está pendente de aprovação pela equipe.
             </p>
             <p className="mb-6 text-center text-xs text-amber-100/70">
-              VocÃª poderÃ¡ fazer atendimentos assim que seu cadastro for analisado e aprovado.
+              Você poderá fazer atendimentos assim que seu cadastro for analisado e aprovado.
             </p>
             <button
               onClick={() => setPendingStatusModal(false)}
@@ -1560,4 +1550,3 @@ export function AreaConsultorPage() {
     </PageShell>
   )
 }
-

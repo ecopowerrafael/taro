@@ -1,4 +1,4 @@
-﻿import { Router } from 'express'
+import { Router } from 'express'
 import { authenticate } from '../middleware/auth.mjs'
 import nodemailer from 'nodemailer'
 import crypto from 'crypto'
@@ -55,27 +55,27 @@ export const createVideoSessionsRouter = (pool) => {
     const userId = request.user.id
 
     if (!consultantId) {
-      return response.status(400).json({ message: 'Consultor nÃ£o especificado.' })
+      return response.status(400).json({ message: 'Consultor não especificado.' })
     }
 
     try {
-      // Obter informaÃ§Ãµes do usuÃ¡rio
+      // Obter informações do usuário
       const [users] = await pool.query('SELECT id, name, email FROM users WHERE id = ?', [userId])
       if (users.length === 0) {
-        return response.status(404).json({ message: 'UsuÃ¡rio nÃ£o encontrado.' })
+        return response.status(404).json({ message: 'Usuário não encontrado.' })
       }
       const user = users[0]
 
-      // Obter informaÃ§Ãµes do consultor (incluindo userId para push/webpush)
+      // Obter informações do consultor (incluindo userId para push/webpush)
       const [consultants] = await pool.query('SELECT id, name, email, userId, status FROM consultants WHERE id = ?', [consultantId])
       if (consultants.length === 0) {
-        return response.status(404).json({ message: 'Consultor nÃ£o encontrado.' })
+        return response.status(404).json({ message: 'Consultor não encontrado.' })
       }
       const consultant = consultants[0]
 
       if (consultant.status !== 'Online') {
         return response.status(409).json({
-          message: 'Este consultor nÃ£o estÃ¡ online no momento. Escolha um consultor online para iniciar a chamada ao vivo.',
+          message: 'Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.',
         })
       }
 
@@ -91,11 +91,11 @@ export const createVideoSessionsRouter = (pool) => {
       const [creds] = await pool.query('SELECT dailyApiKey, dailyDomain, smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom FROM platform_credentials WHERE id = 1')
       const credentials = creds[0] || {}
 
-      // Gerar um ID de sala Ãºnico
+      // Gerar um ID de sala único
       const roomId = `room_${crypto.randomBytes(8).toString('hex')}`
       let roomUrl = ''
 
-      // Se tivermos a API do Daily, podemos criar a sala via API. Caso contrÃ¡rio, montamos a URL se for demo
+      // Se tivermos a API do Daily, podemos criar a sala via API. Caso contrário, montamos a URL se for demo
       let apiKey = credentials.dailyApiKey
       if (apiKey) {
         apiKey = apiKey.trim()
@@ -125,13 +125,13 @@ export const createVideoSessionsRouter = (pool) => {
           if (dailyRes.ok) {
             const dailyData = await dailyRes.json()
             roomUrl = dailyData.url
-            console.log('[videoSessions POST] âœ“ Room criada com sucesso. URL:', roomUrl)
+            console.log('[videoSessions POST] ✓ Room criada com sucesso. URL:', roomUrl)
           } else {
             try {
               const errorData = await dailyRes.json()
-              console.error('[videoSessions POST] âœ— Erro ao criar room:', errorData)
+              console.error('[videoSessions POST] ✗ Erro ao criar room:', errorData)
             } catch (e) {
-              console.error('[videoSessions POST] âœ— Erro ao criar room (nÃ£o-JSON):', dailyRes.status, dailyRes.statusText)
+              console.error('[videoSessions POST] ✗ Erro ao criar room (não-JSON):', dailyRes.status, dailyRes.statusText)
             }
             roomUrl = `https://${credentials.dailyDomain}/${roomId}`
           }
@@ -145,7 +145,7 @@ export const createVideoSessionsRouter = (pool) => {
         console.log('[videoSessions POST] Usando fallback URL:', roomUrl)
       }
 
-      // Salvar a sessÃ£o no banco
+      // Salvar a sessão no banco
       const sessionId = `vs_${crypto.randomBytes(8).toString('hex')}`
       await pool.query(`
         INSERT INTO video_sessions (id, userId, consultantId, status, roomUrl, createdAt)
@@ -167,25 +167,25 @@ export const createVideoSessionsRouter = (pool) => {
         const from = credentials.smtpFrom || credentials.smtpUser
         const link = `https://appastria.online/sala/${sessionId}`
 
-        // Email para o usuÃ¡rio
+        // Email para o usuário
         transporter.sendMail({
           from: `"Astria Tarot" <${from}>`,
           to: user.email,
           subject: 'Sua Consulta de Tarot foi Iniciada',
-          html: `<p>OlÃ¡ ${user.name},</p>
-                 <p>Sua sala de vÃ­deo com o consultor <b>${consultant.name}</b> foi criada com sucesso.</p>
+          html: `<p>Olá ${user.name},</p>
+                 <p>Sua sala de vídeo com o consultor <b>${consultant.name}</b> foi criada com sucesso.</p>
                  <p>Acesse o link abaixo para entrar na sala:</p>
                  <a href="${link}">${link}</a>
                  <p>Aguarde o consultor entrar na sala.</p>`
-        }).catch(e => console.error('Erro ao enviar email para usuÃ¡rio:', e))
+        }).catch(e => console.error('Erro ao enviar email para usuário:', e))
 
         // Email para o consultor
         transporter.sendMail({
           from: `"Astria Tarot" <${from}>`,
           to: consultant.email,
-          subject: 'Novo Atendimento por VÃ­deo Solicitado',
-          html: `<p>OlÃ¡ ${consultant.name},</p>
-                 <p>O cliente <b>${user.name}</b> acabou de solicitar uma consulta de vÃ­deo.</p>
+          subject: 'Novo Atendimento por Vídeo Solicitado',
+          html: `<p>Olá ${consultant.name},</p>
+                 <p>O cliente <b>${user.name}</b> acabou de solicitar uma consulta de vídeo.</p>
                  <p>Acesse o link abaixo para entrar na sala e iniciar o atendimento:</p>
                  <a href="${link}">${link}</a>`
         }).catch(e => console.error('Erro ao enviar email para consultor:', e))
@@ -213,8 +213,8 @@ export const createVideoSessionsRouter = (pool) => {
       
       if ((webpush || firebaseAdmin) && consultantUserId) {
         const payload = {
-          title: 'Nova Chamada de VÃ­deo',
-          body: `O cliente ${user.name} estÃ¡ aguardando na sala!`,
+          title: 'Nova Chamada de Vídeo',
+          body: `O cliente ${user.name} está aguardando na sala!`,
           url: `https://appastria.online/area-consultor?tab=video&sessionId=${sessionId}`,
           nativeRoute: `/area-consultor?tab=video&sessionId=${sessionId}`,
           type: 'incoming_call',
@@ -224,7 +224,7 @@ export const createVideoSessionsRouter = (pool) => {
           consultantId,
         }
 
-        console.log('[videoSessions POST] âœ“ Enviando push FCM...', { userIds: [consultantUserId] })
+        console.log('[videoSessions POST] ✓ Enviando push FCM...', { userIds: [consultantUserId] })
         
         const pushResult = await sendPushToUsers({
           pool,
@@ -241,14 +241,14 @@ export const createVideoSessionsRouter = (pool) => {
         })
 
         if (!pushResult.totalSubscriptions) {
-          console.warn('[videoSessions POST] âš ï¸ Nenhuma subscription ativa para consultor', {
+          console.warn('[videoSessions POST] ⚠️ Nenhuma subscription ativa para consultor', {
             consultantId,
             consultantEmail: consultant.email,
             consultantUserId,
           })
         }
       } else {
-        console.error('[videoSessions POST] âŒ PUSH NÃƒO ENVIADO!', {
+        console.error('[videoSessions POST] ❌ PUSH NÃO ENVIADO!', {
           webpushAvailable: Boolean(webpush),
           firebaseAdminAvailable: Boolean(firebaseAdmin),
           hasConsultantUserId: Boolean(consultantUserId),
@@ -261,17 +261,17 @@ export const createVideoSessionsRouter = (pool) => {
       response.status(201).json({ sessionId, roomUrl })
 
     } catch (error) {
-      console.error('Erro ao criar sessÃ£o de vÃ­deo:', error)
+      console.error('Erro ao criar sessão de vídeo:', error)
       response.status(500).json({ message: 'Erro interno ao criar sala.' })
     }
   })
 
-  // Buscar sessÃµes de vÃ­deo pendentes para um consultor
+  // Buscar sessões de vídeo pendentes para um consultor
   router.get('/pending', async (request, response) => {
     const userId = request.user.id
     const userEmail = request.user.email
     try {
-      // Pega o ID de consultor do usuÃ¡rio logado (com fallback por email para contas legadas).
+      // Pega o ID de consultor do usuário logado (com fallback por email para contas legadas).
       const [cRows] = await pool.query(
         'SELECT id FROM consultants WHERE userId = ? OR email = ? ORDER BY userId = ? DESC LIMIT 1',
         [userId, userEmail || '', userId],
@@ -290,7 +290,7 @@ export const createVideoSessionsRouter = (pool) => {
 
       response.json(sessions)
     } catch (error) {
-      console.error('Erro ao buscar sessÃµes pendentes:', error)
+      console.error('Erro ao buscar sessões pendentes:', error)
       response.status(500).json({ message: 'Erro interno' })
     }
   })
@@ -345,8 +345,8 @@ export const createVideoSessionsRouter = (pool) => {
         })),
       )
     } catch (error) {
-      console.error('Erro ao buscar histÃ³rico de vÃ­deo:', error)
-      response.status(500).json({ message: 'Erro ao carregar histÃ³rico de vÃ­deo.' })
+      console.error('Erro ao buscar histórico de vídeo:', error)
+      response.status(500).json({ message: 'Erro ao carregar histórico de vídeo.' })
     }
   })
 
@@ -365,7 +365,7 @@ export const createVideoSessionsRouter = (pool) => {
       })
 
       if (!session) {
-        return response.status(404).json({ message: 'SessÃ£o nÃ£o encontrada.' })
+        return response.status(404).json({ message: 'Sessão não encontrada.' })
       }
 
       if (!isCustomer && !isConsultant) {
@@ -379,7 +379,7 @@ export const createVideoSessionsRouter = (pool) => {
       const [creds] = await pool.query('SELECT dailyApiKey FROM platform_credentials WHERE id = 1')
       let apiKey = creds[0]?.dailyApiKey
 
-      // Remove eventuais espaÃ§os ou aspas da apiKey
+      // Remove eventuais espaços ou aspas da apiKey
       if (apiKey) {
         apiKey = apiKey.trim()
       }
@@ -387,12 +387,12 @@ export const createVideoSessionsRouter = (pool) => {
       if (apiKey) {
         try {
           const roomName = session.roomUrl.split('/').pop()
-          console.log('[videoSessions GET /:sessionId] â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•')
+          console.log('[videoSessions GET /:sessionId] ═══════════════════════════════════════')
           console.log('[videoSessions GET /:sessionId] Gerando token Daily.co')
           console.log('[videoSessions GET /:sessionId] roomName:', roomName)
           console.log('[videoSessions GET /:sessionId] isConsultant:', isConsultant)
           console.log('[videoSessions GET /:sessionId] user_name:', isConsultant ? session.consultantName : session.userName)
-          console.log('[videoSessions GET /:sessionId] â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•')
+          console.log('[videoSessions GET /:sessionId] ═══════════════════════════════════════')
           
           const tokenRes = await fetch('https://api.daily.co/v1/meeting-tokens', {
             method: 'POST',
@@ -413,30 +413,30 @@ export const createVideoSessionsRouter = (pool) => {
           if (tokenRes.ok) {
             const tokenData = await tokenRes.json()
             dailyToken = tokenData.token
-            console.log('[videoSessions GET /:sessionId] âœ“ Token gerado com sucesso')
+            console.log('[videoSessions GET /:sessionId] ✓ Token gerado com sucesso')
             console.log('[videoSessions GET /:sessionId] Token length:', tokenData.token?.length)
           } else {
             try {
               const errorData = await tokenRes.json()
-              console.error('[videoSessions GET /:sessionId] âœ— Erro ao gerar token:', errorData)
+              console.error('[videoSessions GET /:sessionId] ✗ Erro ao gerar token:', errorData)
             } catch (e) {
-              console.error('[videoSessions GET /:sessionId] âœ— Erro ao gerar token (nÃ£o-JSON):', tokenRes.status, tokenRes.statusText)
+              console.error('[videoSessions GET /:sessionId] ✗ Erro ao gerar token (não-JSON):', tokenRes.status, tokenRes.statusText)
             }
           }
         } catch (e) {
-          console.error('[videoSessions GET /:sessionId] âœ— Exception ao gerar token:', e.message)
+          console.error('[videoSessions GET /:sessionId] ✗ Exception ao gerar token:', e.message)
         }
       } else {
-        console.warn('[videoSessions GET /:sessionId] âš ï¸  apiKey vazia - dailyToken serÃ¡ null')
+        console.warn('[videoSessions GET /:sessionId] ⚠️  apiKey vazia - dailyToken será null')
       }
       
-      console.log('[videoSessions GET /:sessionId] â•â•â•â•â• RESPOSTA FINAL â•â•â•â•â•')
+      console.log('[videoSessions GET /:sessionId] ═════ RESPOSTA FINAL ═════')
       console.log('[videoSessions GET /:sessionId] roomUrl:', session.roomUrl)
       console.log('[videoSessions GET /:sessionId] status:', session.status)
-      console.log('[videoSessions GET /:sessionId] dailyToken prÃ©sent:', !!dailyToken)
+      console.log('[videoSessions GET /:sessionId] dailyToken présent:', !!dailyToken)
       console.log('[videoSessions GET /:sessionId] isConsultant:', isConsultant)
       console.log('[videoSessions GET /:sessionId] pricePerMinute:', session.pricePerMinute)
-      console.log('[videoSessions GET /:sessionId] â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•')
+      console.log('[videoSessions GET /:sessionId] ═════════════════════════')
       response.status(200).json({
         status: session.status,
         roomUrl: session.roomUrl,
@@ -450,12 +450,12 @@ export const createVideoSessionsRouter = (pool) => {
         presenceMembers: presence.members,
       })
     } catch (error) {
-      console.error('Erro ao buscar sessÃ£o:', error)
+      console.error('Erro ao buscar sessão:', error)
       response.status(500).json({ message: 'Erro ao carregar dados da sala.' })
     }
   })
 
-  // Atualizar status (quando ambos entram e o vÃ­deo inicia)
+  // Atualizar status (quando ambos entram e o vídeo inicia)
   router.patch('/:sessionId/status', async (request, response) => {
     const { sessionId } = request.params
     const { status, confirmStart } = request.body
@@ -463,7 +463,7 @@ export const createVideoSessionsRouter = (pool) => {
     const userEmail = request.user.email
 
     if (!['active', 'finished', 'cancelled', 'rejected'].includes(status)) {
-      return response.status(400).json({ message: 'Status invÃ¡lido.' })
+      return response.status(400).json({ message: 'Status inválido.' })
     }
 
     try {
@@ -475,7 +475,7 @@ export const createVideoSessionsRouter = (pool) => {
       })
 
       if (!session) {
-        return response.status(404).json({ message: 'SessÃ£o nÃ£o encontrada.' })
+        return response.status(404).json({ message: 'Sessão não encontrada.' })
       }
 
       if (!isCustomer && !isConsultant) {
@@ -485,7 +485,7 @@ export const createVideoSessionsRouter = (pool) => {
       if (status === 'active') {
         if (confirmStart) {
           if (session.status !== 'active') {
-            return response.status(409).json({ message: 'A sessÃ£o ainda nÃ£o foi liberada para conexÃ£o.', currentStatus: session.status })
+            return response.status(409).json({ message: 'A sessão ainda não foi liberada para conexão.', currentStatus: session.status })
           }
 
           if (session.startedAt) {
@@ -501,13 +501,13 @@ export const createVideoSessionsRouter = (pool) => {
         }
 
         if (session.status !== 'waiting') {
-          return response.status(409).json({ message: 'A sessÃ£o nÃ£o estÃ¡ mais aguardando atendimento.', currentStatus: session.status })
+          return response.status(409).json({ message: 'A sessão não está mais aguardando atendimento.', currentStatus: session.status })
         }
 
         const presence = getSessionPresenceSnapshot(request, sessionId)
         if (!presence.customerOnline) {
           return response.status(409).json({
-            message: 'O cliente nÃ£o estÃ¡ online nesta sala ou jÃ¡ cancelou a chamada.',
+            message: 'O cliente não está online nesta sala ou já cancelou a chamada.',
             currentStatus: session.status,
             customerOnline: false,
           })
@@ -518,19 +518,39 @@ export const createVideoSessionsRouter = (pool) => {
       }
 
       if ((status === 'cancelled' || status === 'rejected') && session.status !== 'waiting') {
-        return response.status(409).json({ message: 'A sessÃ£o jÃ¡ foi iniciada ou encerrada.', currentStatus: session.status })
+        return response.status(409).json({ message: 'A sessão já foi iniciada ou encerrada.', currentStatus: session.status })
       }
 
       const timeField = status === 'active' ? 'startedAt' : 'finishedAt'
       await pool.query(`UPDATE video_sessions SET status = ?, ${timeField} = NOW() WHERE id = ?`, [status, sessionId])
+
+      if (status === 'cancelled' || status === 'rejected') {
+        const firebaseAdmin = request.app.get('firebaseAdmin')
+        if (firebaseAdmin && session.consultantUserId) {
+          import('../push.mjs')
+            .then(({ sendPushToUsers }) => {
+              return sendPushToUsers({
+                pool,
+                firebaseAdmin,
+                userIds: [session.consultantUserId],
+                payload: {
+                  type: 'cancel_call',
+                  sessionId,
+                },
+              })
+            })
+            .catch(err => console.error('[videoSessions] Erro ao enviar cancel_call push:', err))
+        }
+      }
+
       response.json({ ok: true })
     } catch (error) {
-      console.error('Erro ao atualizar status da sessÃ£o:', error)
-      response.status(500).json({ message: 'Erro ao atualizar status da sessÃ£o.' })
+      console.error('Erro ao atualizar status da sessão:', error)
+      response.status(500).json({ message: 'Erro ao atualizar status da sessão.' })
     }
   })
 
-  // Rota para finalizar sessÃ£o com duraÃ§Ã£o e compensaÃ§Ã£o ao consultor
+  // Rota para finalizar sessão com duração e compensação ao consultor
   router.patch('/:sessionId/finish', async (request, response) => {
     const { sessionId } = request.params
     const { durationSeconds } = request.body
@@ -541,7 +561,7 @@ export const createVideoSessionsRouter = (pool) => {
     try {
       await connection.beginTransaction()
 
-      // Obter dados da sessÃ£o
+      // Obter dados da sessão
       const [sessions] = await connection.query(
         `SELECT vs.id, vs.userId, vs.consultantId, vs.status, vs.roomUrl, vs.createdAt, vs.startedAt, vs.finishedAt, vs.durationSeconds, vs.consultantEarnings FROM video_sessions vs WHERE vs.id = ? FOR UPDATE`,
         [sessionId]
@@ -549,17 +569,17 @@ export const createVideoSessionsRouter = (pool) => {
 
       if (!sessions.length) {
         await connection.rollback()
-        return response.status(404).json({ message: 'SessÃ£o nÃ£o encontrada.' })
+        return response.status(404).json({ message: 'Sessão não encontrada.' })
       }
 
       const session = sessions[0]
 
       if (!session.startedAt || session.status !== 'active') {
         await connection.rollback()
-        return response.status(409).json({ message: 'A chamada nÃ£o foi efetivamente iniciada. Nada a cobrar.' })
+        return response.status(409).json({ message: 'A chamada não foi efetivamente iniciada. Nada a cobrar.' })
       }
 
-      // IdempotÃªncia: evita dÃ©bito/crÃ©dito duplicado quando os dois lados encerram quase juntos.
+      // Idempotência: evita débito/crédito duplicado quando os dois lados encerram quase juntos.
       if (session.status === 'finished') {
         const [userRows] = await connection.query(
           'SELECT minutesBalance FROM users WHERE id = ?',
@@ -568,7 +588,7 @@ export const createVideoSessionsRouter = (pool) => {
         const existingUserBalance = userRows.length > 0 ? Number(userRows[0].minutesBalance) || 0 : 0
 
         await connection.rollback()
-        console.log('[videoSessions /finish] SessÃ£o jÃ¡ finalizada anteriormente. Ignorando reprocessamento:', sessionId)
+        console.log('[videoSessions /finish] Sessão já finalizada anteriormente. Ignorando reprocessamento:', sessionId)
         return response.json({
           ok: true,
           alreadyFinished: true,
@@ -589,16 +609,16 @@ export const createVideoSessionsRouter = (pool) => {
       const derivedDuration = startedAtMs ? Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000)) : 0
       const duration = startedAtMs ? derivedDuration : providedDuration
 
-      // CÃ¡lculo autoritativo do backend: nÃ£o confiar em consumo/ganho enviados pelo frontend.
+      // Cálculo autoritativo do backend: não confiar em consumo/ganho enviados pelo frontend.
       const grossConsumption = roundCurrency((duration / 60) * pricePerMinute)
 
-      // Atualizar sessÃ£o com duraÃ§Ã£o e ganho
+      // Atualizar sessão com duração e ganho
       await connection.query(
         `UPDATE video_sessions SET status = 'finished', finishedAt = NOW(), durationSeconds = ?, consultantEarnings = ? WHERE id = ?`,
         [duration, grossConsumption, sessionId]
       )
 
-      // DÃ‰BITO DO USUÃRIO (consumo total da sessÃ£o - aquilo que vai sair da carteira)
+      // DÉBITO DO USUÁRIO (consumo total da sessão - aquilo que vai sair da carteira)
       console.log('[videoSessions /finish] Debitando usuario. userId:', session.userId, 'grossConsumption:', grossConsumption)
       
       // Verificar saldo antes de debitar
@@ -612,7 +632,7 @@ export const createVideoSessionsRouter = (pool) => {
         const effectiveConsumption = Math.min(currentBalance, grossConsumption)
         const newBalance = roundCurrency(currentBalance - effectiveConsumption)
         
-        // Debitar do usuÃ¡rio
+        // Debitar do usuário
         await connection.query(
           'UPDATE users SET minutesBalance = ? WHERE id = ?',
           [newBalance, session.userId]
@@ -620,11 +640,11 @@ export const createVideoSessionsRouter = (pool) => {
         
         console.log('[videoSessions /finish] Usuario debitado. Saldo anterior: R$', currentBalance.toFixed(2), ' Novo saldo: R$', newBalance.toFixed(2), ' Consumo efetivo: R$', effectiveConsumption.toFixed(2))
 
-        // Ganho bruto da sessÃ£o passa a ser exatamente o valor efetivamente debitado do usuÃ¡rio.
+        // Ganho bruto da sessão passa a ser exatamente o valor efetivamente debitado do usuário.
         session.consultantEarnings = effectiveConsumption
       }
 
-      // Garantir persistÃªncia do mesmo valor econÃ´mico usado no dÃ©bito/crÃ©dito.
+      // Garantir persistência do mesmo valor econômico usado no débito/crédito.
       await connection.query(
         `UPDATE video_sessions SET consultantEarnings = ? WHERE id = ?`,
         [Number(session.consultantEarnings) || 0, sessionId]
@@ -638,7 +658,7 @@ export const createVideoSessionsRouter = (pool) => {
           [session.consultantId]
         )
         
-        // 30% para plataforma, 70% para consultor (padrÃ£o)
+        // 30% para plataforma, 70% para consultor (padrão)
         let consultantPercentage = 0.70
         if (consultants.length > 0 && consultants[0].commissionOverride !== null && consultants[0].commissionOverride !== undefined) {
           consultantPercentage = Math.min(1, Math.max(0, Number(consultants[0].commissionOverride) / 100))
@@ -657,17 +677,17 @@ export const createVideoSessionsRouter = (pool) => {
           [session.consultantId]
         )
 
-        // Adicionar COMISSÃƒO Ã  carteira (nÃ£o o valor total)
+        // Adicionar COMISSÃO à carteira (não o valor total)
         await connection.query(
           `UPDATE consultant_wallets SET availableBalance = availableBalance + ? WHERE consultantId = ?`,
           [commissionEarnings, session.consultantId]
         )
         console.log('[videoSessions /finish] Carteira do consultor atualizada com R$', commissionEarnings.toFixed(2))
 
-        // Criar registro de transaÃ§Ã£o
+        // Criar registro de transação
         const txId = `tx_video_${sessionId}`
         const billedMinutes = (duration / 60).toFixed(2)
-        const txDescription = `Ganho de videoconsulta (${billedMinutes} min Ã  R$ ${pricePerMinute.toFixed(2)}/min)`
+        const txDescription = `Ganho de videoconsulta (${billedMinutes} min à R$ ${pricePerMinute.toFixed(2)}/min)`
         
         await connection.query(
           `INSERT INTO wallet_transactions (id, consultantId, type, amount, commissionValue, createdAt, description)
@@ -675,12 +695,12 @@ export const createVideoSessionsRouter = (pool) => {
            ON DUPLICATE KEY UPDATE amount = VALUES(amount), commissionValue = VALUES(commissionValue), description = VALUES(description)`,
           [txId, session.consultantId, commissionEarnings, platformShare, txDescription]
         )
-        console.log('[videoSessions /finish] TransaÃ§Ã£o registrada: txId=', txId)
+        console.log('[videoSessions /finish] Transação registrada: txId=', txId)
       } else {
         console.log('[videoSessions /finish] earnings = 0, nenhum ganho para processar')
       }
 
-      // Buscar novo saldo do usuÃ¡rio apÃ³s dÃ©bito
+      // Buscar novo saldo do usuário após débito
       const [updatedUser] = await connection.query(
         'SELECT minutesBalance FROM users WHERE id = ?',
         [session.userId]
@@ -689,13 +709,13 @@ export const createVideoSessionsRouter = (pool) => {
 
       await connection.commit()
       const finalEarnings = Number(session.consultantEarnings) || 0
-      console.log('[videoSessions /finish] SessÃ£o finalizada com sucesso. sessionId=', sessionId, 'earnings=', finalEarnings, 'newUserBalance=', newUserBalance)
+      console.log('[videoSessions /finish] Sessão finalizada com sucesso. sessionId=', sessionId, 'earnings=', finalEarnings, 'newUserBalance=', newUserBalance)
       response.json({ ok: true, earnings: finalEarnings, newUserBalance })
 
     } catch (error) {
       await connection.rollback()
-      console.error('Erro ao finalizar sessÃ£o de vÃ­deo:', error)
-      response.status(500).json({ message: 'Erro ao finalizar sessÃ£o.' })
+      console.error('Erro ao finalizar sessão de vídeo:', error)
+      response.status(500).json({ message: 'Erro ao finalizar sessão.' })
     } finally {
       connection.release()
     }
@@ -716,11 +736,11 @@ export const createVideoSessionsRouter = (pool) => {
       })
 
       if (!session) {
-        return response.status(404).json({ message: 'SessÃ£o nÃ£o encontrada.' })
+        return response.status(404).json({ message: 'Sessão não encontrada.' })
       }
 
       if (!isConsultant) {
-        return response.status(403).json({ message: 'Somente o consultor pode registrar observaÃ§Ãµes.' })
+        return response.status(403).json({ message: 'Somente o consultor pode registrar observações.' })
       }
 
       const normalizedNotes = String(consultantNotes || '').trim()
@@ -728,11 +748,10 @@ export const createVideoSessionsRouter = (pool) => {
 
       response.json({ ok: true, sessionId, consultantNotes: normalizedNotes })
     } catch (error) {
-      console.error('Erro ao salvar observaÃ§Ã£o da sessÃ£o:', error)
-      response.status(500).json({ message: 'Erro ao salvar observaÃ§Ã£o da sessÃ£o.' })
+      console.error('Erro ao salvar observação da sessão:', error)
+      response.status(500).json({ message: 'Erro ao salvar observação da sessão.' })
     }
   })
 
   return router
 }
-
