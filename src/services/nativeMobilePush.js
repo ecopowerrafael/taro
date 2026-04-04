@@ -1,6 +1,7 @@
 import { App } from '@capacitor/app'
 import { Capacitor, registerPlugin } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
+import { FlutterCallkitIncoming as CapacitorIncomingCallKit } from 'capacitor-incoming-call-kit'
 import { buildApiUrl } from '../utils/runtimeConfig'
 
 const APP_SCHEME = 'com.astria.taromobile'
@@ -138,9 +139,62 @@ const ensureListeners = () => {
     console.error('[native push] erro de registro:', error)
   })
 
-  PushNotifications.addListener('pushNotificationReceived', (notification) => {
-    console.log('[native push] push recebido (app aberto):', notification?.title)
+  PushNotifications.addListener('pushNotificationReceived', async (notification) => {
+    console.log('[native push] push recebido:', notification?.title)
+    
+    // Injeta a chamada do Incoming Call Kit quando o firebase chegar com payload de vídeo
+    if (notification?.data?.type === 'incoming_call' && notification?.data?.sessionId) {
+      console.log('[native push] Interceptado como chamada de vídeo, disparando CallKit...')
+      const callOptions = {
+        options: "call_incoming",
+        methodName: "showCallkitIncoming",
+        parsedOptions: {
+          id: notification.data.sessionId,
+          nameCaller: notification.data.callerName || "Cliente",
+          appName: "Astria Taro",
+          avatar: "https://appastria.online/icon-192.png",
+          handle: "Chamada de Vídeo",
+          type: 1, 
+          duration: 30000, 
+          extra: {
+            sessionId: notification.data.sessionId
+          },
+          android: {
+            isCustomNotification: true,
+            isShowLogo: true,
+            ringtonePath: 'ringtone_default',
+            backgroundColor: '#0F172A',
+            backgroundUrl: 'https://appastria.online/icon-512.png',
+            actionColor: '#4CAF50',
+            textColor: '#FFFFFF',
+            incomingCallNotificationChannelName: "Incoming Calls",
+            missedCallNotificationChannelName: "Missed Calls",
+            isShowFullLockedScreen: true,
+            isImportant: true,
+          }
+        }
+      };
+      
+      try {
+        await CapacitorIncomingCallKit.onMethod(callOptions)
+      } catch(err) {
+        console.error('[native push] erro ao chamar CallKit:', err)
+      }
+    }
   })
+
+  // Listener para quando o usuário atende ou recusa a ligação nativa tela preta
+  CapacitorIncomingCallKit.addListener('com.hiennv.flutter_callkit_incoming.ACTION_CALL_ACCEPT', (event) => {
+    console.log('[native push] CallKit: usuário aceitou chamada nativa!', event)
+    const sessionId = event?.extra?.sessionId
+    if (sessionId) {
+      window.location.href = `/sala/${sessionId}`
+    }
+  });
+
+  CapacitorIncomingCallKit.addListener('com.hiennv.flutter_callkit_incoming.ACTION_CALL_DECLINE', (event) => {
+    console.log('[native push] CallKit: usuário recusou a chamada nativa', event)
+  });
 
   PushNotifications.addListener('pushNotificationActionPerformed', (event) => {
     console.log('[native push] push clicado:', event?.actionId)

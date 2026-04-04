@@ -1,4 +1,4 @@
-const PUSH_PROFILES = {
+﻿const PUSH_PROFILES = {
   incoming_call: {
     channelId: 'incoming_calls_v2',
     deliveryPriority: 'high',
@@ -30,7 +30,7 @@ const normalizePushPayload = (payload = {}) => {
   const profile = PUSH_PROFILES[type] || {}
 
   return {
-    title: payload.title || 'Notificação',
+    title: payload.title || 'NotificaÃ§Ã£o',
     body: payload.body || '',
     url: payload.url || 'https://appastria.online/',
     nativeRoute: payload.nativeRoute || '/',
@@ -67,15 +67,15 @@ const toFirebaseDataMap = (payload) => {
     ...payload.data,
   }
 
-  // Se for notificação de chamada, injetar a key "call" que o capacitor-incoming-call-kit intercepta nativamente.
+  // Se for notificaÃ§Ã£o de chamada, injetar a key "call" que o capacitor-incoming-call-kit intercepta nativamente.
   if (payload.type === 'incoming_call') {
     const callData = {
       id: payload.sessionId || `call-${Date.now()}`,
       nameCaller: payload.customerName || 'Cliente Astria',
       appName: 'Astria Tarot',
       avatar: 'https://appastria.online/pwa-192x192.png',
-      handle: 'Consulta por Vídeo',
-      type: 1, // 0 = Áudio, 1 = Vídeo
+      handle: 'Consulta por VÃ­deo',
+      type: 1, // 0 = Ãudio, 1 = VÃ­deo
       duration: 30000,
       textAccept: 'Atender',
       textDecline: 'Recusar',
@@ -98,7 +98,13 @@ const toFirebaseDataMap = (payload) => {
     }
     rawData.call = JSON.stringify(callData)
   }
-
+    // Se for cancelamento de chamada, injetar key deleteCall
+    if (payload.type === 'cancel_call') {
+      rawData.deleteCall = JSON.stringify({
+        id: payload.sessionId,
+        extra: { sessionId: payload.sessionId }
+      })
+    }
   return Object.entries(rawData).reduce((accumulator, [key, value]) => {
     if (value === undefined || value === null) {
       return accumulator
@@ -115,7 +121,7 @@ export const savePushSubscription = async ({ pool, userId, subscription, userAge
   const auth = subscription?.keys?.auth
 
   if (!userId || !endpoint || !p256dh || !auth) {
-    throw new Error('Subscription push inválida.')
+    throw new Error('Subscription push invÃ¡lida.')
   }
 
   await pool.query(
@@ -154,7 +160,7 @@ export const saveNativePushToken = async ({
   appVersion = null,
 }) => {
   if (!userId || !token) {
-    throw new Error('Token push nativo inválido.')
+    throw new Error('Token push nativo invÃ¡lido.')
   }
 
   await pool.query(
@@ -382,7 +388,7 @@ const sendWebPushToUsers = async ({ pool, webpush, userIds, payload }) => {
 
 const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) => {
   if (!firebaseAdmin) {
-    console.warn('[sendNativePushToUsers] ⚠️ Firebase Admin não disponível')
+    console.warn('[sendNativePushToUsers] âš ï¸ Firebase Admin nÃ£o disponÃ­vel')
     return {
       totalSubscriptions: 0,
       successCount: 0,
@@ -392,10 +398,10 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
   }
 
   const registrations = await getActiveNativeTokensByUserIds({ pool, userIds })
-  console.log(`[sendNativePushToUsers] 🔍 Encontrados ${registrations.length} tokens nativos para userIds:`, userIds)
+  console.log(`[sendNativePushToUsers] ðŸ” Encontrados ${registrations.length} tokens nativos para userIds:`, userIds)
   
   if (registrations.length === 0) {
-    console.warn('[sendNativePushToUsers] ⚠️ Nenhum token nativo encontrado para:', userIds)
+    console.warn('[sendNativePushToUsers] âš ï¸ Nenhum token nativo encontrado para:', userIds)
     return {
       totalSubscriptions: 0,
       successCount: 0,
@@ -407,17 +413,17 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
   const results = []
   const data = toFirebaseDataMap(payload)
   
-  console.log('[sendNativePushToUsers] 📦 Data map keys:', Object.keys(data))
+  console.log('[sendNativePushToUsers] ðŸ“¦ Data map keys:', Object.keys(data))
 
   await Promise.all(
     registrations.map(async ({ userId, token, platform, provider }) => {
       try {
-        console.log(`[sendNativePushToUsers] 📤 Enviando FCM para ${userId} (${platform}/${provider})`)
+        console.log(`[sendNativePushToUsers] ðŸ“¤ Enviando FCM para ${userId} (${platform}/${provider})`)
         console.log(`[sendNativePushToUsers]   Token: ${token.slice(0, 40)}...`)
         
         const fcmPayload = { token, data }
 
-        if (payload.type !== 'incoming_call') {
+        if (payload.type !== 'incoming_call' && payload.type !== 'cancel_call') {
           fcmPayload.notification = {
             title: data.title,
             body: data.body,
@@ -443,7 +449,7 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
 
         const messageId = await firebaseAdmin.messaging().send(fcmPayload)
 
-        console.log(`[sendNativePushToUsers] ✅ FCM enviado com sucesso! messageId: ${messageId}`)
+        console.log(`[sendNativePushToUsers] âœ… FCM enviado com sucesso! messageId: ${messageId}`)
         
         await markNativePushTokenSuccess({ pool, token })
         results.push({
@@ -456,7 +462,7 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
         })
       } catch (error) {
         const errorCode = error?.errorInfo?.code || error?.code || null
-        console.error(`[sendNativePushToUsers] ❌ Erro FCM para ${userId}:`, {
+        console.error(`[sendNativePushToUsers] âŒ Erro FCM para ${userId}:`, {
           code: errorCode,
           message: error?.message,
           fullError: JSON.stringify(error, null, 2),
@@ -468,7 +474,7 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
         ].includes(errorCode)
 
         if (shouldDisableToken) {
-          console.warn(`[sendNativePushToUsers] 🔴 Token inválido detectado, marcando como inativo`)
+          console.warn(`[sendNativePushToUsers] ðŸ”´ Token invÃ¡lido detectado, marcando como inativo`)
           await markNativePushTokenFailure({ pool, token })
         }
 
@@ -494,7 +500,7 @@ const sendNativePushToUsers = async ({ pool, firebaseAdmin, userIds, payload }) 
     results,
   }
   
-  console.log(`[sendNativePushToUsers] 📊 RESUMO:`, {
+  console.log(`[sendNativePushToUsers] ðŸ“Š RESUMO:`, {
     total: summary.totalSubscriptions,
     sucesso: summary.successCount,
     falhas: summary.failureCount,
