@@ -199,7 +199,14 @@ export const createCredentialsRouter = (pool) => {
         stripe: ['stripePublicKey', 'stripeSecretKey'],
         commission: ['globalCommission'],
         smtp: ['smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpFrom'],
-          oracle: ['oracleHereApiKey', 'oracleGeminiKey', 'oracleProkeralaId', 'oracleProkeralaSecret', 'oracleSystemPrompt', 'oraclePrice'],
+        oracle: ['oracleHereApiKey', 'oracleGeminiKey', 'oracleProkeralaId', 'oracleProkeralaSecret', 'oracleSystemPrompt', 'oraclePrice'],
+      }
+
+      console.log(`[API/Credentials] PATCH request para tipo: ${type}`)
+      console.log(`[API/Credentials] Body recebido:`, request.body)
+
+      const allowedFields = fieldsMap[type]
+      if (!allowedFields) {
         return response.status(400).json({ message: `Tipo de credencial inválido: ${type}` })
       }
 
