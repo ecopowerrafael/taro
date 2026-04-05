@@ -233,7 +233,7 @@ export function OraclePage() {
       }
 
       setOracleAnswer(data.answer);
-      if (data.planets) setOraclePlanets(data.planets);
+      if (data.planets) setOraclePlanets(data.planets); if (data.prokeralaDebug) addLog(\'ProkeralaDebug\', data.prokeralaDebug);
       setStep('result');
     } catch (e) {
       console.error(e);
