@@ -6,6 +6,8 @@ import { SmokeBackground } from '../components/Oracle/SmokeBackground';
 import { CityAutocomplete } from '../components/Oracle/CityAutocomplete';
 import { StarFieldInput } from '../components/Oracle/StarFieldInput';
 import { Loader2 } from 'lucide-react';
+import Typewriter from 'typewriter-effect';
+import { AstrologyChart } from '../components/Oracle/AstrologyChart';
 
 export function OraclePage() {
   const { oracleCredentials, profile, setProfile, fetchProfile } = usePlatformContext();
@@ -15,6 +17,7 @@ export function OraclePage() {
   const [birthDateStr, setBirthDateStr] = useState('');  const [birthTimeStr, setBirthTimeStr] = useState('');  const [loadingAction, setLoadingAction] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [oracleAnswer, setOracleAnswer] = useState('');
+  const [oraclePlanets, setOraclePlanets] = useState([]);
 
   // Ao montar, carrega o location salvo se houver
   useEffect(() => {
@@ -163,6 +166,7 @@ export function OraclePage() {
       }
       
       setOracleAnswer(data.answer);
+      if (data.planets) setOraclePlanets(data.planets);
       setStep('result'); 
     } catch (e) {
       setErrorMsg(e.message);
@@ -385,8 +389,16 @@ export function OraclePage() {
                Sua Revelação Astria
              </h2>
              
-             <div className="prose prose-invert prose-gold max-w-none text-gray-300 font-serif leading-relaxed text-left min-h-[150px] whitespace-pre-wrap">
-               {oracleAnswer}
+<AstrologyChart planets={oraclePlanets} />
+               <div className="prose prose-invert prose-gold max-w-none text-gray-300 font-serif leading-relaxed text-left min-h-[150px] whitespace-pre-wrap">
+                 <Typewriter
+                   options={{
+                     strings: [oracleAnswer],
+                     autoStart: true,
+                     delay: 30,
+                     cursor: '✧'
+                   }}
+                 />
              </div>
 
              <button

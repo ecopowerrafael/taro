@@ -102,8 +102,7 @@ export const createOracleRouter = (pool) => {
         return response.status(400).json({ error: 'Chave da API do Gemini não configurada pelo administrador no painel.' })
       }
 
-      let astrologyContext = 'Dados astrológicos exatos indisponíveis/ignorados.'
-
+      let astrologyContext = 'Dados astrológicos exatos indisponíveis/ignorados.'        let rawPlanets = []
       // 3. Integração Prokerala (apenas se tiver credenciais preenchidas e a pessoa tiver salvo Posição GPS + Data de Nascimento)
       if (creds.oracleProkeralaId && creds.oracleProkeralaSecret && user.oracle_lat && user.oracle_lng && (user.oracle_birth_date || user.birthDate)) {
         try {
@@ -128,7 +127,8 @@ export const createOracleRouter = (pool) => {
             
             const astroData = await astroRes.json()
             if (astroData?.data?.planet_position) {
-              const planetsData = astroData.data.planet_position.map(p => `${p.name} em ${Number(p.degree).toFixed(1)}°`).join(', ')
+                rawPlanets = astroData.data.planet_position
+                const planetsData = rawPlanets.map(p => `${p.name} em ${Number(p.degree).toFixed(1)}°`).join(', ')
               astrologyContext = `Planetas no mapa astral de nascimento: ${planetsData}.`
             }
           }
@@ -176,7 +176,7 @@ export const createOracleRouter = (pool) => {
 
       const answer = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'O silêncio do cosmos é absoluto. Não houve resposta.'
 
-      response.status(200).json({ answer })
+        response.status(200).json({ answer, planets: rawPlanets })
     } catch (error) {
       console.error('[API/Oracle] Erro interno:', error)
       response.status(500).json({ error: 'Erro interno ao realizar ritual.' })
