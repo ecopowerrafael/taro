@@ -628,9 +628,12 @@ export function PlatformProvider({ children }) {
     stripeCredentialsRef.current = stripeCredentials
   }, [stripeCredentials])
 
-    useEffect(() => {
-      oracleCredentialsRef.current = oracleCredentials
-    }, [oracleCredentials])
+  useEffect(() => {
+    oracleCredentialsRef.current = oracleCredentials
+  }, [oracleCredentials])
+
+  // Setup socket.io listeners para notificações in-app
+  useEffect(() => {
     if (!isConsultant || !userConsultantProfile) {
       return
     }
