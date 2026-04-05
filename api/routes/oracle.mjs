@@ -139,7 +139,7 @@ export const createOracleRouter = (pool) => {
               astrologyContext = `Planetas no mapa astral de nascimento: ${planetsData}.`
             }
           }
-        } catch (err) {\n            prokeralaDebug = { exception: err.message };
+        } catch (err) {\n            prokeralaDebug = { exception: err.message };\n            prokeralaDebug = { exception: err.message };
           console.error('[API/Oracle] Erro ao integrar com Prokerala:', err.message)
           // Falha do Prokerala não derruba a consulta, pois o Gemini segue usando o nome e cidade
         }
