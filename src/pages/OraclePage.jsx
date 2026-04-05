@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePlatformContext } from '../context/PlatformContext';
+import { usePlatformContext } from "../context/platform-context";
 import { useNavigate } from 'react-router-dom';
 import { SmokeBackground } from '../components/Oracle/SmokeBackground';
 import { CityAutocomplete } from '../components/Oracle/CityAutocomplete';

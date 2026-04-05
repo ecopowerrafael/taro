@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { usePlatformContext } from '../../context/PlatformContext';
+import { usePlatformContext } from "../../context/platform-context";
 import { MapPin, Loader2 } from 'lucide-react';
 
 export function CityAutocomplete({ onSelect }) {

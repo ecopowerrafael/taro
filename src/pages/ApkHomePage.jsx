@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { usePlatformContext } from '../context/PlatformContext'
+import { usePlatformContext } from "../context/platform-context";
 import { PageShell } from '../components/PageShell'
 import { motion } from 'framer-motion'
 
