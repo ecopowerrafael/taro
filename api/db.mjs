@@ -226,11 +226,8 @@ export const initializeSchema = async (pool) => {
       oracleProkeralaId VARCHAR(255) NULL,
       oracleProkeralaSecret VARCHAR(255) NULL,
       oracleGeminiKey VARCHAR(255) NULL,
-      oracleSystemPrompt TEXT NULL
-    )
-  `)
-
-  // Garantir colunas de SMTP para bancos antigos
+        oracleSystemPrompt TEXT NULL,
+        oraclePrice DECIMAL(10,2) NOT NULL DEFAULT 5.00
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpHost VARCHAR(255) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpPort INT NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpUser VARCHAR(255) NULL') } catch (e) {}
@@ -240,8 +237,7 @@ export const initializeSchema = async (pool) => {
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleProkeralaId VARCHAR(255) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleProkeralaSecret VARCHAR(255) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleGeminiKey VARCHAR(255) NULL') } catch (e) {}
-  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleSystemPrompt TEXT NULL') } catch (e) {}
-
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleSystemPrompt TEXT NULL') } catch (e) {}    try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oraclePrice DECIMAL(10,2) NOT NULL DEFAULT 5.00') } catch (e) {}
   await pool.query(`
     CREATE TABLE IF NOT EXISTS video_sessions (
       id VARCHAR(50) PRIMARY KEY,
