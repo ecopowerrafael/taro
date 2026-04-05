@@ -120,8 +120,14 @@ export const initializeSchema = async (pool) => {
     await pool.query('ALTER TABLE users ADD COLUMN oracle_lng DECIMAL(11,8) NULL')
   } catch (e) {}
   try {
-    await pool.query('ALTER TABLE users ADD COLUMN oracle_used_free TINYINT(1) NOT NULL DEFAULT 0')
-  } catch (e) {}
+      await pool.query('ALTER TABLE users ADD COLUMN oracle_birth_date VARCHAR(50) NULL')
+    } catch (e) {}
+    try {
+      await pool.query('ALTER TABLE users ADD COLUMN oracle_birth_date VARCHAR(50) NULL')
+    } catch (e) {}
+    try {
+      await pool.query('ALTER TABLE users ADD COLUMN oracle_used_free TINYINT(1) NOT NULL DEFAULT 0')
+    } catch (e) {}
   // --- End Oracle Users Fields ---
 
   await pool.query(`
