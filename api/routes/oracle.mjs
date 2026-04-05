@@ -103,7 +103,7 @@ export const createOracleRouter = (pool) => {
       }
 
       let astrologyContext = 'Dados astrológicos exatos indisponíveis/ignorados.'
-      let rawPlanets = []
+      let rawPlanets = []; let prokeralaDebug = null;
       // 3. Integração Prokerala (apenas se tiver credenciais preenchidas e a pessoa tiver salvo Posição GPS + Data de Nascimento)
       if (creds.oracleProkeralaId && creds.oracleProkeralaSecret && user.oracle_lat && user.oracle_lng && (user.oracle_birth_date || user.birthDate)) {
         try {
@@ -128,11 +128,11 @@ export const createOracleRouter = (pool) => {
               headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
             })
             
-            const astroData = await astroRes.json()
+            const astroData = await astroRes.json(); if (astroData.errors) prokeralaDebug = astroData.errors;
             console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
             console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
             if (astroData?.data?.planet_position) {
-                rawPlanets = astroData.data.planet_position
+                rawPlanets = astroData.data.planet_position; prokeralaDebug = astroData.errors || astroData;
                 const planetsData = rawPlanets.map(p => `${p.name} em ${Number(p.degree).toFixed(1)}°`).join(', ')
               astrologyContext = `Planetas no mapa astral de nascimento: ${planetsData}.`
             }
@@ -183,7 +183,7 @@ export const createOracleRouter = (pool) => {
 
       const answer = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'O silêncio do cosmos é absoluto. Não houve resposta.'
 
-        response.status(200).json({ answer, planets: rawPlanets })
+        response.status(200).json({ answer, planets: rawPlanets, prokeralaDebug })
     } catch (error) {
       console.error('[API/Oracle] Erro interno:', error)
       response.status(500).json({ error: `Erro Ritual: ${error.message}` })  
