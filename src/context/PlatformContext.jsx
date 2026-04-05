@@ -1493,6 +1493,7 @@ export function PlatformProvider({ children }) {
           oracleProkeralaSecret: payload?.oracleProkeralaSecret ?? '',
           oracleGeminiKey: payload?.oracleGeminiKey ?? '',
           oracleSystemPrompt: payload?.oracleSystemPrompt ?? '',
+		oraclePrice: payload?.oraclePrice ?? '5.00',
         }
         const nextGlobalCommission = Number(payload?.globalCommission)
         mpCredentialsRef.current = mp
