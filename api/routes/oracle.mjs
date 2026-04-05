@@ -126,7 +126,7 @@ export const createOracleRouter = (pool) => {
           if (tokenData.access_token) {
             // B. Pegar a Posição dos Planetas usando a string parseada
             const formattedDate = parseDateString(user.oracle_birth_date || (user.birthDate && new Date(user.birthDate).toISOString()))
-            const astroRes = await fetch(`https://api.prokerala.com/v2/astrology/planet-position?datetime=${formattedDate}&coordinates=${user.oracle_lat},${user.oracle_lng}`, {
+            const astroRes = await fetch(`https://api.prokerala.com/v2/astrology/planet-position?datetime=${formattedDate}&coordinates=${user.oracle_lat},${user.oracle_lng}&ayanamsa=1`, {
               headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
             })
             
