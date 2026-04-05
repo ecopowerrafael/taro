@@ -24,6 +24,7 @@ export function AdminPage() {
     savePlatformCredentials,
     dailyCredentials,
     stripeCredentials,
+    oracleCredentials,
     rechargeRequests,
     fetchPendingRecharges,
     processRechargeAction,
@@ -76,6 +77,8 @@ export function AdminPage() {
         onDailyCredentialsChange={savePlatformCredentials}
         stripeCredentials={stripeCredentials}
         onStripeCredentialsChange={savePlatformCredentials}
+        oracleCredentials={oracleCredentials}
+        onOracleCredentialsChange={savePlatformCredentials}
         rechargeRequests={rechargeRequests}
         onRechargeAction={processRechargeAction}
         updateWithdrawalStatus={updateWithdrawalStatus}

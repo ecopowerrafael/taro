@@ -1,0 +1,29 @@
+{
+  "name": "Astria",
+  "short_name": "Astria",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090812",
+  "theme_color": "#C5A059",
+  "description": "Encontre Astrologos online, leituras de cartas de tarot e previsões para o futuro",
+  "icons": [
+    {
+      "src": "/logoastria.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logoastria.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logoastria.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    }
+  ]
+}

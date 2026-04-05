@@ -308,8 +308,9 @@ try {
   app.use('/api/wallets', createWalletsRouter(pool))
   console.log('[API] Router /wallets carregado.')
   
-  app.use('/api/video-sessions', createVideoSessionsRouter(pool))
-  console.log('[API] Router /video-sessions carregado.')
+  app.use('/api/video-sessions', createVideoSessionsRouter(pool))    
+    import { createOracleRouter } from './routes/oracle.mjs'
+    app.use('/api/oracle', createOracleRouter(pool))  console.log('[API] Router /video-sessions carregado.')
 
   app.use('/api/spells', createSpellsRouter(pool))
   console.log('[API] Router /spells carregado.')

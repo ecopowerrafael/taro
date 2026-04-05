@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /perfil
+Disallow: /area-consultor
+Disallow: /recarregar
+Disallow: /sala
+
+Sitemap: https://appastria.online/sitemap.xml

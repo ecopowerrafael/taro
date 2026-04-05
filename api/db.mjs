@@ -109,6 +109,21 @@ export const initializeSchema = async (pool) => {
     // Ignora se já existirem
   }
 
+  // --- Start Oracle Users Fields ---
+  try {
+    await pool.query('ALTER TABLE users ADD COLUMN oracle_city VARCHAR(255) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE users ADD COLUMN oracle_lat DECIMAL(10,8) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE users ADD COLUMN oracle_lng DECIMAL(11,8) NULL')
+  } catch (e) {}
+  try {
+    await pool.query('ALTER TABLE users ADD COLUMN oracle_used_free TINYINT(1) NOT NULL DEFAULT 0')
+  } catch (e) {}
+  // --- End Oracle Users Fields ---
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS question_requests (
       id VARCHAR(80) PRIMARY KEY,
@@ -206,7 +221,12 @@ export const initializeSchema = async (pool) => {
       smtpPort INT NULL,
       smtpUser VARCHAR(255) NULL,
       smtpPass VARCHAR(255) NULL,
-      smtpFrom VARCHAR(255) NULL
+      smtpFrom VARCHAR(255) NULL,
+      oracleHereApiKey VARCHAR(255) NULL,
+      oracleProkeralaId VARCHAR(255) NULL,
+      oracleProkeralaSecret VARCHAR(255) NULL,
+      oracleGeminiKey VARCHAR(255) NULL,
+      oracleSystemPrompt TEXT NULL
     )
   `)
 
@@ -216,6 +236,11 @@ export const initializeSchema = async (pool) => {
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpUser VARCHAR(255) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpPass VARCHAR(255) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpFrom VARCHAR(255) NULL') } catch (e) {}
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleHereApiKey VARCHAR(255) NULL') } catch (e) {}
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleProkeralaId VARCHAR(255) NULL') } catch (e) {}
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleProkeralaSecret VARCHAR(255) NULL') } catch (e) {}
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleGeminiKey VARCHAR(255) NULL') } catch (e) {}
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleSystemPrompt TEXT NULL') } catch (e) {}
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS video_sessions (
@@ -394,8 +419,9 @@ export const initializeSchema = async (pool) => {
       dailyApiKey,
       dailyDomain,
       dailyRoomName,
-      globalCommission
-    ) VALUES (1, NULL, NULL, NULL, NULL, 'demo.daily.co', 'hello', 30)
+      globalCommission,
+      oracleSystemPrompt
+    ) VALUES (1, NULL, NULL, NULL, NULL, 'demo.daily.co', 'hello', 30, 'Você é a voz do Oráculo Astria. Use os dados técnicos para criar uma narrativa de luxo, mística e acolhedora em Português. Foque na Intenção selecionada pelo usuário.')
   `)
 
   await pool.query(`

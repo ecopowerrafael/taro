@@ -132,7 +132,13 @@ export const createCredentialsRouter = (pool) => {
         smtpPort: 'smtpPort',
         smtpUser: 'smtpUser',
         smtpPass: 'smtpPass',
-        smtpFrom: 'smtpFrom'
+        smtpFrom: 'smtpFrom',
+        oracleHereApiKey: 'oracleHereApiKey',
+        oracleProkeralaId: 'oracleProkeralaId',
+        oracleProkeralaSecret: 'oracleProkeralaSecret',
+        oracleGeminiKey: 'oracleGeminiKey',
+        oracleSystemPrompt: 'oracleSystemPrompt',
+        oraclePrice: 'oraclePrice'
       }
 
       const updates = []

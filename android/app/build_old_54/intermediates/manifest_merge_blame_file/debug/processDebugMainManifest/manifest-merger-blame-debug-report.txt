@@ -1,0 +1,520 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.astria.taromobile"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="23"
+9        android:targetSdkVersion="35" />
+10
+11    <!-- Permissions -->
+12
+13    <uses-permission android:name="android.permission.INTERNET" />
+13-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:49:5-67
+13-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:49:22-64
+14    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+14-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:50:5-77
+14-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:50:22-74
+15    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+15-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:51:5-81
+15-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:51:22-78
+16    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+16-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:52:5-78
+16-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:52:22-75
+17    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+17-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:53:5-77
+17-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:53:22-74
+18    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+18-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:54:5-88
+18-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:54:22-85
+19    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
+19-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:55:5-75
+19-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:55:22-72
+20    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+20-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:56:5-75
+20-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:56:22-72
+21    <uses-permission android:name="android.permission.CALL_PHONE" />
+21-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:57:5-69
+21-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:57:22-66
+22    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+22-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:58:5-75
+22-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:58:22-72
+23    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+23-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:59:5-95
+23-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:59:22-92
+24    <uses-permission android:name="android.permission.WAKE_LOCK" />
+24-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:60:5-68
+24-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:60:22-65
+25    <uses-permission android:name="android.permission.VIBRATE" />
+25-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:61:5-66
+25-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:61:22-63
+26    <uses-permission android:name="android.permission.CAMERA" />
+26-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:62:5-65
+26-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:62:22-62
+27    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+27-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:63:5-71
+27-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:63:22-68
+28    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+28-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:64:5-80
+28-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:64:22-77
+29    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" /> <!-- Although the *SdkVersion is captured in gradle build files, this is required for non gradle builds -->
+29-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:11:5-85
+29-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:11:22-82
+30    <!-- <uses-sdk android:minSdkVersion="16"/> -->
+31    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Required by older versions of Google Play services to create IID tokens -->
+31-->[com.google.firebase:firebase-messaging-directboot:23.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\dec97f1926367386af02dee4e3972fe5\transformed\firebase-messaging-directboot-23.3.1\AndroidManifest.xml:24:5-79
+31-->[com.google.firebase:firebase-messaging-directboot:23.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\dec97f1926367386af02dee4e3972fe5\transformed\firebase-messaging-directboot-23.3.1\AndroidManifest.xml:24:22-76
+32    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+32-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:26:5-82
+32-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:26:22-79
+33
+34    <permission
+34-->[androidx.core:core:1.15.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\5f51ed623ec66baebfa6a053fe8a8b2a\transformed\core-1.15.0\AndroidManifest.xml:22:5-24:47
+35        android:name="com.astria.taromobile.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+35-->[androidx.core:core:1.15.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\5f51ed623ec66baebfa6a053fe8a8b2a\transformed\core-1.15.0\AndroidManifest.xml:23:9-81
+36        android:protectionLevel="signature" />
+36-->[androidx.core:core:1.15.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\5f51ed623ec66baebfa6a053fe8a8b2a\transformed\core-1.15.0\AndroidManifest.xml:24:9-44
+37
+38    <uses-permission android:name="com.astria.taromobile.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+38-->[androidx.core:core:1.15.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\5f51ed623ec66baebfa6a053fe8a8b2a\transformed\core-1.15.0\AndroidManifest.xml:26:5-97
+38-->[androidx.core:core:1.15.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\5f51ed623ec66baebfa6a053fe8a8b2a\transformed\core-1.15.0\AndroidManifest.xml:26:22-94
+39
+40    <application
+40-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:3:5-45:19
+41        android:allowBackup="true"
+41-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:4:9-35
+42        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+42-->[androidx.core:core:1.15.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\5f51ed623ec66baebfa6a053fe8a8b2a\transformed\core-1.15.0\AndroidManifest.xml:28:18-86
+43        android:debuggable="true"
+44        android:extractNativeLibs="false"
+45        android:icon="@mipmap/ic_launcher"
+45-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:5:9-43
+46        android:label="@string/app_name"
+46-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:6:9-41
+47        android:roundIcon="@mipmap/ic_launcher_round"
+47-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:7:9-54
+48        android:supportsRtl="true"
+48-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:8:9-35
+49        android:theme="@style/AppTheme" >
+49-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:9:9-40
+50        <activity
+50-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:10:9-28:20
+51            android:name="com.astria.taromobile.MainActivity"
+51-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:12:13-41
+52            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation"
+52-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:11:13-140
+53            android:exported="true"
+53-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:16:13-36
+54            android:label="@string/title_activity_main"
+54-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:13:13-56
+55            android:launchMode="singleTask"
+55-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:15:13-44
+56            android:theme="@style/AppTheme.NoActionBarLaunch" >
+56-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:14:13-62
+57            <intent-filter>
+57-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:17:13-20:29
+58                <action android:name="android.intent.action.MAIN" />
+58-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:18:17-69
+58-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:18:25-66
+59
+60                <category android:name="android.intent.category.LAUNCHER" />
+60-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:19:17-77
+60-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:19:27-74
+61            </intent-filter>
+62            <intent-filter>
+62-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:22:13-27:29
+63                <action android:name="android.intent.action.VIEW" />
+63-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:23:17-69
+63-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:23:25-66
+64
+65                <category android:name="android.intent.category.DEFAULT" />
+65-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:24:17-76
+65-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:24:27-73
+66                <category android:name="android.intent.category.BROWSABLE" />
+66-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:25:17-78
+66-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:25:27-75
+67
+68                <data
+68-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:26:17-87
+69                    android:host="app"
+69-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:26:66-84
+70                    android:scheme="@string/custom_url_scheme" />
+70-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:26:23-65
+71            </intent-filter>
+72        </activity>
+73
+74        <service
+74-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:30:9-34:19
+75            android:name="com.astria.taromobile.PushNotificationService"
+75-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:30:18-57
+76            android:exported="false" >
+76-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:30:58-82
+77            <intent-filter>
+77-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:31:13-33:29
+78                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+78-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:32:17-78
+78-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:32:25-75
+79            </intent-filter>
+80        </service>
+81
+82        <provider
+83            android:name="androidx.core.content.FileProvider"
+83-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:39:13-62
+84            android:authorities="com.astria.taromobile.fileprovider"
+84-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:40:13-64
+85            android:exported="false"
+85-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:41:13-37
+86            android:grantUriPermissions="true" >
+86-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:42:13-47
+87            <meta-data
+87-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:43:13-112
+88                android:name="android.support.FILE_PROVIDER_PATHS"
+88-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:43:24-74
+89                android:resource="@xml/file_paths" />
+89-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:43:75-109
+90        </provider>
+91
+92        <activity
+92-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:16:9-31:20
+93            android:name="com.hiennv.flutter_callkit_incoming.CallkitIncomingActivity"
+93-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:17:13-87
+94            android:configChanges="orientation"
+94-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:18:13-48
+95            android:directBootAware="true"
+95-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:19:13-43
+96            android:excludeFromRecents="true"
+96-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:20:13-46
+97            android:exported="true"
+97-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:21:13-36
+98            android:noHistory="true"
+98-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:22:13-37
+99            android:taskAffinity="com.hiennv.flutter_callkit_incoming.INCOMING_CALL_AFFINITY"
+99-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:23:13-94
+100            android:theme="@style/CallkitIncomingTheme"
+100-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:24:13-56
+101            android:turnScreenOn="true" >
+101-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:25:13-40
+102            <intent-filter>
+102-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:26:13-30:29
+103                <action android:name="com.astria.taromobile.com.hiennv.flutter_callkit_incoming.ACTION_CALL_INCOMING" />
+103-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:27:17-116
+103-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:27:25-113
+104
+105                <category android:name="android.intent.category.DEFAULT" />
+105-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:24:17-76
+105-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:24:27-73
+106            </intent-filter>
+107        </activity>
+108        <activity
+108-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:32:9-36:55
+109            android:name="com.hiennv.flutter_callkit_incoming.TransparentActivity"
+109-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:33:13-83
+110            android:directBootAware="true"
+110-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:34:13-43
+111            android:exported="false"
+111-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:35:13-37
+112            android:theme="@style/TranslucentTheme" />
+112-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:36:13-52
+113
+114        <receiver
+114-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:38:9-50:20
+115            android:name="com.hiennv.flutter_callkit_incoming.CallkitIncomingBroadcastReceiver"
+115-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:39:13-96
+116            android:directBootAware="true"
+116-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:40:13-43
+117            android:enabled="true"
+117-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:41:13-35
+118            android:exported="true" >
+118-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:42:13-36
+119            <intent-filter>
+119-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:43:13-49:29
+120                <action android:name="com.astria.taromobile.com.hiennv.flutter_callkit_incoming.ACTION_CALL_INCOMING" />
+120-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:27:17-116
+120-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:27:25-113
+121                <action android:name="com.astria.taromobile.com.hiennv.flutter_callkit_incoming.ACTION_CALL_ACCEPT" />
+121-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:45:17-114
+121-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:45:25-111
+122                <action android:name="com.astria.taromobile.com.hiennv.flutter_callkit_incoming.ACTION_CALL_DECLINE" />
+122-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:46:17-115
+122-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:46:25-112
+123                <action android:name="com.astria.taromobile.com.hiennv.flutter_callkit_incoming.ACTION_CALL_ENDED" />
+123-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:47:17-113
+123-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:47:25-110
+124                <action android:name="com.astria.taromobile.com.hiennv.flutter_callkit_incoming.ACTION_CALL_TIMEOUT" />
+124-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:48:17-115
+124-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:48:25-112
+125            </intent-filter>
+126        </receiver>
+127
+128        <service
+128-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:52:9-56:39
+129            android:name="com.hiennv.flutter_callkit_incoming.CallkitSoundPlayerService"
+129-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:53:13-89
+130            android:directBootAware="true"
+130-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:54:13-43
+131            android:enabled="true"
+131-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:55:13-35
+132            android:exported="true" />
+132-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:56:13-36
+133        <service
+133-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:57:9-64:19
+134            android:name="com.hiennv.flutter_callkit_incoming.MessagingService"
+134-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:58:13-80
+135            android:directBootAware="true"
+135-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:59:13-43
+136            android:exported="false" >
+136-->[:capacitor-incoming-call-kit] C:\Users\ecopo\OneDrive\Documentos\taro\node_modules\capacitor-incoming-call-kit\android\build\intermediates\merged_manifest\debug\processDebugManifest\AndroidManifest.xml:60:13-37
+137            <intent-filter>
+137-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:31:13-33:29
+138                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+138-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:32:17-78
+138-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:32:25-75
+139            </intent-filter>
+140        </service>
+141
+142        <receiver
+142-->[com.google.firebase:firebase-messaging-directboot:23.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\dec97f1926367386af02dee4e3972fe5\transformed\firebase-messaging-directboot-23.3.1\AndroidManifest.xml:29:9-37:20
+143            android:name="com.google.firebase.messaging.directboot.FirebaseMessagingDirectBootReceiver"
+143-->[com.google.firebase:firebase-messaging-directboot:23.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\dec97f1926367386af02dee4e3972fe5\transformed\firebase-messaging-directboot-23.3.1\AndroidManifest.xml:30:13-104
+144            android:directBootAware="true"
+144-->[com.google.firebase:firebase-messaging-directboot:23.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\dec97f1926367386af02dee4e3972fe5\transformed\firebase-messaging-directboot-23.3.1\AndroidManifest.xml:31:13-43
+145            android:exported="true"
+145-->[com.google.firebase:firebase-messaging-directboot:23.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\dec97f1926367386af02dee4e3972fe5\transformed\firebase-messaging-directboot-23.3.1\AndroidManifest.xml:32:13-36
+146            android:permission="com.google.android.c2dm.permission.SEND" >
+146-->[com.google.firebase:firebase-messaging-directboot:23.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\dec97f1926367386af02dee4e3972fe5\transformed\firebase-messaging-directboot-23.3.1\AndroidManifest.xml:33:13-73
+147            <intent-filter>
+147-->[com.google.firebase:firebase-messaging-directboot:23.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\dec97f1926367386af02dee4e3972fe5\transformed\firebase-messaging-directboot-23.3.1\AndroidManifest.xml:34:13-36:29
+148                <action android:name="com.google.firebase.messaging.RECEIVE_DIRECT_BOOT" />
+148-->[com.google.firebase:firebase-messaging-directboot:23.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\dec97f1926367386af02dee4e3972fe5\transformed\firebase-messaging-directboot-23.3.1\AndroidManifest.xml:35:17-92
+148-->[com.google.firebase:firebase-messaging-directboot:23.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\dec97f1926367386af02dee4e3972fe5\transformed\firebase-messaging-directboot-23.3.1\AndroidManifest.xml:35:25-89
+149            </intent-filter>
+150        </receiver>
+151        <receiver
+151-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:29:9-40:20
+152            android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
+152-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:30:13-78
+153            android:exported="true"
+153-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:31:13-36
+154            android:permission="com.google.android.c2dm.permission.SEND" >
+154-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:32:13-73
+155            <intent-filter>
+155-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:33:13-35:29
+156                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+156-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:34:17-81
+156-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:34:25-78
+157            </intent-filter>
+158
+159            <meta-data
+159-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:37:13-39:40
+160                android:name="com.google.android.gms.cloudmessaging.FINISHED_AFTER_HANDLED"
+160-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:38:17-92
+161                android:value="true" />
+161-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:39:17-37
+162        </receiver>
+163        <!--
+164             FirebaseMessagingService performs security checks at runtime,
+165             but set to not exported to explicitly avoid allowing another app to call it.
+166        -->
+167        <service
+167-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:46:9-53:19
+168            android:name="com.google.firebase.messaging.FirebaseMessagingService"
+168-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:47:13-82
+169            android:directBootAware="true"
+169-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:48:13-43
+170            android:exported="false" >
+170-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:49:13-37
+171            <intent-filter android:priority="-500" >
+171-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:31:13-33:29
+172                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+172-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:32:17-78
+172-->C:\Users\ecopo\OneDrive\Documentos\taro\android\app\src\main\AndroidManifest.xml:32:25-75
+173            </intent-filter>
+174        </service>
+175        <service
+175-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:54:9-63:19
+176            android:name="com.google.firebase.components.ComponentDiscoveryService"
+176-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:55:13-84
+177            android:directBootAware="true"
+177-->[com.google.firebase:firebase-common:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\f546ee03c2308c684eeebc8faf0e1407\transformed\firebase-common-21.0.0\AndroidManifest.xml:32:13-43
+178            android:exported="false" >
+178-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:56:13-37
+179            <meta-data
+179-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:57:13-59:85
+180                android:name="com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingKtxRegistrar"
+180-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:58:17-122
+181                android:value="com.google.firebase.components.ComponentRegistrar" />
+181-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:59:17-82
+182            <meta-data
+182-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:60:13-62:85
+183                android:name="com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingRegistrar"
+183-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:61:17-119
+184                android:value="com.google.firebase.components.ComponentRegistrar" />
+184-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2c04d43294058e70b8ad79d5184e7401\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:62:17-82
+185            <meta-data
+185-->[com.google.firebase:firebase-installations:17.2.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2d121929483b8667b8bd7f522bf5e661\transformed\firebase-installations-17.2.0\AndroidManifest.xml:15:13-17:85
+186                android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsKtxRegistrar"
+186-->[com.google.firebase:firebase-installations:17.2.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2d121929483b8667b8bd7f522bf5e661\transformed\firebase-installations-17.2.0\AndroidManifest.xml:16:17-130
+187                android:value="com.google.firebase.components.ComponentRegistrar" />
+187-->[com.google.firebase:firebase-installations:17.2.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2d121929483b8667b8bd7f522bf5e661\transformed\firebase-installations-17.2.0\AndroidManifest.xml:17:17-82
+188            <meta-data
+188-->[com.google.firebase:firebase-installations:17.2.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2d121929483b8667b8bd7f522bf5e661\transformed\firebase-installations-17.2.0\AndroidManifest.xml:18:13-20:85
+189                android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsRegistrar"
+189-->[com.google.firebase:firebase-installations:17.2.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2d121929483b8667b8bd7f522bf5e661\transformed\firebase-installations-17.2.0\AndroidManifest.xml:19:17-127
+190                android:value="com.google.firebase.components.ComponentRegistrar" />
+190-->[com.google.firebase:firebase-installations:17.2.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2d121929483b8667b8bd7f522bf5e661\transformed\firebase-installations-17.2.0\AndroidManifest.xml:20:17-82
+191            <meta-data
+191-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\324fc306ed84dc357040da54cc5f1fbc\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:12:13-14:85
+192                android:name="com.google.firebase.components:com.google.firebase.ktx.FirebaseCommonLegacyRegistrar"
+192-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\324fc306ed84dc357040da54cc5f1fbc\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:13:17-116
+193                android:value="com.google.firebase.components.ComponentRegistrar" />
+193-->[com.google.firebase:firebase-common-ktx:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\324fc306ed84dc357040da54cc5f1fbc\transformed\firebase-common-ktx-21.0.0\AndroidManifest.xml:14:17-82
+194            <meta-data
+194-->[com.google.firebase:firebase-common:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\f546ee03c2308c684eeebc8faf0e1407\transformed\firebase-common-21.0.0\AndroidManifest.xml:35:13-37:85
+195                android:name="com.google.firebase.components:com.google.firebase.FirebaseCommonKtxRegistrar"
+195-->[com.google.firebase:firebase-common:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\f546ee03c2308c684eeebc8faf0e1407\transformed\firebase-common-21.0.0\AndroidManifest.xml:36:17-109
+196                android:value="com.google.firebase.components.ComponentRegistrar" />
+196-->[com.google.firebase:firebase-common:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\f546ee03c2308c684eeebc8faf0e1407\transformed\firebase-common-21.0.0\AndroidManifest.xml:37:17-82
+197            <meta-data
+197-->[com.google.firebase:firebase-datatransport:18.2.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\d59858b3709795c3a4e2c9928bb49778\transformed\firebase-datatransport-18.2.0\AndroidManifest.xml:25:13-27:85
+198                android:name="com.google.firebase.components:com.google.firebase.datatransport.TransportRegistrar"
+198-->[com.google.firebase:firebase-datatransport:18.2.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\d59858b3709795c3a4e2c9928bb49778\transformed\firebase-datatransport-18.2.0\AndroidManifest.xml:26:17-115
+199                android:value="com.google.firebase.components.ComponentRegistrar" />
+199-->[com.google.firebase:firebase-datatransport:18.2.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\d59858b3709795c3a4e2c9928bb49778\transformed\firebase-datatransport-18.2.0\AndroidManifest.xml:27:17-82
+200        </service>
+201
+202        <activity
+202-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\b230ccc4c3071da754e2bd5ef15689db\transformed\play-services-base-18.0.1\AndroidManifest.xml:20:9-22:45
+203            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+203-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\b230ccc4c3071da754e2bd5ef15689db\transformed\play-services-base-18.0.1\AndroidManifest.xml:20:19-85
+204            android:exported="false"
+204-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\b230ccc4c3071da754e2bd5ef15689db\transformed\play-services-base-18.0.1\AndroidManifest.xml:22:19-43
+205            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+205-->[com.google.android.gms:play-services-base:18.0.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\b230ccc4c3071da754e2bd5ef15689db\transformed\play-services-base-18.0.1\AndroidManifest.xml:21:19-78
+206
+207        <provider
+207-->[com.google.firebase:firebase-common:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\f546ee03c2308c684eeebc8faf0e1407\transformed\firebase-common-21.0.0\AndroidManifest.xml:23:9-28:39
+208            android:name="com.google.firebase.provider.FirebaseInitProvider"
+208-->[com.google.firebase:firebase-common:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\f546ee03c2308c684eeebc8faf0e1407\transformed\firebase-common-21.0.0\AndroidManifest.xml:24:13-77
+209            android:authorities="com.astria.taromobile.firebaseinitprovider"
+209-->[com.google.firebase:firebase-common:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\f546ee03c2308c684eeebc8faf0e1407\transformed\firebase-common-21.0.0\AndroidManifest.xml:25:13-72
+210            android:directBootAware="true"
+210-->[com.google.firebase:firebase-common:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\f546ee03c2308c684eeebc8faf0e1407\transformed\firebase-common-21.0.0\AndroidManifest.xml:26:13-43
+211            android:exported="false"
+211-->[com.google.firebase:firebase-common:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\f546ee03c2308c684eeebc8faf0e1407\transformed\firebase-common-21.0.0\AndroidManifest.xml:27:13-37
+212            android:initOrder="100" />
+212-->[com.google.firebase:firebase-common:21.0.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\f546ee03c2308c684eeebc8faf0e1407\transformed\firebase-common-21.0.0\AndroidManifest.xml:28:13-36
+213        <provider
+213-->[androidx.emoji2:emoji2:1.3.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\455628e39230ce08b70f281b4ac99c3c\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
+214            android:name="androidx.startup.InitializationProvider"
+214-->[androidx.emoji2:emoji2:1.3.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\455628e39230ce08b70f281b4ac99c3c\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
+215            android:authorities="com.astria.taromobile.androidx-startup"
+215-->[androidx.emoji2:emoji2:1.3.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\455628e39230ce08b70f281b4ac99c3c\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
+216            android:exported="false" >
+216-->[androidx.emoji2:emoji2:1.3.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\455628e39230ce08b70f281b4ac99c3c\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37
+217            <meta-data
+217-->[androidx.emoji2:emoji2:1.3.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\455628e39230ce08b70f281b4ac99c3c\transformed\emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
+218                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+218-->[androidx.emoji2:emoji2:1.3.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\455628e39230ce08b70f281b4ac99c3c\transformed\emoji2-1.3.0\AndroidManifest.xml:30:17-75
+219                android:value="androidx.startup" />
+219-->[androidx.emoji2:emoji2:1.3.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\455628e39230ce08b70f281b4ac99c3c\transformed\emoji2-1.3.0\AndroidManifest.xml:31:17-49
+220            <meta-data
+220-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2086035d7e747a32c2be40e6ed7f404e\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:29:13-31:52
+221                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+221-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2086035d7e747a32c2be40e6ed7f404e\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:30:17-78
+222                android:value="androidx.startup" />
+222-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\2086035d7e747a32c2be40e6ed7f404e\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:31:17-49
+223            <meta-data
+223-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
+224                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+224-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
+225                android:value="androidx.startup" />
+225-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
+226        </provider>
+227
+228        <meta-data
+228-->[com.google.android.gms:play-services-basement:18.3.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\bf10fd02607fac4185e6132b9261c407\transformed\play-services-basement-18.3.0\AndroidManifest.xml:21:9-23:69
+229            android:name="com.google.android.gms.version"
+229-->[com.google.android.gms:play-services-basement:18.3.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\bf10fd02607fac4185e6132b9261c407\transformed\play-services-basement-18.3.0\AndroidManifest.xml:22:13-58
+230            android:value="@integer/google_play_services_version" />
+230-->[com.google.android.gms:play-services-basement:18.3.0] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\bf10fd02607fac4185e6132b9261c407\transformed\play-services-basement-18.3.0\AndroidManifest.xml:23:13-66
+231
+232        <receiver
+232-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
+233            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+233-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+234            android:directBootAware="false"
+234-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+235            android:enabled="true"
+235-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+236            android:exported="true"
+236-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+237            android:permission="android.permission.DUMP" >
+237-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
+238            <intent-filter>
+238-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+239                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+239-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+239-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
+240            </intent-filter>
+241            <intent-filter>
+241-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+242                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+242-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+242-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+243            </intent-filter>
+244            <intent-filter>
+244-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+245                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+245-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+245-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+246            </intent-filter>
+247            <intent-filter>
+247-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+248                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+248-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+248-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\0f3d68271fd414f74f11a6a9c308b287\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+249            </intent-filter>
+250        </receiver>
+251
+252        <service
+252-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\c53ce620ea6072f75d375d7efaf4f97b\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:28:9-34:19
+253            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+253-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\c53ce620ea6072f75d375d7efaf4f97b\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:29:13-103
+254            android:exported="false" >
+254-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\c53ce620ea6072f75d375d7efaf4f97b\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:30:13-37
+255            <meta-data
+255-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\c53ce620ea6072f75d375d7efaf4f97b\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:31:13-33:39
+256                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+256-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\c53ce620ea6072f75d375d7efaf4f97b\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:32:17-94
+257                android:value="cct" />
+257-->[com.google.android.datatransport:transport-backend-cct:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\c53ce620ea6072f75d375d7efaf4f97b\transformed\transport-backend-cct-3.1.9\AndroidManifest.xml:33:17-36
+258        </service>
+259        <service
+259-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\e166bb1d6f54168e00acc5493c1d998b\transformed\transport-runtime-3.1.9\AndroidManifest.xml:26:9-30:19
+260            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+260-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\e166bb1d6f54168e00acc5493c1d998b\transformed\transport-runtime-3.1.9\AndroidManifest.xml:27:13-117
+261            android:exported="false"
+261-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\e166bb1d6f54168e00acc5493c1d998b\transformed\transport-runtime-3.1.9\AndroidManifest.xml:28:13-37
+262            android:permission="android.permission.BIND_JOB_SERVICE" >
+262-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\e166bb1d6f54168e00acc5493c1d998b\transformed\transport-runtime-3.1.9\AndroidManifest.xml:29:13-69
+263        </service>
+264
+265        <receiver
+265-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\e166bb1d6f54168e00acc5493c1d998b\transformed\transport-runtime-3.1.9\AndroidManifest.xml:32:9-34:40
+266            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+266-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\e166bb1d6f54168e00acc5493c1d998b\transformed\transport-runtime-3.1.9\AndroidManifest.xml:33:13-132
+267            android:exported="false" />
+267-->[com.google.android.datatransport:transport-runtime:3.1.9] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\e166bb1d6f54168e00acc5493c1d998b\transformed\transport-runtime-3.1.9\AndroidManifest.xml:34:13-37
+268
+269        <provider
+269-->[com.squareup.picasso:picasso:2.71828] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\246d16cbd15e245c911c7255105ca94c\transformed\picasso-2.71828\AndroidManifest.xml:8:9-11:40
+270            android:name="com.squareup.picasso.PicassoProvider"
+270-->[com.squareup.picasso:picasso:2.71828] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\246d16cbd15e245c911c7255105ca94c\transformed\picasso-2.71828\AndroidManifest.xml:9:13-64
+271            android:authorities="com.astria.taromobile.com.squareup.picasso"
+271-->[com.squareup.picasso:picasso:2.71828] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\246d16cbd15e245c911c7255105ca94c\transformed\picasso-2.71828\AndroidManifest.xml:10:13-72
+272            android:exported="false" />
+272-->[com.squareup.picasso:picasso:2.71828] C:\Users\ecopo\.gradle\caches\8.11.1\transforms\246d16cbd15e245c911c7255105ca94c\transformed\picasso-2.71828\AndroidManifest.xml:11:13-37
+273    </application>
+274
+275</manifest>

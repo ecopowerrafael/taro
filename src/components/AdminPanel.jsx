@@ -61,6 +61,8 @@ export function AdminPanel({
   updateWithdrawalStatus,
   stripeCredentials,
   onStripeCredentialsChange,
+  oracleCredentials,
+  onOracleCredentialsChange,
   adminUsers,
   onRefreshAdminUsers,
   onSendPushBroadcast,
@@ -110,6 +112,12 @@ export function AdminPanel({
     smtpUser: '',
     smtpPass: '',
     smtpFrom: '',
+    oracleHereApiKey: '',
+    oracleProkeralaId: '',
+    oracleProkeralaSecret: '',
+    oracleGeminiKey: '',
+    oracleSystemPrompt: '',
+    oraclePrice: '0.00',
   })
   const [mercadoPagoAvailable, setMercadoPagoAvailable] = useState(false)
   const [paymentMethodsChecked, setPaymentMethodsChecked] = useState(false)
@@ -134,7 +142,7 @@ export function AdminPanel({
   }, [])
 
   useEffect(() => {
-    if (mpCredentials || dailyCredentials || stripeCredentials) {
+    if (mpCredentials || dailyCredentials || stripeCredentials || oracleCredentials) {
       setCredentialsDraft({
         mpPublicKey: mpCredentials?.publicKey || '',
         mpAccessToken: mpCredentials?.accessToken || '',
@@ -152,9 +160,15 @@ export function AdminPanel({
         smtpUser: dailyCredentials?.smtpUser || '',
         smtpPass: dailyCredentials?.smtpPass || '',
         smtpFrom: dailyCredentials?.smtpFrom || '',
+        oracleHereApiKey: oracleCredentials?.oracleHereApiKey || '',
+        oracleProkeralaId: oracleCredentials?.oracleProkeralaId || '',
+        oracleProkeralaSecret: oracleCredentials?.oracleProkeralaSecret || '',
+        oracleGeminiKey: oracleCredentials?.oracleGeminiKey || '',
+        oracleSystemPrompt: oracleCredentials?.oracleSystemPrompt || '',
+        oraclePrice: oracleCredentials?.oraclePrice || '0.00',
       })
     }
-  }, [mpCredentials, dailyCredentials, stripeCredentials])
+  }, [mpCredentials, dailyCredentials, stripeCredentials, oracleCredentials])
 
   useEffect(() => {
     setFinanceDraft(
@@ -204,6 +218,15 @@ export function AdminPanel({
         smtpUser: credentialsDraft.smtpUser,
         smtpPass: credentialsDraft.smtpPass,
         smtpFrom: credentialsDraft.smtpFrom,
+      }
+    } else if (type === 'oracle') {
+      data = {
+        oracleHereApiKey: credentialsDraft.oracleHereApiKey,
+        oracleProkeralaId: credentialsDraft.oracleProkeralaId,
+        oracleProkeralaSecret: credentialsDraft.oracleProkeralaSecret,
+        oracleGeminiKey: credentialsDraft.oracleGeminiKey,
+        oracleSystemPrompt: credentialsDraft.oracleSystemPrompt,
+        oraclePrice: credentialsDraft.oraclePrice,
       }
     }
     
@@ -1618,6 +1641,82 @@ export function AdminPanel({
                     onChange={(e) => setCredentialsDraft({ ...credentialsDraft, smtpFrom: e.target.value })}
                     className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
                     placeholder="ex: contato@appastria.online"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-xl text-mystic-goldSoft">APIs Místicas (Oráculo)</h3>
+                  <p className="text-xs text-ethereal-silver/70">Google Gemini, HERE Maps e Prokerala (Astrologia).</p>
+                </div>
+                <button
+                  onClick={() => handleSavePartial('oracle')}
+                  className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110"
+                >
+                  <Save size={14} />
+                  Salvar APIs
+                </button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  HERE Maps API Key
+                  <input
+                    type="password"
+                    value={credentialsDraft.oracleHereApiKey}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, oracleHereApiKey: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Google Gemini API Key
+                  <input
+                    type="password"
+                    value={credentialsDraft.oracleGeminiKey}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, oracleGeminiKey: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Prokerala Base AI App ID
+                  <input
+                    type="text"
+                    value={credentialsDraft.oracleProkeralaId}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, oracleProkeralaId: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Prokerala Secret Key
+                  <input
+                    type="password"
+                    value={credentialsDraft.oracleProkeralaSecret}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, oracleProkeralaSecret: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75 md:col-span-2">
+                  System Prompt (Gemini)
+                  <textarea
+                    rows={4}
+                    value={credentialsDraft.oracleSystemPrompt}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, oracleSystemPrompt: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                    placeholder="Instruções e persona para o Oráculo"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm text-amber-100/75 md:col-span-2">
+                  Preço da Consulta Subsequente (R$)
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={credentialsDraft.oraclePrice}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, oraclePrice: e.target.value })}
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60 w-48"
+                    placeholder="Ex: 5.00"
                   />
                 </label>
               </div>

@@ -11,9 +11,12 @@ import { MobileBottomNav } from './components/MobileBottomNav'
 import { NotificationToast } from './components/NotificationToast'
 import { attachNativeAppUrlListener } from './services/nativeMobilePush'
 
+import { isNativeAndroidApp } from './services/nativeMobilePush'
+
 const lazyNamed = (factory, exportName) => lazy(() => factory().then((module) => ({ default: module[exportName] })))
 
 const HomePage = lazyNamed(() => import('./pages/HomePage'), 'HomePage')
+const ApkHomePage = lazyNamed(() => import('./pages/ApkHomePage'), 'ApkHomePage')
 const PlatformPage = lazyNamed(() => import('./pages/PlatformPage'), 'PlatformPage')
 const AdminPage = lazyNamed(() => import('./pages/AdminPage'), 'AdminPage')
 const PerfilPage = lazyNamed(() => import('./pages/PerfilPage'), 'PerfilPage')
@@ -35,6 +38,7 @@ const BlogArticlePage = lazyNamed(() => import('./pages/BlogArticlePage'), 'Blog
 const AjudaPage = lazyNamed(() => import('./pages/AjudaPage'), 'AjudaPage')
 const ContatoPage = lazyNamed(() => import('./pages/ContatoPage'), 'ContatoPage')
 const ConsultorPerfilPage = lazyNamed(() => import('./pages/ConsultorPerfilPage'), 'ConsultorPerfilPage')
+const OraclePage = lazyNamed(() => import('./pages/OraclePage'), 'OraclePage')
 
 function RouteFallback() {
   return (
@@ -81,10 +85,19 @@ function ProtectedRoute({ children, role }) {
 function AppContent() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { inAppNotifications, removeInAppNotification } = usePlatformContext()
+  const { inAppNotifications, removeInAppNotification, isAuthenticated, authLoading } = usePlatformContext()
   const routeSeo = getRouteSeo(location.pathname)
 
   useEffect(() => attachNativeAppUrlListener((route) => navigate(route)), [navigate])
+
+  const renderHome = () => {
+    if (isNativeAndroidApp()) {
+       if (authLoading) return <RouteFallback />
+       if (!isAuthenticated) return <Navigate to="/entrar" replace />
+       return wrapWithTransition(ApkHomePage)
+    }
+    return wrapWithTransition(HomePage)
+  }
 
   return (
     <>
@@ -98,7 +111,8 @@ function AppContent() {
       />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={wrapWithTransition(HomePage)} />
+          <Route path="/" element={renderHome()} />
+          <Route path="/oraculo" element={<ProtectedRoute>{wrapWithTransition(OraclePage)}</ProtectedRoute>} />
           <Route path="/plataforma" element={wrapWithTransition(PlatformPage)} />
           <Route 
             path="/admin" 

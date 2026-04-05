@@ -317,6 +317,13 @@ export function PlatformProvider({ children }) {
     publicKey: '',
     secretKey: '',
   })
+  const [oracleCredentials, setOracleCredentialsState] = useState({
+    oracleHereApiKey: '',
+    oracleProkeralaId: '',
+    oracleProkeralaSecret: '',
+    oracleGeminiKey: '',
+    oracleSystemPrompt: '',
+  })
   const [questionRequests, setQuestionRequests] = useState([])
   const [consultantWallets, setConsultantWallets] = useState(initialConsultantWallets)
   const [paymentResult] = useState(null)
@@ -753,6 +760,7 @@ export function PlatformProvider({ children }) {
         if (type === 'mp') setMpCredentials(data)
         if (type === 'daily') setDailyCredentials(data)
         if (type === 'pix') setMpCredentials(data)
+        if (type === 'oracle') setOracleCredentialsState(data)
         if (type === 'stripe') setStripeCredentials(data)
         if (type === 'smtp') setMpCredentials(data)
         if (type === 'commission') {
@@ -1479,13 +1487,22 @@ export function PlatformProvider({ children }) {
           publicKey: payload?.stripePublicKey ?? '',
           secretKey: payload?.stripeSecretKey ?? '',
         }
+        const oracle = {
+          oracleHereApiKey: payload?.oracleHereApiKey ?? '',
+          oracleProkeralaId: payload?.oracleProkeralaId ?? '',
+          oracleProkeralaSecret: payload?.oracleProkeralaSecret ?? '',
+          oracleGeminiKey: payload?.oracleGeminiKey ?? '',
+          oracleSystemPrompt: payload?.oracleSystemPrompt ?? '',
+        }
         const nextGlobalCommission = Number(payload?.globalCommission)
         mpCredentialsRef.current = mp
         dailyCredentialsRef.current = daily
         stripeCredentialsRef.current = stripe
+        oracleCredentialsRef.current = oracle
         setMpCredentialsState(mp)
         setDailyCredentialsState(daily)
         setStripeCredentialsState(stripe)
+        setOracleCredentialsState(oracle)
         setGlobalCommissionState(Number.isFinite(nextGlobalCommission) ? nextGlobalCommission : 30)
       } catch {
         return
@@ -2157,6 +2174,8 @@ export function PlatformProvider({ children }) {
     setDailyCredentials,
     stripeCredentials,
     setStripeCredentials,
+    oracleCredentials,
+    setOracleCredentialsState,
     submitQuestionConsultation,
     questionRequests,
     respondToQuestionRequest,
