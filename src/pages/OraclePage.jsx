@@ -476,9 +476,12 @@ export function OraclePage() {
 <AstrologyChart planets={oraclePlanets} />
                <div className="prose prose-invert prose-gold max-w-none text-gray-300 font-serif leading-relaxed text-left min-h-[150px] whitespace-pre-wrap">
                  <Typewriter
+                   onInit={(typewriter) => {
+                     typewriter
+                       .typeString(oracleAnswer)
+                       .start();
+                   }}
                    options={{
-                     strings: [oracleAnswer],
-                     autoStart: true,
                      delay: 30,
                      cursor: '✧'
                    }}
