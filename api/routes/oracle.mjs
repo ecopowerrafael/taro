@@ -117,7 +117,7 @@ export const createOracleRouter = (pool) => {
               client_secret: creds.oracleProkeralaSecret
             })
           })
-          const tokenData = await tokenRes.json()
+          const tokenData = await tokenRes.json()\n            prokeralaDebug = { AuthStep: tokenData };
           console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
           console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
           console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
@@ -133,7 +133,7 @@ export const createOracleRouter = (pool) => {
             console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100)); 
             console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
             console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
-            prokeralaDebug = { debug: astroData };
+            prokeralaDebug = { TokenStep: tokenData, AstroStep: astroData };
               if (astroData?.data?.planet_position) {
                 rawPlanets = astroData.data.planet_position;
                 const planetsData = rawPlanets.map(p => `${p.name} em ${Number(p.degree).toFixed(1)}°`).join(', ')
