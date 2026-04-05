@@ -108,7 +108,7 @@ export function OraclePage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('taro_token')}`
         },
         body: JSON.stringify(payload)
       });
@@ -143,7 +143,7 @@ export function OraclePage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('taro_token')}`
         }
       });
       const data = await res.json();
@@ -216,7 +216,7 @@ export function OraclePage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('taro_token')}`
         },
         body: JSON.stringify({ question })
       });
