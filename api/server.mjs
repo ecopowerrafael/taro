@@ -15,6 +15,7 @@ import { createAuthRouter } from './routes/auth.mjs'
 import { createRechargesRouter } from './routes/recharges.mjs'
 import { createVideoSessionsRouter } from './routes/videoSessions.mjs'
 import { createSpellsRouter } from './routes/spells.mjs'
+import { createOracleRouter } from './routes/oracle.mjs'
 import webpush from 'web-push'
 import { authenticate, authorizeAdmin } from './middleware/auth.mjs'
 import { initializeFirebaseAdmin } from './firebaseAdmin.mjs'
@@ -309,12 +310,13 @@ try {
   console.log('[API] Router /wallets carregado.')
   
   app.use('/api/video-sessions', createVideoSessionsRouter(pool))    
-    import { createOracleRouter } from './routes/oracle.mjs'
-    app.use('/api/oracle', createOracleRouter(pool))  console.log('[API] Router /video-sessions carregado.')
+    console.log('[API] Router /video-sessions carregado.')
 
-  app.use('/api/spells', createSpellsRouter(pool))
-  console.log('[API] Router /spells carregado.')
+    app.use('/api/spells', createSpellsRouter(pool))
+    console.log('[API] Router /spells carregado.')
 
+    app.use('/api/oracle', createOracleRouter(pool))
+    console.log('[API] Router /oracle carregado.')
   app.post('/api/push/subscribe', authenticate, async (req, res) => {
     if (!pushEnabled) {
       return res.status(503).json({ error: 'Web Push desativado no servidor.' })
