@@ -120,20 +120,6 @@ export function OraclePage() {
     setBirthTimeStr(val);
   };
 
-  const handleDateChange = (e) => {
-    let val = e.target.value.replace(/\D/g, '');
-    if (val.length > 8) val = val.substring(0, 8);
-    if (val.length > 4) val = val.replace(/^(\d{2})(\d{2})/, "$1/$2/");
-    else if (val.length > 2) val = val.replace(/^(\d{2})/, "$1/");
-    setBirthDateStr(val);
-  };
-
-  const handleTimeChange = (e) => {
-    let val = e.target.value.replace(/\D/g, '');
-    if (val.length > 4) val = val.substring(0, 4);
-    if (val.length > 2) val = val.replace(/^(\d{2})/, "$1:");
-    setBirthTimeStr(val);
-  };
 
   const handleNextStep = () => {
     if (step === 'intro') {
