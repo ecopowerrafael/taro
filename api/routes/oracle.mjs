@@ -151,7 +151,7 @@ export const createOracleRouter = (pool) => {
       Contexto Astrológico Bruto (Prokerala): ${astrologyContext}.
       Desejo / Pergunta Secreta: "${question}"`
 
-      const modelName = creds.oracleGeminiModel || 'gemini-1.5-flash'
+      const modelName = creds.oracleGeminiModel || 'gemini-pro'
       const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${creds.oracleGeminiKey}`
       
       const geminiBody = {
