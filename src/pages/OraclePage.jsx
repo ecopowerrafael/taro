@@ -474,6 +474,11 @@ export function OraclePage() {
                  <AstrologyChart planets={oraclePlanets} />
               )}
 
+              <StarFieldInput
+                isLoading={loadingAction}
+                onSubmit={handleOracleRequest}
+              />
+
               {errorMsg && (
                  <div className="mt-4 text-red-400 bg-red-900/30 p-3 rounded text-sm w-full">
                    {errorMsg}
