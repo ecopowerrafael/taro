@@ -337,7 +337,7 @@ export function PlatformProvider({ children }) {
   const mpCredentialsRef = useRef(mpCredentials)
   const dailyCredentialsRef = useRef(dailyCredentials)
   const stripeCredentialsRef = useRef(stripeCredentials)
-
+    const oracleCredentialsRef = useRef(oracleCredentials)
   const minutesBalance = profile?.minutesBalance || 0
 
   const userConsultantProfile = useMemo(() => {
@@ -628,8 +628,9 @@ export function PlatformProvider({ children }) {
     stripeCredentialsRef.current = stripeCredentials
   }, [stripeCredentials])
 
-  // Setup socket.io listeners para notificações in-app
-  useEffect(() => {
+    useEffect(() => {
+      oracleCredentialsRef.current = oracleCredentials
+    }, [oracleCredentials])
     if (!isConsultant || !userConsultantProfile) {
       return
     }
@@ -1505,8 +1506,8 @@ export function PlatformProvider({ children }) {
         setStripeCredentialsState(stripe)
         setOracleCredentialsState(oracle)
         setGlobalCommissionState(Number.isFinite(nextGlobalCommission) ? nextGlobalCommission : 30)
-      } catch {
-        return
+        } catch (err) {
+          console.error('[loadCredentials] Error:', err)
       }
     }
     void loadCredentials()
