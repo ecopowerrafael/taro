@@ -102,7 +102,8 @@ export const createOracleRouter = (pool) => {
         return response.status(400).json({ error: 'Chave da API do Gemini não configurada pelo administrador no painel.' })
       }
 
-      let astrologyContext = 'Dados astrológicos exatos indisponíveis/ignorados.'        let rawPlanets = []
+      let astrologyContext = 'Dados astrológicos exatos indisponíveis/ignorados.'
+      let rawPlanets = []
       // 3. Integração Prokerala (apenas se tiver credenciais preenchidas e a pessoa tiver salvo Posição GPS + Data de Nascimento)
       if (creds.oracleProkeralaId && creds.oracleProkeralaSecret && user.oracle_lat && user.oracle_lng && (user.oracle_birth_date || user.birthDate)) {
         try {
