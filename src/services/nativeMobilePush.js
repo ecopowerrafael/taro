@@ -1,8 +1,14 @@
 import { App } from '@capacitor/app'
 import { Capacitor, registerPlugin } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
-import { FlutterCallkitIncoming as CapacitorIncomingCallKit } from 'capacitor-incoming-call-kit'
 import { buildApiUrl } from '../utils/runtimeConfig'
+
+const CapacitorIncomingCallKit = registerPlugin('FlutterCallkitIncoming', {
+  web: () => Promise.resolve({
+    onMethod: async () => {},
+    addListener: async () => ({ remove: () => {} }),
+  })
+});
 
 const APP_SCHEME = 'com.astria.taromobile'
 
