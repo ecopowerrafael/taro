@@ -120,6 +120,7 @@ export const createOracleRouter = (pool) => {
           const tokenData = await tokenRes.json()
           console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
           console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
+          console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
 
           if (tokenData.access_token) {
             // B. Pegar a Posição dos Planetas usando a string parseada
@@ -128,7 +129,8 @@ export const createOracleRouter = (pool) => {
               headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
             })
             
-            const astroData = await astroRes.json(); if (astroData.errors) prokeralaDebug = astroData.errors;
+            const astroData = await astroRes.json()
+            console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100)); if (astroData.errors) prokeralaDebug = astroData.errors;
             console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
             console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
             if (astroData?.data?.planet_position) {
@@ -151,9 +153,18 @@ export const createOracleRouter = (pool) => {
       Contexto Astrológico Bruto (Prokerala): ${astrologyContext}.
       Desejo / Pergunta Secreta: "${question}"`
 
-      let modelName = creds.oracleGeminiModel || 'gemini-pro';
-      if (modelName === 'gemini-1.5-flash') modelName = 'gemini-pro';
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${creds.oracleGeminiKey}`
+let activeModel = creds.oracleGeminiModel || 'gemini-1.5-flash';
+        try {
+          const listRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + creds.oracleGeminiKey);
+          const listData = await listRes.json();
+          if (listData?.models) {
+             const models = listData.models.filter(m => m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'));
+             if (models.length > 0 && !models.find(m => m.name === 'models/' + activeModel)) {
+                activeModel = models[0].name.replace('models/', '');
+             }
+          }
+        } catch (e) {}
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${creds.oracleGeminiKey}`
       
       const geminiBody = {
         system_instruction: {
