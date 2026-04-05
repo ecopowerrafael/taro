@@ -20,7 +20,7 @@ export function EntrarPage() {
 
     if (result.ok) {
       setSystemNotice('Bem-vindo de volta!')
-      navigate('/perfil')
+      navigate('/')
     } else {
       setSystemNotice(result.message || 'Erro ao entrar. Verifique suas credenciais.')
     }

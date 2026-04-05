@@ -12,8 +12,7 @@ export function OraclePage() {
   const navigate = useNavigate();
   const [step, setStep] = useState('intro');
   const [birthLocation, setBirthLocation] = useState(null);
-  const [birthDateStr, setBirthDateStr] = useState('');
-  const [loadingAction, setLoadingAction] = useState(false);
+  const [birthDateStr, setBirthDateStr] = useState('');  const [birthTimeStr, setBirthTimeStr] = useState('');  const [loadingAction, setLoadingAction] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [oracleAnswer, setOracleAnswer] = useState('');
 
@@ -26,7 +25,9 @@ export function OraclePage() {
         lng: profile.oracle_lng
       });
       if (profile.oracle_birth_date) {
-         setBirthDateStr(profile.oracle_birth_date);
+         const parts = profile.oracle_birth_date.split(' ');
+         if (parts[0]) setBirthDateStr(parts[0]);
+         if (parts[1]) setBirthTimeStr(parts[1]);
       }
     }
   }, [profile]);
@@ -47,7 +48,7 @@ export function OraclePage() {
           oracle_city: birthLocation.name,
           oracle_lat: birthLocation.lat,
           oracle_lng: birthLocation.lng,
-          oracle_birth_date: birthDateStr
+          oracle_birth_date: `${birthDateStr} ${birthTimeStr}`.trim()
         })
       });
       // Atualiza o local state do profile global
@@ -93,6 +94,43 @@ export function OraclePage() {
 
   const isFree = !profile?.oracle_used_free;
   const oraclePrice = Number(oracleCredentials?.oraclePrice || 0);
+
+  const handleDateChange = (e) => {
+    let val = e.target.value.replace(/\D/g, ''); // só números
+    if (val.length > 8) val = val.substring(0, 8);
+    // máscara DD/MM/YYYY
+    if (val.length > 4) {
+      val = val.replace(/^(\d{2})(\d{2})/, "$1/$2/");
+    } else if (val.length > 2) {
+      val = val.replace(/^(\d{2})/, "$1/");
+    }
+    setBirthDateStr(val);
+  };
+
+  const handleTimeChange = (e) => {
+    let val = e.target.value.replace(/\D/g, ''); // só números
+    if (val.length > 4) val = val.substring(0, 4);
+    // máscara HH:MM
+    if (val.length > 2) {
+      val = val.replace(/^(\d{2})/, "$1:");
+    }
+    setBirthTimeStr(val);
+  };
+
+  const handleDateChange = (e) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 8) val = val.substring(0, 8);
+    if (val.length > 4) val = val.replace(/^(\d{2})(\d{2})/, "$1/$2/");
+    else if (val.length > 2) val = val.replace(/^(\d{2})/, "$1/");
+    setBirthDateStr(val);
+  };
+
+  const handleTimeChange = (e) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 4) val = val.substring(0, 4);
+    if (val.length > 2) val = val.replace(/^(\d{2})/, "$1:");
+    setBirthTimeStr(val);
+  };
 
   const handleNextStep = () => {
     if (step === 'intro') {
@@ -148,7 +186,7 @@ export function OraclePage() {
             exit={{ opacity: 0, y: -20 }}
             className="space-y-6"
           >
-            <img src="/oraculo-astria.png" alt="Oráculo Astria" className="w-32 h-32 mx-auto" />
+            <img src="/oraculo.png" alt="Oráculo Astria" className="w-32 h-32 mx-auto" />
             <h1 className="text-3xl font-serif text-mystic-gold">Oráculo Astria</h1>
             <p className="text-gray-300">
               Bem-vindo ao ritual. Concentre-se na sua questão e permita que o cosmos revele a verdade oculta.
@@ -181,16 +219,28 @@ export function OraclePage() {
             </p>
             
             <div className="w-full relative z-20 space-y-4">
-               <div>
-                 <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">Data e Hora exata em que você nasceu</label>
-                 <input 
-                   type="text"
-                   value={birthDateStr}
-                   onChange={(e) => setBirthDateStr(e.target.value)}
-                   placeholder="Dia/Mês/Ano e Horário (Ex: 25/05/1990 14:30)"
-                   className="w-full bg-black/60 border border-mystic-purple/50 rounded-lg px-4 py-4 text-left text-white placeholder-gray-500 focus:outline-none focus:border-mystic-gold focus:ring-1 focus:ring-mystic-gold transition-all"
-                 />
-               </div>
+               <div className="flex gap-4">
+  <div className="flex-1">
+    <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">Data de Nascimento</label>
+    <input
+      type="text"
+      value={birthDateStr}
+      onChange={handleDateChange}
+      placeholder="DD/MM/AAAA"
+      className="w-full bg-black/60 border border-mystic-purple/50 rounded-lg px-4 py-4 text-left text-white placeholder-gray-500 focus:outline-none focus:border-mystic-gold focus:ring-1 focus:ring-mystic-gold transition-all"
+    />
+  </div>
+  <div className="flex-1">
+    <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">Horário de Nascimento</label>
+    <input
+      type="text"
+      value={birthTimeStr}
+      onChange={handleTimeChange}
+      placeholder="HH:MM"
+      className="w-full bg-black/60 border border-mystic-purple/50 rounded-lg px-4 py-4 text-left text-white placeholder-gray-500 focus:outline-none focus:border-mystic-gold focus:ring-1 focus:ring-mystic-gold transition-all"
+    />
+  </div>
+</div>
                
                <div>
                  <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">Sua cidade natal (Onde você nasceu)</label>
@@ -199,7 +249,7 @@ export function OraclePage() {
             </div>
             
             <div className="mt-8 min-h-[60px] relative z-0">
-               {birthLocation && birthDateStr.length >= 8 && (
+               {birthLocation && birthDateStr.length >= 10 && birthTimeStr.length >= 5 && (
                  <motion.button
                    initial={{ opacity: 0, y: 10 }}
                    animate={{ opacity: 1, y: 0 }}
