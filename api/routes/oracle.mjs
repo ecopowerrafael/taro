@@ -130,11 +130,12 @@ export const createOracleRouter = (pool) => {
             })
             
             const astroData = await astroRes.json()
-            console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100)); if (astroData.errors) prokeralaDebug = astroData.errors;
+            console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100)); 
             console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
             console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
-            if (astroData?.data?.planet_position) {
-                rawPlanets = astroData.data.planet_position; prokeralaDebug = astroData.errors || astroData;
+            prokeralaDebug = { debug: astroData };
+              if (astroData?.data?.planet_position) {
+                rawPlanets = astroData.data.planet_position;
                 const planetsData = rawPlanets.map(p => `${p.name} em ${Number(p.degree).toFixed(1)}°`).join(', ')
               astrologyContext = `Planetas no mapa astral de nascimento: ${planetsData}.`
             }
