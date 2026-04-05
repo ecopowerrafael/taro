@@ -18,7 +18,7 @@ export const createOracleRouter = (pool) => {
       response.status(200).json({ success: true })
     } catch (error) {
       console.error('[API/Oracle] Erro ao salvar location:', error)
-      response.status(500).json({ error: 'Erro interno.' })
+      response.status(500).json({ error: `Erro salvar BD: ${error.message}` })
     }
   })
 
@@ -56,7 +56,7 @@ export const createOracleRouter = (pool) => {
 
     } catch (error) {
       console.error('[API/Oracle] Erro ao debitar saldo:', error)
-      response.status(500).json({ error: 'Erro interno.' })
+      response.status(500).json({ error: `Erro debitar: ${error.message}` })
     }
   })
 
@@ -172,7 +172,7 @@ export const createOracleRouter = (pool) => {
 
       if (geminiData.error) {
         console.error('[API/Oracle] Erro retornado pelo Gemini:', geminiData.error)
-        return response.status(500).json({ error: 'Os astros não puderam responder agora. Nossa conexão mística falhou (Erro AI).' })
+        return response.status(500).json({ error: `Erro AI: ${geminiData.error.message || JSON.stringify(geminiData.error)}` })
       }
 
       const answer = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'O silêncio do cosmos é absoluto. Não houve resposta.'
@@ -180,7 +180,7 @@ export const createOracleRouter = (pool) => {
         response.status(200).json({ answer, planets: rawPlanets })
     } catch (error) {
       console.error('[API/Oracle] Erro interno:', error)
-      response.status(500).json({ error: 'Erro interno ao realizar ritual.' })
+      response.status(500).json({ error: `Erro Ritual: ${error.message}` })  
     }
   })
 
