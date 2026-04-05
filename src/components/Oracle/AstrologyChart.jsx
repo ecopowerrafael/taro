@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { getInterpretationText } from '../../data/astrologyData';
 
 const translationMap = {
   "Aries": "Áries",
@@ -106,17 +107,31 @@ export function AstrologyChart({ planets }) {
       </svg>
 
       <div className="absolute -inset-4 bg-mystic-purple/10 rounded-full blur-xl -z-10 mix-blend-screen pointer-events-none" />
-      
-      <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs">
-         {planets.slice(0, 5).map(p => { 
-           if (!planetIcons[p.name]) return null; 
-           const signIdx = Math.floor((Number(p.longitude || p.degree) || 0) / 30); 
-           const signWestern = westernSigns[signIdx % 12]; 
+
+      </div>
+
+      <div className="mt-8 flex flex-col gap-4 text-xs max-w-full">
+         {planets.map(p => {
+           if (!planetIcons[p.name]) return null;
+           const signIdx = Math.floor((Number(p.longitude || p.degree) || 0) / 30);
+           const signWestern = westernSigns[signIdx % 12];
+           // House parsing. Prokerala uses position for House.
+           const houseNum = p.position || null;
+           const interpretation = getInterpretationText(p.name, signWestern, Boolean(p.is_retrograde), houseNum);
+           
            return (
-            <span key={p.name} className="px-2 py-1 bg-black/40 border border-mystic-gold/30 rounded-full text-gray-300">
-               <span className="text-mystic-gold mr-1">{planetIcons[p.name] || '✧'}</span>
-               {t(p.name)} em {t(signWestern)}
-            </span>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              key={p.name} 
+              className="px-4 py-3 bg-black/60 border border-mystic-gold/20 rounded-xl text-gray-300 text-left"
+            >
+               <div className="font-bold text-mystic-gold text-sm mb-1 flex items-center gap-2">
+                 <span className="text-xl">{planetIcons[p.name] || '✧'}</span> 
+                 {t(p.name)} em {t(signWestern)}
+               </div>
+               <p className="leading-relaxed opacity-90">{interpretation}</p>
+            </motion.div>
            );
          })}
       </div>
