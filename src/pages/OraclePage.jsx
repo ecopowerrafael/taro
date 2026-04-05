@@ -9,15 +9,63 @@ import { Loader2 } from 'lucide-react';
 import Typewriter from 'typewriter-effect';
 import { AstrologyChart } from '../components/Oracle/AstrologyChart';
 
+// Explosion particle component for the button
+function ButtonExplosion({ isExploding, children }) {
+  if (!isExploding) return null;
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+          animate={{ 
+             opacity: 0, 
+             scale: 0, 
+             x: (Math.random() - 0.5) * 300, 
+             y: (Math.random() - 0.5) * 300 
+          }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="absolute w-2 h-2 rounded-full bg-mystic-gold shadow-[0_0_10px_#fff]"
+        />
+      ))}
+      {children}
+    </div>
+  );
+}
+
+// Stars Background for birth_city step
+function StarsBackground() {
+  return (
+    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+       {[...Array(50)].map((_, i) => (
+         <motion.div
+           key={i}
+           initial={{ opacity: Math.random(), scale: Math.random() * 0.5 + 0.5 }}
+           animate={{ opacity: [0.2, 1, 0.2] }}
+           transition={{ duration: Math.random() * 3 + 2, repeat: Infinity }}
+           className="absolute w-1 h-1 bg-white rounded-full shadow-[0_0_5px_#fff]"
+           style={{
+             top: `${Math.random() * 100}%`,
+             left: `${Math.random() * 100}%`
+           }}
+         />
+       ))}
+    </div>
+  );
+}
+
 export function OraclePage() {
   const { oracleCredentials, profile, setProfile, fetchProfile } = usePlatformContext();
   const navigate = useNavigate();
   const [step, setStep] = useState('intro');
   const [birthLocation, setBirthLocation] = useState(null);
-  const [birthDateStr, setBirthDateStr] = useState('');  const [birthTimeStr, setBirthTimeStr] = useState('');  const [loadingAction, setLoadingAction] = useState(false);
+  const [birthDateStr, setBirthDateStr] = useState('');  
+  const [birthTimeStr, setBirthTimeStr] = useState('');  
+  const [loadingAction, setLoadingAction] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [oracleAnswer, setOracleAnswer] = useState('');
   const [oraclePlanets, setOraclePlanets] = useState([]);
+  const [isExploding, setIsExploding] = useState(false);
 
   // Ao montar, carrega o location salvo se houver
   useEffect(() => {
@@ -123,12 +171,15 @@ export function OraclePage() {
 
   const handleNextStep = () => {
     if (step === 'intro') {
-      // Se ele já tem salvo no banco, podemos pular a tela de cidade
-      if (profile?.oracle_city) {
-        setStep('payment');
-      } else {
-        setStep('birth_city');
-      }
+      setIsExploding(true);
+      setTimeout(() => {
+        setIsExploding(false);
+        if (profile?.oracle_city) {
+          setStep('payment');
+        } else {
+          setStep('birth_city');
+        }
+      }, 500); // Aguarda animação de explosão
     }
   };
 
@@ -181,12 +232,15 @@ export function OraclePage() {
             <p className="text-gray-300">
               Bem-vindo ao ritual. Concentre-se na sua questão e permita que o cosmos revele a verdade oculta.
             </p>
-            <button
-              onClick={handleNextStep}
-              className="bg-mystic-gold text-mystic-dark px-8 py-3 rounded-full font-bold shadow-[0_0_15px_rgba(255,215,0,0.5)] uppercase tracking-wider mt-8 hover:scale-105 transition-transform"
-            >
-              Continuar a Jornada
-            </button>
+            <div className="relative inline-block mt-8">
+              <ButtonExplosion isExploding={isExploding} />
+              <button
+                onClick={handleNextStep}
+                className="relative z-10 bg-mystic-gold text-mystic-dark px-8 py-3 rounded-full font-bold shadow-[0_0_15px_rgba(255,215,0,0.5)] uppercase tracking-wider hover:scale-105 transition-transform"
+              >
+                Continuar a Jornada
+              </button>
+            </div>
             <button
               onClick={() => navigate(-1)}
               className="block mx-auto text-sm text-gray-400 mt-4 hover:text-white"
@@ -202,8 +256,9 @@ export function OraclePage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-6 w-full max-w-sm mx-auto"
+            className="space-y-6 w-full max-w-sm mx-auto relative z-10"
           >
+            <StarsBackground />
             <p className="text-mystic-gold text-2xl font-serif italic drop-shadow-md mb-8 relative z-20 text-center">
               Onde e quando as estrelas brilharam no seu nascimento?
             </p>

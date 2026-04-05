@@ -25,18 +25,10 @@ export function ApkHomePage() {
         >
           <div className="absolute inset-0 bg-gradient-to-br from-mystic-purple/30 via-transparent to-black/80 opacity-80 pointer-events-none" />
           
-          <img src="/oraculo-astria.png" alt="Oráculo Astria" className="relative z-10 w-28 h-28 mb-4 object-contain drop-shadow-[0_0_15px_rgba(255,215,0,0.5)]" />
+          <img src="/oraculo.png" alt="Oráculo Astria" className="relative z-10 w-28 h-28 mb-4 object-contain drop-shadow-[0_0_15px_rgba(255,215,0,0.5)]" />
           <h3 className="relative z-10 font-serif text-2xl text-mystic-gold tracking-widest uppercase font-bold text-center leading-tight">
             Consultar<br/>Oráculo Astria
           </h3>
-          
-          {!hasUsedFreeOracle && (
-             <div className="mt-4 px-5 py-2 rounded-full bg-gradient-to-r from-mystic-gold/20 via-mystic-gold/40 to-mystic-gold/20 border border-mystic-gold/60 relative z-10 shadow-[0_0_15px_rgba(255,215,0,0.3)] animate-pulse">
-               <span className="text-xs font-bold text-mystic-gold uppercase tracking-[0.1em] drop-shadow-md">
-                 🔮 Primeira Consulta Grátis
-               </span>
-             </div>
-          )}
         </motion.button>
 
         {/* Botões Secundários */}
