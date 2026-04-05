@@ -30,20 +30,24 @@ const translationMap = {
 };
 
 const planetIcons = {
-  "Sun": "☉",
-  "Moon": "☽",
-  "Mercury": "☿",
-  "Venus": "♀",
-  "Mars": "♂",
-  "Jupiter": "♃",
-  "Saturn": "♄",
-  "Uranus": "♅",
-  "Neptune": "♆",
-  "Pluto": "♇",
-  "True Node": "☊"
+  "Sun": "\u2609",
+  "Moon": "\u263D",
+  "Mercury": "\u263F",
+  "Venus": "\u2640",
+  "Mars": "\u2642",
+  "Jupiter": "\u2643",
+  "Saturn": "\u2644",
+  "Uranus": "\u2645",
+  "Neptune": "\u2646",
+  "Pluto": "\u2647",
+  "True Node": "\u260A",
+  "Rahu": "\u260A",
+  "Ketu": "\u260B",
+  "Ascendant": "ASC"
 };
 
-const signSymbols = ["♈︎","♉︎","♊︎","♋︎","♌︎","♍︎","♎︎","♏︎","♐︎","♑︎","♒︎","♓︎"];
+const signSymbols = ["\u2648", "\u2649", "\u264A", "\u264B", "\u264C", "\u264D", "\u264E", "\u264F", "\u2650", "\u2651", "\u2652", "\u2653"];
+const westernSigns = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
 
 const t = (term) => translationMap[term] || term;
 
@@ -83,10 +87,10 @@ export function AstrologyChart({ planets }) {
           if (!planetIcons[planet.name]) return null;
           
           // Prokerala returns 'degree' 0-360 starting from Aries. Math angle 0 is 3 o'clock.
-          const degree = Number(planet.degree);
+          const degree = Number(planet.longitude || planet.degree);
           const angle = degree * (Math.PI / 180);
           // R varies slightly so text does not overlap as much, or just keep it around 40-50
-          const r = 45 + (idx % 3) * 5; 
+          const r = 35 + (idx % 4) * 8; 
           const px = 100 + r * Math.cos(angle);
           const py = 100 + r * Math.sin(angle);
 
@@ -104,12 +108,17 @@ export function AstrologyChart({ planets }) {
       <div className="absolute -inset-4 bg-mystic-purple/10 rounded-full blur-xl -z-10 mix-blend-screen pointer-events-none" />
       
       <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs">
-         {planets.slice(0, 5).map(p => (
+         {planets.slice(0, 5).map(p => { 
+           if (!planetIcons[p.name]) return null; 
+           const signIdx = Math.floor((Number(p.longitude || p.degree) || 0) / 30); 
+           const signWestern = westernSigns[signIdx % 12]; 
+           return (
             <span key={p.name} className="px-2 py-1 bg-black/40 border border-mystic-gold/30 rounded-full text-gray-300">
-               <span className="text-mystic-gold mr-1">{planetIcons[p.name] || '✦'}</span>
-               {t(p.name)} em {t(p.sign)}
+               <span className="text-mystic-gold mr-1">{planetIcons[p.name] || '✧'}</span>
+               {t(p.name)} em {t(signWestern)}
             </span>
-         ))}
+           );
+         })}
       </div>
     </div>
   );
