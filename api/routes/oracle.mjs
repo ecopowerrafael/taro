@@ -137,8 +137,16 @@ export const createOracleRouter = (pool) => {
             prokeralaDebug = { TokenStep: tokenData, AstroStep: astroData };
               if (astroData?.data?.planet_position) {
                 rawPlanets = astroData.data.planet_position;
-                const planetsData = rawPlanets.map(p => `${p.name} em ${Number(p.degree).toFixed(1)}°`).join(', ')
-              astrologyContext = `Planetas no mapa astral de nascimento: ${planetsData}.`
+                const planetsData = rawPlanets.map(p => {
+                  let sign = p.sign ? (p.sign.name || p.sign || '') : '';
+                  let deg = typeof p.normDegree === 'number' ? p.normDegree : (typeof p.degree === 'number' ? p.degree : 0);
+                  let naks = p.nakshatra ? (p.nakshatra.name || p.nakshatra || '') : '';
+                  let house = p.house ? `Casa ${p.house}` : '';
+                  let retro = p.isRetrograde ? ' (Retrógrado)' : '';
+                  
+                  return `${p.name} em ${sign} ${house} ${Number(deg).toFixed(1)}° ${naks ? 'Nakshatra: '+naks : ''} ${retro}`.replace(/\s+/g, ' ').trim();
+                }).join('; ');
+              astrologyContext = `Posições Astrológicas (Prokerala Ayanamsa): ${planetsData}.`
             }
           }
         } catch (err) {
