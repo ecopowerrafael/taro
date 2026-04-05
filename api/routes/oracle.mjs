@@ -117,7 +117,8 @@ export const createOracleRouter = (pool) => {
               client_secret: creds.oracleProkeralaSecret
             })
           })
-          const tokenData = await tokenRes.json();\n            prokeralaDebug = { AuthStep: tokenData };\n            prokeralaDebug = { AuthStep: tokenData };
+          const tokenData = await tokenRes.json();
+            prokeralaDebug = { AuthStep: tokenData };
           console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
           console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
           console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
