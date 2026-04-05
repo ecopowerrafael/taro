@@ -1,0 +1,1 @@
+﻿const fs = require('fs'); let code = fs.readFileSync('src/context/PlatformContext.jsx', 'utf8'); code = code.replace('oracleSystemPrompt: payload?.oracleSystemPrompt ?? \'\'', 'oracleSystemPrompt: payload?.oracleSystemPrompt ?? \'\', oraclePrice: payload?.oraclePrice ?? \'5.00\''); fs.writeFileSync('src/context/PlatformContext.jsx', code);

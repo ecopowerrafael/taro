@@ -1,0 +1,1 @@
+﻿const fs = require('fs'); let code = fs.readFileSync('src/pages/AdminPage.jsx', 'utf8'); code = code.replace('oracleSystemPrompt: credentialsDraft.oracleSystemPrompt,', 'oracleSystemPrompt: credentialsDraft.oracleSystemPrompt,\n\t\toraclePrice: credentialsDraft.oraclePrice,'); fs.writeFileSync('src/pages/AdminPage.jsx', code);

@@ -56,9 +56,10 @@ export function AstrologyChart({ planets }) {
   if (!planets || planets.length === 0) return null;
 
   return (
-    <div className="relative w-full max-w-[300px] aspect-square mx-auto my-8">
-      {/* Outer Circle (Zodiac Wheel) */}
-      <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-[0_0_10px_rgba(255,215,0,0.4)]">
+    <div className="w-full">
+      <div className="relative w-full max-w-[300px] aspect-square mx-auto my-8">
+        {/* Outer Circle (Zodiac Wheel) */}
+        <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-[0_0_10px_rgba(255,215,0,0.4)]">
         <circle cx="100" cy="100" r="90" fill="none" stroke="#D4AF37" strokeWidth="1" opacity="0.3" />
         <circle cx="100" cy="100" r="60" fill="none" stroke="#D4AF37" strokeWidth="1" opacity="0.3" />
         
@@ -107,7 +108,6 @@ export function AstrologyChart({ planets }) {
       </svg>
 
       <div className="absolute -inset-4 bg-mystic-purple/10 rounded-full blur-xl -z-10 mix-blend-screen pointer-events-none" />
-
       </div>
 
       <div className="mt-8 flex flex-col gap-4 text-xs max-w-full">
