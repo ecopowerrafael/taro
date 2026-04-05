@@ -137,6 +137,7 @@ export const createCredentialsRouter = (pool) => {
         oracleProkeralaId: 'oracleProkeralaId',
         oracleProkeralaSecret: 'oracleProkeralaSecret',
         oracleGeminiKey: 'oracleGeminiKey',
+        oracleGeminiModel: 'oracleGeminiModel',
         oracleSystemPrompt: 'oracleSystemPrompt',
         oraclePrice: 'oraclePrice'
       }
@@ -199,7 +200,7 @@ export const createCredentialsRouter = (pool) => {
         stripe: ['stripePublicKey', 'stripeSecretKey'],
         commission: ['globalCommission'],
         smtp: ['smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpFrom'],
-        oracle: ['oracleHereApiKey', 'oracleGeminiKey', 'oracleProkeralaId', 'oracleProkeralaSecret', 'oracleSystemPrompt', 'oraclePrice'],
+        oracle: ['oracleHereApiKey', 'oracleGeminiKey', 'oracleGeminiModel', 'oracleProkeralaId', 'oracleProkeralaSecret', 'oracleSystemPrompt', 'oraclePrice'],
       }
 
       console.log(`[API/Credentials] PATCH request para tipo: ${type}`)

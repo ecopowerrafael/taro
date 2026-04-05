@@ -95,7 +95,7 @@ export const createOracleRouter = (pool) => {
       }
 
       // 2. Buscar as credenciais no banco de dados
-      const [pRows] = await pool.query('SELECT oracleProkeralaId, oracleProkeralaSecret, oracleGeminiKey, oracleSystemPrompt FROM platform_credentials LIMIT 1')
+      const [pRows] = await pool.query('SELECT oracleProkeralaId, oracleProkeralaSecret, oracleGeminiKey, oracleGeminiModel, oracleSystemPrompt FROM platform_credentials LIMIT 1')
       const creds = pRows[0] || {}
 
       if (!creds.oracleGeminiKey) {
@@ -118,6 +118,8 @@ export const createOracleRouter = (pool) => {
             })
           })
           const tokenData = await tokenRes.json()
+          console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
+          console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
 
           if (tokenData.access_token) {
             // B. Pegar a Posição dos Planetas usando a string parseada
@@ -127,6 +129,8 @@ export const createOracleRouter = (pool) => {
             })
             
             const astroData = await astroRes.json()
+            console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
+            console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
             if (astroData?.data?.planet_position) {
                 rawPlanets = astroData.data.planet_position
                 const planetsData = rawPlanets.map(p => `${p.name} em ${Number(p.degree).toFixed(1)}°`).join(', ')
@@ -147,7 +151,8 @@ export const createOracleRouter = (pool) => {
       Contexto Astrológico Bruto (Prokerala): ${astrologyContext}.
       Desejo / Pergunta Secreta: "${question}"`
 
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${creds.oracleGeminiKey}`
+      const modelName = creds.oracleGeminiModel || 'gemini-1.5-flash'
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${creds.oracleGeminiKey}`
       
       const geminiBody = {
         system_instruction: {
