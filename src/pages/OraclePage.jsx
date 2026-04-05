@@ -66,6 +66,7 @@ export function OraclePage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [oracleAnswer, setOracleAnswer] = useState('');
   const [oraclePlanets, setOraclePlanets] = useState([]);
+  const [chartLoading, setChartLoading] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
   const [debugLogs, setDebugLogs] = useState([]);
 
@@ -134,6 +135,32 @@ export function OraclePage() {
       setLoadingAction(false);
     }
   };
+
+  useEffect(() => {
+    if (step === 'ritual' && oraclePlanets.length === 0) {
+      const fetchChart = async () => {
+        setChartLoading(true);
+        addLog('ChartReq', 'Fetching from Prokerala API');
+        try {
+          const res = await fetch(buildApiUrl('/api/oracle/chart'), {
+            headers: { Authorization: `Bearer ${localStorage.getItem('taro_token')}` }
+          });
+          const data = await res.json();
+          if (data.debug) addLog('ChartDebug', data.debug);
+          if (data.planets) {
+            setOraclePlanets(data.planets);
+          }
+        } catch (err) {
+          console.error('Error fetching astrology chart', err);
+          addLog('ChartErr', err);
+        } finally {
+          setChartLoading(false);
+        }
+      };
+      // only fire once
+      fetchChart();
+    }
+  }, [step]);
 
   const handleConsultSubmit = async () => {
     setLoadingAction(true);
@@ -438,11 +465,15 @@ export function OraclePage() {
                 </span>
               </div>
               
-              <StarFieldInput 
-                isLoading={loadingAction} 
-                onSubmit={handleOracleRequest} 
-              />
-              
+              {chartLoading ? (
+                 <div className="flex flex-col items-center my-6">
+                   <Loader2 className="w-8 h-8 animate-spin text-mystic-gold mb-2" />
+                   <p className="text-sm text-mystic-gold">Desenhando seu céu natal...</p>
+                 </div>
+              ) : (
+                 <AstrologyChart planets={oraclePlanets} />
+              )}
+
               {errorMsg && (
                  <div className="mt-4 text-red-400 bg-red-900/30 p-3 rounded text-sm w-full">
                    {errorMsg}

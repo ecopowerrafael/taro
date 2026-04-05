@@ -60,6 +60,65 @@ export const createOracleRouter = (pool) => {
     }
   })
 
+  // Obter APENAS o mapa astral para o frontend renderizar antes de chamar o Gemini
+  router.get('/chart', authenticate, async (request, response) => {
+    try {
+      const userId = request.user.id
+      const [uRows] = await pool.query('SELECT birthDate, oracle_birth_date, oracle_lat, oracle_lng FROM users WHERE id = ?', [userId])
+      if (!uRows.length) return response.status(404).json({ error: 'Usuário não encontrado' })
+      const user = uRows[0]
+
+      const parseDateString = (dateStr) => {
+        if (!dateStr) return new Date().toISOString()
+        const parts = dateStr.split(/[\sT]+/)
+        const datePart = parts[0] || ''
+        const timePart = parts[1] || '12:00'
+        let isoStr = dateStr
+        if (datePart.includes('/')) {
+           const [day, month, year] = datePart.split('/')
+           if (day && month && year) isoStr = `${year}-${month}-${day}T${timePart}:00Z`
+        }
+        const parsed = new Date(isoStr)
+        return isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString()
+      }
+
+      const [pRows] = await pool.query('SELECT oracleProkeralaId, oracleProkeralaSecret FROM platform_credentials LIMIT 1')
+      const creds = pRows[0] || {}
+      let rawPlanets = []; let prokeralaDebug = null;
+
+      if (creds.oracleProkeralaId && creds.oracleProkeralaSecret && user.oracle_lat && user.oracle_lng && (user.oracle_birth_date || user.birthDate)) {
+        try {
+          const tokenRes = await fetch('https://api.prokerala.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              grant_type: 'client_credentials',
+              client_id: creds.oracleProkeralaId,
+              client_secret: creds.oracleProkeralaSecret
+            })
+          })
+          const tokenData = await tokenRes.json();
+          prokeralaDebug = { AuthStep: tokenData };
+
+          if (tokenData.access_token) {
+            const formattedDate = parseDateString(user.oracle_birth_date || (user.birthDate && new Date(user.birthDate).toISOString()))
+            const astroRes = await fetch(`https://api.prokerala.com/v2/astrology/planet-position?datetime=${formattedDate}&coordinates=${user.oracle_lat},${user.oracle_lng}&ayanamsa=1`, {
+              headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+            })
+            const astroData = await astroRes.json()
+            prokeralaDebug = { TokenStep: tokenData, AstroStep: astroData };
+            if (astroData?.data?.planet_position) rawPlanets = astroData.data.planet_position;
+          }
+        } catch (err) {
+          prokeralaDebug = { exception: err.message };
+        }
+      }
+      return response.status(200).json({ planets: rawPlanets, debug: prokeralaDebug })
+    } catch (error) {
+      return response.status(500).json({ error: error.message })
+    }
+  })
+
   // Realizar a consulta no Oráculo (Gemini + Prokerala)
   router.post('/consult', authenticate, async (request, response) => {
     try {
