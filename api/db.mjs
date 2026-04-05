@@ -226,8 +226,12 @@ export const initializeSchema = async (pool) => {
       oracleProkeralaId VARCHAR(255) NULL,
       oracleProkeralaSecret VARCHAR(255) NULL,
       oracleGeminiKey VARCHAR(255) NULL,
-        oracleSystemPrompt TEXT NULL,
-        oraclePrice DECIMAL(10,2) NOT NULL DEFAULT 5.00
+      oracleSystemPrompt TEXT NULL,
+      oraclePrice DECIMAL(10,2) NOT NULL DEFAULT 5.00 
+    )
+  `)
+
+  // Garantir colunas de SMTP para bancos antigos  
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpHost VARCHAR(255) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpPort INT NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpUser VARCHAR(255) NULL') } catch (e) {}
