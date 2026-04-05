@@ -89,7 +89,8 @@ export function CityAutocomplete({ onSelect }) {
           {suggestions.map((item, index) => (
             <button
               key={item.place_id || index}
-              onClick={() => handleSelect(item)}
+              onMouseDown={() => handleSelect(item)}
+              onClick={(e) => e.preventDefault()}
               className="w-full text-left px-4 py-3 hover:bg-mystic-purple/50 text-gray-200 transition-colors border-b border-mystic-purple/30 last:border-0"
             >
               <div className="font-medium text-mystic-gold">{item.display_name.split(',')[0]}</div>

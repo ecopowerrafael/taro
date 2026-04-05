@@ -8,6 +8,7 @@ import { StarFieldInput } from '../components/Oracle/StarFieldInput';
 import { Loader2 } from 'lucide-react';
 import Typewriter from 'typewriter-effect';
 import { AstrologyChart } from '../components/Oracle/AstrologyChart';
+import { buildApiUrl } from '../utils/runtimeConfig';
 
 // Explosion particle component for the button
 function ButtonExplosion({ isExploding, children }) {
@@ -66,6 +67,12 @@ export function OraclePage() {
   const [oracleAnswer, setOracleAnswer] = useState('');
   const [oraclePlanets, setOraclePlanets] = useState([]);
   const [isExploding, setIsExploding] = useState(false);
+  const [debugLogs, setDebugLogs] = useState([]);
+
+  const addLog = (tag, err) => {
+    const msg = typeof err === 'object' ? (err.message || JSON.stringify(err)) : String(err);
+    setDebugLogs(prev => [...prev.slice(-4), `${tag}: ${msg}`]);
+  };
 
   // Ao montar, carrega o location salvo se houver
   useEffect(() => {
@@ -85,28 +92,44 @@ export function OraclePage() {
 
   const handleLocationSubmit = async () => {
     if (!birthLocation) return;
-    
     setLoadingAction(true);
+    setErrorMsg('');
+    addLog('LocSubmit', 'start');
     try {
-      // Salva no banco de dados local
-      await fetch('/api/oracle/save-location', {
+      const payload = {
+        oracle_city: birthLocation.name,
+        oracle_lat: birthLocation.lat,
+        oracle_lng: birthLocation.lng,
+        oracle_birth_date: `${birthDateStr} ${birthTimeStr}`.trim()
+      };
+      addLog('Payload', payload);
+
+      const res = await fetch(buildApiUrl('/api/oracle/save-location'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({
-          oracle_city: birthLocation.name,
-          oracle_lat: birthLocation.lat,
-          oracle_lng: birthLocation.lng,
-          oracle_birth_date: `${birthDateStr} ${birthTimeStr}`.trim()
-        })
+        body: JSON.stringify(payload)
       });
-      // Atualiza o local state do profile global
+
+      const rawText = await res.text();
+      addLog('LocResSt', res.status);
+      addLog('LocResTxt', rawText.substring(0, 50));
+      
+      let data = {};
+      try { data = JSON.parse(rawText); } catch(err){}
+
+      if (!res.ok) {
+        throw new Error(data.error || `HTTP ${res.status}: ${rawText.substring(0, 40)}`);
+      }
+
       await fetchProfile();
-      setStep('payment'); // Próximo passo é decidir se paga ou não
+      setStep('payment');
     } catch (e) {
-      console.error(e);
+      console.error('Erro no LocationSubmit:', e);
+      addLog('LocErr', e);
+      setErrorMsg('Erro salvar local: ' + e.message);
     } finally {
       setLoadingAction(false);
     }
@@ -116,7 +139,7 @@ export function OraclePage() {
     setLoadingAction(true);
     setErrorMsg('');
     try {
-      const res = await fetch('/api/oracle/deduct-balance', {
+      const res = await fetch(buildApiUrl('/api/oracle/deduct-balance'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -137,6 +160,7 @@ export function OraclePage() {
       await fetchProfile();
       setStep('ritual');
     } catch (e) {
+      console.error(e);
       setErrorMsg(e.message);
     } finally {
       setLoadingAction(false);
@@ -186,8 +210,9 @@ export function OraclePage() {
   const handleOracleRequest = async (question) => {
     setLoadingAction(true);
     setErrorMsg('');
+    addLog('OracReq', 'start');
     try {
-      const res = await fetch('/api/oracle/consult', {
+      const res = await fetch(buildApiUrl('/api/oracle/consult'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -195,17 +220,23 @@ export function OraclePage() {
         },
         body: JSON.stringify({ question })
       });
+
+      const rawText = await res.text();
+      addLog('ReqResSt', res.status);
+      addLog('ReqResTxt', rawText.substring(0, 50));
       
-      const data = await res.json();
-      
+      let data = {};
+      try { data = JSON.parse(rawText); } catch(err){}
+
       if (!res.ok) {
-        throw new Error(data.error || 'Erro ao comunicar com o além.');
+        throw new Error(data.error || `HTTP ${res.status}: ${rawText.substring(0, 40)}`);
       }
-      
+
       setOracleAnswer(data.answer);
       if (data.planets) setOraclePlanets(data.planets);
-      setStep('result'); 
+      setStep('result');
     } catch (e) {
+      console.error(e);
       setErrorMsg(e.message);
     } finally {
       setLoadingAction(false);
@@ -217,6 +248,13 @@ export function OraclePage() {
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-mystic-dark to-black" />
       <SmokeBackground />
       
+      <div className="absolute top-0 left-0 w-full max-h-40 overflow-y-auto bg-black/80 text-green-400 font-mono text-[10px] p-2 z-[99] break-words text-left">
+        <div className="flex justify-between items-center bg-black sticky top-0 font-bold mb-1">
+           <span>Debug API</span>
+           <button onClick={() => setDebugLogs([])} className="pointer-events-auto bg-red-800 text-white px-2 rounded">Clear</button>
+        </div>
+        {debugLogs.map((log, i) => <div key={i}>{log}</div>)}
+      </div>
       <div className="z-10 relative flex flex-col items-center max-w-lg mx-auto p-4 text-center">
       <AnimatePresence mode="wait">
         {step === 'intro' && (
@@ -302,7 +340,12 @@ export function OraclePage() {
                    disabled={loadingAction}
                    className="bg-transparent border-2 border-mystic-gold text-mystic-gold px-8 py-3 rounded-full font-bold shadow-[0_0_15px_rgba(255,215,0,0.3)] uppercase tracking-wider mx-auto flex items-center justify-center gap-2 hover:bg-mystic-gold hover:text-mystic-dark transition-all disabled:opacity-50"
                  >
-                   {loadingAction && <Loader2 className="w-4 h-4 animate-spin" />}
+                   {errorMsg && (
+                 <div className="absolute -top-12 w-full text-red-500 bg-red-900/50 p-2 rounded text-sm text-center">
+                   {errorMsg}
+                 </div>
+               )}
+               {loadingAction && <Loader2 className="w-4 h-4 animate-spin" />}
                    Sintonizar Cosmos
                  </motion.button>
                )}
