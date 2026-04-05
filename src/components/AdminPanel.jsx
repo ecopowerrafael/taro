@@ -1649,7 +1649,7 @@ export function AdminPanel({
             <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h3 className="font-display text-xl text-mystic-goldSoft">APIs Místicas (Oráculo)</h3>
+                  <h3 className="font-display text-xl text-mystic-goldSoft">APIs Místicas (Mapa Astral)</h3>
                   <p className="text-xs text-ethereal-silver/70">Google Gemini, HERE Maps e Prokerala (Astrologia).</p>
                 </div>
                 <button
@@ -1704,7 +1704,7 @@ export function AdminPanel({
                     value={credentialsDraft.oracleSystemPrompt}
                     onChange={(e) => setCredentialsDraft({ ...credentialsDraft, oracleSystemPrompt: e.target.value })}
                     className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
-                    placeholder="Instruções e persona para o Oráculo"
+                    placeholder="Instruções e persona para o Mapa Astral"
                   />
                 </label>
                 <label className="grid gap-1.5 text-sm text-amber-100/75 md:col-span-2">

@@ -112,7 +112,7 @@ function AppContent() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={renderHome()} />
-          <Route path="/oraculo" element={<ProtectedRoute>{wrapWithTransition(OraclePage)}</ProtectedRoute>} />
+          <Route path="/mapa-astral" element={<ProtectedRoute>{wrapWithTransition(OraclePage)}</ProtectedRoute>} />
           <Route path="/plataforma" element={wrapWithTransition(PlatformPage)} />
           <Route 
             path="/admin" 

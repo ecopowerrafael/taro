@@ -14,20 +14,20 @@ export function ApkHomePage() {
     <PageShell title="Seu Destino" subtitle="O que os astros revelam hoje?">
       <div className="grid gap-6 px-4 py-8 max-w-sm mx-auto relative z-10 w-full">
         
-        {/* Card Principal - Ritual do Oráculo Astria */}
+        {/* Card Principal - Ritual do Mapa Astral Astria */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/oraculo')}
+          onClick={() => navigate('/Mapa Astral')}
           className="group relative flex flex-col items-center justify-center p-10 rounded-3xl border border-mystic-gold/40 bg-black/80 shadow-[0_0_20px_rgba(255,215,0,0.15)] transition-shadow hover:shadow-[0_0_35px_rgba(255,215,0,0.3)] overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-mystic-purple/30 via-transparent to-black/80 opacity-80 pointer-events-none" />
           
-          <img src="/oraculo.png" alt="Oráculo Astria" className="relative z-10 w-28 h-28 mb-4 object-contain drop-shadow-[0_0_15px_rgba(255,215,0,0.5)]" />
-          <h3 className="relative z-10 font-serif text-2xl text-mystic-gold tracking-widest uppercase font-bold text-center leading-tight">
-            Consultar<br/>Oráculo Astria
+          <img src="/mapa-astral.png" alt="Mapa Astral" className="relative z-10 w-28 h-28 mb-4 object-contain drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]" />
+          <h3 className="relative z-10 font-serif text-xl text-mystic-gold tracking-widest uppercase font-bold text-center leading-tight [text-shadow:_0_0_10px_#ffd700,_0_0_20px_#ffd700]">
+            Crie seu mapa<br/>astral grátis
           </h3>
         </motion.button>
 

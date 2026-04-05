@@ -4,7 +4,6 @@ import { usePlatformContext } from "../context/platform-context";
 import { useNavigate } from 'react-router-dom';
 import { SmokeBackground } from '../components/Oracle/SmokeBackground';
 import { CityAutocomplete } from '../components/Oracle/CityAutocomplete';
-import { StarFieldInput } from '../components/Oracle/StarFieldInput';
 import { Loader2 } from 'lucide-react';
 import Typewriter from 'typewriter-effect';
 import { AstrologyChart } from '../components/Oracle/AstrologyChart';
@@ -68,12 +67,6 @@ export function OraclePage() {
   const [oraclePlanets, setOraclePlanets] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
-  const [debugLogs, setDebugLogs] = useState([]);
-
-  const addLog = (tag, err) => {
-    const msg = typeof err === 'object' ? (err.message || JSON.stringify(err)) : String(err);
-    setDebugLogs(prev => [...prev.slice(-4), `${tag}: ${msg}`]);
-  };
 
   // Ao montar, carrega o location salvo se houver
   useEffect(() => {
@@ -95,7 +88,7 @@ export function OraclePage() {
     if (!birthLocation) return;
     setLoadingAction(true);
     setErrorMsg('');
-    addLog('LocSubmit', 'start');
+    // addLog('LocSubmit', 'start');
     try {
       const payload = {
         oracle_city: birthLocation.name,
@@ -103,7 +96,7 @@ export function OraclePage() {
         oracle_lng: birthLocation.lng,
         oracle_birth_date: `${birthDateStr} ${birthTimeStr}`.trim()
       };
-      addLog('Payload', payload);
+      // addLog('Payload', payload);
 
       const res = await fetch(buildApiUrl('/api/oracle/save-location'), {
         method: 'POST',
@@ -115,8 +108,8 @@ export function OraclePage() {
       });
 
       const rawText = await res.text();
-      addLog('LocResSt', res.status);
-      addLog('LocResTxt', rawText.substring(0, 50));
+      // addLog('LocResSt', res.status);
+      // addLog('LocResTxt', rawText.substring(0, 50));
       
       let data = {};
       try { data = JSON.parse(rawText); } catch(err){}
@@ -126,10 +119,10 @@ export function OraclePage() {
       }
 
       await updateProfile({});
-      setStep('payment');
+      setStep('ritual');
     } catch (e) {
       console.error('Erro no LocationSubmit:', e);
-      addLog('LocErr', e);
+      // addLog('LocErr', e);
       setErrorMsg('Erro salvar local: ' + e.message);
     } finally {
       setLoadingAction(false);
@@ -140,19 +133,19 @@ export function OraclePage() {
     if (step === 'ritual' && oraclePlanets.length === 0) {
       const fetchChart = async () => {
         setChartLoading(true);
-        addLog('ChartReq', 'Fetching from Prokerala API');
+        // addLog('ChartReq', 'Fetching from Prokerala API');
         try {
           const res = await fetch(buildApiUrl('/api/oracle/chart'), {
             headers: { Authorization: `Bearer ${localStorage.getItem('taro_token')}` }
           });
           const data = await res.json();
-          if (data.debug) addLog('ChartDebug', data.debug);
+          if (data.debug) // addLog('ChartDebug', data.debug);
           if (data.planets) {
             setOraclePlanets(data.planets);
           }
         } catch (err) {
           console.error('Error fetching astrology chart', err);
-          addLog('ChartErr', err);
+          // addLog('ChartErr', err);
         } finally {
           setChartLoading(false);
         }
@@ -226,7 +219,7 @@ export function OraclePage() {
       setTimeout(() => {
         setIsExploding(false);
         if (profile?.oracle_city) {
-          setStep('payment');
+          setStep('ritual');
         } else {
           setStep('birth_city');
         }
@@ -237,7 +230,7 @@ export function OraclePage() {
   const handleOracleRequest = async (question) => {
     setLoadingAction(true);
     setErrorMsg('');
-    addLog('OracReq', 'start');
+    // addLog('OracReq', 'start');
     try {
       const res = await fetch(buildApiUrl('/api/oracle/consult'), {
         method: 'POST',
@@ -249,8 +242,8 @@ export function OraclePage() {
       });
 
       const rawText = await res.text();
-      addLog('ReqResSt', res.status);
-      addLog('ReqResTxt', rawText.substring(0, 50));
+      // addLog('ReqResSt', res.status);
+      // addLog('ReqResTxt', rawText.substring(0, 50));
       
       let data = {};
       try { data = JSON.parse(rawText); } catch(err){}
@@ -260,7 +253,7 @@ export function OraclePage() {
       }
 
       setOracleAnswer(data.answer);
-        if (data.planets) setOraclePlanets(data.planets); if (data.prokeralaDebug) addLog('ProkeralaDebug', data.prokeralaDebug);
+        if (data.planets) setOraclePlanets(data.planets); if (data.prokeralaDebug) // addLog('ProkeralaDebug', data.prokeralaDebug);
       setStep('result');
     } catch (e) {
       console.error(e);
@@ -274,14 +267,7 @@ export function OraclePage() {
     <div className="min-h-screen bg-[#05000A] text-white relative flex flex-col items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-mystic-dark to-black" />
       <SmokeBackground />
-      
-      <div className="absolute top-0 left-0 w-full max-h-40 overflow-y-auto bg-black/80 text-green-400 font-mono text-[10px] p-2 z-[99] break-words text-left">
-        <div className="flex justify-between items-center bg-black sticky top-0 font-bold mb-1">
-           <span>Debug API</span>
-           <button onClick={() => setDebugLogs([])} className="pointer-events-auto bg-red-800 text-white px-2 rounded">Clear</button>
-        </div>
-        {debugLogs.map((log, i) => <div key={i}>{log}</div>)}
-      </div>
+
       <div className="z-10 relative flex flex-col items-center max-w-lg mx-auto p-4 text-center">
       <AnimatePresence mode="wait">
         {step === 'intro' && (
@@ -471,14 +457,21 @@ export function OraclePage() {
                    <p className="text-sm text-mystic-gold">Desenhando seu céu natal...</p>
                  </div>
               ) : (
+                <>
                  <AstrologyChart planets={oraclePlanets} />
-              )}
 
-              <StarFieldInput
-                isLoading={loadingAction}
-                onSubmit={handleOracleRequest}
-              />
-
+               <div className="mt-8 text-center p-6 bg-[#1a0f2e]/80 border border-mystic-gold/30 rounded-2xl w-full max-w-2xl mx-auto shadow-[0_0_20px_rgba(255,215,0,0.1)]">
+                 <p className="text-gray-300 font-serif mb-4 text-lg md:text-xl relative z-10">Quer saber mais sobre o que os Astros podem revelar?</p>
+                 <button
+                  onClick={() => navigate('/consultores')}
+                  className="relative z-10 w-full md:w-auto inline-flex items-center justify-center bg-mystic-gold text-mystic-dark font-bold py-3 md:py-4 px-8 rounded-full shadow-[0_0_15px_rgba(255,215,0,0.5)] hover:scale-105 hover:shadow-[0_0_25px_rgba(255,215,0,0.8)] transition-all uppercase tracking-wider text-sm md:text-base border-2 border-transparent hover:border-white/20"
+                 >
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin hidden" />
+                  Fale com um Consultor Ao vivo
+                 </button>
+               </div>
+               </>
+            )}
               {errorMsg && (
                  <div className="mt-4 text-red-400 bg-red-900/30 p-3 rounded text-sm w-full">
                    {errorMsg}
