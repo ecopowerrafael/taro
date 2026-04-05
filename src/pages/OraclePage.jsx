@@ -289,7 +289,7 @@ export function OraclePage() {
                 onClick={handleNextStep}
                 className="relative z-10 bg-mystic-gold text-mystic-dark px-8 py-3 rounded-full font-bold shadow-[0_0_15px_rgba(255,215,0,0.5)] uppercase tracking-wider hover:scale-105 transition-transform"
               >
-                Gerar meu Mapa Astral
+                {profile?.oracle_city ? 'Ver meu Mapa Astral' : 'Gerar meu Mapa Astral'}
               </button>
             </div>
 

@@ -157,7 +157,12 @@ export const createAuthRouter = (pool) => {
           email: user.email,
           role: user.role,
           birthDate: user.birthDate,
-          minutesBalance: user.minutesBalance
+          minutesBalance: user.minutesBalance,
+        oracle_used_free: user.oracle_used_free,
+        oracle_city: user.oracle_city,
+        oracle_lat: user.oracle_lat,
+        oracle_lng: user.oracle_lng,
+        oracle_birth_date: user.oracle_birth_date
         }
       })
     } catch (error) {
@@ -188,7 +193,12 @@ export const createAuthRouter = (pool) => {
         email: user.email,
         role: user.role,
         birthDate: user.birthDate,
-        minutesBalance: user.minutesBalance
+        minutesBalance: user.minutesBalance,
+        oracle_used_free: user.oracle_used_free,
+        oracle_city: user.oracle_city,
+        oracle_lat: user.oracle_lat,
+        oracle_lng: user.oracle_lng,
+        oracle_birth_date: user.oracle_birth_date
       }
 
       // Se for consultor, adicionar consultantId
