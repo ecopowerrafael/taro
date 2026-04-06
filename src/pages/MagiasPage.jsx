@@ -19,7 +19,10 @@ export function MagiasPage() {
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")' }} />
       <SacredGeometry />
 
-      <PageShell title="Magias" subtitle="Conecte-se às forças do cosmos através de rituais personalizados. Onde a precisão astronômica encontra a magia ancestral para transformar sua realidade.">
+      <PageShell 
+        title="Magias" 
+        subtitle={<span className="text-[11px] leading-tight md:text-sm block">Conecte-se às forças do cosmos através de rituais personalizados.</span>}
+      >
         <section className="mb-20">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-mystic-purple-light/30 bg-mystic-purple-light/10 backdrop-blur-sm mb-8">
             <Sparkles className="w-4 h-4 text-mystic-gold" />
