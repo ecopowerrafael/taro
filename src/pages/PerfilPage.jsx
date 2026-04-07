@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogOut, Wallet } from 'lucide-react'
+import { LogOut, Pencil, Wallet } from 'lucide-react'
 import { motion as Motion } from 'framer-motion'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
@@ -209,9 +209,18 @@ export function PerfilPage() {
               )}
 
               <div className="w-full text-center">
-                <h2 className="font-display text-xl text-mystic-goldSoft drop-shadow-[0_0_12px_rgba(197,160,89,0.4)] sm:text-2xl">
-                  {profile.name}
-                </h2>
+                <div className="flex items-center justify-center gap-2">
+                  <h2 className="font-display text-xl text-mystic-goldSoft drop-shadow-[0_0_12px_rgba(197,160,89,0.4)] sm:text-2xl">
+                    {profile.name}
+                  </h2>
+                  <button
+                    type="button"
+                    aria-label="Editar perfil"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-stardust-gold/45 bg-[rgba(197,160,89,0.16)] text-stardust-gold shadow-[0_0_18px_rgba(197,160,89,0.35)]"
+                  >
+                    <Pencil size={18} strokeWidth={2.4} />
+                  </button>
+                </div>
                 {sign && (
                   <p className="mt-1 text-[11px] tracking-[0.22em] uppercase text-ethereal-silver/50">{sign}</p>
                 )}
