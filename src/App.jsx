@@ -6,6 +6,7 @@ import { PlatformProvider } from './context/PlatformContext'
 import { SeoHead } from './components/SeoHead'
 import { PageTransition } from './components/PageTransition'
 import { PermissionPromptModal } from './components/PermissionPromptModal'
+import { RouteLoader } from './components/RouteLoader'
 import { getRouteSeo } from './data/siteConfig'
 import { MobileBottomNav } from './components/MobileBottomNav'
 import { NotificationToast } from './components/NotificationToast'
@@ -41,11 +42,7 @@ const ConsultorPerfilPage = lazyNamed(() => import('./pages/ConsultorPerfilPage'
 const OraclePage = lazyNamed(() => import('./pages/OraclePage'), 'OraclePage')
 
 function RouteFallback() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-mystic-purple text-mystic-gold">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-mystic-gold border-t-transparent"></div>
-    </div>
-  )
+  return <RouteLoader message="Abrindo portal..." />
 }
 
 const wrapWithTransition = (Component) => (
@@ -60,11 +57,7 @@ function ProtectedRoute({ children, role }) {
   const { profile, authLoading, isAuthenticated, isAdmin, isConsultant } = usePlatformContext()
 
   if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-mystic-purple text-mystic-gold">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-mystic-gold border-t-transparent"></div>
-      </div>
-    )
+    return <RouteLoader message="Sincronizando conta..." />
   }
 
   if (!isAuthenticated) {
@@ -89,6 +82,10 @@ function AppContent() {
   const routeSeo = getRouteSeo(location.pathname)
 
   useEffect(() => attachNativeAppUrlListener((route) => navigate(route)), [navigate])
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [location.pathname])
 
   const renderHome = () => {
     if (isNativeAndroidApp()) {
