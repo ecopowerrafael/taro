@@ -135,9 +135,7 @@ export function PerfilPage() {
     logout()
     navigate('/')
   }
-    } catch {
-      setPushNotice('Erro ao consultar status do push.')
-    } finally {
+
   if (authLoading) {
     return (
       <PageShell title="Carregando..." subtitle="">
