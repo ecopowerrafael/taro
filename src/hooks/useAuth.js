@@ -165,6 +165,20 @@ export function useAuth() {
     }
   }
 
+  const refreshProfile = async () => {
+    if (!token) {
+      return { ok: false, message: 'Sessão inválida.' }
+    }
+
+    try {
+      await fetchProfile(token)
+      return { ok: true }
+    } catch (error) {
+      console.error('Erro ao atualizar dados do perfil:', error)
+      return { ok: false, message: 'Falha ao sincronizar perfil.' }
+    }
+  }
+
   const rechargeMinutes = async (minutes) => {
     try {
       const response = await fetch(buildApiUrl('/api/auth/recharge'), {
@@ -226,6 +240,7 @@ export function useAuth() {
     registerConsultant,
     logout,
     updateProfile,
+    refreshProfile,
     rechargeMinutes,
     debitMinutes,
     isAuthenticated: !!user,

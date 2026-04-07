@@ -55,7 +55,7 @@ function StarsBackground() {
 }
 
 export function OraclePage() {
-  const { oracleCredentials, profile, updateProfile, isAuthenticated, authLoading } = usePlatformContext();
+  const { oracleCredentials, profile, refreshProfile, isAuthenticated, authLoading } = usePlatformContext();
   const navigate = useNavigate();
   const [step, setStep] = useState('intro');
   const [birthLocation, setBirthLocation] = useState(null);
@@ -130,7 +130,7 @@ export function OraclePage() {
         throw new Error(data.error || `HTTP ${res.status}: ${rawText.substring(0, 40)}`);
       }
 
-      await updateProfile({});
+      await refreshProfile();
       setStep('ritual');
     } catch (e) {
       console.error('Erro no LocationSubmit:', e);
@@ -189,7 +189,7 @@ export function OraclePage() {
       }
       
       // Pagou ou usou a grátis com sucesso
-      await updateProfile({});
+      await refreshProfile();
       setStep('ritual');
     } catch (e) {
       console.error(e);
