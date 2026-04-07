@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogOut, Pencil, Wallet } from 'lucide-react'
 import { motion as Motion } from 'framer-motion'
+import { AuthProfileForm } from '../components/AuthProfileForm'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
 
@@ -111,6 +112,7 @@ export function PerfilPage() {
     profile,
     sign,
     minutesBalance,
+    updateProfile,
     logout,
     authLoading,
     isAuthenticated,
@@ -118,6 +120,7 @@ export function PerfilPage() {
   } = usePlatformContext()
   const navigate = useNavigate()
   const [seenAnswerIds, setSeenAnswerIds] = useState(new Set())
+  const [editInlineOpen, setEditInlineOpen] = useState(false)
   const seenStorageKey = `astria_answers_seen_${profile?.id || profile?.email || 'anon'}`
 
   useEffect(() => {
@@ -216,9 +219,10 @@ export function PerfilPage() {
                   <button
                     type="button"
                     aria-label="Editar perfil"
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-stardust-gold/45 bg-[rgba(197,160,89,0.16)] text-stardust-gold shadow-[0_0_18px_rgba(197,160,89,0.35)]"
+                    onClick={() => setEditInlineOpen((prev) => !prev)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-stardust-gold/45 bg-[rgba(197,160,89,0.16)] text-stardust-gold shadow-[0_0_14px_rgba(197,160,89,0.32)]"
                   >
-                    <Pencil size={18} strokeWidth={2.4} />
+                    <Pencil size={14} strokeWidth={2.4} />
                   </button>
                 </div>
                 {sign && (
@@ -255,6 +259,22 @@ export function PerfilPage() {
               </Motion.button>
             </Motion.div>
           </div>
+
+          {editInlineOpen && (
+            <section className="mb-6">
+              <AuthProfileForm
+                profile={profile}
+                sign={sign}
+                onUpdate={async (payload) => {
+                  const result = await updateProfile(payload)
+                  if (result?.ok) {
+                    setEditInlineOpen(false)
+                  }
+                }}
+                isRegister={false}
+              />
+            </section>
+          )}
 
           {/* ── MENU GRID 2×2 ──────────────────────────────────────── */}
           <div className="mb-8 grid grid-cols-2 gap-3">
