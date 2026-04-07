@@ -195,8 +195,8 @@ export function PerfilPage() {
         <div className="mx-auto max-w-lg px-4 pb-36 pt-2">
 
           {/* ── HERO: Selo + Nome + Saldo ───────────────────────────── */}
-          <div className="mb-8 grid grid-cols-[minmax(0,1fr)_150px] items-center gap-4 rounded-[28px] border border-stardust-gold/20 bg-[rgba(10,0,20,0.42)] px-4 py-4 shadow-[0_0_40px_rgba(197,160,89,0.08)] backdrop-blur-md sm:grid-cols-[minmax(0,1fr)_180px]">
-            <div className="flex min-w-0 items-center gap-3">
+          <div className="mb-8 grid grid-cols-[minmax(0,1fr)_150px] items-start gap-4 rounded-[28px] border border-stardust-gold/20 bg-[rgba(10,0,20,0.42)] px-4 py-4 shadow-[0_0_40px_rgba(197,160,89,0.08)] backdrop-blur-md sm:grid-cols-[minmax(0,1fr)_180px]">
+            <div className="flex flex-col items-center gap-3">
               {signData ? (
                 <div className="shrink-0">
                   <SignSeal signLabel={sign} size={104} />
@@ -211,9 +211,9 @@ export function PerfilPage() {
                 </Motion.div>
               )}
 
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="truncate font-display text-xl text-mystic-goldSoft drop-shadow-[0_0_12px_rgba(197,160,89,0.4)] sm:text-2xl">
+              <div className="w-full text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <h2 className="font-display text-xl text-mystic-goldSoft drop-shadow-[0_0_12px_rgba(197,160,89,0.4)] sm:text-2xl">
                     {profile.name}
                   </h2>
                   <button
