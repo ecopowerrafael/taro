@@ -23,14 +23,12 @@ export function MagiasPage() {
         title="Magias" 
         subtitle={<span className="text-[11px] leading-tight md:text-sm block">Conecte-se às forças do cosmos através de rituais personalizados.</span>}
       >
-        <section className="mb-20">
-          <h1 className="font-playfair text-[12px] md:text-6xl leading-[1.25] md:leading-[1.1] mb-4 md:mb-6 drop-shadow-2xl">
-            Rituais sob Medida <br/>
-            <span className="text-gradient-gold italic">com Mentores de Elite</span> <br/>
-            e Fluxo Unificado
+        <section className="mb-8">
+          <h1 className="font-playfair text-[20px] md:text-6xl leading-[1.25] md:leading-[1.1] mb-3 md:mb-6 drop-shadow-2xl">
+            Rituais sob Medida <span className="text-gradient-gold italic">com Mentores de Elite</span> e Fluxo Unificado
           </h1>
 
-          <p className="text-[9px] md:text-xl text-mystic-purple-light mb-8 max-w-2xl leading-relaxed font-light">
+          <p className="text-[14px] md:text-xl text-mystic-purple-light mb-4 max-w-2xl leading-relaxed font-light">
             Explore nossa seleção de rituais exclusivos, conduzidos por mestres da tradição. Escolha sua linhagem, alinhe sua intenção e ative sua transformação com fluidez imediata.
           </p>
         </section>
