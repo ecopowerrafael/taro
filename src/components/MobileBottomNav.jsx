@@ -14,7 +14,7 @@ export function MobileBottomNav() {
 
   if (isAuthenticated) {
     mobileLinks.unshift({ to: '/perfil', label: 'Perfil', icon: Star })
-    mobileLinks.splice(2, 0, { to: '/oraculo', label: 'Mapa', icon: Compass })
+    mobileLinks.splice(2, 0, { to: '/mapa-astral', label: 'Mapa', icon: Compass })
     mobileLinks.push({ to: '/recarregar', label: 'Saldo', icon: Sparkles })
     if (isConsultant || isAdmin) {
       mobileLinks.push({ to: '/area-consultor', label: 'Painel', icon: IdCard })

@@ -20,7 +20,7 @@ export function ApkHomePage() {
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/Mapa Astral')}
+          onClick={() => navigate('/mapa-astral')}
           className="group relative flex flex-col items-center justify-center p-10 rounded-3xl border border-mystic-gold/40 bg-black/80 shadow-[0_0_20px_rgba(255,215,0,0.15)] transition-shadow hover:shadow-[0_0_35px_rgba(255,215,0,0.3)] overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-mystic-purple/30 via-transparent to-black/80 opacity-80 pointer-events-none" />
