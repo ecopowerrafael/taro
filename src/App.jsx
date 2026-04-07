@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { usePlatformContext } from './context/platform-context'
 import { PlatformProvider } from './context/PlatformContext'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { SeoHead } from './components/SeoHead'
 import { PageTransition } from './components/PageTransition'
 import { PermissionPromptModal } from './components/PermissionPromptModal'
@@ -162,9 +163,11 @@ function AppContent() {
 
 function App() {
   return (
-    <PlatformProvider>
-      <AppContent />
-    </PlatformProvider>
+    <ErrorBoundary>
+      <PlatformProvider>
+        <AppContent />
+      </PlatformProvider>
+    </ErrorBoundary>
   )
 }
 
