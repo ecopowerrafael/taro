@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BellRing, Loader2, SendHorizontal, Sparkles, Wallet, Lock, UserPlus, Info, XCircle, History, NotebookPen, Video, MessagesSquare } from 'lucide-react'
+import { BellRing, Loader2, SendHorizontal, Sparkles, Wallet, Lock, UserPlus, Info, XCircle, History, NotebookPen, Video, MessagesSquare, Mic } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
 import { WalletStatement } from '../components/WalletStatement'
 import { NotificationBadge } from '../components/NotificationBadge'
+import { AudioRecorder } from '../components/AudioRecorder'
 import { usePlatformContext } from '../context/platform-context'
 import { notificationService } from '../services/ConsultantNotificationService'
 import { canPromptPwaInstall, promptPwaInstall } from '../services/pwaService'
@@ -52,6 +53,7 @@ export function AreaConsultorPage() {
   const [panelNotice, setPanelNotice] = useState('')
   const [profileNotice, setProfileNotice] = useState('')
   const [responseDrafts, setResponseDrafts] = useState({})
+  const [responseTypes, setResponseTypes] = useState({})
   const [profileDraft, setProfileDraft] = useState(null)
   const [pendingVideoSessions, setPendingVideoSessions] = useState([])
   const [rejectModal, setRejectModal] = useState(null)
@@ -570,6 +572,26 @@ export function AreaConsultorPage() {
       draft[index] = value
       return { ...prev, [requestId]: draft }
     })
+    // Define tipo como texto
+    setResponseTypes((prev) => {
+      const types = prev[requestId] ? [...prev[requestId]] : []
+      types[index] = 'text'
+      return { ...prev, [requestId]: types }
+    })
+  }
+
+  const handleResponseAudio = (requestId, index, blob, duration) => {
+    const file = new File([blob], `audio-${Date.now()}.webm`, { type: blob.type })
+    setResponseDrafts((prev) => {
+      const draft = Array.isArray(prev[requestId]) ? [...prev[requestId]] : []
+      draft[index] = file
+      return { ...prev, [requestId]: draft }
+    })
+    setResponseTypes((prev) => {
+      const types = prev[requestId] ? [...prev[requestId]] : []
+      types[index] = 'audio'
+      return { ...prev, [requestId]: types }
+    })
   }
 
   const handleSubmitResponse = (requestId) => {
@@ -580,8 +602,8 @@ export function AreaConsultorPage() {
     }
 
     const drafts = responseDrafts[requestId] ?? []
-    if (!Array.isArray(drafts) || drafts.length === 0) {
-      setPanelNotice('Preencha as respostas antes de concluir o atendimento.')
+    if (!Array.isArray(drafts) || drafts.length === 0 || drafts.some(d => !d)) {
+      setPanelNotice('Preencha todas as respostas antes de concluir o atendimento.')
       return
     }
 
@@ -593,25 +615,72 @@ export function AreaConsultorPage() {
     if (!confirmResponseModal) return
 
     const { requestId, request, drafts } = confirmResponseModal
-    const filledAnswers = request.entries.map((entry, i) => {
-      const answerText = (drafts[i] ?? '').trim()
-      return `P${i + 1}: ${answerText || '[Sem resposta]'}`
-    })
+    const types = responseTypes[requestId] ?? []
 
-    const answerSummary = filledAnswers.join('\n')
+    // Construir answeredEntries com tipo de resposta
     const answeredEntries = request.entries.map((entry, index) => ({
       ...entry,
-      answer: (drafts[index] ?? '').trim(),
+      answerType: types[index] ?? 'text',
+      answer: types[index] === 'text' ? (drafts[index] ?? '').trim() : '[Áudio gravado]',
     }))
 
+    // Construir answerSummary para exibição
+    const filledAnswers = answeredEntries.map((entry, i) => {
+      if (types[i] === 'audio') {
+        return `P${i + 1}: [Áudio gravado]`
+      }
+      return `P${i + 1}: ${entry.answer || '[Sem resposta]'}`
+    })
+    const answerSummary = filledAnswers.join('\n')
+
     try {
-      await respondToQuestionRequest({
-        requestId,
-        consultantId: selectedConsultantId,
-        answerSummary,
-        answeredEntries,
-      })
+      // Se há áudio, usar FormData
+      const hasAudio = types.some(t => t === 'audio')
+      
+      if (hasAudio) {
+        const formData = new FormData()
+        formData.append('consultantId', selectedConsultantId)
+        formData.append('answerSummary', answerSummary)
+        formData.append('answeredEntries', JSON.stringify(answeredEntries))
+        
+        // Adicionar arquivos de áudio
+        drafts.forEach((draft, index) => {
+          if (types[index] === 'audio' && draft instanceof File) {
+            formData.append(`audioFiles[${index}]`, draft)
+          }
+        })
+
+        // Envio com FormData (sem JSON parsing)
+        const res = await fetch(buildApiUrl(`/api/question-requests/${requestId}/answer`), {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        })
+
+        if (!res.ok) {
+          const data = await res.json()
+          throw new Error(data.message || 'Erro ao enviar resposta')
+        }
+
+        // Atualizar contexto após sucesso
+        await respondToQuestionRequest({
+          requestId,
+          consultantId: selectedConsultantId,
+          answerSummary,
+          answeredEntries,
+        })
+      } else {
+        // Se é só texto, usar JSON como antes
+        await respondToQuestionRequest({
+          requestId,
+          consultantId: selectedConsultantId,
+          answerSummary,
+          answeredEntries,
+        })
+      }
+
       setResponseDrafts((prev) => ({ ...prev, [requestId]: [] }))
+      setResponseTypes((prev) => ({ ...prev, [requestId]: [] }))
       setConfirmResponseModal(null)
       setPanelNotice('Resposta enviada e valor líquido creditado na carteira do consultor.')
     } catch (error) {
@@ -761,20 +830,75 @@ export function AreaConsultorPage() {
             {request.entries.map((entry, index) => {
               const questionText =
                 entry.question || entry.text || (entry.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada')
+              const responseType = responseTypes[request.id]?.[index] ?? 'text'
+              const response = responseDrafts[request.id]?.[index]
+              const isAudioFile = response instanceof File
+
               return (
                 <div key={index} className="grid gap-2">
                   <p className="text-sm text-amber-50">
                     <span className="font-bold text-mystic-goldSoft">P{index + 1}: </span>
                     {questionText}
                   </p>
-                  <textarea
-                    placeholder={`Digite a resposta para a Pergunta ${index + 1}...`}
-                    value={responseDrafts[request.id]?.[index] ?? ''}
-                    onChange={(event) =>
-                      handleResponseChange(request.id, index, event.target.value)
-                    }
-                    className="min-h-[80px] w-full resize-y rounded-lg border border-mystic-gold/35 bg-black/35 p-3 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                  />
+
+                  {/* Toggle de tipo de resposta */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setResponseTypes((prev) => {
+                        const types = prev[request.id] ? [...prev[request.id]] : []
+                        types[index] = 'text'
+                        return { ...prev, [request.id]: types }
+                      })}
+                      className={`rounded-lg border px-3 py-2 text-sm transition ${
+                        responseType === 'text'
+                          ? 'border-stardust-gold/70 bg-stardust-gold/20 text-stardust-gold'
+                          : 'border-stardust-gold/35 text-ethereal-silver/80 hover:bg-stardust-gold/10'
+                      }`}
+                    >
+                      Texto
+                    </button>
+                    <button
+                      onClick={() => setResponseTypes((prev) => {
+                        const types = prev[request.id] ? [...prev[request.id]] : []
+                        types[index] = 'audio'
+                        return { ...prev, [request.id]: types }
+                      })}
+                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                        responseType === 'audio'
+                          ? 'border-stardust-gold/70 bg-stardust-gold/20 text-stardust-gold'
+                          : 'border-stardust-gold/35 text-ethereal-silver/80 hover:bg-stardust-gold/10'
+                      }`}
+                    >
+                      <Mic size={14} />
+                      Áudio
+                    </button>
+                  </div>
+
+                  {/* Resposta por texto */}
+                  {responseType === 'text' ? (
+                    <textarea
+                      placeholder={`Digite a resposta para a Pergunta ${index + 1}...`}
+                      value={responseDrafts[request.id]?.[index] ?? ''}
+                      onChange={(event) =>
+                        handleResponseChange(request.id, index, event.target.value)
+                      }
+                      className="min-h-[80px] w-full resize-y rounded-lg border border-mystic-gold/35 bg-black/35 p-3 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                    />
+                  ) : (
+                    /* Resposta por áudio */
+                    <AudioRecorder
+                      onAudioRecorded={(blob, duration) =>
+                        handleResponseAudio(request.id, index, blob, duration)
+                      }
+                      onSave={() => {}}
+                      maxDurationSeconds={300}
+                    />
+                  )}
+
+                  {/* Mostrar se áudio foi gravado */}
+                  {isAudioFile && (
+                    <p className="text-xs text-emerald-200">✓ Áudio gravado: {response.name}</p>
+                  )}
                 </div>
               )
             })}
@@ -1414,7 +1538,11 @@ export function AreaConsultorPage() {
               {confirmResponseModal.request?.entries.map((entry, index) => {
                 const questionText =
                   entry.question || entry.text || (entry.fileName ? `Áudio: ${entry.fileName}` : 'Pergunta não informada')
-                const answerText = (confirmResponseModal.drafts[index] ?? '').trim()
+                const responseType = responseTypes[confirmResponseModal.requestId]?.[index] ?? 'text'
+                const answer = confirmResponseModal.drafts[index]
+                const answerText = responseType === 'text' ? (answer ?? '').trim() : '[Áudio gravado]'
+                const isAudioFile = answer instanceof File
+
                 return (
                   <div key={index} className="border-b border-mystic-gold/20 pb-3 last:border-b-0">
                     <p className="mb-2 text-sm text-mystic-goldSoft">
@@ -1422,8 +1550,19 @@ export function AreaConsultorPage() {
                     </p>
                     <p className="mb-2 text-xs text-amber-100/70">
                       <span className="font-semibold">Sua resposta:</span>
+                      <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-stardust-gold/20 px-2 py-1 text-xs text-stardust-gold">
+                        {responseType === 'audio' ? (
+                          <>
+                            <Mic size={12} /> Áudio
+                          </>
+                        ) : (
+                          'Texto'
+                        )}
+                      </span>
                     </p>
-                    <p className="rounded bg-black/40 p-2 text-sm text-amber-50 text-left">{answerText || '[Sem resposta]'}</p>
+                    <p className="rounded bg-black/40 p-2 text-sm text-amber-50 text-left">
+                      {isAudioFile ? `✓ ${answer.name}` : (answerText || '[Sem resposta]')}
+                    </p>
                   </div>
                 )
               })}
