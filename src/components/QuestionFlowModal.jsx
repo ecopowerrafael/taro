@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Mic, Send, X } from 'lucide-react'
+import { AudioRecorder } from './AudioRecorder'
 
 const createInitialEntries = (questionCount) =>
   Array.from({ length: questionCount }, () => ({
@@ -157,22 +158,16 @@ export function QuestionFlowModal({
               />
             ) : (
               <div className="grid gap-2">
-                <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg border border-stardust-gold/45 bg-stardust-gold/10 px-3 py-2 text-sm text-stardust-gold transition hover:bg-stardust-gold/20">
-                  <Mic size={14} />
-                  Selecionar áudio (até 2 minutos)
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    className="hidden"
-                    onChange={(event) => handleAudioFile(event.target.files?.[0] ?? null)}
-                  />
-                </label>
-                {currentEntry.file && (
-                  <p className="text-xs text-emerald-200">
-                    {currentEntry.file.name} • {Math.round(currentEntry.durationSeconds)}s
-                  </p>
-                )}
-                {audioError && <p className="text-xs text-red-300">{audioError}</p>}
+                <AudioRecorder
+                  onAudioRecorded={(blob, duration) => {
+                    const file = new File([blob], `audio-${Date.now()}.webm`, { type: blob.type })
+                    setEntry(step, {
+                      file,
+                      durationSeconds: duration,
+                    })
+                  }}
+                  maxDurationSeconds={120}
+                />
               </div>
             )}
           </div>
