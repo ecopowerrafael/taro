@@ -227,9 +227,21 @@ export const createAuthRouter = (pool) => {
       const decoded = jwt.verify(token, JWT_SECRET)
       const { name, birthDate } = request.body
 
+      const [users] = await pool.query('SELECT name, birthDate FROM users WHERE id = ?', [decoded.id])
+      if (users.length === 0) {
+        return response.status(404).json({ message: 'Usuário não encontrado.' })
+      }
+
+      const currentUser = users[0]
+      const hasName = typeof name === 'string'
+      const hasBirthDate = Object.prototype.hasOwnProperty.call(request.body || {}, 'birthDate')
+
+      const nextName = hasName && name.trim().length > 0 ? name.trim() : currentUser.name
+      const nextBirthDate = hasBirthDate ? (birthDate || null) : currentUser.birthDate
+
       await pool.query(
         'UPDATE users SET name = ?, birthDate = ? WHERE id = ?',
-        [name, birthDate, decoded.id]
+        [nextName, nextBirthDate, decoded.id]
       )
 
       response.json({ message: 'Perfil atualizado com sucesso.' })

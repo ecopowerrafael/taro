@@ -85,6 +85,14 @@ function AppContent() {
   const { inAppNotifications, removeInAppNotification, isAuthenticated, authLoading } = usePlatformContext()
   const routeSeo = getRouteSeo(location.pathname)
 
+  useEffect(() => {
+    // Evita variação /rota e /rota/ que pode causar inconsistências de navegação.
+    if (location.pathname.length > 1 && location.pathname.endsWith('/')) {
+      const normalizedPath = location.pathname.replace(/\/+$/, '') || '/'
+      navigate(`${normalizedPath}${location.search}${location.hash}`, { replace: true })
+    }
+  }, [location.pathname, location.search, location.hash, navigate])
+
   useEffect(() => attachNativeAppUrlListener((route) => navigate(route)), [navigate])
 
   useEffect(() => {

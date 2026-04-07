@@ -29,11 +29,16 @@ export function useAuth() {
         }
         setUser(userData)
       } else {
-        logout()
+        // Logout apenas para token inválido/expirado.
+        if (response.status === 401 || response.status === 404) {
+          setToken(null)
+          setUser(null)
+          localStorage.removeItem('taro_token')
+        }
       }
     } catch (error) {
       console.error('Erro ao buscar perfil:', error)
-      logout()
+      // Erro de rede temporário não deve derrubar sessão do usuário.
     } finally {
       setLoading(false)
     }
@@ -127,6 +132,16 @@ export function useAuth() {
 
   const updateProfile = async (updates) => {
     try {
+      if (!token) {
+        return { ok: false, message: 'Sessão inválida.' }
+      }
+
+      // Permite refresh de perfil sem sobrescrever dados.
+      if (!updates || Object.keys(updates).length === 0) {
+        await fetchProfile(token)
+        return { ok: true }
+      }
+
       const response = await fetch(buildApiUrl('/api/auth/profile'), {
         method: 'PUT',
         headers: {
