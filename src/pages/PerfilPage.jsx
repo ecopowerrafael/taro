@@ -156,10 +156,8 @@ export function PerfilPage() {
     (request) => request.customerEmail === profile.email && request.status === 'answered'
   )
 
-  const minutosFormatados = minutesBalance != null
-    ? minutesBalance >= 60
-      ? `${Math.floor(minutesBalance / 60)}h ${minutesBalance % 60}min`
-      : `${minutesBalance} min`
+  const saldoFormatado = minutesBalance != null
+    ? `R$ ${Number(minutesBalance).toFixed(2).replace('.', ',')}`
     : '–'
 
   const signData = sign ? SIGNO_MAP[sign] : null
@@ -227,7 +225,7 @@ export function PerfilPage() {
                 <span className="text-[10px] tracking-[0.25em] uppercase text-stardust-gold/60">Saldo</span>
               </div>
               <div className="font-display relative text-3xl font-bold text-mystic-goldSoft drop-shadow-[0_0_10px_rgba(197,160,89,0.6)]">
-                {minutosFormatados}
+                {saldoFormatado}
               </div>
               <Motion.button
                 whileHover={{ scale: 1.04 }}
