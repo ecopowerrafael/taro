@@ -949,16 +949,22 @@ export function SincronicidadePage() {
                     transition={{ delay: 1.7 }}
                     whileHover={{ scale: 1.02 }}
                     onClick={() => {
-                      const text = `${signoAData.symbol} ${signoAData.label} + ${signoBData.symbol} ${signoBData.label}\n✦ Nossa Sincronicidade é de ${resultado?.percent ?? 0}% ✦\n${resultado?.dinamica ?? 'Conexão em análise'}\n\nDescubra a sua em appastria.online`
-                      if (navigator.share) {
-                        navigator.share({ title: 'Sincronicidade de Almas · Astria', text }).catch(() => {})
-                      } else {
-                        navigator.clipboard.writeText(text).catch(() => {})
-                      }
+                      const selectedSigns = `${signoAData.symbol} ${signoAData.label} + ${signoBData.symbol} ${signoBData.label}`
+                      const text =
+                        `Acabei de fazer um *Teste de Sincronicidade de Almas*\n` +
+                        `No Aplicativo *Astria*\n` +
+                        `e sabia que: ${selectedSigns} (signos selecionados)\n` +
+                        `✦ Nossa Sincronicidade é de ${resultado?.percent ?? 0}% ✦\n` +
+                        `O que você achou do Resultado?\n` +
+                        `Que tal você também fazer um teste:\n` +
+                        `https://appastria.online/`
+
+                      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`
+                      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
                     }}
-                    className="mb-6 w-full rounded-xl border border-ethereal-silver/20 py-3 text-sm tracking-wider text-ethereal-silver/60 transition hover:border-stardust-gold/30 hover:text-stardust-gold/80"
+                    className="mb-6 w-full rounded-xl border border-emerald-400/30 bg-emerald-500/10 py-3 text-sm font-semibold tracking-wider text-emerald-200 transition hover:border-emerald-300/50 hover:bg-emerald-500/20"
                   >
-                    ↑ Compartilhar Sincronicidade
+                    🟢 Compartilhar
                   </Motion.button>
 
                   {/* Refazer */}
