@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Mic, Square, Play, Trash2, Download } from 'lucide-react'
+import { Mic, Square, Play, Trash2, Check } from 'lucide-react'
 
-export function AudioRecorder({ onAudioRecorded, maxDurationSeconds = 120 }) {
+export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 120 }) {
   const [isRecording, setIsRecording] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [recordedBlob, setRecordedBlob] = useState(null)
@@ -140,14 +140,8 @@ export function AudioRecorder({ onAudioRecorded, maxDurationSeconds = 120 }) {
     }
   }
 
-  const downloadRecording = () => {
-    if (!recordedBlob) return
-    const url = URL.createObjectURL(recordedBlob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `audio-${Date.now()}.webm`
-    a.click()
-    URL.revokeObjectURL(url)
+  const saveRecording = () => {
+    if (onSave) onSave()
   }
 
   const formatTime = (seconds) => {
@@ -237,7 +231,7 @@ export function AudioRecorder({ onAudioRecorded, maxDurationSeconds = 120 }) {
         /* Reprodutor de áudio gravado */
         <div className="rounded-lg border border-emerald-400/50 bg-emerald-500/10 p-4">
           <p className="mb-3 text-sm text-emerald-100">
-            ✓ Áudio gravado com sucesso • {formatTime(elapsedSeconds)}
+            ✓ Áudio gravado • {formatTime(elapsedSeconds)}
           </p>
 
           <audio
@@ -249,25 +243,18 @@ export function AudioRecorder({ onAudioRecorded, maxDurationSeconds = 120 }) {
 
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={playRecording}
-              className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/50 bg-emerald-500/20 px-3 py-2 text-sm font-medium text-emerald-100 transition hover:bg-emerald-500/30"
+              onClick={saveRecording}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-stardust-gold/90 to-amber-500/85 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110"
             >
-              <Play size={14} />
-              Reproduzir
-            </button>
-            <button
-              onClick={downloadRecording}
-              className="inline-flex items-center gap-2 rounded-lg border border-blue-400/50 bg-blue-500/20 px-3 py-2 text-sm font-medium text-blue-100 transition hover:bg-blue-500/30"
-            >
-              <Download size={14} />
-              Baixar
+              <Check size={14} />
+              Salvar e continuar
             </button>
             <button
               onClick={resetRecording}
               className="inline-flex items-center gap-2 rounded-lg border border-amber-400/50 bg-amber-500/20 px-3 py-2 text-sm font-medium text-amber-100 transition hover:bg-amber-500/30"
             >
               <Trash2 size={14} />
-              Deletar
+              Regravar
             </button>
           </div>
         </div>

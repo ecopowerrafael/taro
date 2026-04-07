@@ -166,6 +166,7 @@ export function QuestionFlowModal({
                       durationSeconds: duration,
                     })
                   }}
+                  onSave={goNext}
                   maxDurationSeconds={120}
                 />
               </div>
