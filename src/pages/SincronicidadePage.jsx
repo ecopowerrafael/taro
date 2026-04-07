@@ -102,6 +102,15 @@ function getSigno(id) {
   return SIGNOS.find((s) => s.id === id)
 }
 
+function buildFallbackResultado(signA, signB) {
+  return {
+    percent: 62,
+    dinamica: `${signA?.label ?? 'Signo A'} + ${signB?.label ?? 'Signo B'}`,
+    texto:
+      'A conexão mostrou um padrão energético raro. Refaça o cálculo em instantes ou aprofunde a leitura com um consultor para detalhes de Vênus, Marte e Lua.',
+  }
+}
+
 // ─── Partícula de coração flutuante ──────────────────────────────────────────
 function FloatingHeart({ x, y, delay, size }) {
   return (
@@ -417,10 +426,9 @@ function LuxurySignSeal({ sign, size = 92, pulse = false }) {
 // ─── Reveal: card com perfil do signo antes da fusão ────────────────────────
 function SignRevealPhase({ signoA, signoB, onComplete }) {
   const [index, setIndex] = useState(0)
-  const onCompleteRef = useRef(onComplete)
-  useEffect(() => { onCompleteRef.current = onComplete }, [onComplete])
+  const [canContinue, setCanContinue] = useState(false)
 
-  const signIds = [signoA, signoB]
+  const signIds = signoA === signoB ? [signoA] : [signoA, signoB]
   const currentSignId = signIds[index]
   const currentSign = getSigno(currentSignId)
   const perfil = SIGNO_PERFIS[currentSignId]
@@ -428,18 +436,21 @@ function SignRevealPhase({ signoA, signoB, onComplete }) {
 
   const particMs = perfil.particularidade.length * 18
   const vantagMs = perfil.vantagem.length * 18
-  const totalMs = particMs + 300 + vantagMs + 3000
+  const totalMs = particMs + 300 + vantagMs + 250
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      if (index === 0) {
-        setIndex(1)
-      } else {
-        onCompleteRef.current()
-      }
-    }, totalMs)
+    setCanContinue(false)
+    const t = setTimeout(() => setCanContinue(true), totalMs)
     return () => clearTimeout(t)
   }, [index, totalMs])
+
+  const handleContinue = () => {
+    if (index < signIds.length - 1) {
+      setIndex((prev) => prev + 1)
+      return
+    }
+    onComplete()
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -517,6 +528,22 @@ function SignRevealPhase({ signoA, signoB, onComplete }) {
             <Typewriter text={perfil.vantagem} delay={particMs / 1000 + 0.3} speed={18} />
           </p>
         </div>
+
+        <div className="relative mt-6 flex justify-center">
+          <Motion.button
+            whileHover={canContinue ? { scale: 1.03 } : undefined}
+            whileTap={canContinue ? { scale: 0.97 } : undefined}
+            disabled={!canContinue}
+            onClick={handleContinue}
+            className={`rounded-xl px-6 py-3 text-sm font-bold tracking-[0.14em] transition-all ${
+              canContinue
+                ? 'bg-gradient-to-r from-[#C5A059] via-[#E0C27A] to-[#C5A059] text-mystic-black shadow-[0_0_24px_rgba(197,160,89,0.35)]'
+                : 'bg-stardust-gold/20 text-stardust-gold/40'
+            }`}
+          >
+            {index < signIds.length - 1 ? 'Continuar' : 'Iniciar Cálculo'}
+          </Motion.button>
+        </div>
       </Motion.div>
     </AnimatePresence>
   )
@@ -527,7 +554,7 @@ export function SincronicidadePage() {
   const navigate = useNavigate()
   const [signoA, setSignoA] = useState('')
   const [signoB, setSignoB] = useState('')
-  const [fase, setFase] = useState('input') // 'input' | 'fusao' | 'resultado'
+  const [fase, setFase] = useState('input') // 'input' | 'reveal' | 'fusao' | 'resultado'
   const [resultado, setResultado] = useState(null)
   const [showHearts, setShowHearts] = useState(false)
   const [heartsTick, setHeartsTick] = useState(0)
@@ -556,11 +583,18 @@ export function SincronicidadePage() {
 
   const handleRevealComplete = useCallback(async () => {
     setFase('fusao')
-    const data = await (matchDataPromiseRef.current ?? getMatch(signoA, signoB))
-    await new Promise((r) => setTimeout(r, 2800))
-    setResultado(data)
-    setFase('resultado')
-    setShowHearts(true)
+    try {
+      const data = await (matchDataPromiseRef.current ?? getMatch(signoA, signoB))
+      await new Promise((r) => setTimeout(r, 2800))
+      setResultado(data ?? buildFallbackResultado(getSigno(signoA), getSigno(signoB)))
+      setFase('resultado')
+      setShowHearts(true)
+    } catch {
+      await new Promise((r) => setTimeout(r, 2800))
+      setResultado(buildFallbackResultado(getSigno(signoA), getSigno(signoB)))
+      setFase('resultado')
+      setShowHearts(true)
+    }
   }, [signoA, signoB])
 
   const handleReset = () => {
@@ -766,7 +800,7 @@ export function SincronicidadePage() {
             )}
 
             {/* ── FASE RESULTADO ──────────────────────────────────────────── */}
-            {fase === 'resultado' && resultado && (
+            {fase === 'resultado' && (
               <Motion.div
                 key="resultado"
                 initial={{ opacity: 0, scale: 0.92 }}
@@ -839,7 +873,7 @@ export function SincronicidadePage() {
                           textShadow: `0 0 40px ${percentColor(resultado.percent)}88`,
                         }}
                       >
-                        <AnimatedCounter target={resultado.percent} />%
+                        <AnimatedCounter target={resultado?.percent ?? 0} />%
                       </span>
                     </Motion.div>
                   </div>
@@ -851,7 +885,7 @@ export function SincronicidadePage() {
                     transition={{ delay: 0.4 }}
                     className="mb-5 text-center font-display text-xl tracking-[0.15em] text-mystic-goldSoft"
                   >
-                    {resultado.dinamica}
+                    {resultado?.dinamica ?? 'Conexão em análise'}
                   </Motion.p>
 
                   {/* Texto de gancho (typewriter) */}
@@ -861,7 +895,7 @@ export function SincronicidadePage() {
                     transition={{ delay: 0.7 }}
                     className="mx-auto mb-8 max-w-sm text-center text-sm leading-relaxed text-ethereal-silver/75"
                   >
-                    <Typewriter text={resultado.texto} delay={0.9} />
+                    <Typewriter text={resultado?.texto ?? 'A leitura foi concluída com dados parciais. Refaça o cálculo em alguns instantes.'} delay={0.9} />
                   </Motion.p>
 
                   {/* Divisor */}
@@ -879,10 +913,10 @@ export function SincronicidadePage() {
                     className="mb-4 rounded-2xl border border-mystic-purple-light/30 bg-mystic-purple/30 p-4 text-center"
                   >
                     <p className="mb-1 text-xs tracking-widest text-stardust-gold/60 uppercase">
-                      {resultado.percent >= 65 ? 'Potencialize essa união' : 'Supere os desafios'}
+                      {(resultado?.percent ?? 0) >= 65 ? 'Potencialize essa união' : 'Supere os desafios'}
                     </p>
                     <p className="mb-4 text-sm text-ethereal-silver/70">
-                      {resultado.percent >= 65
+                      {(resultado?.percent ?? 0) >= 65
                         ? 'O Sol revela a sintonia, mas o destino está nos detalhes. O Vênus dele(a) se alinha com o seu Marte?'
                         : 'Os signos solares mostram a superfície. Descubra como superar os desafios com a Sinastria Completa.'}
                     </p>
@@ -892,7 +926,7 @@ export function SincronicidadePage() {
                       onClick={() => navigate('/mapa-astral')}
                       className="w-full rounded-xl bg-gradient-to-r from-[#C5A059] via-[#E0C27A] to-[#C5A059] py-3 font-bold tracking-[0.1em] text-mystic-black shadow-[0_0_24px_rgba(197,160,89,0.4)] transition-all hover:shadow-[0_0_36px_rgba(197,160,89,0.6)]"
                     >
-                      {resultado.percent >= 65 ? '✦ Desbloquear Análise de Vênus e Marte' : '✦ Desbloquear Análise Completa'}
+                      {(resultado?.percent ?? 0) >= 65 ? '✦ Desbloquear Análise de Vênus e Marte' : '✦ Desbloquear Análise Completa'}
                     </Motion.button>
                   </Motion.div>
 
@@ -915,7 +949,7 @@ export function SincronicidadePage() {
                     transition={{ delay: 1.7 }}
                     whileHover={{ scale: 1.02 }}
                     onClick={() => {
-                      const text = `${signoAData.symbol} ${signoAData.label} + ${signoBData.symbol} ${signoBData.label}\n✦ Nossa Sincronicidade é de ${resultado.percent}% ✦\n${resultado.dinamica}\n\nDescubra a sua em appastria.online`
+                      const text = `${signoAData.symbol} ${signoAData.label} + ${signoBData.symbol} ${signoBData.label}\n✦ Nossa Sincronicidade é de ${resultado?.percent ?? 0}% ✦\n${resultado?.dinamica ?? 'Conexão em análise'}\n\nDescubra a sua em appastria.online`
                       if (navigator.share) {
                         navigator.share({ title: 'Sincronicidade de Almas · Astria', text }).catch(() => {})
                       } else {
