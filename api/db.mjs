@@ -128,6 +128,15 @@ export const initializeSchema = async (pool) => {
     try {
       await pool.query('ALTER TABLE users ADD COLUMN oracle_used_free TINYINT(1) NOT NULL DEFAULT 0')
     } catch (e) {}
+      try {
+        await pool.query('ALTER TABLE users ADD COLUMN oracle_chart_cache LONGTEXT NULL')
+      } catch (e) {}
+      try {
+        await pool.query('ALTER TABLE users ADD COLUMN oracle_chart_cache_key VARCHAR(255) NULL')
+      } catch (e) {}
+      try {
+        await pool.query('ALTER TABLE users ADD COLUMN oracle_chart_cached_at DATETIME NULL')
+      } catch (e) {}
   // --- End Oracle Users Fields ---
 
   await pool.query(`

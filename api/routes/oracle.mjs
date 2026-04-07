@@ -4,6 +4,139 @@ import { authenticate } from '../middleware/auth.mjs'
 export const createOracleRouter = (pool) => {
   const router = Router()
 
+  const parseDateString = (dateStr) => {
+    if (!dateStr) return new Date().toISOString()
+    const parts = dateStr.split(/[\sT]+/)
+    const datePart = parts[0] || ''
+    const timePart = parts[1] || '12:00'
+
+    let isoStr = dateStr
+    if (datePart.includes('/')) {
+      const [day, month, year] = datePart.split('/')
+      if (day && month && year) {
+        isoStr = `${year}-${month}-${day}T${timePart}:00Z`
+      }
+    }
+
+    const parsed = new Date(isoStr)
+    return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString()
+  }
+
+  const buildChartCacheKey = (user) => {
+    const effectiveBirthDate = user.oracle_birth_date || user.birthDate || ''
+    return JSON.stringify({
+      birthDate: effectiveBirthDate,
+      lat: user.oracle_lat == null ? null : Number(user.oracle_lat),
+      lng: user.oracle_lng == null ? null : Number(user.oracle_lng),
+    })
+  }
+
+  const parseCachedPlanets = (cacheValue) => {
+    if (!cacheValue) {
+      return null
+    }
+
+    try {
+      const parsed = JSON.parse(cacheValue)
+      return Array.isArray(parsed) ? parsed : null
+    } catch {
+      return null
+    }
+  }
+
+  const buildAstrologyContext = (rawPlanets) => {
+    if (!Array.isArray(rawPlanets) || rawPlanets.length === 0) {
+      return 'Dados astrológicos exatos indisponíveis/ignorados.'
+    }
+
+    const planetsData = rawPlanets
+      .map((planet) => {
+        const sign = planet.sign ? (planet.sign.name || planet.sign || '') : ''
+        const degree = typeof planet.normDegree === 'number'
+          ? planet.normDegree
+          : (typeof planet.degree === 'number' ? planet.degree : 0)
+        const nakshatra = planet.nakshatra ? (planet.nakshatra.name || planet.nakshatra || '') : ''
+        const house = planet.house ? `Casa ${planet.house}` : ''
+        const retrograde = planet.isRetrograde ? ' (Retrógrado)' : ''
+
+        return `${planet.name} em ${sign} ${house} ${Number(degree).toFixed(1)}° ${nakshatra ? `Nakshatra: ${nakshatra}` : ''} ${retrograde}`
+          .replace(/\s+/g, ' ')
+          .trim()
+      })
+      .join('; ')
+
+    return `Posições Astrológicas (Prokerala Ayanamsa): ${planetsData}.`
+  }
+
+  const fetchProkeralaChart = async (user, creds) => {
+    let rawPlanets = []
+    let prokeralaDebug = null
+
+    if (
+      !creds.oracleProkeralaId ||
+      !creds.oracleProkeralaSecret ||
+      !user.oracle_lat ||
+      !user.oracle_lng ||
+      !(user.oracle_birth_date || user.birthDate)
+    ) {
+      return { rawPlanets, prokeralaDebug }
+    }
+
+    try {
+      const tokenRes = await fetch('https://api.prokerala.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: creds.oracleProkeralaId,
+          client_secret: creds.oracleProkeralaSecret,
+        })
+      })
+      const tokenData = await tokenRes.json()
+      prokeralaDebug = { AuthStep: tokenData }
+
+      if (tokenData.access_token) {
+        const formattedDate = parseDateString(user.oracle_birth_date || (user.birthDate && new Date(user.birthDate).toISOString()))
+        const astroRes = await fetch(`https://api.prokerala.com/v2/astrology/planet-position?datetime=${formattedDate}&coordinates=${user.oracle_lat},${user.oracle_lng}&ayanamsa=1`, {
+          headers: { Authorization: `Bearer ${tokenData.access_token}` }
+        })
+        const astroData = await astroRes.json()
+        prokeralaDebug = { TokenStep: tokenData, AstroStep: astroData }
+
+        if (astroData?.data?.planet_position) {
+          rawPlanets = astroData.data.planet_position
+        }
+      }
+    } catch (error) {
+      prokeralaDebug = { exception: error.message }
+    }
+
+    return { rawPlanets, prokeralaDebug }
+  }
+
+  const getOracleChart = async (user, userId, creds) => {
+    const cacheKey = buildChartCacheKey(user)
+    const cachedPlanets = parseCachedPlanets(user.oracle_chart_cache)
+
+    if (cachedPlanets && user.oracle_chart_cache_key === cacheKey) {
+      return {
+        rawPlanets: cachedPlanets,
+        prokeralaDebug: { cached: true, cachedAt: user.oracle_chart_cached_at },
+      }
+    }
+
+    const { rawPlanets, prokeralaDebug } = await fetchProkeralaChart(user, creds)
+
+    if (Array.isArray(rawPlanets) && rawPlanets.length > 0) {
+      await pool.query(
+        'UPDATE users SET oracle_chart_cache = ?, oracle_chart_cache_key = ?, oracle_chart_cached_at = NOW() WHERE id = ?',
+        [JSON.stringify(rawPlanets), cacheKey, userId]
+      )
+    }
+
+    return { rawPlanets, prokeralaDebug }
+  }
+
   // Salvar localização do nascimento (e se a primeira consulta já foi usada)
   router.post('/save-location', authenticate, async (request, response) => {
     try {
@@ -11,7 +144,7 @@ export const createOracleRouter = (pool) => {
       const userId = request.user.id
 
       await pool.query(
-        'UPDATE users SET oracle_city = ?, oracle_lat = ?, oracle_lng = ?, oracle_birth_date = ? WHERE id = ?',
+        'UPDATE users SET oracle_city = ?, oracle_lat = ?, oracle_lng = ?, oracle_birth_date = ?, oracle_chart_cache = NULL, oracle_chart_cache_key = NULL, oracle_chart_cached_at = NULL WHERE id = ?',
         [oracle_city, oracle_lat, oracle_lng, oracle_birth_date, userId]
       )
 
@@ -64,55 +197,14 @@ export const createOracleRouter = (pool) => {
   router.get('/chart', authenticate, async (request, response) => {
     try {
       const userId = request.user.id
-      const [uRows] = await pool.query('SELECT birthDate, oracle_birth_date, oracle_lat, oracle_lng FROM users WHERE id = ?', [userId])
+      const [uRows] = await pool.query('SELECT birthDate, oracle_birth_date, oracle_lat, oracle_lng, oracle_chart_cache, oracle_chart_cache_key, oracle_chart_cached_at FROM users WHERE id = ?', [userId])
       if (!uRows.length) return response.status(404).json({ error: 'Usuário não encontrado' })
       const user = uRows[0]
 
-      const parseDateString = (dateStr) => {
-        if (!dateStr) return new Date().toISOString()
-        const parts = dateStr.split(/[\sT]+/)
-        const datePart = parts[0] || ''
-        const timePart = parts[1] || '12:00'
-        let isoStr = dateStr
-        if (datePart.includes('/')) {
-           const [day, month, year] = datePart.split('/')
-           if (day && month && year) isoStr = `${year}-${month}-${day}T${timePart}:00Z`
-        }
-        const parsed = new Date(isoStr)
-        return isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString()
-      }
-
       const [pRows] = await pool.query('SELECT oracleProkeralaId, oracleProkeralaSecret FROM platform_credentials LIMIT 1')
       const creds = pRows[0] || {}
-      let rawPlanets = []; let prokeralaDebug = null;
+      const { rawPlanets, prokeralaDebug } = await getOracleChart(user, userId, creds)
 
-      if (creds.oracleProkeralaId && creds.oracleProkeralaSecret && user.oracle_lat && user.oracle_lng && (user.oracle_birth_date || user.birthDate)) {
-        try {
-          const tokenRes = await fetch('https://api.prokerala.com/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-              grant_type: 'client_credentials',
-              client_id: creds.oracleProkeralaId,
-              client_secret: creds.oracleProkeralaSecret
-            })
-          })
-          const tokenData = await tokenRes.json();
-          prokeralaDebug = { AuthStep: tokenData };
-
-          if (tokenData.access_token) {
-            const formattedDate = parseDateString(user.oracle_birth_date || (user.birthDate && new Date(user.birthDate).toISOString()))
-            const astroRes = await fetch(`https://api.prokerala.com/v2/astrology/planet-position?datetime=${formattedDate}&coordinates=${user.oracle_lat},${user.oracle_lng}&ayanamsa=1`, {
-              headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
-            })
-            const astroData = await astroRes.json()
-            prokeralaDebug = { TokenStep: tokenData, AstroStep: astroData };
-            if (astroData?.data?.planet_position) rawPlanets = astroData.data.planet_position;
-          }
-        } catch (err) {
-          prokeralaDebug = { exception: err.message };
-        }
-      }
       return response.status(200).json({ planets: rawPlanets, debug: prokeralaDebug })
     } catch (error) {
       return response.status(500).json({ error: error.message })
@@ -130,28 +222,9 @@ export const createOracleRouter = (pool) => {
       const userId = request.user.id
 
       // 1. Buscar os dados do consulente
-      const [uRows] = await pool.query('SELECT name, birthDate, oracle_birth_date, oracle_city, oracle_lat, oracle_lng FROM users WHERE id = ?', [userId])
+      const [uRows] = await pool.query('SELECT name, birthDate, oracle_birth_date, oracle_city, oracle_lat, oracle_lng, oracle_chart_cache, oracle_chart_cache_key, oracle_chart_cached_at FROM users WHERE id = ?', [userId])
       if (!uRows.length) return response.status(404).json({ error: 'Usuário não encontrado' })
       const user = uRows[0]
-
-      // Lógica de Parse Simples para transformar a string digitada em data do Prokerala
-      const parseDateString = (dateStr) => {
-        if (!dateStr) return new Date().toISOString()
-        // Padrão que espera DD/MM/YYYY HH:MM ou apenas DD/MM/YYYY
-        const parts = dateStr.split(/[\sT]+/)
-        const datePart = parts[0] || ''
-        const timePart = parts[1] || '12:00'
-        
-        let isoStr = dateStr
-        if (datePart.includes('/')) {
-           const [day, month, year] = datePart.split('/')
-           if (day && month && year) {
-             isoStr = `${year}-${month}-${day}T${timePart}:00Z`
-           }
-        }
-        const parsed = new Date(isoStr)
-        return isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString()
-      }
 
       // 2. Buscar as credenciais no banco de dados
       const [pRows] = await pool.query('SELECT oracleProkeralaId, oracleProkeralaSecret, oracleGeminiKey, oracleGeminiModel, oracleSystemPrompt FROM platform_credentials LIMIT 1')
@@ -162,58 +235,8 @@ export const createOracleRouter = (pool) => {
       }
 
       let astrologyContext = 'Dados astrológicos exatos indisponíveis/ignorados.'
-      let rawPlanets = []; let prokeralaDebug = null;
-      // 3. Integração Prokerala (apenas se tiver credenciais preenchidas e a pessoa tiver salvo Posição GPS + Data de Nascimento)
-      if (creds.oracleProkeralaId && creds.oracleProkeralaSecret && user.oracle_lat && user.oracle_lng && (user.oracle_birth_date || user.birthDate)) {
-        try {
-          // A. Obter Token (Oauth2 client_credentials via fetch raw na porta /token)
-          const tokenRes = await fetch('https://api.prokerala.com/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-              grant_type: 'client_credentials',
-              client_id: creds.oracleProkeralaId,
-              client_secret: creds.oracleProkeralaSecret
-            })
-          })
-          const tokenData = await tokenRes.json();
-            prokeralaDebug = { AuthStep: tokenData };
-          console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
-          console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
-          console.log('[API/Prokerala] Token:', tokenData.access_token ? 'Ok' : tokenData.error || 'Failed')
-
-          if (tokenData.access_token) {
-            // B. Pegar a Posição dos Planetas usando a string parseada
-            const formattedDate = parseDateString(user.oracle_birth_date || (user.birthDate && new Date(user.birthDate).toISOString()))
-            const astroRes = await fetch(`https://api.prokerala.com/v2/astrology/planet-position?datetime=${formattedDate}&coordinates=${user.oracle_lat},${user.oracle_lng}&ayanamsa=1`, {
-              headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
-            })
-            
-            const astroData = await astroRes.json()
-            console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100)); 
-            console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
-            console.log('[API/Prokerala] Response:', astroData?.data?.planet_position ? 'Got Planets' : JSON.stringify(astroData).substring(0, 100))
-            prokeralaDebug = { TokenStep: tokenData, AstroStep: astroData };
-              if (astroData?.data?.planet_position) {
-                rawPlanets = astroData.data.planet_position;
-                const planetsData = rawPlanets.map(p => {
-                  let sign = p.sign ? (p.sign.name || p.sign || '') : '';
-                  let deg = typeof p.normDegree === 'number' ? p.normDegree : (typeof p.degree === 'number' ? p.degree : 0);
-                  let naks = p.nakshatra ? (p.nakshatra.name || p.nakshatra || '') : '';
-                  let house = p.house ? `Casa ${p.house}` : '';
-                  let retro = p.isRetrograde ? ' (Retrógrado)' : '';
-                  
-                  return `${p.name} em ${sign} ${house} ${Number(deg).toFixed(1)}° ${naks ? 'Nakshatra: '+naks : ''} ${retro}`.replace(/\s+/g, ' ').trim();
-                }).join('; ');
-              astrologyContext = `Posições Astrológicas (Prokerala Ayanamsa): ${planetsData}.`
-            }
-          }
-        } catch (err) {
-            prokeralaDebug = { exception: err.message };
-          console.error('[API/Oracle] Erro ao integrar com Prokerala:', err.message)
-          // Falha do Prokerala não derruba a consulta, pois o Gemini segue usando o nome e cidade
-        }
-      }
+      const { rawPlanets, prokeralaDebug } = await getOracleChart(user, userId, creds)
+      astrologyContext = buildAstrologyContext(rawPlanets)
 
       // 4. Integração Gemini 1.5 Flash (Acesso Direto REST para evitar excesso de dependências do SDK)
       const systemInstruction = creds.oracleSystemPrompt || 'Você é o Astria, um oráculo místico. Responda com um tom esotérico e poético. Sempre entregue conselhos embasados nas mensagens das estrelas.'

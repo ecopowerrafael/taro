@@ -55,7 +55,7 @@ function StarsBackground() {
 }
 
 export function OraclePage() {
-  const { oracleCredentials, profile, updateProfile } = usePlatformContext();
+  const { oracleCredentials, profile, updateProfile, isAuthenticated, authLoading } = usePlatformContext();
   const navigate = useNavigate();
   const [step, setStep] = useState('intro');
   const [birthLocation, setBirthLocation] = useState(null);
@@ -67,6 +67,7 @@ export function OraclePage() {
   const [oraclePlanets, setOraclePlanets] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
+  const [showGuestModal, setShowGuestModal] = useState(false);
 
   // Ao montar, carrega o location salvo se houver
   useEffect(() => {
@@ -83,6 +84,17 @@ export function OraclePage() {
       }
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    setShowGuestModal(!isAuthenticated);
+    if (!isAuthenticated) {
+      setStep('intro');
+    }
+  }, [authLoading, isAuthenticated]);
 
   const handleLocationSubmit = async () => {
     if (!birthLocation) return;
@@ -214,6 +226,11 @@ export function OraclePage() {
 
 
   const handleNextStep = () => {
+    if (!isAuthenticated) {
+      setShowGuestModal(true);
+      return;
+    }
+
     if (step === 'intro') {
       setIsExploding(true);
       setTimeout(() => {
@@ -267,6 +284,44 @@ export function OraclePage() {
     <div className="min-h-screen bg-[#05000A] text-white relative flex flex-col items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-mystic-dark to-black" />
       <SmokeBackground />
+
+      <AnimatePresence>
+        {!authLoading && showGuestModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-30 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              className="w-full max-w-md rounded-3xl border border-mystic-gold/30 bg-[linear-gradient(180deg,rgba(33,18,54,0.98),rgba(10,7,18,0.96))] p-6 text-center shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_30px_rgba(197,160,89,0.18)]"
+            >
+              <img src="/mapa-astral.png" alt="Mapa Astral" className="mx-auto h-20 w-20 object-contain drop-shadow-[0_0_18px_rgba(255,215,0,0.4)]" />
+              <h2 className="mt-4 font-display text-3xl text-mystic-goldSoft">Mapa Astral</h2>
+              <p className="mt-4 text-sm leading-relaxed text-amber-100/80">
+                Para realizar seu mapa astral faça seu cadastro ou login e aceite receber notificações.
+              </p>
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => navigate('/cadastro')}
+                  className="flex-1 rounded-xl border border-mystic-gold/40 px-4 py-3 font-bold text-mystic-goldSoft transition hover:bg-mystic-gold/10"
+                >
+                  Cadastro
+                </button>
+                <button
+                  onClick={() => navigate('/entrar')}
+                  className="flex-1 rounded-xl bg-mystic-gold px-4 py-3 font-bold text-mystic-dark transition hover:brightness-110"
+                >
+                  Login
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="z-10 relative flex flex-col items-center max-w-lg mx-auto p-4 text-center">
       <AnimatePresence mode="wait">
