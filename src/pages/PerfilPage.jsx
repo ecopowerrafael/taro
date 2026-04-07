@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronDown, Star, LogOut, Wallet } from 'lucide-react'
-import { motion as Motion, AnimatePresence } from 'framer-motion'
+import { LogOut, Wallet } from 'lucide-react'
+import { motion as Motion } from 'framer-motion'
 import { AuthProfileForm } from '../components/AuthProfileForm'
 import { PageShell } from '../components/PageShell'
-import { ReviewModal } from '../components/ReviewModal'
 import { usePlatformContext } from '../context/platform-context'
 
 // ─── Mapa de signos ──────────────────────────────────────────────────────────
@@ -118,18 +117,30 @@ export function PerfilPage() {
     authLoading,
     isAuthenticated,
     questionRequests,
-    token,
   } = usePlatformContext()
   const navigate = useNavigate()
-  const [expandedAnswerId, setExpandedAnswerId] = useState(null)
-  const [reviewModal, setReviewModal] = useState({ isOpen: false, consultantId: '', consultantName: '', referenceId: '' })
-  const [reviewedIds, setReviewedIds] = useState(new Set())
+  const [seenAnswerIds, setSeenAnswerIds] = useState(new Set())
+  const seenStorageKey = `astria_answers_seen_${profile?.id || profile?.email || 'anon'}`
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/entrar')
     }
   }, [authLoading, isAuthenticated, navigate])
+
+  useEffect(() => {
+    if (!profile) return
+    try {
+      const raw = localStorage.getItem(seenStorageKey)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        setSeenAnswerIds(new Set(parsed))
+      }
+    } catch {
+      // Ignora storage inválido
+    }
+  }, [profile, seenStorageKey])
 
   const handleLogout = () => {
     logout()
@@ -146,15 +157,13 @@ export function PerfilPage() {
     )
   }
 
-  const respostasRef = useRef(null)
-  const editarRef = useRef(null)
-
   if (!profile) return null
 
-  // Filtrar respostas recebidas pelo cliente (status === 'answered')
   const myAnswers = questionRequests.filter(
     (request) => request.customerEmail === profile.email && request.status === 'answered'
   )
+
+  const unreadAnswersCount = myAnswers.filter((answer) => !seenAnswerIds.has(answer.id)).length
 
   const saldoFormatado = minutesBalance != null
     ? `R$ ${Number(minutesBalance).toFixed(2).replace('.', ',')}`
@@ -167,8 +176,9 @@ export function PerfilPage() {
     { label: 'Mapa Astral',   icon: '/mapa-astral.png',          to: '/mapa-astral',      external: false },
     { label: 'Sincronia',     icon: '/almas.png',                 to: '/sincronicidade',   external: false },
     { label: 'Especialistas', icon: '/especialistas-reais.png',   to: '/consultores',      external: false },
-    { label: 'Respostas',     icon: '/respostas.png',             to: null,                external: false,
-      onClick: () => respostasRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) },
+    { label: 'Respostas',     icon: '/respostas.png',             to: '/respostas',        external: false,
+      badgeCount: unreadAnswersCount > 0 ? unreadAnswersCount : myAnswers.length,
+      badgeTone: unreadAnswersCount > 0 ? 'green' : 'red' },
   ]
 
   return (
@@ -245,21 +255,29 @@ export function PerfilPage() {
                 <Motion.div
                   whileTap={{ scale: 0.95 }}
                   whileHover={{ scale: 1.03 }}
-                  className="flex flex-col items-center gap-2 rounded-2xl border border-stardust-gold/30 bg-[rgba(26,11,46,0.70)] py-5 px-3 shadow-[0_4px_20px_rgba(0,0,0,0.4)] backdrop-blur-md transition hover:border-stardust-gold/60 hover:bg-[rgba(46,22,79,0.75)]"
+                  className="relative flex flex-col items-center gap-2 rounded-2xl border border-stardust-gold/30 bg-[rgba(26,11,46,0.70)] py-5 px-3 shadow-[0_4px_20px_rgba(0,0,0,0.4)] backdrop-blur-md transition hover:border-stardust-gold/60 hover:bg-[rgba(46,22,79,0.75)]"
                 >
+                  {item.badgeCount !== undefined && (
+                    <span
+                      className={`absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full border px-1 text-[10px] font-bold leading-none ${
+                        item.badgeTone === 'green'
+                          ? 'border-emerald-300/70 bg-emerald-500 text-white'
+                          : 'border-red-300/70 bg-red-500 text-white'
+                      }`}
+                    >
+                      {item.badgeCount > 99 ? '99+' : item.badgeCount}
+                    </span>
+                  )}
                   <img src={item.icon} alt={item.label} className="h-14 w-14 object-contain drop-shadow-[0_0_10px_rgba(197,160,89,0.3)]" />
                   <span className="text-center text-[11px] font-medium tracking-widest uppercase text-mystic-goldSoft/80">{item.label}</span>
                 </Motion.div>
               )
-              if (item.onClick) {
-                return <button key={item.label} onClick={item.onClick} className="block w-full text-left">{inner}</button>
-              }
               return <Link key={item.label} to={item.to}>{inner}</Link>
             })}
           </div>
 
           {/* ── EDITAR PERFIL ─────────────────────────────────────── */}
-          <section ref={editarRef} className="mb-8">
+          <section className="mb-8">
             <div className="mb-3 flex items-center gap-3">
               <div className="flex-1 border-t border-stardust-gold/20" />
               <span className="text-[10px] tracking-[0.3em] uppercase text-stardust-gold/50">Editar Perfil</span>
@@ -285,115 +303,8 @@ export function PerfilPage() {
             </div>
           </section>
 
-          {/* ── RESPOSTAS ─────────────────────────────────────────── */}
-          <section ref={respostasRef}>
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex-1 border-t border-stardust-gold/20" />
-              <span className="text-[10px] tracking-[0.3em] uppercase text-stardust-gold/50">
-                Respostas {myAnswers.length > 0 && `(${myAnswers.length})`}
-              </span>
-              <div className="flex-1 border-t border-stardust-gold/20" />
-            </div>
-
-            {myAnswers.length === 0 ? (
-              <div className="rounded-2xl border border-stardust-gold/20 bg-[rgba(10,0,20,0.5)] px-5 py-6 text-center text-sm text-ethereal-silver/50">
-                Nenhuma resposta recebida ainda.
-              </div>
-            ) : (
-              <div className="grid gap-3">
-                {myAnswers.map((answer) => (
-                  <article
-                    key={answer.id}
-                    className="overflow-hidden rounded-2xl border border-stardust-gold/25 bg-[rgba(10,0,20,0.65)] backdrop-blur-md"
-                  >
-                    {/* Cabeçalho */}
-                    <button
-                      className="flex w-full items-center justify-between px-4 py-3 text-left"
-                      onClick={() => setExpandedAnswerId(expandedAnswerId === answer.id ? null : answer.id)}
-                    >
-                      <div>
-                        <p className="font-semibold text-mystic-goldSoft">{answer.consultantName}</p>
-                        <p className="text-[10px] text-ethereal-silver/40 mt-0.5">
-                          {new Date(answer.answeredAt).toLocaleDateString('pt-BR')} · {answer.questionCount} pergunta(s)
-                        </p>
-                      </div>
-                      <ChevronDown
-                        size={18}
-                        className={`text-stardust-gold transition-transform ${expandedAnswerId === answer.id ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-
-                    {/* Conteúdo expandido */}
-                    <AnimatePresence>
-                      {expandedAnswerId === answer.id && (
-                        <Motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.28 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="space-y-3 border-t border-stardust-gold/15 px-4 py-4">
-                            {Array.isArray(answer.entries) && answer.entries.length > 0 && (
-                              <div className="rounded-xl bg-black/40 p-3 space-y-2">
-                                <p className="text-[11px] font-semibold tracking-widest uppercase text-stardust-gold/60 mb-1">Suas perguntas</p>
-                                {answer.entries.map((entry, idx) => (
-                                  <p key={entry.id || idx} className="text-xs text-amber-100/80 pb-2 border-b border-stardust-gold/10 last:border-0">
-                                    <span className="text-stardust-gold font-bold">P{idx + 1}.</span>{' '}
-                                    {entry.question || entry.text || '—'}
-                                  </p>
-                                ))}
-                              </div>
-                            )}
-                            <div className="rounded-xl bg-black/40 p-3">
-                              <p className="text-[11px] font-semibold tracking-widest uppercase text-stardust-gold/60 mb-2">Resposta</p>
-                              <p className="text-xs text-amber-50 whitespace-pre-wrap leading-relaxed">{answer.answerSummary}</p>
-                            </div>
-                            {!reviewedIds.has(answer.id) && (
-                              <div className="flex justify-end">
-                                <button
-                                  onClick={() =>
-                                    setReviewModal({
-                                      isOpen: true,
-                                      consultantId: answer.consultantId,
-                                      consultantName: answer.consultantName,
-                                      referenceId: answer.id,
-                                    })
-                                  }
-                                  className="inline-flex items-center gap-1.5 rounded-xl border border-stardust-gold/40 bg-black/30 px-3 py-1.5 text-xs text-stardust-gold transition hover:bg-stardust-gold/10"
-                                >
-                                  <Star size={12} /> Avaliar consultor
-                                </button>
-                              </div>
-                            )}
-                            {reviewedIds.has(answer.id) && (
-                              <p className="text-right text-xs text-emerald-400/80">✓ Avaliado</p>
-                            )}
-                          </div>
-                        </Motion.div>
-                      )}
-                    </AnimatePresence>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-
         </div>
       </PageShell>
-
-      <ReviewModal
-        isOpen={reviewModal.isOpen}
-        consultantName={reviewModal.consultantName}
-        consultantId={reviewModal.consultantId}
-        referenceId={reviewModal.referenceId}
-        sessionType="question"
-        token={token}
-        onClose={() => setReviewModal(r => ({ ...r, isOpen: false }))}
-        onSubmitted={() => {
-          setReviewedIds(prev => new Set([...prev, reviewModal.referenceId]))
-        }}
-      />
     </div>
   )
 }

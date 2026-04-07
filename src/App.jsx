@@ -42,6 +42,7 @@ const ContatoPage = lazyNamed(() => import('./pages/ContatoPage'), 'ContatoPage'
 const ConsultorPerfilPage = lazyNamed(() => import('./pages/ConsultorPerfilPage'), 'ConsultorPerfilPage')
 const OraclePage = lazyNamed(() => import('./pages/OraclePage'), 'OraclePage')
 const SincronicidadePage = lazyNamed(() => import('./pages/SincronicidadePage'), 'SincronicidadePage')
+const RespostasPage = lazyNamed(() => import('./pages/RespostasPage'), 'RespostasPage')
 
 function RouteFallback() {
   return <RouteLoader message="Abrindo portal..." />
@@ -120,6 +121,7 @@ function AppContent() {
             element={<ProtectedRoute role="admin">{wrapWithTransition(AdminPage)}</ProtectedRoute>} 
           />
           <Route path="/perfil" element={wrapWithTransition(PerfilPage)} />
+          <Route path="/respostas" element={wrapWithTransition(RespostasPage)} />
           <Route path="/cadastro" element={wrapWithTransition(CadastroPage)} />
           <Route path="/entrar" element={wrapWithTransition(EntrarPage)} />
           <Route path="/consultores" element={wrapWithTransition(ConsultoresPage)} />
