@@ -38,11 +38,16 @@ export function AdminPage() {
     spells,
     pendingSpellOrders,
     adminSpellOrders,
+    pendingAstralReadingOrders,
+    adminAstralReadingOrders,
     saveSpell,
     deleteSpell,
     fetchPendingSpellOrders,
     fetchAdminSpellOrders,
+    fetchPendingAstralReadingOrders,
+    fetchAdminAstralReadingOrders,
     processSpellOrderAction,
+    processAstralReadingOrderAction,
     token,
   } = usePlatformContext()
 
@@ -50,6 +55,8 @@ export function AdminPage() {
     fetchPendingRecharges()
     fetchPendingSpellOrders()
     fetchAdminSpellOrders()
+    fetchPendingAstralReadingOrders()
+    fetchAdminAstralReadingOrders()
     fetchAdminUsers()
     fetchAdminDashboardStats()
   }, [])
@@ -92,9 +99,12 @@ export function AdminPage() {
         spells={spells}
         pendingSpellOrders={pendingSpellOrders}
         adminSpellOrders={adminSpellOrders}
+        pendingAstralReadingOrders={pendingAstralReadingOrders}
+        adminAstralReadingOrders={adminAstralReadingOrders}
         onSaveSpell={saveSpell}
         onDeleteSpell={deleteSpell}
         onSpellOrderAction={processSpellOrderAction}
+        onAstralReadingOrderAction={processAstralReadingOrderAction}
       />
     </PageShell>
   )

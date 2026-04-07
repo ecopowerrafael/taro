@@ -15,6 +15,7 @@ import { createAuthRouter } from './routes/auth.mjs'
 import { createRechargesRouter } from './routes/recharges.mjs'
 import { createVideoSessionsRouter } from './routes/videoSessions.mjs'
 import { createSpellsRouter } from './routes/spells.mjs'
+import { createAstralReadingsRouter } from './routes/astralReadings.mjs'
 import { createOracleRouter } from './routes/oracle.mjs'
 import webpush from 'web-push'
 import { authenticate, authorizeAdmin } from './middleware/auth.mjs'
@@ -314,6 +315,9 @@ try {
 
     app.use('/api/spells', createSpellsRouter(pool))
     console.log('[API] Router /spells carregado.')
+
+    app.use('/api/astral-readings', createAstralReadingsRouter(pool))
+    console.log('[API] Router /astral-readings carregado.')
 
     app.use('/api/oracle', createOracleRouter(pool))
     console.log('[API] Router /oracle carregado.')

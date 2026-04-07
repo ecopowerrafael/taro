@@ -32,6 +32,7 @@ import {
   Pencil,
   ShieldBan,
   Sparkles,
+  FileText,
 } from 'lucide-react'
 import { GlassCard } from './GlassCard'
 import { AdminMagicPanel } from './AdminMagicPanel'
@@ -73,11 +74,14 @@ export function AdminPanel({
   spells = [],
   pendingSpellOrders = [],
   adminSpellOrders = [],
+  pendingAstralReadingOrders = [],
+  adminAstralReadingOrders = [],
   onSaveSpell,
   onDeleteSpell,
   onSpellOrderAction,
+  onAstralReadingOrderAction,
 }) {
-  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'usuarios' | 'financeiro' | 'magias' | 'credenciais' | 'notificacoes' | 'recharges' | 'saques'
+  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'usuarios' | 'financeiro' | 'magias' | 'leituras' | 'credenciais' | 'notificacoes' | 'recharges' | 'saques'
   const [searchQuery, setSearchSearchQuery] = useState('')
   const [editingConsultantId, setEditingConsultantId] = useState(null)
   const [editForm, setEditForm] = useState(null)
@@ -288,6 +292,25 @@ export function AdminPanel({
     }
     const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : null
+  }
+
+  const formatCurrency = (value) =>
+    Number(value || 0).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    })
+
+  const formatDateTime = (value) => {
+    if (!value) {
+      return 'Nao informado'
+    }
+
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) {
+      return 'Nao informado'
+    }
+
+    return parsed.toLocaleString('pt-BR')
   }
 
   const financeDirty = useMemo(() => {
@@ -662,6 +685,15 @@ export function AdminPanel({
           {pendingSpellOrders.length > 0 && (
             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
               {pendingSpellOrders.length}
+            </span>
+          )}
+        </button>
+        <button className={tabButtonClass('leituras')} onClick={() => setActiveTab('leituras')}>
+          <FileText size={14} />
+          Leituras Astrais
+          {pendingAstralReadingOrders.length > 0 && (
+            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
+              {pendingAstralReadingOrders.length}
             </span>
           )}
         </button>
@@ -1394,6 +1426,103 @@ export function AdminPanel({
             onDeleteSpell={onDeleteSpell}
             onSpellOrderAction={onSpellOrderAction}
           />
+        )}
+
+        {activeTab === 'leituras' && (
+          <div className="grid gap-6">
+            <section className="rounded-2xl border border-mystic-gold/20 bg-black/20 p-4 md:p-5">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h3 className="font-display text-xl text-mystic-goldSoft">Leitura Astral Completa</h3>
+                  <p className="text-sm text-amber-100/70">
+                    Pedidos do produto de R$ 49,90 enviados a partir do mapa astral.
+                  </p>
+                </div>
+                <div className="rounded-full border border-mystic-gold/30 bg-mystic-gold/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-mystic-goldSoft">
+                  {pendingAstralReadingOrders.length} aguardando validacao PIX
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-mystic-gold/20 bg-black/20 p-4 md:p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <History size={16} className="text-mystic-goldSoft" />
+                <h3 className="font-display text-lg text-mystic-goldSoft">Pedidos PIX pendentes</h3>
+              </div>
+
+              {pendingAstralReadingOrders.length === 0 ? (
+                <p className="text-sm text-amber-100/65">Nenhum pedido PIX pendente no momento.</p>
+              ) : (
+                <div className="grid gap-3">
+                  {pendingAstralReadingOrders.map((order) => (
+                    <article key={order.id} className="rounded-2xl border border-mystic-gold/20 bg-black/25 p-4">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div className="space-y-1 text-sm text-amber-100/80">
+                          <p className="font-semibold text-mystic-goldSoft">{order.userName || 'Cliente sem nome'} </p>
+                          <p>{order.userEmail || 'E-mail nao informado'}</p>
+                          <p>Pedido: {order.readingTitle}</p>
+                          <p>Valor: {formatCurrency(order.price)}</p>
+                          <p>Criado em: {formatDateTime(order.createdAt)}</p>
+                          <p>Cidade salva no oraculo: {order.oracleCity || 'Nao informada'}</p>
+                          <p>Data de nascimento: {order.oracleBirthDate || order.birthDate || 'Nao informada'}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 md:justify-end">
+                          <button
+                            onClick={() => onAstralReadingOrderAction?.(order.id, 'approved')}
+                            className="rounded-lg border border-emerald-400/50 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
+                          >
+                            Aprovar PIX
+                          </button>
+                          <button
+                            onClick={() => onAstralReadingOrderAction?.(order.id, 'rejected')}
+                            className="rounded-lg border border-red-400/50 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/20"
+                          >
+                            Rejeitar
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-2xl border border-mystic-gold/20 bg-black/20 p-4 md:p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <FileText size={16} className="text-mystic-goldSoft" />
+                <h3 className="font-display text-lg text-mystic-goldSoft">Historico de pedidos</h3>
+              </div>
+
+              {adminAstralReadingOrders.length === 0 ? (
+                <p className="text-sm text-amber-100/65">Nenhum pedido de leitura astral registrado ainda.</p>
+              ) : (
+                <div className="grid gap-3">
+                  {adminAstralReadingOrders.map((order) => (
+                    <article key={order.id} className="rounded-2xl border border-mystic-gold/15 bg-black/20 p-4">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div className="space-y-1 text-sm text-amber-100/80">
+                          <p className="font-semibold text-mystic-goldSoft">{order.readingTitle}</p>
+                          <p>Cliente: {order.userName || 'Cliente sem nome'}</p>
+                          <p>E-mail: {order.userEmail || 'Nao informado'}</p>
+                          <p>Pagamento: {order.method === 'pix' ? 'PIX' : 'Cartao Stripe'}</p>
+                          <p>Status: {order.status}</p>
+                          <p>Valor: {formatCurrency(order.price)}</p>
+                          <p>Criado em: {formatDateTime(order.createdAt)}</p>
+                          <p>Pago em: {formatDateTime(order.paidAt)}</p>
+                        </div>
+                        <div className="space-y-1 text-xs text-amber-100/60 md:text-right">
+                          <p>Oracle cidade: {order.oracleCity || 'Nao informada'}</p>
+                          <p>Oracle nascimento: {order.oracleBirthDate || order.birthDate || 'Nao informada'}</p>
+                          {order.stripeNetAmount !== null && <p>Liquido Stripe: {formatCurrency(order.stripeNetAmount)}</p>}
+                          {order.stripeFeeAmount !== null && <p>Taxa Stripe: {formatCurrency(order.stripeFeeAmount)}</p>}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
         )}
 
         {activeTab === 'credenciais' && (

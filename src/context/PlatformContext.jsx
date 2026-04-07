@@ -240,6 +240,19 @@ const normalizeSpellOrder = (order) => ({
   consultantNetValue: Number(order.consultantNetValue) || 0,
 })
 
+const normalizeAstralReadingOrder = (order) => ({
+  ...order,
+  price: Number(order.price) || 0,
+  stripeFeeAmount:
+    order.stripeFeeAmount === null || order.stripeFeeAmount === undefined
+      ? null
+      : Number(order.stripeFeeAmount) || 0,
+  stripeNetAmount:
+    order.stripeNetAmount === null || order.stripeNetAmount === undefined
+      ? null
+      : Number(order.stripeNetAmount) || 0,
+})
+
 const normalizeWalletState = (walletRows, fallback = {}) => {
   const next = { ...fallback }
   walletRows.forEach((wallet) => {
@@ -301,6 +314,8 @@ export function PlatformProvider({ children }) {
   const [spells, setSpells] = useState([])
   const [pendingSpellOrders, setPendingSpellOrders] = useState([])
   const [adminSpellOrders, setAdminSpellOrders] = useState([])
+  const [pendingAstralReadingOrders, setPendingAstralReadingOrders] = useState([])
+  const [adminAstralReadingOrders, setAdminAstralReadingOrders] = useState([])
   const [mpCredentials, setMpCredentialsState] = useState({
     publicKey: '',
     accessToken: '',
@@ -909,6 +924,50 @@ export function PlatformProvider({ children }) {
     }
   }
 
+  const fetchPendingAstralReadingOrders = async () => {
+    if (!token) {
+      return
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('/api/astral-readings/orders/pending'), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) {
+        return
+      }
+      const payload = await response.json()
+      if (!Array.isArray(payload)) {
+        return
+      }
+      setPendingAstralReadingOrders(payload.map(normalizeAstralReadingOrder))
+    } catch (error) {
+      console.error('[fetchPendingAstralReadingOrders] Erro ao buscar pedidos PIX:', error)
+    }
+  }
+
+  const fetchAdminAstralReadingOrders = async () => {
+    if (!token) {
+      return
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('/api/astral-readings/orders/admin'), {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) {
+        return
+      }
+      const payload = await response.json()
+      if (!Array.isArray(payload)) {
+        return
+      }
+      setAdminAstralReadingOrders(payload.map(normalizeAstralReadingOrder))
+    } catch (error) {
+      console.error('[fetchAdminAstralReadingOrders] Erro ao buscar histórico admin de leituras astrais:', error)
+    }
+  }
+
   const saveSpell = async (spellData) => {
     if (!token) {
       return { ok: false, message: 'Faça login como admin para salvar a magia.' }
@@ -1091,6 +1150,116 @@ export function PlatformProvider({ children }) {
       return { ok: true, ...payload }
     } catch (error) {
       console.error('[processSpellOrderAction] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao processar pedido PIX.' }
+    }
+  }
+
+  const createAstralReadingPixOrder = async () => {
+    if (!token) {
+      return { ok: false, message: 'Entre na sua conta para solicitar sua leitura astral.' }
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('/api/astral-readings/orders/pix'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao iniciar pagamento PIX.' }
+      }
+
+      return { ok: true, ...payload }
+    } catch (error) {
+      console.error('[createAstralReadingPixOrder] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao iniciar pagamento PIX.' }
+    }
+  }
+
+  const createAstralReadingStripePaymentIntent = async () => {
+    if (!token) {
+      return { ok: false, message: 'Entre na sua conta para pagar com cartão.' }
+    }
+
+    try {
+      const response = await fetch(buildApiUrl('/api/astral-readings/orders/stripe-payment-intent'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          customerEmail: profile?.email || '',
+        }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao iniciar pagamento com cartão.' }
+      }
+
+      return { ok: true, ...payload }
+    } catch (error) {
+      console.error('[createAstralReadingStripePaymentIntent] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao iniciar pagamento com cartão.' }
+    }
+  }
+
+  const confirmAstralReadingStripeOrder = async ({ paymentIntentId }) => {
+    if (!token) {
+      return { ok: false, message: 'Entre na sua conta para concluir o pagamento.' }
+    }
+
+    try {
+      const response = await fetch(buildApiUrl(`/api/astral-readings/orders/stripe-confirm/${paymentIntentId}`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao confirmar pagamento.' }
+      }
+
+      return { ok: true, ...payload }
+    } catch (error) {
+      console.error('[confirmAstralReadingStripeOrder] Erro:', error)
+      return { ok: false, message: 'Erro de conexão ao confirmar pagamento.' }
+    }
+  }
+
+  const processAstralReadingOrderAction = async (orderId, action) => {
+    if (!token) {
+      return { ok: false, message: 'Faça login como admin para processar o pedido.' }
+    }
+
+    try {
+      const response = await fetch(buildApiUrl(`/api/astral-readings/orders/${orderId}/action`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao processar pedido PIX.' }
+      }
+
+      setPendingAstralReadingOrders((prev) => prev.filter((item) => item.id !== orderId))
+      await fetchAdminAstralReadingOrders()
+      return { ok: true, ...payload }
+    } catch (error) {
+      console.error('[processAstralReadingOrderAction] Erro:', error)
       return { ok: false, message: 'Erro de conexão ao processar pedido PIX.' }
     }
   }
@@ -2170,6 +2339,8 @@ export function PlatformProvider({ children }) {
     spells,
     pendingSpellOrders,
     adminSpellOrders,
+    pendingAstralReadingOrders,
+    adminAstralReadingOrders,
     setMinutePackages,
     updateMinutePackage,
     setFeaturedPackage,
@@ -2200,6 +2371,12 @@ export function PlatformProvider({ children }) {
     fetchPendingSpellOrders,
     fetchAdminSpellOrders,
     processSpellOrderAction,
+    createAstralReadingPixOrder,
+    createAstralReadingStripePaymentIntent,
+    confirmAstralReadingStripeOrder,
+    fetchPendingAstralReadingOrders,
+    fetchAdminAstralReadingOrders,
+    processAstralReadingOrderAction,
     adminDashboardStats,
     selectConsultant,
     setSelectedConsultant,

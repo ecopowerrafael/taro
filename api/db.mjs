@@ -491,6 +491,28 @@ export const initializeSchema = async (pool) => {
     )
   `)
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS astral_reading_orders (
+      id VARCHAR(90) PRIMARY KEY,
+      userId VARCHAR(50) NOT NULL,
+      readingTitle VARCHAR(180) NOT NULL,
+      price DECIMAL(10,2) NOT NULL,
+      method ENUM('pix', 'card') NOT NULL,
+      status ENUM('pending', 'processing', 'approved', 'completed', 'rejected') NOT NULL DEFAULT 'pending',
+      stripePaymentIntentId VARCHAR(80) NULL,
+      stripeChargeId VARCHAR(80) NULL,
+      stripeBalanceTransactionId VARCHAR(80) NULL,
+      stripeFeeAmount DECIMAL(10,2) NULL,
+      stripeNetAmount DECIMAL(10,2) NULL,
+      paidAt DATETIME NULL,
+      createdAt DATETIME NOT NULL,
+      updatedAt DATETIME NOT NULL,
+      INDEX idx_astral_reading_orders_status (status, method, createdAt),
+      INDEX idx_astral_reading_orders_user (userId, createdAt),
+      CONSTRAINT fk_astral_reading_orders_user FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `)
+
   // Tabela de avaliações dos consultores
   await pool.query(`
     CREATE TABLE IF NOT EXISTS consultant_reviews (
