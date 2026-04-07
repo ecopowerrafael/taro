@@ -147,7 +147,7 @@ function HeartsLayer() {
 }
 
 // ─── Seletor de signo ─────────────────────────────────────────────────────────
-function SignSelector({ label, value, onChange }) {
+function SignSelector({ label, value, onChange, iconSrc, iconAlt }) {
   const selected = value ? getSigno(value) : null
   const [open, setOpen] = useState(false)
 
@@ -175,10 +175,14 @@ function SignSelector({ label, value, onChange }) {
           />
         )}
 
-        <div className="relative z-10 flex flex-col items-center gap-1">
-          <span className="text-4xl leading-none">{selected ? selected.symbol : '✦'}</span>
+        <div className="relative z-10 flex flex-col items-center gap-1.5">
+          <img
+            src={iconSrc}
+            alt={iconAlt}
+            className="h-12 w-12 object-contain drop-shadow-[0_0_12px_rgba(197,160,89,0.45)]"
+          />
           <span className="font-display text-lg text-mystic-goldSoft">
-            {selected ? selected.label : 'Selecionar signo'}
+            {selected ? selected.label : label}
           </span>
           {selected && (
             <span className="text-[11px] tracking-widest text-ethereal-silver/50 uppercase">{selected.datas}</span>
@@ -205,7 +209,9 @@ function SignSelector({ label, value, onChange }) {
                     value === s.id ? 'bg-stardust-gold/15 text-stardust-gold' : 'text-ethereal-silver/80'
                   }`}
                 >
-                  <span className="text-xl leading-none">{s.symbol}</span>
+                  <span className="flex-shrink-0">
+                    <LuxurySignSeal sign={s} size={36} />
+                  </span>
                   <div>
                     <div className="text-sm font-medium">{s.label}</div>
                     <div className="text-[10px] text-ethereal-silver/40">{s.datas}</div>
@@ -276,6 +282,72 @@ function percentColor(p) {
   if (p >= 65) return '#C5A059'
   if (p >= 45) return '#A57CDB'
   return '#E5E7EB'
+}
+
+function LuxurySignSeal({ sign, size = 92, pulse = false }) {
+  if (!sign) return null
+
+  const palette = ELEMENTO_COLORS[sign.elemento] ?? ELEMENTO_COLORS.fogo
+  const id = `${sign.id}-${size}`
+
+  return (
+    <Motion.svg
+      width={size}
+      height={size}
+      viewBox="0 0 120 120"
+      className="overflow-visible"
+      animate={pulse ? { scale: [1, 1.06, 1], rotate: [0, 2, -2, 0] } : undefined}
+      transition={pulse ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
+    >
+      <defs>
+        <radialGradient id={`bg-${id}`} cx="50%" cy="40%" r="68%">
+          <stop offset="0%" stopColor={`${palette.primary}55`} />
+          <stop offset="70%" stopColor="#1A0B2E" />
+          <stop offset="100%" stopColor="#050505" />
+        </radialGradient>
+        <linearGradient id={`gold-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFF7CC" />
+          <stop offset="45%" stopColor="#E0C27A" />
+          <stop offset="100%" stopColor="#C5A059" />
+        </linearGradient>
+        <filter id={`glow-${id}`} x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="2.8" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <circle cx="60" cy="60" r="50" fill={`url(#bg-${id})`} />
+      <circle cx="60" cy="60" r="52" fill="none" stroke={`url(#gold-${id})`} strokeWidth="2.4" />
+      <circle cx="60" cy="60" r="43" fill="none" stroke={`${palette.primary}66`} strokeWidth="1.1" />
+
+      <path
+        d="M60 12 L63 20 L72 20 L65 25 L68 34 L60 29 L52 34 L55 25 L48 20 L57 20 Z"
+        fill={`url(#gold-${id})`}
+        opacity="0.9"
+      />
+      <path
+        d="M60 108 L63 100 L72 100 L65 95 L68 86 L60 91 L52 86 L55 95 L48 100 L57 100 Z"
+        fill={`url(#gold-${id})`}
+        opacity="0.9"
+      />
+
+      <text
+        x="60"
+        y="72"
+        textAnchor="middle"
+        fontSize="48"
+        fontWeight="700"
+        fill={`url(#gold-${id})`}
+        filter={`url(#glow-${id})`}
+        style={{ letterSpacing: '0.02em' }}
+      >
+        {sign.symbol}
+      </text>
+    </Motion.svg>
+  )
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
@@ -354,7 +426,13 @@ export function SincronicidadePage() {
               >
                 {/* Seletores */}
                 <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:gap-8">
-                  <SignSelector label="Sua energia (seu signo)" value={signoA} onChange={setSignoA} />
+                  <SignSelector
+                    label="Seu signo"
+                    value={signoA}
+                    onChange={setSignoA}
+                    iconSrc="/signodela.png"
+                    iconAlt="Ícone para selecionar seu signo"
+                  />
 
                   {/* Ícone central */}
                   <Motion.div
@@ -365,7 +443,13 @@ export function SincronicidadePage() {
                     ✦
                   </Motion.div>
 
-                  <SignSelector label="Energia dele(a) (signo dele/a)" value={signoB} onChange={setSignoB} />
+                  <SignSelector
+                    label="Signo da outra pessoa"
+                    value={signoB}
+                    onChange={setSignoB}
+                    iconSrc="/signodele.png"
+                    iconAlt="Ícone para selecionar o signo da outra pessoa"
+                  />
                 </div>
 
                 {/* Indicador de elementos selecionados */}
@@ -411,8 +495,8 @@ export function SincronicidadePage() {
                 </div>
 
                 {/* Disclaimer */}
-                <p className="mt-6 text-center text-[11px] tracking-wider text-ethereal-silver/30">
-                  Baseado na Teoria dos Quatro Elementos · 144 combinações astrológicas
+                <p className="mt-6 text-center text-sm leading-relaxed text-ethereal-silver/60">
+                  Duas trajetórias, um único desenho estelar. Selecione as energias que deseja cruzar e observe como os elementos reagem à presença um do outro. O Cosmo não comete erros de cálculo; ele apenas revela afinidades.
                 </p>
               </Motion.div>
             )}
@@ -433,7 +517,7 @@ export function SincronicidadePage() {
                 <div className="relative flex h-40 w-40 items-center justify-center">
                   {/* Ícone A em órbita */}
                   <Motion.div
-                    className="absolute text-5xl"
+                    className="absolute"
                     animate={{ rotate: [0, 360] }}
                     transition={{ duration: 2.6, ease: 'linear', repeat: Infinity }}
                     style={{ transformOrigin: '50% 50%' }}
@@ -444,13 +528,13 @@ export function SincronicidadePage() {
                       className="inline-block"
                       style={{ filter: `drop-shadow(0 0 12px ${ELEMENTO_COLORS[signoAData?.elemento ?? 'fogo'].primary})` }}
                     >
-                      {signoAData?.symbol}
+                      <LuxurySignSeal sign={signoAData} size={84} pulse />
                     </Motion.span>
                   </Motion.div>
 
                   {/* Ícone B em órbita inversa */}
                   <Motion.div
-                    className="absolute text-5xl"
+                    className="absolute"
                     animate={{ rotate: [360, 0] }}
                     transition={{ duration: 2.6, ease: 'linear', repeat: Infinity }}
                   >
@@ -460,7 +544,7 @@ export function SincronicidadePage() {
                       className="inline-block"
                       style={{ filter: `drop-shadow(0 0 12px ${ELEMENTO_COLORS[signoBData?.elemento ?? 'agua'].primary})` }}
                     >
-                      {signoBData?.symbol}
+                      <LuxurySignSeal sign={signoBData} size={84} pulse />
                     </Motion.span>
                   </Motion.div>
 
@@ -511,14 +595,13 @@ export function SincronicidadePage() {
                   {/* Signos */}
                   <div className="mb-6 flex items-center justify-center gap-4">
                     <div className="flex flex-col items-center">
-                      <Motion.span
-                        className="text-5xl"
+                      <Motion.div
                         animate={{ y: [0, -4, 0] }}
                         transition={{ duration: 3, repeat: Infinity }}
                         style={{ filter: `drop-shadow(0 0 10px ${ELEMENTO_COLORS[signoAData.elemento].primary})` }}
                       >
-                        {signoAData.symbol}
-                      </Motion.span>
+                        <LuxurySignSeal sign={signoAData} size={90} pulse />
+                      </Motion.div>
                       <span className="mt-1 text-xs text-ethereal-silver/50">{signoAData.label}</span>
                     </div>
 
@@ -533,14 +616,13 @@ export function SincronicidadePage() {
                     </div>
 
                     <div className="flex flex-col items-center">
-                      <Motion.span
-                        className="text-5xl"
+                      <Motion.div
                         animate={{ y: [0, 4, 0] }}
                         transition={{ duration: 3, repeat: Infinity }}
                         style={{ filter: `drop-shadow(0 0 10px ${ELEMENTO_COLORS[signoBData.elemento].primary})` }}
                       >
-                        {signoBData.symbol}
-                      </Motion.span>
+                        <LuxurySignSeal sign={signoBData} size={90} pulse />
+                      </Motion.div>
                       <span className="mt-1 text-xs text-ethereal-silver/50">{signoBData.label}</span>
                     </div>
                   </div>
