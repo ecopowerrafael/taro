@@ -7,6 +7,7 @@ import { SeoHead } from './components/SeoHead'
 import { PageTransition } from './components/PageTransition'
 import { PermissionPromptModal } from './components/PermissionPromptModal'
 import { RouteLoader } from './components/RouteLoader'
+import { BrowserInstallPrompt } from './components/BrowserInstallPrompt'
 import { getRouteSeo } from './data/siteConfig'
 import { MobileBottomNav } from './components/MobileBottomNav'
 import { NotificationToast } from './components/NotificationToast'
@@ -149,6 +150,7 @@ function AppContent() {
         notifications={inAppNotifications}
         onClose={removeInAppNotification}
       />
+      <BrowserInstallPrompt />
       <PermissionPromptModal />
     </>
   )
