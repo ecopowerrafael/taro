@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogOut, Pencil, Wallet, X } from 'lucide-react'
+import { LogOut, Wallet } from 'lucide-react'
 import { motion as Motion } from 'framer-motion'
-import { AuthProfileForm } from '../components/AuthProfileForm'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
 
@@ -112,7 +111,6 @@ export function PerfilPage() {
     profile,
     sign,
     minutesBalance,
-    updateProfile,
     logout,
     authLoading,
     isAuthenticated,
@@ -120,7 +118,6 @@ export function PerfilPage() {
   } = usePlatformContext()
   const navigate = useNavigate()
   const [seenAnswerIds, setSeenAnswerIds] = useState(new Set())
-  const [editModalOpen, setEditModalOpen] = useState(false)
   const seenStorageKey = `astria_answers_seen_${profile?.id || profile?.email || 'anon'}`
 
   useEffect(() => {
@@ -212,18 +209,9 @@ export function PerfilPage() {
               )}
 
               <div className="w-full text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <h2 className="font-display text-xl text-mystic-goldSoft drop-shadow-[0_0_12px_rgba(197,160,89,0.4)] sm:text-2xl">
-                    {profile.name}
-                  </h2>
-                  <button
-                    onClick={() => setEditModalOpen(true)}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stardust-gold/10 text-stardust-gold transition hover:bg-stardust-gold/20 hover:text-mystic-goldSoft"
-                    aria-label="Editar perfil"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                </div>
+                <h2 className="font-display text-xl text-mystic-goldSoft drop-shadow-[0_0_12px_rgba(197,160,89,0.4)] sm:text-2xl">
+                  {profile.name}
+                </h2>
                 {sign && (
                   <p className="mt-1 text-[11px] tracking-[0.22em] uppercase text-ethereal-silver/50">{sign}</p>
                 )}
@@ -279,7 +267,7 @@ export function PerfilPage() {
                       {item.badgeCount > 99 ? '99+' : item.badgeCount}
                     </span>
                   )}
-                  <img src={item.icon} alt={item.label} className="h-16 w-16 object-contain drop-shadow-[0_0_18px_rgba(197,160,89,0.85)] sm:h-20 sm:w-20" />
+                  <img src={item.icon} alt={item.label} className="h-28 w-28 object-contain drop-shadow-[0_0_18px_rgba(197,160,89,0.85)] sm:h-32 sm:w-32" />
                   <span className="text-center text-[11px] font-medium tracking-widest uppercase text-mystic-goldSoft/80">{item.label}</span>
                 </Motion.div>
               )
@@ -300,45 +288,6 @@ export function PerfilPage() {
 
         </div>
       </PageShell>
-
-      {editModalOpen && (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="absolute inset-0" onClick={() => setEditModalOpen(false)} />
-          <Motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="relative z-10 w-full max-w-md overflow-hidden rounded-[28px] border border-stardust-gold/30 bg-[linear-gradient(180deg,rgba(26,11,46,0.94),rgba(5,5,5,0.96))] shadow-[0_0_40px_rgba(197,160,89,0.18)]"
-          >
-            <div className="flex items-center justify-between border-b border-stardust-gold/15 px-5 py-4">
-              <div>
-                <p className="font-display text-xl text-mystic-goldSoft">Editar Perfil</p>
-                <p className="text-[11px] tracking-[0.18em] uppercase text-ethereal-silver/40">Ajuste seus dados pessoais</p>
-              </div>
-              <button
-                onClick={() => setEditModalOpen(false)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-stardust-gold/10 text-stardust-gold transition hover:bg-stardust-gold/20"
-                aria-label="Fechar modal"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="max-h-[78vh] overflow-y-auto p-1">
-              <AuthProfileForm
-                profile={profile}
-                sign={sign}
-                onUpdate={async (payload) => {
-                  await updateProfile(payload)
-                  setEditModalOpen(false)
-                }}
-                isRegister={false}
-              />
-            </div>
-          </Motion.div>
-        </div>
-      )}
     </div>
   )
 }
