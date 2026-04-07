@@ -27,6 +27,70 @@ const ELEMENTO_COLORS = {
   agua:  { primary: '#4A90D9', glow: 'rgba(74,144,217,0.6)', smoke: ['#4A90D9','#7B68EE','#00CED1'] },
 }
 
+// ─── Perfis amorosos dos signos ──────────────────────────────────────────────
+const SIGNO_PERFIS = {
+  aries: {
+    titulo: 'O Conquistador Audaz',
+    particularidade: 'Precisa de autonomia e de uma "causa" dentro da relação. Se o tédio se instala, a chama apaga.',
+    vantagem: 'Lealdade feroz e uma honestidade brutal que elimina joguinhos. Com Áries, você sempre sabe onde pisa.',
+  },
+  taurus: {
+    titulo: 'O Âncora de Vênus',
+    particularidade: 'O amor passa pelos cinco sentidos. Se não houver toque, boa comida e estabilidade financeira, ele se retrai.',
+    vantagem: 'É o signo mais construtor do zodíaco. Estar com Touro é ter a garantia de que o relacionamento será um investimento sólido e seguro.',
+  },
+  gemini: {
+    titulo: 'O Poliglota do Afeto',
+    particularidade: 'O órgão mais sexual de Gêmeos é o cérebro. Se a conversa morrer, o interesse morre junto.',
+    vantagem: 'Adaptabilidade extrema. Eles trazem leveza, riso e uma renovação constante que impede o relacionamento de envelhecer.',
+  },
+  cancer: {
+    titulo: 'O Guardião do Ninho',
+    particularidade: 'Memória emocional implacável. Eles não esquecem como você os fez sentir há dez anos.',
+    vantagem: 'Uma capacidade de cuidado e intuição que faz o parceiro se sentir a pessoa mais protegida do mundo. É o acolhimento absoluto.',
+  },
+  leo: {
+    titulo: 'O Sol do Relacionamento',
+    particularidade: 'Precisa de admiração mútua. Se ele não se sente o "protagonista" na vida do parceiro, o brilho se torna drama.',
+    vantagem: 'Generosidade magnânima. Leão eleva o parceiro, celebra suas vitórias como se fossem dele e traz um romance digno de cinema.',
+  },
+  virgo: {
+    titulo: 'O Alquimista da Rotina',
+    particularidade: 'Demonstra amor através do serviço. Ele não vai fazer um poema, mas vai consertar o seu computador e organizar sua agenda.',
+    vantagem: 'A busca pela melhor versão do casal. Virgem lapida a relação até que ela funcione como uma máquina perfeita e saudável.',
+  },
+  libra: {
+    titulo: 'O Arquiteto da Harmonia',
+    particularidade: 'Horror ao conflito. Pode omitir o que sente para não quebrar a paz, o que exige um parceiro atento às entrelinhas.',
+    vantagem: 'A arte da parceria. Libra é o mestre em fazer o outro se sentir ouvido, valorizado e esteticamente em paz.',
+  },
+  scorpio: {
+    titulo: 'O Mergulhador de Abismos',
+    particularidade: '"Tudo ou nada". Não suporta conexões superficiais. Ele exige a entrega das sombras, não apenas das luzes.',
+    vantagem: 'Uma lealdade transformadora. Escorpião cura o parceiro através da profundidade e protege a relação com uma intensidade mística.',
+  },
+  sagittarius: {
+    titulo: 'O Arqueiro da Liberdade',
+    particularidade: 'O relacionamento deve ser uma expansão, nunca uma gaiola. Ele precisa sentir que a vida é maior ao seu lado.',
+    vantagem: 'Otimismo contagiante. Sagitário transforma qualquer crise em uma aventura filosófica e mantém a chama da esperança sempre acesa.',
+  },
+  capricorn: {
+    titulo: 'O Arquiteto do Legado',
+    particularidade: 'O amor é um compromisso sério, quase um contrato de alma. Ele demora a se abrir, mas quando o faz, é para sempre.',
+    vantagem: 'Provedoria e suporte inabalável. Capricórnio é a rocha que sustenta o parceiro nos momentos de maior tempestade.',
+  },
+  aquarius: {
+    titulo: 'O Visionário do Desapego',
+    particularidade: 'Precisa de amizade antes do romance. Ele valoriza o espaço individual tanto quanto a conexão do casal.',
+    vantagem: 'Originalidade e zero posse. Com Aquário, você terá um parceiro que respeita sua individualidade e te incentiva a ser autêntico.',
+  },
+  pisces: {
+    titulo: 'O Poeta do Invisível',
+    particularidade: 'Tende a idealizar o parceiro. Vive em uma frequência mística onde o amor é uma forma de sacrifício e beleza.',
+    vantagem: 'Empatia sem limites. Peixes sente a sua dor antes de você falar, oferecendo uma conexão espiritual que transcende o plano físico.',
+  },
+}
+
 // ─── Utilitários ─────────────────────────────────────────────────────────────
 function getMatch(s1, s2) {
   // Cobre todos os 144 pares ordenados com 78 chaves únicas
@@ -252,7 +316,7 @@ function AnimatedCounter({ target, duration = 1.8 }) {
 }
 
 // ─── Efeito typewriter ────────────────────────────────────────────────────────
-function Typewriter({ text, delay = 0 }) {
+function Typewriter({ text, delay = 0, speed = 28 }) {
   const [displayed, setDisplayed] = useState('')
   const [started, setStarted] = useState(false)
 
@@ -269,7 +333,7 @@ function Typewriter({ text, delay = 0 }) {
       setDisplayed(text.slice(0, i + 1))
       i++
       if (i >= text.length) clearInterval(iv)
-    }, 28)
+    }, speed)
     return () => clearInterval(iv)
   }, [started, text])
 
@@ -350,6 +414,114 @@ function LuxurySignSeal({ sign, size = 92, pulse = false }) {
   )
 }
 
+// ─── Reveal: card com perfil do signo antes da fusão ────────────────────────
+function SignRevealPhase({ signoA, signoB, onComplete }) {
+  const [index, setIndex] = useState(0)
+  const onCompleteRef = useRef(onComplete)
+  useEffect(() => { onCompleteRef.current = onComplete }, [onComplete])
+
+  const signIds = [signoA, signoB]
+  const currentSignId = signIds[index]
+  const currentSign = getSigno(currentSignId)
+  const perfil = SIGNO_PERFIS[currentSignId]
+  const palette = ELEMENTO_COLORS[currentSign.elemento]
+
+  const particMs = perfil.particularidade.length * 18
+  const vantagMs = perfil.vantagem.length * 18
+  const totalMs = particMs + 300 + vantagMs + 3000
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (index === 0) {
+        setIndex(1)
+      } else {
+        onCompleteRef.current()
+      }
+    }, totalMs)
+    return () => clearTimeout(t)
+  }, [index, totalMs])
+
+  return (
+    <AnimatePresence mode="wait">
+      <Motion.div
+        key={index}
+        initial={{ opacity: 0, y: 32, scale: 0.94 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.96 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="relative overflow-hidden rounded-3xl border border-stardust-gold/40 bg-[rgba(6,0,18,0.72)] p-6 shadow-[0_0_70px_rgba(197,160,89,0.22)] backdrop-blur-xl sm:p-8"
+      >
+        {/* Glow de elemento */}
+        <Motion.div
+          className="pointer-events-none absolute inset-0 rounded-3xl"
+          animate={{ opacity: [0.2, 0.5, 0.2] }}
+          transition={{ duration: 3, repeat: Infinity }}
+          style={{ background: `radial-gradient(ellipse at 50% 0%, ${palette.glow}, transparent 68%)` }}
+        />
+        {/* Shimmer */}
+        <Motion.div
+          className="pointer-events-none absolute inset-0 rounded-3xl"
+          animate={{ backgroundPosition: ['200% 0%', '-200% 0%'] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+          style={{ background: 'linear-gradient(90deg, transparent 30%, rgba(255,247,204,0.07) 50%, transparent 70%)', backgroundSize: '300%' }}
+        />
+
+        {/* Indicadores de progresso */}
+        <div className="relative mb-2 flex justify-center gap-2">
+          {signIds.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1 rounded-full transition-all duration-500 ${
+                i === index ? 'w-8 bg-stardust-gold' : 'w-4 bg-stardust-gold/25'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Seal animado */}
+        <div className="relative my-5 flex justify-center">
+          <Motion.div
+            animate={{
+              filter: [
+                `drop-shadow(0 0 12px ${palette.primary}60)`,
+                `drop-shadow(0 0 28px ${palette.primary})`,
+                `drop-shadow(0 0 12px ${palette.primary}60)`,
+              ],
+            }}
+            transition={{ duration: 2.5, repeat: Infinity }}
+          >
+            <LuxurySignSeal sign={currentSign} size={110} pulse />
+          </Motion.div>
+        </div>
+
+        {/* Nome + título */}
+        <div className="relative mb-6 text-center">
+          <p className="font-display text-2xl tracking-[0.12em] text-mystic-goldSoft sm:text-3xl">
+            {currentSign.symbol} {currentSign.label}
+          </p>
+          <p className="mt-1 text-sm italic tracking-wider text-stardust-gold/55">{perfil.titulo}</p>
+        </div>
+
+        {/* Particularidade */}
+        <div className="relative mb-4 rounded-2xl border border-stardust-gold/20 bg-black/35 p-4">
+          <p className="mb-2 text-[10px] font-semibold tracking-[0.26em] uppercase text-stardust-gold/65">✦ Particularidade</p>
+          <p className="min-h-[3em] text-sm leading-relaxed text-ethereal-silver/85">
+            <Typewriter text={perfil.particularidade} delay={0} speed={18} />
+          </p>
+        </div>
+
+        {/* Vantagem */}
+        <div className="relative rounded-2xl border border-emerald-500/20 bg-black/35 p-4">
+          <p className="mb-2 text-[10px] font-semibold tracking-[0.26em] uppercase text-emerald-400/65">✦ Vantagem</p>
+          <p className="min-h-[3em] text-sm leading-relaxed text-ethereal-silver/85">
+            <Typewriter text={perfil.vantagem} delay={particMs / 1000 + 0.3} speed={18} />
+          </p>
+        </div>
+      </Motion.div>
+    </AnimatePresence>
+  )
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 export function SincronicidadePage() {
   const navigate = useNavigate()
@@ -360,6 +532,7 @@ export function SincronicidadePage() {
   const [showHearts, setShowHearts] = useState(false)
   const [heartsTick, setHeartsTick] = useState(0)
   const smokeColors = useRef([])
+  const matchDataPromiseRef = useRef(null)
 
   // Gera corações periodicamente na tela de resultado
   useEffect(() => {
@@ -368,7 +541,7 @@ export function SincronicidadePage() {
     return () => clearInterval(iv)
   }, [fase])
 
-  const handleVerSincronicidade = useCallback(async () => {
+  const handleVerSincronicidade = useCallback(() => {
     if (!signoA || !signoB) return
     const sA = getSigno(signoA)
     const sB = getSigno(signoB)
@@ -376,10 +549,14 @@ export function SincronicidadePage() {
     const colorsB = ELEMENTO_COLORS[sB.elemento].smoke
     smokeColors.current = [...new Set([...colorsA, ...colorsB])]
 
-    setFase('fusao')
+    // Pré-carrega dados enquanto o reveal é exibido
+    matchDataPromiseRef.current = getMatch(signoA, signoB)
+    setFase('reveal')
+  }, [signoA, signoB])
 
-    // Carrega dados em paralelo com a animação
-    const data = await getMatch(signoA, signoB)
+  const handleRevealComplete = useCallback(async () => {
+    setFase('fusao')
+    const data = await (matchDataPromiseRef.current ?? getMatch(signoA, signoB))
     await new Promise((r) => setTimeout(r, 2800))
     setResultado(data)
     setFase('resultado')
@@ -392,6 +569,7 @@ export function SincronicidadePage() {
     setShowHearts(false)
     setSignoA('')
     setSignoB('')
+    matchDataPromiseRef.current = null
   }
 
   const signoAData = signoA ? getSigno(signoA) : null
@@ -498,6 +676,26 @@ export function SincronicidadePage() {
                 <p className="mt-6 text-center text-sm leading-relaxed text-ethereal-silver/60">
                   Duas trajetórias, um único desenho estelar. Selecione as energias que deseja cruzar e observe como os elementos reagem à presença um do outro. O Cosmo não comete erros de cálculo; ele apenas revela afinidades.
                 </p>
+              </Motion.div>
+            )}
+
+            {/* ── FASE REVEAL ─────────────────────────────────────────────── */}
+            {fase === 'reveal' && (
+              <Motion.div
+                key="reveal"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -24 }}
+                transition={{ duration: 0.45 }}
+              >
+                <p className="mb-4 text-center text-[11px] tracking-[0.28em] uppercase text-stardust-gold/45">
+                  Lendo as energias dos signos...
+                </p>
+                <SignRevealPhase
+                  signoA={signoA}
+                  signoB={signoB}
+                  onComplete={handleRevealComplete}
+                />
               </Motion.div>
             )}
 
