@@ -68,8 +68,22 @@ export function OraclePage() {
   const [oracleAnswer, setOracleAnswer] = useState('');
   const [oraclePlanets, setOraclePlanets] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
+  const [chartRequestAttempted, setChartRequestAttempted] = useState(false);
+  const [chartGenerationFailed, setChartGenerationFailed] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
+
+  const hasSavedOracleData = Boolean(
+    birthLocation?.name &&
+    birthLocation?.lat !== null &&
+    birthLocation?.lat !== undefined &&
+    birthLocation?.lng !== null &&
+    birthLocation?.lng !== undefined &&
+    birthDateStr?.trim() &&
+    birthTimeStr?.trim(),
+  );
+
+  const hasGeneratedAstralMap = Array.isArray(oraclePlanets) && oraclePlanets.length > 0;
 
   // Ao montar, carrega o location salvo se houver
   useEffect(() => {
@@ -97,6 +111,58 @@ export function OraclePage() {
       setStep('intro');
     }
   }, [authLoading, isAuthenticated]);
+
+  const resetChartState = () => {
+    setOraclePlanets([]);
+    setChartRequestAttempted(false);
+    setChartGenerationFailed(false);
+  };
+
+  const fetchChart = async () => {
+    setChartLoading(true);
+    setChartRequestAttempted(true);
+    setChartGenerationFailed(false);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch(buildApiUrl('/api/oracle/chart'), {
+        headers: { Authorization: `Bearer ${localStorage.getItem('taro_token')}` }
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Não foi possível gerar o mapa astral agora.');
+      }
+
+      if (Array.isArray(data.planets) && data.planets.length > 0) {
+        setOraclePlanets(data.planets);
+        setChartGenerationFailed(false);
+        return true;
+      }
+
+      setOraclePlanets([]);
+      setChartGenerationFailed(true);
+      return false;
+    } catch (err) {
+      console.error('Error fetching astrology chart', err);
+      setOraclePlanets([]);
+      setChartGenerationFailed(true);
+      return false;
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  const handleRetryAstralMap = async () => {
+    if (!hasSavedOracleData) {
+      resetChartState();
+      setErrorMsg('');
+      setStep('birth_city');
+      return;
+    }
+
+    await fetchChart();
+  };
 
   const handleLocationSubmit = async () => {
     if (!birthLocation) return;
@@ -133,6 +199,7 @@ export function OraclePage() {
       }
 
       await refreshProfile();
+      resetChartState();
       setStep('ritual');
     } catch (e) {
       console.error('Erro no LocationSubmit:', e);
@@ -145,26 +212,6 @@ export function OraclePage() {
 
   useEffect(() => {
     if (step === 'ritual' && oraclePlanets.length === 0) {
-      const fetchChart = async () => {
-        setChartLoading(true);
-        // addLog('ChartReq', 'Fetching from Prokerala API');
-        try {
-          const res = await fetch(buildApiUrl('/api/oracle/chart'), {
-            headers: { Authorization: `Bearer ${localStorage.getItem('taro_token')}` }
-          });
-          const data = await res.json();
-          if (data.debug) // addLog('ChartDebug', data.debug);
-          if (data.planets) {
-            setOraclePlanets(data.planets);
-          }
-        } catch (err) {
-          console.error('Error fetching astrology chart', err);
-          // addLog('ChartErr', err);
-        } finally {
-          setChartLoading(false);
-        }
-      };
-      // only fire once
       fetchChart();
     }
   }, [step]);
@@ -237,6 +284,8 @@ export function OraclePage() {
       setIsExploding(true);
       setTimeout(() => {
         setIsExploding(false);
+        setErrorMsg('');
+        resetChartState();
         if (profile?.oracle_city) {
           setStep('ritual');
         } else {
@@ -521,6 +570,32 @@ export function OraclePage() {
                    <Loader2 className="w-8 h-8 animate-spin text-mystic-gold mb-2" />
                    <p className="text-sm text-mystic-gold">Desenhando seu céu natal...</p>
                  </div>
+              ) : chartRequestAttempted && chartGenerationFailed && !hasGeneratedAstralMap ? (
+                <div className="mt-6 w-full max-w-2xl rounded-2xl border border-mystic-gold/25 bg-[#1a0f2e]/85 p-6 text-center shadow-[0_0_20px_rgba(255,215,0,0.08)]">
+                  <p className="text-base leading-relaxed text-amber-100 md:text-lg">
+                    Algumas nuvens impediram a leitura dos astros, espere 1 minuto e clique em gerar novamente.
+                  </p>
+                  <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                    <button
+                      onClick={handleRetryAstralMap}
+                      className="inline-flex items-center justify-center rounded-full bg-mystic-gold px-6 py-3 text-sm font-bold uppercase tracking-wider text-mystic-dark transition hover:scale-105"
+                    >
+                      Tentar novamente
+                    </button>
+                    {!hasSavedOracleData && (
+                      <button
+                        onClick={() => {
+                          resetChartState();
+                          setErrorMsg('');
+                          setStep('birth_city');
+                        }}
+                        className="inline-flex items-center justify-center rounded-full border border-mystic-gold/40 px-6 py-3 text-sm font-bold uppercase tracking-wider text-mystic-gold transition hover:bg-mystic-gold/10"
+                      >
+                        Preencher dados novamente
+                      </button>
+                    )}
+                  </div>
+                </div>
               ) : (
                 <>
                  <AstrologyChart planets={oraclePlanets} />
