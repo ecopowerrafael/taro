@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogOut, Wallet } from 'lucide-react'
+import { LogOut, Pencil, Wallet, X } from 'lucide-react'
 import { motion as Motion } from 'framer-motion'
 import { AuthProfileForm } from '../components/AuthProfileForm'
 import { PageShell } from '../components/PageShell'
@@ -120,6 +120,7 @@ export function PerfilPage() {
   } = usePlatformContext()
   const navigate = useNavigate()
   const [seenAnswerIds, setSeenAnswerIds] = useState(new Set())
+  const [editModalOpen, setEditModalOpen] = useState(false)
   const seenStorageKey = `astria_answers_seen_${profile?.id || profile?.email || 'anon'}`
 
   useEffect(() => {
@@ -194,36 +195,46 @@ export function PerfilPage() {
         <div className="mx-auto max-w-lg px-4 pb-36 pt-2">
 
           {/* ── HERO: Selo + Nome + Saldo ───────────────────────────── */}
-          <div className="mb-8 flex flex-col items-center gap-3">
-            {/* Selo do signo */}
-            {signData ? (
-              <SignSeal signLabel={sign} size={130} />
-            ) : (
-              <Motion.div
-                className="flex h-32 w-32 items-center justify-center rounded-full border-2 border-stardust-gold/40 bg-mystic-purple/40 text-5xl text-stardust-gold/50"
-                animate={{ scale: [1, 1.04, 1] }}
-                transition={{ duration: 4, repeat: Infinity }}
-              >
-                ✦
-              </Motion.div>
-            )}
-
-            <div className="text-center">
-              <h2 className="font-display text-2xl text-mystic-goldSoft drop-shadow-[0_0_12px_rgba(197,160,89,0.4)]">
-                {profile.name}
-              </h2>
-              {sign && (
-                <p className="mt-0.5 text-xs tracking-[0.22em] uppercase text-ethereal-silver/50">{sign}</p>
+          <div className="mb-8 grid grid-cols-[minmax(0,1fr)_150px] items-center gap-4 rounded-[28px] border border-stardust-gold/20 bg-[rgba(10,0,20,0.42)] px-4 py-4 shadow-[0_0_40px_rgba(197,160,89,0.08)] backdrop-blur-md sm:grid-cols-[minmax(0,1fr)_180px]">
+            <div className="flex min-w-0 items-center gap-3">
+              {signData ? (
+                <div className="shrink-0">
+                  <SignSeal signLabel={sign} size={104} />
+                </div>
+              ) : (
+                <Motion.div
+                  className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-mystic-purple/40 text-4xl text-stardust-gold/50 shadow-[0_0_26px_rgba(197,160,89,0.18)]"
+                  animate={{ scale: [1, 1.04, 1] }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                >
+                  ✦
+                </Motion.div>
               )}
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="truncate font-display text-xl text-mystic-goldSoft drop-shadow-[0_0_12px_rgba(197,160,89,0.4)] sm:text-2xl">
+                    {profile.name}
+                  </h2>
+                  <button
+                    onClick={() => setEditModalOpen(true)}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stardust-gold/10 text-stardust-gold transition hover:bg-stardust-gold/20 hover:text-mystic-goldSoft"
+                    aria-label="Editar perfil"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                </div>
+                {sign && (
+                  <p className="mt-1 text-[11px] tracking-[0.22em] uppercase text-ethereal-silver/50">{sign}</p>
+                )}
+              </div>
             </div>
 
-            {/* Card de saldo */}
             <Motion.div
-              className="relative mt-2 overflow-hidden rounded-2xl border border-stardust-gold/40 bg-[rgba(10,0,20,0.7)] px-8 py-4 text-center shadow-[0_0_30px_rgba(197,160,89,0.12)] backdrop-blur-md"
+              className="relative overflow-hidden rounded-2xl border border-stardust-gold/30 bg-[rgba(10,0,20,0.78)] px-4 py-4 text-center shadow-[0_0_30px_rgba(197,160,89,0.12)] backdrop-blur-md"
               animate={{ boxShadow: ['0 0 18px rgba(197,160,89,0.10)', '0 0 34px rgba(197,160,89,0.22)', '0 0 18px rgba(197,160,89,0.10)'] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              {/* shimmer */}
               <Motion.div
                 className="pointer-events-none absolute inset-0"
                 animate={{ backgroundPosition: ['200% 0%', '-200% 0%'] }}
@@ -232,16 +243,16 @@ export function PerfilPage() {
               />
               <div className="relative flex items-center justify-center gap-2">
                 <Wallet size={15} className="text-stardust-gold/70" />
-                <span className="text-[10px] tracking-[0.25em] uppercase text-stardust-gold/60">Saldo</span>
+                <span className="text-[10px] tracking-[0.22em] uppercase text-stardust-gold/60">Saldo</span>
               </div>
-              <div className="font-display relative text-3xl font-bold text-mystic-goldSoft drop-shadow-[0_0_10px_rgba(197,160,89,0.6)]">
+              <div className="relative mt-1 font-display text-2xl font-bold text-mystic-goldSoft drop-shadow-[0_0_10px_rgba(197,160,89,0.6)] sm:text-3xl">
                 {saldoFormatado}
               </div>
               <Motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate('/recarregar')}
-                className="relative mt-2 rounded-xl bg-gradient-to-r from-[#C5A059] via-[#E0C27A] to-[#C5A059] px-5 py-1.5 text-xs font-bold tracking-widest text-mystic-black shadow-[0_0_14px_rgba(197,160,89,0.4)]"
+                className="relative mt-2 rounded-xl bg-gradient-to-r from-[#C5A059] via-[#E0C27A] to-[#C5A059] px-4 py-1.5 text-[11px] font-bold tracking-widest text-mystic-black shadow-[0_0_14px_rgba(197,160,89,0.4)]"
               >
                 + Recarregar
               </Motion.button>
@@ -268,7 +279,7 @@ export function PerfilPage() {
                       {item.badgeCount > 99 ? '99+' : item.badgeCount}
                     </span>
                   )}
-                  <img src={item.icon} alt={item.label} className="h-14 w-14 object-contain drop-shadow-[0_0_10px_rgba(197,160,89,0.3)]" />
+                  <img src={item.icon} alt={item.label} className="h-16 w-16 object-contain drop-shadow-[0_0_18px_rgba(197,160,89,0.85)] sm:h-20 sm:w-20" />
                   <span className="text-center text-[11px] font-medium tracking-widest uppercase text-mystic-goldSoft/80">{item.label}</span>
                 </Motion.div>
               )
@@ -276,35 +287,58 @@ export function PerfilPage() {
             })}
           </div>
 
-          {/* ── EDITAR PERFIL ─────────────────────────────────────── */}
-          <section className="mb-8">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex-1 border-t border-stardust-gold/20" />
-              <span className="text-[10px] tracking-[0.3em] uppercase text-stardust-gold/50">Editar Perfil</span>
-              <div className="flex-1 border-t border-stardust-gold/20" />
-            </div>
-            <div className="overflow-hidden rounded-2xl border border-stardust-gold/25 bg-[rgba(10,0,20,0.65)] backdrop-blur-md">
-              <AuthProfileForm
-                profile={profile}
-                sign={sign}
-                onUpdate={updateProfile}
-                isRegister={false}
-              />
-            </div>
-            <div className="mt-4 flex justify-center">
-              <Motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleLogout}
-                className="flex items-center gap-2 rounded-xl border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-sm text-red-400 transition hover:bg-red-500/20"
-              >
-                <LogOut size={14} /> Sair da Conta
-              </Motion.button>
-            </div>
+          <section className="mb-8 flex justify-center">
+            <Motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleLogout}
+              className="flex items-center gap-2 rounded-xl border border-red-500/40 bg-red-500/10 px-5 py-2.5 text-sm text-red-400 transition hover:bg-red-500/20"
+            >
+              <LogOut size={14} /> Sair da Conta
+            </Motion.button>
           </section>
 
         </div>
       </PageShell>
+
+      {editModalOpen && (
+        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="absolute inset-0" onClick={() => setEditModalOpen(false)} />
+          <Motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-[28px] border border-stardust-gold/30 bg-[linear-gradient(180deg,rgba(26,11,46,0.94),rgba(5,5,5,0.96))] shadow-[0_0_40px_rgba(197,160,89,0.18)]"
+          >
+            <div className="flex items-center justify-between border-b border-stardust-gold/15 px-5 py-4">
+              <div>
+                <p className="font-display text-xl text-mystic-goldSoft">Editar Perfil</p>
+                <p className="text-[11px] tracking-[0.18em] uppercase text-ethereal-silver/40">Ajuste seus dados pessoais</p>
+              </div>
+              <button
+                onClick={() => setEditModalOpen(false)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-stardust-gold/10 text-stardust-gold transition hover:bg-stardust-gold/20"
+                aria-label="Fechar modal"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="max-h-[78vh] overflow-y-auto p-1">
+              <AuthProfileForm
+                profile={profile}
+                sign={sign}
+                onUpdate={async (payload) => {
+                  await updateProfile(payload)
+                  setEditModalOpen(false)
+                }}
+                isRegister={false}
+              />
+            </div>
+          </Motion.div>
+        </div>
+      )}
     </div>
   )
 }
