@@ -81,7 +81,7 @@ export function MagiasPage() {
         </section>
 
         <section className="rounded-2xl glass-panel border border-mystic-purple-light/20 p-12 mb-20">
-          <h2 className="font-playfair text-4xl text-white mb-8 flex items-center gap-3">
+          <h2 className="font-playfair text-[20px] md:text-4xl text-white mb-8">
             Como o Ritual <span className="text-gradient-gold italic">funciona</span>
           </h2>
 
