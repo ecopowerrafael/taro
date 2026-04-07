@@ -88,6 +88,8 @@ export function VideoRoomPage() {
           consultantOnline: Boolean(data.consultantOnline),
         })
         setSession(data)
+        // Pré-carregar SDK Daily enquanto usuário aguarda na sala
+        loadDailyIframe().catch(() => {})
       } catch (err) {
         setError(err.message || 'Erro ao carregar a sala.')
       } finally {
@@ -233,7 +235,7 @@ export function VideoRoomPage() {
       } catch (e) {
         // ignore
       }
-    }, 5000)
+    }, 2000)
     return () => clearInterval(interval)
   }, [session, isCallActive, sessionId, token])
 
@@ -270,27 +272,25 @@ export function VideoRoomPage() {
       if (containerRef.current) {
         containerRef.current.innerHTML = ''
       }
-      // Dar tempo ao DOM atualizar
-      await new Promise(resolve => setTimeout(resolve, 300))
     }
     
-    // Marcar sessão como ativa no DB se ainda não estiver
-    if (sessionData.status !== 'active') {
-      const activateResponse = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status: 'active' })
-      })
-
-      if (!activateResponse.ok) {
-        const activatePayload = await activateResponse.json().catch(() => ({}))
-        throw new Error(activatePayload.message || 'A sessão não pode ser iniciada agora.')
-      }
-    }
+    // Marcar sessão como ativa no DB se ainda não estiver, em paralelo com o carregamento do SDK
+    const activatePromise = sessionData.status !== 'active'
+      ? fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ status: 'active' })
+        }).then(async (r) => {
+          if (!r.ok) {
+            const payload = await r.json().catch(() => ({}))
+            throw new Error(payload.message || 'A sessão não pode ser iniciada agora.')
+          }
+        })
+      : Promise.resolve()
 
     // Usar createCallObject ao invés de createFrame para controle 100% via código
     // Isso elimina completamente a UI de prejoin do Daily
-    const DailyIframe = await loadDailyIframe()
+    const [, DailyIframe] = await Promise.all([activatePromise, loadDailyIframe()])
 
     if (!DailyIframe || typeof DailyIframe.createCallObject !== 'function') {
       throw new Error('Nao foi possivel carregar o SDK de video.')
@@ -686,9 +686,6 @@ export function VideoRoomPage() {
       console.log('[VideoRoomPage] ✓ Join bem-sucedido')
       console.log('[VideoRoomPage] Join result:', joinResult)
       
-      // Esperar um momento para que os eventos sejam disparados
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
       const participants = callFrame.participants()
       console.log('[VideoRoomPage] ★ Participants após 0.5s:', {
         count: Object.keys(participants).length,
@@ -978,10 +975,23 @@ export function VideoRoomPage() {
     navigate('/consultores')
   }
 
+  // Auto-encerrar chamada Daily quando billing parar por saldo zerado
+  useEffect(() => {
+    if (
+      !billing.isConnected &&
+      isCallActive &&
+      billingStartedRef.current &&
+      !callAlreadyEndedRef.current
+    ) {
+      console.log('[VideoRoomPage] Billing desconectou com chamada ativa — encerrando chamada por saldo zerado')
+      handleLeaveCall()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [billing.isConnected, isCallActive])
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Remover listener de resize
       if (resizeHandlerRef.current) {
         window.removeEventListener('resize', resizeHandlerRef.current)
         resizeHandlerRef.current = null
