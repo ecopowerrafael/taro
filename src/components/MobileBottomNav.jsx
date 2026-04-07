@@ -1,5 +1,5 @@
 import { motion as Motion } from 'framer-motion'
-import { IdCard, Moon, Sparkles, Star, LogIn, Compass } from 'lucide-react'
+import { IdCard, Moon, Sparkles, Star, LogIn, Compass, Heart } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { usePlatformContext } from '../context/platform-context'
 
@@ -9,6 +9,7 @@ export function MobileBottomNav() {
 
   const mobileLinks = [
     { to: '/consultores', label: 'Consultores', icon: Moon },
+    { to: '/sincronicidade', label: 'Sincronia', icon: Heart },
     { to: '/mapa-astral', label: 'Mapa', icon: Compass },
     { to: '/magias', label: 'Magias', icon: Sparkles },
   ]

@@ -41,6 +41,7 @@ const AjudaPage = lazyNamed(() => import('./pages/AjudaPage'), 'AjudaPage')
 const ContatoPage = lazyNamed(() => import('./pages/ContatoPage'), 'ContatoPage')
 const ConsultorPerfilPage = lazyNamed(() => import('./pages/ConsultorPerfilPage'), 'ConsultorPerfilPage')
 const OraclePage = lazyNamed(() => import('./pages/OraclePage'), 'OraclePage')
+const SincronicidadePage = lazyNamed(() => import('./pages/SincronicidadePage'), 'SincronicidadePage')
 
 function RouteFallback() {
   return <RouteLoader message="Abrindo portal..." />
@@ -112,6 +113,7 @@ function AppContent() {
           <Route path="/" element={renderHome()} />
           <Route path="/oraculo" element={<Navigate to="/mapa-astral" replace />} />
           <Route path="/mapa-astral" element={wrapWithTransition(OraclePage)} />
+          <Route path="/sincronicidade" element={wrapWithTransition(SincronicidadePage)} />
           <Route path="/plataforma" element={wrapWithTransition(PlatformPage)} />
           <Route 
             path="/admin" 
