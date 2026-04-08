@@ -306,6 +306,11 @@ export function OraclePage() {
         throw new Error(data.error || `HTTP ${res.status}: ${rawText.substring(0, 40)}`);
       }
 
+      addDebugLog('location:save:resolved-coordinates', {
+        oracle_lat: data?.oracle_lat ?? null,
+        oracle_lng: data?.oracle_lng ?? null,
+      });
+
       await refreshProfile();
       resetChartState();
       setStep('ritual');

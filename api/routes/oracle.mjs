@@ -5,6 +5,45 @@ import { calculateChart } from '../astroEngine.mjs'
 export const createOracleRouter = (pool) => {
   const router = Router()
 
+  const toFiniteNumber = (value) => {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : null
+  }
+
+  const isValidCoordinatePair = (lat, lng) => {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false
+    if (lat === 0 && lng === 0) return false
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return false
+    return true
+  }
+
+  const resolveCoordinatesFromCity = async (cityName) => {
+    if (!cityName || !String(cityName).trim()) return null
+
+    const endpoint = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(String(cityName).trim())}&format=json&addressdetails=1&limit=1&countrycodes=br`
+    const response = await fetch(endpoint, {
+      headers: {
+        'Accept-Language': 'pt-BR',
+        'User-Agent': 'AstriaOracle/1.0 (backend geocoding fallback)'
+      }
+    })
+
+    if (!response.ok) return null
+    const data = await response.json().catch(() => [])
+    if (!Array.isArray(data) || data.length === 0) return null
+
+    const first = data[0]
+    const lat = toFiniteNumber(first?.lat)
+    const lng = toFiniteNumber(first?.lon)
+    if (!isValidCoordinatePair(lat, lng)) return null
+
+    return {
+      lat,
+      lng,
+      displayName: first?.display_name || cityName,
+    }
+  }
+
   const parseDateString = (dateStr) => {
     if (!dateStr) return null
     const parts = dateStr.split(/[\sT]+/)
@@ -177,12 +216,27 @@ export const createOracleRouter = (pool) => {
       const { oracle_city, oracle_lat, oracle_lng, oracle_birth_date } = request.body
       const userId = request.user.id
 
+      let finalLat = toFiniteNumber(oracle_lat)
+      let finalLng = toFiniteNumber(oracle_lng)
+
+      if (!isValidCoordinatePair(finalLat, finalLng)) {
+        const resolved = await resolveCoordinatesFromCity(oracle_city)
+        if (!resolved) {
+          return response.status(422).json({
+            error: 'Não foi possível localizar essa cidade com precisão. Selecione outra opção da lista.',
+            code: 'INVALID_ORACLE_COORDINATES',
+          })
+        }
+        finalLat = resolved.lat
+        finalLng = resolved.lng
+      }
+
       await pool.query(
         'UPDATE users SET oracle_city = ?, oracle_lat = ?, oracle_lng = ?, oracle_birth_date = ?, oracle_chart_cache = NULL, oracle_chart_cache_key = NULL, oracle_chart_cached_at = NULL WHERE id = ?',
-        [oracle_city, oracle_lat, oracle_lng, oracle_birth_date, userId]
+        [oracle_city, finalLat, finalLng, oracle_birth_date, userId]
       )
 
-      response.status(200).json({ success: true })
+      response.status(200).json({ success: true, oracle_lat: finalLat, oracle_lng: finalLng })
     } catch (error) {
       console.error('[API/Oracle] Erro ao salvar location:', error)
       response.status(500).json({ error: `Erro salvar BD: ${error.message}` })
