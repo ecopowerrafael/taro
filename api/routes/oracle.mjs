@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { authenticate } from '../middleware/auth.mjs'
+import { calculateChart } from '../astroEngine.mjs'
 
 export const createOracleRouter = (pool) => {
   const router = Router()
@@ -65,67 +66,48 @@ export const createOracleRouter = (pool) => {
       })
       .join('; ')
 
-    return `Posições Astrológicas (Prokerala Ayanamsa): ${planetsData}.`
+    return `Posições Astrológicas (Swiss Ephemeris Ayanamsa Lahiri): ${planetsData}.`
   }
 
-  const fetchProkeralaChart = async (user, creds) => {
+  const fetchSwissephChart = async (user) => {
     let rawPlanets = []
-    let prokeralaDebug = null
+    let engineDebug = null
 
     if (
-      !creds.oracleProkeralaId ||
-      !creds.oracleProkeralaSecret ||
       !user.oracle_lat ||
       !user.oracle_lng ||
       !(user.oracle_birth_date || user.birthDate)
     ) {
-      return { rawPlanets, prokeralaDebug }
+      return { rawPlanets, engineDebug }
     }
 
     try {
-      const tokenRes = await fetch('https://api.prokerala.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'client_credentials',
-          client_id: creds.oracleProkeralaId,
-          client_secret: creds.oracleProkeralaSecret,
-        })
-      })
-      const tokenData = await tokenRes.json()
-      prokeralaDebug = { AuthStep: tokenData }
-
-      if (tokenData.access_token) {
-        const formattedDate = parseDateString(user.oracle_birth_date || (user.birthDate && new Date(user.birthDate).toISOString()))
-        const astroRes = await fetch(`https://api.prokerala.com/v2/astrology/planet-position?datetime=${formattedDate}&coordinates=${user.oracle_lat},${user.oracle_lng}&ayanamsa=1`, {
-          headers: { Authorization: `Bearer ${tokenData.access_token}` }
-        })
-        const astroData = await astroRes.json()
-        prokeralaDebug = { TokenStep: tokenData, AstroStep: astroData }
-
-        if (astroData?.data?.planet_position) {
-          rawPlanets = astroData.data.planet_position
-        }
-      }
+      const birthDateIso = parseDateString(user.oracle_birth_date || (user.birthDate && new Date(user.birthDate).toISOString()))
+      rawPlanets = await calculateChart(
+        birthDateIso,
+        Number(user.oracle_lat),
+        Number(user.oracle_lng)
+      )
+      engineDebug = { calculated: true, planetCount: rawPlanets.length }
     } catch (error) {
-      prokeralaDebug = { exception: error.message }
+      engineDebug = { exception: error.message }
     }
 
-    return { rawPlanets, prokeralaDebug }
+    return { rawPlanets, engineDebug }
   }
 
-  const getOracleChart = async (user, userId, creds) => {
+  const getOracleChart = async (user, userId) => {
     const cacheKey = buildChartCacheKey(user)
     const cachedPlanets = parseCachedPlanets(user.oracle_chart_cache)
 
     if (cachedPlanets && user.oracle_chart_cache_key === cacheKey) {
       return {
         rawPlanets: cachedPlanets,
-        prokeralaDebug: { cached: true, cachedAt: user.oracle_chart_cached_at },
+        engineDebug: { cached: true, cachedAt: user.oracle_chart_cached_at },
       }
     }
 
-    const { rawPlanets, prokeralaDebug } = await fetchProkeralaChart(user, creds)
+    const { rawPlanets, engineDebug } = await fetchSwissephChart(user)
 
     if (Array.isArray(rawPlanets) && rawPlanets.length > 0) {
       await pool.query(
@@ -134,7 +116,7 @@ export const createOracleRouter = (pool) => {
       )
     }
 
-    return { rawPlanets, prokeralaDebug }
+    return { rawPlanets, engineDebug }
   }
 
   // Salvar localização do nascimento (e se a primeira consulta já foi usada)
@@ -201,11 +183,9 @@ export const createOracleRouter = (pool) => {
       if (!uRows.length) return response.status(404).json({ error: 'Usuário não encontrado' })
       const user = uRows[0]
 
-      const [pRows] = await pool.query('SELECT oracleProkeralaId, oracleProkeralaSecret FROM platform_credentials LIMIT 1')
-      const creds = pRows[0] || {}
-      const { rawPlanets, prokeralaDebug } = await getOracleChart(user, userId, creds)
+      const { rawPlanets, engineDebug } = await getOracleChart(user, userId)
 
-      return response.status(200).json({ planets: rawPlanets, debug: prokeralaDebug })
+      return response.status(200).json({ planets: rawPlanets, debug: engineDebug })
     } catch (error) {
       return response.status(500).json({ error: error.message })
     }
@@ -227,7 +207,7 @@ export const createOracleRouter = (pool) => {
       const user = uRows[0]
 
       // 2. Buscar as credenciais no banco de dados
-      const [pRows] = await pool.query('SELECT oracleProkeralaId, oracleProkeralaSecret, oracleGeminiKey, oracleGeminiModel, oracleSystemPrompt FROM platform_credentials LIMIT 1')
+      const [pRows] = await pool.query('SELECT oracleGeminiKey, oracleGeminiModel, oracleSystemPrompt FROM platform_credentials LIMIT 1')
       const creds = pRows[0] || {}
 
       if (!creds.oracleGeminiKey) {
@@ -235,7 +215,7 @@ export const createOracleRouter = (pool) => {
       }
 
       let astrologyContext = 'Dados astrológicos exatos indisponíveis/ignorados.'
-      const { rawPlanets, prokeralaDebug } = await getOracleChart(user, userId, creds)
+      const { rawPlanets, engineDebug } = await getOracleChart(user, userId)
       astrologyContext = buildAstrologyContext(rawPlanets)
 
       // 4. Integração Gemini 1.5 Flash (Acesso Direto REST para evitar excesso de dependências do SDK)
@@ -243,7 +223,7 @@ export const createOracleRouter = (pool) => {
       const userContext = `Nome do Consulente: ${user.name}. 
       Cidade de Nascimento: ${user.oracle_city || 'Desconhecida'}.
       Data/Hora de Nascimento Fornecida: ${user.oracle_birth_date || 'Desconhecida'}.
-      Contexto Astrológico Bruto (Prokerala): ${astrologyContext}.
+      Contexto Astrológico Bruto (Swiss Ephemeris): ${astrologyContext}.
       Desejo / Pergunta Secreta: "${question}"`
 
 let activeModel = creds.oracleGeminiModel || 'gemini-2.5-pro';

@@ -56,17 +56,17 @@ export class ErrorBoundary extends Component {
             )}
 
             <button
-              onClick={this.handleReset}
+              onClick={() => window.location.reload()}
               className="mt-6 w-full rounded-lg bg-gradient-to-r from-mystic-gold/90 to-amber-500/85 py-3 font-bold text-black transition hover:brightness-110"
             >
-              Voltar ao Início
+              Recarregar Página
             </button>
 
             <button
-              onClick={() => window.location.reload()}
+              onClick={this.handleReset}
               className="mt-2 w-full rounded-lg border border-mystic-gold/30 bg-black/30 py-2 font-medium text-amber-50 transition hover:bg-black/50"
             >
-              Recarregar Página
+              Voltar ao Início
             </button>
           </div>
         </div>

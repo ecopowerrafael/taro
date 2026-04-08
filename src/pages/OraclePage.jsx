@@ -58,6 +58,16 @@ function StarsBackground() {
 export function OraclePage() {
   const { oracleCredentials, profile, refreshProfile, isAuthenticated, authLoading } = usePlatformContext();
   const navigate = useNavigate();
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const debugRequested =
+    urlParams?.get('oracleDebug') === '1' ||
+    (typeof window !== 'undefined' && localStorage.getItem('oracle_debug') === '1');
+  const debugUserFilter = typeof window !== 'undefined' ? localStorage.getItem('oracle_debug_user') : '';
+  const debugForCurrentUser =
+    !debugUserFilter ||
+    String(debugUserFilter) === String(profile?.id ?? '') ||
+    String(debugUserFilter).toLowerCase() === String(profile?.email ?? '').toLowerCase();
+  const showOracleDebug = Boolean(debugRequested && debugForCurrentUser);
   const [step, setStep] = useState('intro');
   const [showAstralReadingModal, setShowAstralReadingModal] = useState(false);
   const [birthLocation, setBirthLocation] = useState(null);
@@ -70,8 +80,28 @@ export function OraclePage() {
   const [chartLoading, setChartLoading] = useState(false);
   const [chartRequestAttempted, setChartRequestAttempted] = useState(false);
   const [chartGenerationFailed, setChartGenerationFailed] = useState(false);
+  const [chartApiDebug, setChartApiDebug] = useState(null);
+  const [debugLog, setDebugLog] = useState([]);
   const [isExploding, setIsExploding] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
+
+  const addDebugLog = (event, payload = null) => {
+    if (!showOracleDebug) {
+      return;
+    }
+
+    setDebugLog((prev) => {
+      const next = [
+        {
+          time: new Date().toISOString(),
+          event,
+          payload,
+        },
+        ...prev,
+      ];
+      return next.slice(0, 30);
+    });
+  };
 
   const hasSavedOracleData = Boolean(
     birthLocation?.name &&
@@ -116,6 +146,7 @@ export function OraclePage() {
     setOraclePlanets([]);
     setChartRequestAttempted(false);
     setChartGenerationFailed(false);
+    setChartApiDebug(null);
   };
 
   const fetchChart = async () => {
@@ -123,6 +154,16 @@ export function OraclePage() {
     setChartRequestAttempted(true);
     setChartGenerationFailed(false);
     setErrorMsg('');
+    addDebugLog('chart:request:start', {
+      step,
+      userId: profile?.id,
+      email: profile?.email,
+      hasSavedOracleData,
+      oracle_city: profile?.oracle_city,
+      oracle_birth_date: profile?.oracle_birth_date,
+      oracle_lat: profile?.oracle_lat,
+      oracle_lng: profile?.oracle_lng,
+    });
 
     try {
       const res = await fetch(buildApiUrl('/api/oracle/chart'), {
@@ -130,6 +171,15 @@ export function OraclePage() {
       });
 
       const data = await res.json().catch(() => ({}));
+      setChartApiDebug(data?.debug ?? null);
+      addDebugLog('chart:request:response', {
+        status: res.status,
+        ok: res.ok,
+        planetsCount: Array.isArray(data?.planets) ? data.planets.length : 0,
+        debug: data?.debug ?? null,
+        error: data?.error ?? null,
+      });
+
       if (!res.ok) {
         throw new Error(data.error || 'Não foi possível gerar o mapa astral agora.');
       }
@@ -147,6 +197,9 @@ export function OraclePage() {
       console.error('Error fetching astrology chart', err);
       setOraclePlanets([]);
       setChartGenerationFailed(true);
+      addDebugLog('chart:request:error', {
+        message: err?.message || 'unknown_error',
+      });
       return false;
     } finally {
       setChartLoading(false);
@@ -155,12 +208,18 @@ export function OraclePage() {
 
   const handleRetryAstralMap = async () => {
     if (!hasSavedOracleData) {
+      addDebugLog('chart:retry:no-saved-data', {
+        birthLocation,
+        birthDateStr,
+        birthTimeStr,
+      });
       resetChartState();
       setErrorMsg('');
       setStep('birth_city');
       return;
     }
 
+    addDebugLog('chart:retry:with-saved-data');
     await fetchChart();
   };
 
@@ -168,7 +227,11 @@ export function OraclePage() {
     if (!birthLocation) return;
     setLoadingAction(true);
     setErrorMsg('');
-    // addLog('LocSubmit', 'start');
+    addDebugLog('location:save:start', {
+      birthLocation,
+      birthDateStr,
+      birthTimeStr,
+    });
     try {
       const payload = {
         oracle_city: birthLocation.name,
@@ -176,7 +239,7 @@ export function OraclePage() {
         oracle_lng: birthLocation.lng,
         oracle_birth_date: `${birthDateStr} ${birthTimeStr}`.trim()
       };
-      // addLog('Payload', payload);
+      addDebugLog('location:save:payload', payload);
 
       const res = await fetch(buildApiUrl('/api/oracle/save-location'), {
         method: 'POST',
@@ -188,8 +251,11 @@ export function OraclePage() {
       });
 
       const rawText = await res.text();
-      // addLog('LocResSt', res.status);
-      // addLog('LocResTxt', rawText.substring(0, 50));
+      addDebugLog('location:save:response', {
+        status: res.status,
+        ok: res.ok,
+        raw: rawText.substring(0, 260),
+      });
       
       let data = {};
       try { data = JSON.parse(rawText); } catch(err){}
@@ -203,7 +269,9 @@ export function OraclePage() {
       setStep('ritual');
     } catch (e) {
       console.error('Erro no LocationSubmit:', e);
-      // addLog('LocErr', e);
+      addDebugLog('location:save:error', {
+        message: e?.message || 'unknown_error',
+      });
       setErrorMsg('Erro salvar local: ' + e.message);
     } finally {
       setLoadingAction(false);
@@ -212,6 +280,11 @@ export function OraclePage() {
 
   useEffect(() => {
     if (step === 'ritual' && oraclePlanets.length === 0) {
+      addDebugLog('chart:auto-fetch:ritual-entered', {
+        step,
+        hasGeneratedAstralMap,
+        planetsCount: oraclePlanets.length,
+      });
       fetchChart();
     }
   }, [step]);
@@ -670,6 +743,39 @@ export function OraclePage() {
       </AnimatePresence>
       {showAstralReadingModal && (
         <AstralReadingPurchaseModal onClose={() => setShowAstralReadingModal(false)} />
+      )}
+
+      {showOracleDebug && (
+        <div className="fixed bottom-3 left-3 right-3 z-[180] max-h-[44vh] overflow-auto rounded-xl border border-amber-400/40 bg-black/90 p-3 text-left text-xs text-amber-100 shadow-[0_0_24px_rgba(0,0,0,0.6)]">
+          <p className="font-semibold text-amber-300">DEBUG ORACLE (ativo para diagnóstico)</p>
+          <p className="mt-1 text-amber-100/80">
+            userId: {String(profile?.id || 'n/a')} | email: {profile?.email || 'n/a'} | step: {step}
+          </p>
+          <p className="text-amber-100/80">
+            savedData: {hasSavedOracleData ? 'sim' : 'não'} | planets: {oraclePlanets.length} | chartFail: {chartGenerationFailed ? 'sim' : 'não'}
+          </p>
+
+          {chartApiDebug && (
+            <pre className="mt-2 whitespace-pre-wrap rounded border border-amber-400/20 bg-black/70 p-2 text-[11px] text-amber-200">
+              {JSON.stringify(chartApiDebug, null, 2)}
+            </pre>
+          )}
+
+          {debugLog.length > 0 && (
+            <div className="mt-2 space-y-2">
+              {debugLog.map((entry, index) => (
+                <div key={`${entry.time}-${index}`} className="rounded border border-amber-400/15 bg-black/60 p-2">
+                  <p className="text-[11px] font-semibold text-amber-300">{entry.time} — {entry.event}</p>
+                  {entry.payload && (
+                    <pre className="mt-1 whitespace-pre-wrap text-[10px] text-amber-100/90">
+                      {JSON.stringify(entry.payload, null, 2)}
+                    </pre>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
       </div>
     </div>

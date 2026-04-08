@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion as Motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
+import { AstralReadingPurchaseModal } from '../components/AstralReadingPurchaseModal'
 
 // ─── Dados dos signos ────────────────────────────────────────────────────────
 const SIGNOS = [
@@ -555,6 +556,7 @@ export function SincronicidadePage() {
   const [signoA, setSignoA] = useState('')
   const [signoB, setSignoB] = useState('')
   const [fase, setFase] = useState('input') // 'input' | 'reveal' | 'fusao' | 'resultado'
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false)
   const [resultado, setResultado] = useState(null)
   const [showHearts, setShowHearts] = useState(false)
   const [heartsTick, setHeartsTick] = useState(0)
@@ -912,41 +914,53 @@ export function SincronicidadePage() {
                     transition={{ delay: 1.2 }}
                     className="mb-4 rounded-2xl border border-mystic-purple-light/30 bg-mystic-purple/30 p-4 text-center"
                   >
-                    <p className="mb-1 text-xs tracking-widest text-stardust-gold/60 uppercase">
-                      {(resultado?.percent ?? 0) >= 65 ? 'Potencialize essa união' : 'Supere os desafios'}
+                    <p className="mb-2 text-base font-semibold text-mystic-goldSoft">
+                      Faça uma leitura completa do Casal
                     </p>
-                    <p className="mb-4 text-sm text-ethereal-silver/70">
-                      {(resultado?.percent ?? 0) >= 65
-                        ? 'O Sol revela a sintonia, mas o destino está nos detalhes. O Vênus dele(a) se alinha com o seu Marte?'
-                        : 'Os signos solares mostram a superfície. Descubra como superar os desafios com a Sinastria Completa.'}
+
+                    <p className="mb-3 text-sm tracking-widest text-stardust-gold/60 uppercase">
+                      O Sol atrai, mas é a dança de Vênus e Marte que mantém.
                     </p>
+
+                    <div className="space-y-3 text-left text-sm leading-relaxed text-ethereal-silver/75">
+                      <p>
+                        Você descobriu a sintonia de superfície entre seus signos, mas a verdadeira química de um casal está escondida nos detalhes que os olhos não veem.
+                      </p>
+
+                      <p>Enquanto o Sol mostra quem vocês são, o Mapa Astral de Sincronicidade (Sinastria) revela:</p>
+
+                      <p>
+                        A Química do Desejo: Como o Marte de um ativa os instintos do outro.
+                      </p>
+
+                      <p>
+                        A Linguagem do Afeto: Onde o Vênus de vocês se encontra para criar um amor duradouro.
+                      </p>
+
+                      <p>
+                        O Nó Cármico: Quais desafios vocês vieram resolver juntos nesta existência.
+                      </p>
+
+                      <p>
+                        Não deixe o futuro do seu relacionamento à mercê do acaso. Entenda os mecanismos ocultos da sua união e transforme a paixão em um destino inabalável.
+                      </p>
+                    </div>
+
                     <Motion.button
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => navigate('/mapa-astral')}
-                      className="w-full rounded-xl bg-gradient-to-r from-[#C5A059] via-[#E0C27A] to-[#C5A059] py-3 font-bold tracking-[0.1em] text-mystic-black shadow-[0_0_24px_rgba(197,160,89,0.4)] transition-all hover:shadow-[0_0_36px_rgba(197,160,89,0.6)]"
+                      onClick={() => setShowPurchaseModal(true)}
+                      className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#C5A059] via-[#E0C27A] to-[#C5A059] py-3 font-bold tracking-[0.08em] text-mystic-black shadow-[0_0_24px_rgba(197,160,89,0.4)] transition-all hover:shadow-[0_0_36px_rgba(197,160,89,0.6)]"
                     >
-                      {(resultado?.percent ?? 0) >= 65 ? '✦ Desbloquear Análise de Vênus e Marte' : '✦ Desbloquear Análise Completa'}
+                      DESBLOQUEAR O MAPA COMPLETO DO CASAL
                     </Motion.button>
                   </Motion.div>
-
-                  {/* Botão consultores */}
-                  <Motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.5 }}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => navigate('/consultores')}
-                    className="mb-4 w-full rounded-xl border border-stardust-gold/30 py-3 text-sm tracking-wider text-stardust-gold/80 transition hover:bg-stardust-gold/10"
-                  >
-                    Falar com Consultor ao Vivo
-                  </Motion.button>
 
                   {/* Compartilhar */}
                   <Motion.button
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 1.7 }}
+                    transition={{ delay: 1.5 }}
                     whileHover={{ scale: 1.02 }}
                     onClick={() => {
                       const selectedSigns = `${signoAData.symbol} ${signoAData.label} + ${signoBData.symbol} ${signoBData.label}`
@@ -978,6 +992,10 @@ export function SincronicidadePage() {
               </Motion.div>
             )}
           </AnimatePresence>
+
+          {showPurchaseModal && (
+            <AstralReadingPurchaseModal onClose={() => setShowPurchaseModal(false)} />
+          )}
         </div>
       </PageShell>
     </div>

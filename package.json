@@ -33,6 +33,7 @@
     "@stripe/react-stripe-js": "^6.0.0",
     "@stripe/stripe-js": "^9.0.0",
     "@vitejs/plugin-react": "^6.0.1",
+    "astronomia": "^4.2.0",
     "autoprefixer": "^10.4.27",
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
