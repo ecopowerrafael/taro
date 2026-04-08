@@ -91,6 +91,15 @@ export function OraclePage() {
   const [isExploding, setIsExploding] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
 
+  const isValidCoordinatePair = (lat, lng) => {
+    const nLat = Number(lat);
+    const nLng = Number(lng);
+    if (!Number.isFinite(nLat) || !Number.isFinite(nLng)) return false;
+    if (nLat === 0 && nLng === 0) return false;
+    if (nLat < -90 || nLat > 90 || nLng < -180 || nLng > 180) return false;
+    return true;
+  };
+
   const addDebugLog = (event, payload = null) => {
     if (!showOracleDebug) {
       return;
@@ -111,12 +120,15 @@ export function OraclePage() {
 
   const hasSavedOracleData = Boolean(
     birthLocation?.name &&
-    birthLocation?.lat !== null &&
-    birthLocation?.lat !== undefined &&
-    birthLocation?.lng !== null &&
-    birthLocation?.lng !== undefined &&
+    isValidCoordinatePair(birthLocation?.lat, birthLocation?.lng) &&
     birthDateStr?.trim() &&
     birthTimeStr?.trim(),
+  );
+
+  const hasValidSavedProfileOracleData = Boolean(
+    profile?.oracle_city &&
+    isValidCoordinatePair(profile?.oracle_lat, profile?.oracle_lng) &&
+    profile?.oracle_birth_date,
   );
 
   const hasGeneratedAstralMap = Array.isArray(oraclePlanets) && oraclePlanets.length > 0;
@@ -187,7 +199,10 @@ export function OraclePage() {
       });
 
       if (!res.ok) {
-        throw new Error(data.error || 'Não foi possível gerar o mapa astral agora.');
+        const error = new Error(data.error || 'Não foi possível gerar o mapa astral agora.');
+        error.code = data?.code || null;
+        error.details = data?.details || null;
+        throw error;
       }
 
       if (Array.isArray(data.planets) && data.planets.length > 0) {
@@ -203,7 +218,25 @@ export function OraclePage() {
       console.error('Error fetching astrology chart', err);
       setOraclePlanets([]);
       setChartGenerationFailed(true);
+
+      if (err?.code === 'MISSING_ORACLE_BIRTH_DATA' || err?.code === 'INVALID_ORACLE_COORDINATES') {
+        const msg = err?.message || 'Faltam dados de nascimento válidos. Preencha novamente para gerar o mapa astral.';
+        setErrorMsg(msg);
+        addDebugLog('chart:request:invalid-data', {
+          code: err?.code,
+          details: err?.details || null,
+          message: msg,
+        });
+        setStep('birth_city');
+        return false;
+      }
+
+      if (err?.code === 'ORACLE_CHART_EMPTY') {
+        setErrorMsg(err?.message || 'Não foi possível gerar o mapa com os dados atuais. Revise e tente novamente.');
+      }
+
       addDebugLog('chart:request:error', {
+        code: err?.code || null,
         message: err?.message || 'unknown_error',
       });
       return false;
@@ -230,7 +263,10 @@ export function OraclePage() {
   };
 
   const handleLocationSubmit = async () => {
-    if (!birthLocation) return;
+    if (!birthLocation || !isValidCoordinatePair(birthLocation?.lat, birthLocation?.lng)) {
+      setErrorMsg('Selecione sua cidade na lista de sugestões para gerar latitude e longitude corretas.');
+      return;
+    }
     setLoadingAction(true);
     setErrorMsg('');
     addDebugLog('location:save:start', {
@@ -365,9 +401,12 @@ export function OraclePage() {
         setIsExploding(false);
         setErrorMsg('');
         resetChartState();
-        if (profile?.oracle_city) {
+        if (hasValidSavedProfileOracleData) {
           setStep('ritual');
         } else {
+          if (profile?.oracle_city) {
+            setErrorMsg('Confirme novamente sua cidade pela lista para validar as coordenadas do mapa astral.');
+          }
           setStep('birth_city');
         }
       }, 500); // Aguarda animação de explosão
@@ -538,7 +577,7 @@ export function OraclePage() {
             </div>
             
             <div className="mt-8 min-h-[60px] relative z-0">
-               {birthLocation && birthDateStr.length >= 10 && birthTimeStr.length >= 5 && (
+               {birthLocation && isValidCoordinatePair(birthLocation?.lat, birthLocation?.lng) && birthDateStr.length >= 10 && birthTimeStr.length >= 5 && (
                  <motion.button
                    initial={{ opacity: 0, y: 10 }}
                    animate={{ opacity: 1, y: 0 }}

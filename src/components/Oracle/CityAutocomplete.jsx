@@ -54,17 +54,6 @@ export function CityAutocomplete({ onSelect }) {
     });
   };
 
-  const handleCustomInput = () => {
-    if (query.trim().length > 0) {
-       setIsOpen(false);
-       onSelect({
-         name: query.trim(),
-         lat: 0,
-         lng: 0
-       });
-    }
-  };
-
   return (
     <div className="relative w-full text-left">
       <div className="relative">
@@ -75,7 +64,7 @@ export function CityAutocomplete({ onSelect }) {
             setQuery(e.target.value);
             onSelect(null); 
           }}
-          onBlur={() => setTimeout(handleCustomInput, 200)}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           placeholder="Digite o nome da cidade em que nasceu..."
           className="w-full bg-black/60 border border-mystic-purple/50 rounded-lg px-4 py-4 pl-12 text-white placeholder-gray-400 focus:outline-none focus:border-mystic-gold focus:ring-1 focus:ring-mystic-gold transition-all"
         />

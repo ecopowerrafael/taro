@@ -6,7 +6,7 @@ export const createOracleRouter = (pool) => {
   const router = Router()
 
   const parseDateString = (dateStr) => {
-    if (!dateStr) return new Date().toISOString()
+    if (!dateStr) return null
     const parts = dateStr.split(/[\sT]+/)
     const datePart = parts[0] || ''
     const timePart = parts[1] || '12:00'
@@ -20,7 +20,56 @@ export const createOracleRouter = (pool) => {
     }
 
     const parsed = new Date(isoStr)
-    return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString()
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString()
+  }
+
+  const validateOracleBirthData = (user) => {
+    const lat = Number(user.oracle_lat)
+    const lng = Number(user.oracle_lng)
+    const birthRaw = user.oracle_birth_date || user.birthDate || ''
+    const birthDateIso = parseDateString(birthRaw)
+
+    if (!birthRaw || !birthDateIso) {
+      return {
+        ok: false,
+        code: 'MISSING_ORACLE_BIRTH_DATA',
+        message: 'Data e hora de nascimento inválidas. Preencha novamente para gerar seu mapa astral.',
+      }
+    }
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return {
+        ok: false,
+        code: 'INVALID_ORACLE_COORDINATES',
+        message: 'Coordenadas de nascimento inválidas. Selecione novamente sua cidade de nascimento.',
+        details: { lat: user.oracle_lat, lng: user.oracle_lng }
+      }
+    }
+
+    if (lat === 0 && lng === 0) {
+      return {
+        ok: false,
+        code: 'INVALID_ORACLE_COORDINATES',
+        message: 'Não conseguimos localizar sua cidade com precisão. Selecione novamente a cidade de nascimento.',
+        details: { lat, lng }
+      }
+    }
+
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return {
+        ok: false,
+        code: 'INVALID_ORACLE_COORDINATES',
+        message: 'Latitude/longitude fora do intervalo permitido. Selecione novamente a cidade de nascimento.',
+        details: { lat, lng }
+      }
+    }
+
+    return {
+      ok: true,
+      birthDateIso,
+      lat,
+      lng,
+    }
   }
 
   const buildChartCacheKey = (user) => {
@@ -72,28 +121,31 @@ export const createOracleRouter = (pool) => {
   const fetchSwissephChart = async (user) => {
     let rawPlanets = []
     let engineDebug = null
-
-    if (
-      !user.oracle_lat ||
-      !user.oracle_lng ||
-      !(user.oracle_birth_date || user.birthDate)
-    ) {
-      return { rawPlanets, engineDebug }
+    const validation = validateOracleBirthData(user)
+    if (!validation.ok) {
+      return {
+        rawPlanets,
+        engineDebug: {
+          validationFailed: true,
+          code: validation.code,
+          details: validation.details || null,
+        },
+        validationError: validation,
+      }
     }
 
     try {
-      const birthDateIso = parseDateString(user.oracle_birth_date || (user.birthDate && new Date(user.birthDate).toISOString()))
       rawPlanets = await calculateChart(
-        birthDateIso,
-        Number(user.oracle_lat),
-        Number(user.oracle_lng)
+        validation.birthDateIso,
+        validation.lat,
+        validation.lng
       )
       engineDebug = { calculated: true, planetCount: rawPlanets.length }
     } catch (error) {
       engineDebug = { exception: error.message }
     }
 
-    return { rawPlanets, engineDebug }
+    return { rawPlanets, engineDebug, validationError: null }
   }
 
   const getOracleChart = async (user, userId) => {
@@ -107,7 +159,7 @@ export const createOracleRouter = (pool) => {
       }
     }
 
-    const { rawPlanets, engineDebug } = await fetchSwissephChart(user)
+    const { rawPlanets, engineDebug, validationError } = await fetchSwissephChart(user)
 
     if (Array.isArray(rawPlanets) && rawPlanets.length > 0) {
       await pool.query(
@@ -116,7 +168,7 @@ export const createOracleRouter = (pool) => {
       )
     }
 
-    return { rawPlanets, engineDebug }
+    return { rawPlanets, engineDebug, validationError }
   }
 
   // Salvar localização do nascimento (e se a primeira consulta já foi usada)
@@ -183,7 +235,24 @@ export const createOracleRouter = (pool) => {
       if (!uRows.length) return response.status(404).json({ error: 'Usuário não encontrado' })
       const user = uRows[0]
 
-      const { rawPlanets, engineDebug } = await getOracleChart(user, userId)
+      const { rawPlanets, engineDebug, validationError } = await getOracleChart(user, userId)
+
+      if (validationError) {
+        return response.status(422).json({
+          error: validationError.message,
+          code: validationError.code,
+          details: validationError.details || null,
+          debug: engineDebug,
+        })
+      }
+
+      if (!Array.isArray(rawPlanets) || rawPlanets.length === 0) {
+        return response.status(422).json({
+          error: 'Não foi possível gerar seu mapa com os dados atuais. Revise cidade/data de nascimento e tente novamente.',
+          code: 'ORACLE_CHART_EMPTY',
+          debug: engineDebug,
+        })
+      }
 
       return response.status(200).json({ planets: rawPlanets, debug: engineDebug })
     } catch (error) {
@@ -267,7 +336,7 @@ let activeModel = creds.oracleGeminiModel || 'gemini-2.5-pro';
 
       const answer = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'O silêncio do cosmos é absoluto. Não houve resposta.'
 
-        response.status(200).json({ answer, planets: rawPlanets, prokeralaDebug })
+        response.status(200).json({ answer, planets: rawPlanets, engineDebug })
     } catch (error) {
       console.error('[API/Oracle] Erro interno:', error)
       response.status(500).json({ error: `Erro Ritual: ${error.message}` })  
