@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Camera, Loader2 } from 'lucide-react'
 import { GlassCard } from '../components/GlassCard'
@@ -7,11 +7,13 @@ import { usePlatformContext } from '../context/platform-context'
 
 export function SejaConsultorPage() {
   const navigate = useNavigate()
-  const { registerConsultant, setSystemNotice } = usePlatformContext()
+  const { registerConsultant, setSystemNotice, profile, isAuthenticated } = usePlatformContext()
+  const [useCurrentUser, setUseCurrentUser] = useState(isAuthenticated)
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
+    birthDate: '',
     tagline: '',
     description: '',
     pricePerMinute: '5,00',
@@ -76,13 +78,30 @@ export function SejaConsultorPage() {
       })
     }
 
-    const result = await registerConsultant({
-      ...form,
-      photo: photoBase64,
-      pricePerMinute: parseCurrency(form.pricePerMinute),
-      priceThreeQuestions: parseCurrency(form.priceThreeQuestions),
-      priceFiveQuestions: parseCurrency(form.priceFiveQuestions),
-    })
+    let payload
+    if (isAuthenticated && useCurrentUser && profile) {
+      payload = {
+        name: form.name || profile.name,
+        email: profile.email,
+        tagline: form.tagline,
+        description: form.description,
+        photo: photoBase64,
+        pricePerMinute: parseCurrency(form.pricePerMinute),
+        priceThreeQuestions: parseCurrency(form.priceThreeQuestions),
+        priceFiveQuestions: parseCurrency(form.priceFiveQuestions),
+        // Não envia senha nem birthDate
+      }
+    } else {
+      payload = {
+        ...form,
+        photo: photoBase64,
+        pricePerMinute: parseCurrency(form.pricePerMinute),
+        priceThreeQuestions: parseCurrency(form.priceThreeQuestions),
+        priceFiveQuestions: parseCurrency(form.priceFiveQuestions),
+      }
+    }
+
+    const result = await registerConsultant(payload)
 
     setLoading(false)
     if (result.ok) {
@@ -108,42 +127,73 @@ export function SejaConsultorPage() {
         title="Cadastro de Consultor"
         subtitle="Complete o formulário abaixo para se registrar como consultor astral em nossa plataforma."
       >
+        {isAuthenticated && (
+          <div className="md:col-span-2 mb-2">
+            <div className="rounded-lg border border-mystic-gold/40 bg-black/30 px-4 py-3 text-sm text-mystic-goldSoft">
+              Você já está logado como <b>{profile?.email}</b>.<br />
+              Deseja usar este usuário para se tornar consultor?
+            </div>
+            <div className="flex gap-4 mt-2">
+              <button type="button" className={`px-4 py-2 rounded-lg font-bold ${useCurrentUser ? 'bg-mystic-gold text-black' : 'bg-black text-mystic-gold border border-mystic-gold/60'}`} onClick={() => setUseCurrentUser(true)}>
+                Sim, usar este usuário
+              </button>
+              <button type="button" className={`px-4 py-2 rounded-lg font-bold ${!useCurrentUser ? 'bg-mystic-gold text-black' : 'bg-black text-mystic-gold border border-mystic-gold/60'}`} onClick={() => setUseCurrentUser(false)}>
+                Não, cadastrar novo usuário
+              </button>
+            </div>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
           {errorNotice && (
             <div ref={errorRef} className="md:col-span-2 rounded-lg border border-red-400/40 bg-red-900/40 px-4 py-3 text-sm text-red-200 font-semibold">
               {errorNotice}
             </div>
           )}
-          <label className="grid gap-2 text-sm text-amber-100/80">
-            Nome Completo
-            <input
-              required
-              value={form.name}
-              onChange={(event) => updateField('name', event.target.value)}
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-            />
-          </label>
-          <label className="grid gap-2 text-sm text-amber-100/80">
-            E-mail
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(event) => updateField('email', event.target.value)}
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-            />
-          </label>
-          <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
-            Senha (mínimo 6 caracteres)
-            <input
-              type="password"
-              minLength={6}
-              required
-              value={form.password}
-              onChange={(event) => updateField('password', event.target.value)}
-              className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-            />
-          </label>
+          {/* Campos de cadastro de usuário só se não estiver logado ou optou por novo usuário */}
+          {(!isAuthenticated || !useCurrentUser) && (
+            <>
+              <label className="grid gap-2 text-sm text-amber-100/80">
+                Nome Completo
+                <input
+                  required
+                  value={form.name}
+                  onChange={(event) => updateField('name', event.target.value)}
+                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                />
+              </label>
+              <label className="grid gap-2 text-sm text-amber-100/80">
+                E-mail
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(event) => updateField('email', event.target.value)}
+                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                />
+              </label>
+              <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
+                Senha (mínimo 6 caracteres)
+                <input
+                  type="password"
+                  minLength={6}
+                  required
+                  value={form.password}
+                  onChange={(event) => updateField('password', event.target.value)}
+                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                />
+              </label>
+              <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
+                Data de Nascimento
+                <input
+                  type="date"
+                  required
+                  value={form.birthDate}
+                  onChange={(event) => updateField('birthDate', event.target.value)}
+                  className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                />
+              </label>
+            </>
+          )}
           <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
             Foto de Perfil
             <div className="rounded-lg border border-dashed border-mystic-gold/50 bg-black/25 p-4">
