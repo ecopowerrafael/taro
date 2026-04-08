@@ -21,6 +21,8 @@ export function SejaConsultorPage() {
   })
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [errorNotice, setErrorNotice] = useState('')
+  const errorRef = useRef(null)
 
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -62,6 +64,7 @@ export function SejaConsultorPage() {
   const handleSubmit = async (event) => {
     event.preventDefault()
     setLoading(true)
+    setErrorNotice('')
 
     // Convert photo to base64 if exists
     let photoBase64 = null
@@ -87,7 +90,12 @@ export function SejaConsultorPage() {
       setSystemNotice('Cadastro realizado com sucesso! Bem-vindo à equipe.')
       setTimeout(() => navigate('/area-consultor'), 2000)
     } else {
-      setSystemNotice(result.message || 'Erro ao realizar cadastro.')
+      setErrorNotice(result.message || 'Erro ao realizar cadastro.')
+      setTimeout(() => {
+        if (errorRef.current) {
+          errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
     }
   }
 
@@ -101,6 +109,11 @@ export function SejaConsultorPage() {
         subtitle="Complete o formulário abaixo para se registrar como consultor astral em nossa plataforma."
       >
         <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
+          {errorNotice && (
+            <div ref={errorRef} className="md:col-span-2 rounded-lg border border-red-400/40 bg-red-900/40 px-4 py-3 text-sm text-red-200 font-semibold">
+              {errorNotice}
+            </div>
+          )}
           <label className="grid gap-2 text-sm text-amber-100/80">
             Nome Completo
             <input
