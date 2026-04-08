@@ -59,15 +59,21 @@ export function OraclePage() {
   const { oracleCredentials, profile, refreshProfile, isAuthenticated, authLoading } = usePlatformContext();
   const navigate = useNavigate();
   const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const debugParam = urlParams?.get('oracleDebug') || urlParams?.get('debug') || '';
+  const forceDebugParam = urlParams?.get('forceOracleDebug') || '';
+  const localDebugFlag = typeof window !== 'undefined' ? localStorage.getItem('oracle_debug') : '';
   const debugRequested =
-    urlParams?.get('oracleDebug') === '1' ||
-    (typeof window !== 'undefined' && localStorage.getItem('oracle_debug') === '1');
-  const debugUserFilter = typeof window !== 'undefined' ? localStorage.getItem('oracle_debug_user') : '';
+    debugParam === '1' ||
+    debugParam.toLowerCase() === 'true' ||
+    localDebugFlag === '1' ||
+    String(localDebugFlag).toLowerCase() === 'true';
+  const forceDebugRequested = forceDebugParam === '1' || String(forceDebugParam).toLowerCase() === 'true';
+  const debugUserFilter = typeof window !== 'undefined' ? (localStorage.getItem('oracle_debug_user') || '').trim() : '';
   const debugForCurrentUser =
     !debugUserFilter ||
     String(debugUserFilter) === String(profile?.id ?? '') ||
     String(debugUserFilter).toLowerCase() === String(profile?.email ?? '').toLowerCase();
-  const showOracleDebug = Boolean(debugRequested && debugForCurrentUser);
+  const showOracleDebug = Boolean((debugRequested && debugForCurrentUser) || forceDebugRequested);
   const [step, setStep] = useState('intro');
   const [showAstralReadingModal, setShowAstralReadingModal] = useState(false);
   const [birthLocation, setBirthLocation] = useState(null);
@@ -751,6 +757,11 @@ export function OraclePage() {
           <p className="mt-1 text-amber-100/80">
             userId: {String(profile?.id || 'n/a')} | email: {profile?.email || 'n/a'} | step: {step}
           </p>
+          {debugUserFilter && !debugForCurrentUser && (
+            <p className="text-amber-200/90">
+              Filtro ativo ({debugUserFilter}) não corresponde ao usuário atual.
+            </p>
+          )}
           <p className="text-amber-100/80">
             savedData: {hasSavedOracleData ? 'sim' : 'não'} | planets: {oraclePlanets.length} | chartFail: {chartGenerationFailed ? 'sim' : 'não'}
           </p>
