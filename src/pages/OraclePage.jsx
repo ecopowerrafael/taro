@@ -264,7 +264,9 @@ export function OraclePage() {
 
   const handleLocationSubmit = async () => {
     if (!birthLocation || !isValidCoordinatePair(birthLocation?.lat, birthLocation?.lng)) {
-      setErrorMsg('Selecione sua cidade na lista de sugestões para gerar latitude e longitude corretas.');
+      addDebugLog('location:save:invalid-coordinates-before-submit', {
+        birthLocation,
+      });
       return;
     }
     setLoadingAction(true);
@@ -409,9 +411,6 @@ export function OraclePage() {
         if (hasValidSavedProfileOracleData) {
           setStep('ritual');
         } else {
-          if (profile?.oracle_city) {
-            setErrorMsg('Confirme novamente sua cidade pela lista para validar as coordenadas do mapa astral.');
-          }
           setStep('birth_city');
         }
       }, 500); // Aguarda animação de explosão
@@ -577,7 +576,12 @@ export function OraclePage() {
                
                <div>
                  <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">Sua cidade natal (Onde você nasceu)</label>
-                 <CityAutocomplete onSelect={(location) => setBirthLocation(location)} />
+                 <CityAutocomplete onSelect={(location) => {
+                   setBirthLocation(location);
+                   if (location && isValidCoordinatePair(location.lat, location.lng)) {
+                     setErrorMsg('');
+                   }
+                 }} />
                  <p className="mt-2 text-left text-xs text-amber-100/80">
                    Escolha uma opção da lista para validar a localização. Apenas digitar o nome da cidade não gera coordenadas.
                  </p>
