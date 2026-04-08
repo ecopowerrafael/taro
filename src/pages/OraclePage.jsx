@@ -573,6 +573,9 @@ export function OraclePage() {
                <div>
                  <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">Sua cidade natal (Onde você nasceu)</label>
                  <CityAutocomplete onSelect={(location) => setBirthLocation(location)} />
+                 <p className="mt-2 text-left text-xs text-amber-100/80">
+                   Escolha uma opção da lista para validar a localização. Apenas digitar o nome da cidade não gera coordenadas.
+                 </p>
                </div>
             </div>
             

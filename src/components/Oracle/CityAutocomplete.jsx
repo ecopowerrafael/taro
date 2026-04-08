@@ -8,6 +8,11 @@ export function CityAutocomplete({ onSelect }) {
   const [isOpen, setIsOpen] = useState(false);
   const timeoutRef = useRef(null);
 
+  const toNumber = (value) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  };
+
   useEffect(() => {
     if (!query || query.length < 3) {
       setSuggestions([]);
@@ -45,12 +50,20 @@ export function CityAutocomplete({ onSelect }) {
 
   const handleSelect = (item) => {
     const cityName = item.display_name.split(',')[0];
+    const lat = toNumber(item.lat);
+    const lng = toNumber(item.lon);
+
+    if (lat === null || lng === null) {
+      onSelect(null);
+      return;
+    }
+
     setQuery(cityName); 
     setIsOpen(false);
     onSelect({
       name: cityName,
-      lat: parseFloat(item.lat || 0),
-      lng: parseFloat(item.lon || 0)
+      lat,
+      lng
     });
   };
 
@@ -78,8 +91,15 @@ export function CityAutocomplete({ onSelect }) {
           {suggestions.map((item, index) => (
             <button
               key={item.place_id || index}
-              onMouseDown={() => handleSelect(item)}
-              onClick={(e) => e.preventDefault()}
+              type="button"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                handleSelect(item);
+              }}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                handleSelect(item);
+              }}
               className="w-full text-left px-4 py-3 hover:bg-mystic-purple/50 text-gray-200 transition-colors border-b border-mystic-purple/30 last:border-0"
             >
               <div className="font-medium text-mystic-gold">{item.display_name.split(',')[0]}</div>
