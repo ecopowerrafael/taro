@@ -1,4 +1,4 @@
-import { calculatePositions, detectAspect } from '../astroEngine.mjs';
+import { calculatePositions, detectAspect, SIGN_NAMES } from '../astroEngine.mjs';
 
 const MALEFICS = ['Saturn', 'Mars', 'Pluto'];
 const CRITICAL_HOUSES = [6, 8, 12];
@@ -24,6 +24,8 @@ const PLANET_LABELS = {
   Uranus: 'Urano',
   Neptune: 'Netuno',
   Pluto: 'Plutão',
+  Rahu: 'Rahu',
+  Ketu: 'Ketu'
 };
 
 const HOUSE_INTERPRETATIONS = {
@@ -52,11 +54,12 @@ function calculateCriticalityScore(planet, natalPlanets) {
 
   // 2. Dignidade (Queda ou Detrimento)
   const dignity = DIGNITIES[planet.name];
-  if (dignity) {
-    if (dignity.fall.includes(planet.sign.name)) {
+  const signName = planet.sign?.name || planet.sign || '';
+  if (dignity && signName) {
+    if (dignity.fall.includes(signName)) {
       score += 30;
       reasons.push('Queda');
-    } else if (dignity.detriment.includes(planet.sign.name)) {
+    } else if (dignity.detriment.includes(signName)) {
       score += 30;
       reasons.push('Detrimento');
     }
@@ -65,7 +68,7 @@ function calculateCriticalityScore(planet, natalPlanets) {
   // 3. Aspectos Tensos com planetas natais
   let hasTenseAspect = false;
   for (const np of natalPlanets) {
-    const aspect = detectAspect(planet.longitude, np.longitude);
+    const aspect = detectAspect(planet.longitude, np.longitude, 5);
     if (aspect === 'Quadratura' || aspect === 'Oposição') {
       const dist = Math.abs(planet.longitude - np.longitude);
       const orb = dist > 180 ? 360 - dist : dist;
@@ -93,42 +96,31 @@ function calculateCriticalityScore(planet, natalPlanets) {
 
 export const criticalAstroService = {
   /**
-   * Identifica o planeta mais crítico baseado no cache do oráculo diário ou cálculo atual
+   * Identifica o planeta mais crítico baseado no trânsito das 03:00 AM (sincronizado com Oráculo)
    */
-  getCriticalAstro: async (natalPlanets, ascendantLon, dailyCache = null) => {
+  getCriticalAstro: async (natalPlanets, ascendantLon) => {
     if (!natalPlanets || natalPlanets.length === 0) return null;
 
-    let transitPlanets = [];
+    // Sincronizar tempo com a renovação do Oráculo (03:00 AM)
+    const now = new Date();
+    const targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 3, 0, 0);
+    // Se ainda não passou das 3 da manhã de hoje, usamos as 3 da manhã de ontem
+    if (now < targetDate) {
+      targetDate.setDate(targetDate.getDate() - 1);
+    }
+    
+    const transitPlanetsRaw = await calculatePositions(targetDate.toISOString());
     const ascSignIdx = Math.floor(ascendantLon / 30);
-
-    if (dailyCache) {
-      try {
-        // O cache do oráculo diário já vem processado pelo transitEngine
-        // Precisamos apenas garantir o formato esperado para pontuação
-        const cachedTransits = typeof dailyCache === 'string' ? JSON.parse(dailyCache) : dailyCache;
-        
-        transitPlanets = cachedTransits.map(t => ({
-          name: t.name,
-          longitude: t.longitude,
-          house: t.house,
-          sign: { name: t.sign }
-        }));
-      } catch (err) {
-        console.error('[CriticalAstro] Erro ao ler dailyCache:', err);
-      }
-    }
-
-    // Se não tiver cache ou falhar, calcula posições atuais
-    if (transitPlanets.length === 0) {
-      const now = new Date().toISOString();
-      const transitPlanetsRaw = await calculatePositions(now);
-      
-      transitPlanets = transitPlanetsRaw.map(tp => {
-        const planetSignIdx = Math.floor(tp.longitude / 30);
-        const house = ((planetSignIdx - ascSignIdx + 12) % 12) + 1;
-        return { ...tp, house };
-      });
-    }
+    
+    const transitPlanets = transitPlanetsRaw.map(tp => {
+      const planetSignIdx = Math.floor(tp.longitude / 30);
+      const house = ((planetSignIdx - ascSignIdx + 12) % 12) + 1;
+      return { 
+        ...tp, 
+        house,
+        sign: { name: SIGN_NAMES[planetSignIdx] }
+      };
+    });
 
     const scoredPlanets = transitPlanets.map(tp => {
       const { score, reasons, hasTenseAspect } = calculateCriticalityScore(tp, natalPlanets);
@@ -138,14 +130,13 @@ export const criticalAstroService = {
     // Ordenar por score e pegar o maior
     const critical = scoredPlanets.sort((a, b) => b.score - a.score)[0];
 
-    if (!critical || critical.score < 20) return null; // Só alerta se houver tensão real
+    if (!critical) return null;
 
     // Gerar interpretação mística
     let interpretacao = "";
     if (CRITICAL_HOUSES.includes(critical.house)) {
       interpretacao = HOUSE_INTERPRETATIONS[critical.house];
     } else if (critical.hasTenseAspect) {
-      // Se não está em casa crítica mas tem aspecto tenso
       interpretacao = "gerando desafios em sua estrutura energética hoje. Atente-se aos impulsos.";
     } else {
       interpretacao = "exigindo maior consciência e cautela em suas ações neste momento.";

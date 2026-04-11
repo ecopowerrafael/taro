@@ -64,20 +64,7 @@ export const createTarotRouter = (pool) => {
             
             const ascendant = rawPlanets.find(p => p.name === 'Ascendant')
             if (ascendant) {
-              // Verificar se o cache do oráculo diário é de hoje (pós 03:00)
-              let dailyCache = null
-              const now = new Date()
-              const today3am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 3, 0, 0)
-              
-              if (user.oracle_daily_cache && user.oracle_daily_cached_at) {
-                const cachedAt = new Date(user.oracle_daily_cached_at)
-                // Se o cache foi gerado após as 3 da manhã de hoje, usamos ele
-                if (cachedAt > today3am) {
-                  dailyCache = user.oracle_daily_cache
-                }
-              }
-
-              criticalAstro = await criticalAstroService.getCriticalAstro(rawPlanets, ascendant.longitude, dailyCache)
+              criticalAstro = await criticalAstroService.getCriticalAstro(rawPlanets, ascendant.longitude)
             }
           } catch (err) {
             console.error('[API/Tarot] Erro ao calcular astro crítico:', err)
