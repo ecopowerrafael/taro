@@ -1,5 +1,8 @@
 import { Router } from 'express'
 import { TAROT_INTERPRETATIONS, MINOR_ARCANA_TEMPLATE } from '../data/tarot_interpretations.mjs'
+import { authenticate } from '../middleware/auth.mjs'
+import { criticalAstroService } from '../services/criticalAstroService.mjs'
+import { calculateChart } from '../astroEngine.mjs'
 
 export const createTarotRouter = (pool) => {
   const router = Router()
@@ -26,12 +29,47 @@ export const createTarotRouter = (pool) => {
 
   const ALL_CARD_IDS = [...MAJOR_ARCANA_IDS, ...MINOR_ARCANA_IDS]
 
-  router.post('/tirar-carta', async (req, res) => {
+  router.post('/tirar-carta', authenticate, async (req, res) => {
     try {
       const { tema } = req.body // 'Amor', 'Dinheiro', 'Saúde', 'Família'
+      const userId = req.user.id
       
       if (!tema) {
         return res.status(400).json({ error: 'Tema é obrigatório' })
+      }
+
+      // Buscar dados do usuário para o Astro Crítico
+      const [uRows] = await pool.query(
+        'SELECT oracle_birth_date, birthDate, oracle_lat, oracle_lng, oracle_chart_cache FROM users WHERE id = ?',
+        [userId]
+      )
+      const user = uRows[0]
+      let criticalAstro = null
+      let hasChart = false
+
+      if (user) {
+        const birthDate = user.oracle_birth_date || user.birthDate
+        const lat = user.oracle_lat
+        const lng = user.oracle_lng
+
+        if (birthDate && lat != null && lng != null) {
+          hasChart = true
+          let rawPlanets = []
+          try {
+            if (user.oracle_chart_cache) {
+              rawPlanets = JSON.parse(user.oracle_chart_cache)
+            } else {
+              rawPlanets = await calculateChart(birthDate, lat, lng)
+            }
+            
+            const ascendant = rawPlanets.find(p => p.name === 'Ascendant')
+            if (ascendant) {
+              criticalAstro = await criticalAstroService.getCriticalAstro(rawPlanets, ascendant.longitude)
+            }
+          } catch (err) {
+            console.error('[API/Tarot] Erro ao calcular astro crítico:', err)
+          }
+        }
       }
 
       // Sorteio aleatório
@@ -65,7 +103,9 @@ export const createTarotRouter = (pool) => {
         id: selectedCardId,
         nome: cardName,
         face_img: `/cartas/${selectedCardId}.png`,
-        texto: interpretacao
+        texto: interpretacao,
+        criticalAstro,
+        hasChart
       })
     } catch (err) {
       console.error('[API/Tarot] Erro ao tirar carta:', err)

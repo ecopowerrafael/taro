@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Typewriter from 'typewriter-effect'
-import { Sparkles, Heart, DollarSign, Users, Activity, RotateCcw, MessageCircle } from 'lucide-react'
+import { Sparkles, Heart, DollarSign, Users, Activity, RotateCcw, MessageCircle, AlertTriangle, Map, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const STATES = {
@@ -338,6 +338,59 @@ export function CinematicTarot() {
                     </motion.div>
                   )}
                 </div>
+
+                {/* Alerta de Frequência / Astro Crítico */}
+                {state === STATES.INTERPRETATION && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 5 }}
+                    className="mt-10"
+                  >
+                    {!drawnCard.hasChart ? (
+                      <Link 
+                        to="/mapa-astral"
+                        className="flex flex-col items-center gap-4 p-6 rounded-2xl border border-mystic-gold/20 bg-mystic-gold/5 hover:bg-mystic-gold/10 transition-colors group text-center"
+                      >
+                        <div className="p-3 rounded-full bg-mystic-gold/10 border border-mystic-gold/30 group-hover:scale-110 transition-transform">
+                          <Map className="w-6 h-6 text-mystic-gold" />
+                        </div>
+                        <div>
+                          <h4 className="text-white font-playfair text-lg mb-1">Potencialize sua Leitura</h4>
+                          <p className="text-ethereal-silver/60 text-xs uppercase tracking-widest">Complemente fazendo seu Mapa Astral Grátis</p>
+                        </div>
+                      </Link>
+                    ) : drawnCard.criticalAstro ? (
+                      <div className="p-6 rounded-2xl border border-red-500/20 bg-red-500/5 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <AlertTriangle className="w-12 h-12 text-red-500" />
+                        </div>
+                        
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30">
+                            <AlertTriangle className="w-4 h-4 text-red-500" />
+                          </div>
+                          <span className="text-[10px] uppercase tracking-[0.2em] text-red-400 font-bold">Alerta de Frequência</span>
+                        </div>
+
+                        <p className="text-white text-sm leading-relaxed mb-4">
+                          {drawnCard.criticalAstro.interpretacao}
+                        </p>
+
+                        <Link 
+                          to="/consultores"
+                          className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-mystic-gold font-bold hover:text-white transition-colors"
+                        >
+                          Saber como lidar com isso <ArrowRight className="w-3 h-3" />
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="p-6 rounded-2xl border border-mystic-gold/20 bg-mystic-gold/5 text-center">
+                        <p className="text-ethereal-silver/60 text-[10px] uppercase tracking-widest">Suas energias astrais estão em equilíbrio hoje</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           </motion.div>

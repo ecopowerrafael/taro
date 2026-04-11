@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Hash, User, Calendar, ArrowRight, Lock, Sparkles, Loader2 } from 'lucide-react'
+import { Hash, User, Calendar, ArrowRight, Lock, Sparkles, Loader2, AlertTriangle, Map } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { usePlatformContext } from '../../context/platform-context'
 
@@ -173,6 +173,58 @@ export function NumerologyWidget() {
                   <div className="text-3xl font-display text-mystic-gold">{result.desejo_alma.numero}</div>
                 </div>
               </div>
+
+              {/* Alerta de Frequência / Astro Crítico */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 }}
+                className="w-full mb-8"
+              >
+                {!result.hasChart ? (
+                  <Link 
+                    to="/mapa-astral"
+                    className="flex items-center gap-4 p-6 rounded-2xl border border-mystic-gold/20 bg-mystic-gold/5 hover:bg-mystic-gold/10 transition-colors group"
+                  >
+                    <div className="p-3 rounded-full bg-mystic-gold/10 border border-mystic-gold/30 group-hover:scale-110 transition-transform">
+                      <Map className="w-5 h-5 text-mystic-gold" />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="text-white font-playfair text-lg">Potencialize sua Leitura</h4>
+                      <p className="text-ethereal-silver/60 text-[10px] uppercase tracking-widest">Complemente fazendo seu Mapa Astral Grátis</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-mystic-gold ml-auto group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                ) : result.criticalAstro ? (
+                  <div className="p-6 rounded-2xl border border-red-500/20 bg-red-500/5 relative overflow-hidden group text-left">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <AlertTriangle className="w-12 h-12 text-red-500" />
+                    </div>
+                    
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30">
+                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                      </div>
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-red-400 font-bold">Alerta de Frequência</span>
+                    </div>
+
+                    <p className="text-white text-sm leading-relaxed mb-4">
+                      {result.criticalAstro.interpretacao}
+                    </p>
+
+                    <Link 
+                      to="/consultores"
+                      className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-mystic-gold font-bold hover:text-white transition-colors"
+                    >
+                      Saber como lidar com isso <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl border border-mystic-gold/10 bg-mystic-gold/5 text-center">
+                    <p className="text-ethereal-silver/40 text-[10px] uppercase tracking-widest">Frequência astrológica estável no momento</p>
+                  </div>
+                )}
+              </motion.div>
 
               {/* CTA Section */}
               <div className="w-full p-8 rounded-[24px] bg-mystic-purple/20 border border-mystic-gold/20 relative overflow-hidden text-center">
