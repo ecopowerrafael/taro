@@ -39,18 +39,31 @@ export const createTarotRouter = (pool) => {
       const selectedCardId = ALL_CARD_IDS[randomIndex]
 
       let interpretacao = ''
+      let cardName = ''
       
       if (selectedCardId.startsWith('major_arcana_')) {
-        interpretacao = TAROT_INTERPRETATIONS[selectedCardId]?.[tema] || 'Interpretação não encontrada.'
+        const cardData = TAROT_INTERPRETATIONS[selectedCardId]
+        interpretacao = cardData?.[tema] || 'Interpretação não encontrada.'
+        cardName = cardData?.nome || selectedCardId.replace(/_/g, ' ')
       } else {
-        // Extrair o rank para buscar no template
         const parts = selectedCardId.split('_')
         const rank = parts[parts.length - 1]
-        interpretacao = MINOR_ARCANA_TEMPLATE[rank]?.[tema] || 'Interpretação não encontrada.'
+        const suit = parts[2] // cups, swords, wands, pentacles
+        const template = MINOR_ARCANA_TEMPLATE[rank]
+        interpretacao = template?.[tema] || 'Interpretação não encontrada.'
+        
+        const suitMap = {
+          'cups': 'Copas',
+          'swords': 'Espadas',
+          'wands': 'Paus',
+          'pentacles': 'Ouros'
+        }
+        cardName = `${template?.nome || rank} de ${suitMap[suit] || suit}`
       }
 
       res.json({
         id: selectedCardId,
+        nome: cardName,
         face_img: `/cartas/${selectedCardId}.png`,
         texto: interpretacao
       })

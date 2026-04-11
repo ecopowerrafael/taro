@@ -6,35 +6,23 @@ import { Sparkles, Stars } from 'lucide-react'
 export function TarotDiaPage() {
   return (
     <PageShell>
-      <div className="container mx-auto px-6 py-12 flex flex-col items-center min-h-[80vh]">
-        {/* Header */}
-        <div className="text-center mb-16 relative">
-          <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-20 blur-2xl">
-            <Stars className="w-20 h-20 text-mystic-gold" />
-          </div>
-          
-          <h1 className="font-playfair text-4xl md:text-6xl text-white mb-4 tracking-tighter">
+      <div className="container mx-auto px-6 py-4 flex flex-col items-center min-h-[80vh]">
+        {/* Header Reduzido */}
+        <div className="text-center mb-8 relative">
+          <h1 className="font-playfair text-3xl md:text-5xl text-white mb-2 tracking-tighter">
             Carta do <span className="text-gradient-gold italic">Dia</span>
           </h1>
-          <p className="text-mystic-purple-light text-lg max-w-xl mx-auto font-light">
-            Conecte-se com as energias do Tarot Cinematográfico Astria. <br/>
-            Escolha um tema e deixe o destino revelar seu caminho.
-          </p>
           
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <div className="h-px w-12 bg-mystic-gold/30" />
-            <Sparkles className="w-5 h-5 text-mystic-gold animate-pulse" />
-            <div className="h-px w-12 bg-mystic-gold/30" />
+          <div className="flex items-center justify-center gap-2">
+            <div className="h-px w-8 bg-mystic-gold/30" />
+            <Sparkles className="w-4 h-4 text-mystic-gold animate-pulse" />
+            <div className="h-px w-8 bg-mystic-gold/30" />
           </div>
         </div>
 
         {/* Cinematic Experience */}
         <div className="w-full max-w-6xl glass-panel rounded-[40px] border border-mystic-gold/10 overflow-hidden shadow-2xl relative">
-          {/* Subtle Glow Corners */}
-          <div className="absolute top-0 left-0 w-32 h-32 bg-mystic-gold/5 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-32 h-32 bg-mystic-gold/5 blur-3xl pointer-events-none" />
-          
-          <div className="py-12 md:py-20">
+          <div className="py-8 md:py-12">
             <CinematicTarot />
           </div>
         </div>

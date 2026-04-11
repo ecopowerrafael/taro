@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Typewriter from 'typewriter-effect'
-import { Sparkles, Heart, DollarSign, Users, Activity, RotateCcw } from 'lucide-react'
+import { Sparkles, Heart, DollarSign, Users, Activity, RotateCcw, MessageCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const STATES = {
   INVITE: 'invite',
@@ -193,42 +194,38 @@ export function CinematicTarot() {
         {state === STATES.DRAWING && (
           <motion.div 
             key="drawing"
-            initial={{ opacity: 0, scale: 0.5 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center"
           >
             <motion.div
               animate={{ 
-                rotateX: [-5, 5, -5],
-                rotateY: [-8, 8, -8],
+                rotateX: [-3, 3, -3],
+                rotateY: [-5, 5, -5],
                 rotateZ: [-1, 1, -1],
-                scale: [1, 1.05, 1],
-                y: [0, -20, 0]
+                y: [0, -15, 0]
               }}
               transition={{ 
-                rotateX: { duration: 5, repeat: Infinity, ease: "easeInOut" },
-                rotateY: { duration: 7, repeat: Infinity, ease: "easeInOut" },
-                rotateZ: { duration: 6, repeat: Infinity, ease: "easeInOut" },
-                scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-                y: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+                duration: 6,
+                repeat: Infinity,
+                ease: "easeInOut"
               }}
               onClick={handleCardClick}
-              className="relative w-56 h-84 cursor-pointer"
+              className="relative w-64 h-[400px] cursor-pointer"
               style={{ transformStyle: 'preserve-3d' }}
             >
-              <div className="absolute inset-0 rounded-2xl border-2 border-mystic-gold bg-black shadow-[0_0_50px_rgba(197,160,89,0.4)] overflow-hidden">
+              <div className="absolute inset-0 rounded-2xl border-2 border-mystic-gold bg-black shadow-[0_0_60px_rgba(197,160,89,0.5)] overflow-hidden">
                 <img src="/cartas/verso.png" alt="Verso" className="w-full h-full object-cover" />
-                {/* Overlay de brilho sutil */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-mystic-gold/10 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-mystic-gold/20 via-transparent to-white/10 pointer-events-none" />
               </div>
             </motion.div>
             <motion.p 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="mt-8 text-mystic-goldSoft text-sm uppercase tracking-widest animate-pulse"
+              className="mt-12 text-mystic-goldSoft text-sm uppercase tracking-[0.2em] font-bold animate-pulse"
             >
-              Toque na carta para revelar
+              Toque no Arcano para Revelar
             </motion.p>
           </motion.div>
         )}
@@ -279,7 +276,7 @@ export function CinematicTarot() {
             >
               <div className="inline-flex items-center gap-2 mb-4 text-mystic-goldSoft uppercase tracking-widest text-xs font-bold">
                 {selectedTheme && <selectedTheme.icon className="w-4 h-4" />}
-                <span>{selectedTheme?.label} • {drawnCard.id.replace(/_/g, ' ')}</span>
+                <span>{selectedTheme?.label} • {drawnCard.nome || drawnCard.id.replace(/_/g, ' ')}</span>
               </div>
 
               <div className="glass-panel border border-mystic-gold/20 p-8 rounded-3xl relative overflow-hidden">
@@ -312,16 +309,35 @@ export function CinematicTarot() {
                   )}
                 </div>
 
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 3 }}
-                  onClick={reset}
-                  className="mt-8 flex items-center gap-2 text-mystic-gold hover:text-white transition-colors text-sm uppercase tracking-widest font-bold group"
-                >
-                  <RotateCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-                  Nova Tiragem
-                </motion.button>
+                <div className="flex flex-col sm:flex-row items-center gap-4 mt-10">
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 3 }}
+                    onClick={reset}
+                    className="flex items-center gap-2 text-mystic-gold hover:text-white transition-colors text-sm uppercase tracking-widest font-bold group"
+                  >
+                    <RotateCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                    Nova Tiragem
+                  </motion.button>
+
+                  {state === STATES.INTERPRETATION && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 4 }}
+                      className="w-full sm:w-auto"
+                    >
+                      <Link 
+                        to="/consultores"
+                        className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-mystic-gold/10 border border-mystic-gold/50 text-mystic-gold hover:bg-mystic-gold hover:text-black transition-all duration-500 text-xs font-bold uppercase tracking-widest group"
+                      >
+                        <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        Falar com Consultor (R$ 1,97)
+                      </Link>
+                    </motion.div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </motion.div>
