@@ -33,25 +33,45 @@ export const createTarotRouter = (pool) => {
     try {
       const { tema } = req.body // 'Amor', 'Dinheiro', 'Saúde', 'Família'
       const userId = req.user.id
-      
       if (!tema) {
         return res.status(400).json({ error: 'Tema é obrigatório' })
       }
 
-      // Buscar dados do usuário para o Astro Crítico
+      // Função para obter o ciclo diário baseado em 08:00 local (igual frontend)
+      function getCycleKey(date = new Date()) {
+        const local = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)) // local time
+        if (local.getHours() < 8) {
+          local.setDate(local.getDate() - 1)
+        }
+        return local.toISOString().split('T')[0]
+      }
+      const cycleKey = getCycleKey()
+
+      // Buscar última tiragem do usuário
       const [uRows] = await pool.query(
-        'SELECT oracle_birth_date, birthDate, oracle_lat, oracle_lng, oracle_chart_cache, oracle_daily_cache, oracle_daily_cached_at FROM users WHERE id = ?',
+        'SELECT oracle_birth_date, birthDate, oracle_lat, oracle_lng, oracle_chart_cache, oracle_daily_card_cycle, oracle_daily_card_id, oracle_daily_card_tema, oracle_daily_card_nome, oracle_daily_card_texto, oracle_daily_card_face_img, oracle_daily_card_at, oracle_daily_cache, oracle_daily_cached_at FROM users WHERE id = ?',
         [userId]
       )
       const user = uRows[0]
       let criticalAstro = null
       let hasChart = false
 
+      // Se já tirou carta neste ciclo, retorna a mesma
+      if (user && user.oracle_daily_card_cycle === cycleKey && user.oracle_daily_card_id) {
+        return res.json({
+          id: user.oracle_daily_card_id,
+          nome: user.oracle_daily_card_nome,
+          face_img: user.oracle_daily_card_face_img,
+          texto: user.oracle_daily_card_texto,
+          criticalAstro: null,
+          hasChart: false
+        })
+      }
+
       if (user) {
         const birthDate = user.oracle_birth_date || user.birthDate
         const lat = user.oracle_lat
         const lng = user.oracle_lng
-
         if (birthDate && lat != null && lng != null) {
           hasChart = true
           let rawPlanets = []
@@ -61,7 +81,6 @@ export const createTarotRouter = (pool) => {
             } else {
               rawPlanets = await calculateChart(birthDate, lat, lng)
             }
-            
             const ascendant = rawPlanets.find(p => p.name === 'Ascendant')
             if (ascendant) {
               criticalAstro = await criticalAstroService.getCriticalAstro(rawPlanets, ascendant.longitude)
@@ -78,7 +97,8 @@ export const createTarotRouter = (pool) => {
 
       let interpretacao = ''
       let cardName = ''
-      
+      let faceImg = `/cartas/${selectedCardId}.png`
+
       if (selectedCardId.startsWith('major_arcana_')) {
         const cardData = TAROT_INTERPRETATIONS[selectedCardId]
         interpretacao = cardData?.[tema] || 'Interpretação não encontrada.'
@@ -89,7 +109,6 @@ export const createTarotRouter = (pool) => {
         const suit = parts[2] // cups, swords, wands, pentacles
         const template = MINOR_ARCANA_TEMPLATE[rank]
         interpretacao = template?.[tema] || 'Interpretação não encontrada.'
-        
         const suitMap = {
           'cups': 'Copas',
           'swords': 'Espadas',
@@ -99,10 +118,16 @@ export const createTarotRouter = (pool) => {
         cardName = `${template?.nome || rank} de ${suitMap[suit] || suit}`
       }
 
+      // Salvar tiragem do ciclo no usuário
+      await pool.query(
+        `UPDATE users SET oracle_daily_card_cycle = ?, oracle_daily_card_id = ?, oracle_daily_card_tema = ?, oracle_daily_card_nome = ?, oracle_daily_card_texto = ?, oracle_daily_card_face_img = ?, oracle_daily_card_at = NOW() WHERE id = ?`,
+        [cycleKey, selectedCardId, tema, cardName, interpretacao, faceImg, userId]
+      )
+
       res.json({
         id: selectedCardId,
         nome: cardName,
-        face_img: `/cartas/${selectedCardId}.png`,
+        face_img: faceImg,
         texto: interpretacao,
         criticalAstro,
         hasChart
