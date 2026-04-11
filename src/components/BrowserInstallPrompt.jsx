@@ -29,7 +29,14 @@ export function BrowserInstallPrompt() {
       return
     }
 
-    setIsOpen(true)
+    // Verifica se já mostrou hoje
+    const lastShown = localStorage.getItem('last_install_prompt_date')
+    const today = new Date().toISOString().split('T')[0] // Formato YYYY-MM-DD
+
+    if (lastShown !== today) {
+      setIsOpen(true)
+      localStorage.setItem('last_install_prompt_date', today)
+    }
   }, [mobileOs])
 
   useEffect(() => {

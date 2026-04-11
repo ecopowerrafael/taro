@@ -14,8 +14,11 @@ dist-ssr
 
 # Sensitive Firebase / environment files
 api/.env
-api/firebase-service-account.json
+# api/firebase-service-account.json (Comentado para permitir subir ao Git se necessário, ou use ENV na Hostinger)
 android/app/google-services.json
+
+# Public assets to keep
+# public/app-astria.apk (Comentado para permitir subir ao Git e evitar deleção no deploy)
 
 # Editor directories and files
 .vscode/*
