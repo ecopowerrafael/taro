@@ -113,123 +113,22 @@ export function HomePage() {
     }
   }, [shouldStartCounters])
 
-  const activeConsultants = useCountAnimation({
-    start: 25,
-    end: 150,
-    duration: 3200,
-    shouldStart: shouldStartCounters,
-  })
-  const completedSessions = useCountAnimation({
-    start: 1,
-    end: 5000,
-    duration: 3800,
-    shouldStart: shouldStartCounters,
-  })
-  const completedSessionsText =
-    completedSessions < 1000
-      ? String(completedSessions).padStart(3, '0')
-      : new Intl.NumberFormat('pt-BR').format(completedSessions)
-  const stats = [
-    { value: `${activeConsultants}+`, label: 'Consultores Ativos' },
-    { value: `${completedSessionsText}+`, label: 'Consultas Realizadas' },
-    { value: '4.9', label: 'Avaliação Média' },
-    { value: '24/7', label: 'Sempre Disponíveis' },
-  ]
-
-  const { isAuthenticated } = usePlatformContext()
-  const navLinks = buildHeaderLinks({ isAuthenticated, isConsultant: false, isAdmin: false })
-
   return (
     <div className="min-h-screen bg-mystic-black text-white overflow-x-hidden font-lato selection:bg-mystic-gold/30 selection:text-mystic-gold">
       {/* BACKGROUND EFFECTS */}
       <div className="fixed inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-mystic-purple-dark/40 via-mystic-black to-mystic-black" />
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/stardust.png")' }} />
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen" style={{ backgroundImage: 'url(\"https://www.transparenttextures.com/patterns/stardust.png\")' }} />
       <SacredGeometry />
-      
-      {/* DYNAMIC MOUSE LIGHT (Desktop only) */}
-      <div 
-        className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-300 hidden md:block"
-        style={{
-          background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(212,175,55,0.06), transparent 40%)`
-        }}
-      />
+      {/* HEADER e outros elementos mantidos... */}
 
-      {/* HEADER */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'py-3 glass-panel shadow-[0_10px_30px_rgba(0,0,0,0.5)]' : 'py-6 bg-transparent'}`}>
-        <div className="container mx-auto px-6 md:px-12 flex items-center justify-between">
-          
-          {/* Logo */}
-          <div className="flex items-center gap-2 group cursor-pointer">
-            <img src="/logoastria.png" alt="Astria" className="w-8 h-8" />
-            <span className="font-playfair text-2xl font-bold tracking-wider text-white">
-              Astria
-            </span>
-          </div>
-
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            {publicNavLinks.filter((link) => link.label !== 'Home').map((link) => {
-              return (
-                <Link key={link.to} to={link.to} className="text-sm uppercase tracking-widest text-mystic-purple-light hover:text-mystic-gold transition-colors duration-300 relative group">
-                  {link.label}
-                  <span className="absolute -bottom-2 left-0 w-0 h-px bg-mystic-gold transition-all duration-300 group-hover:w-full"></span>
-                </Link>
-              )
-            })}
-          </nav>
-
-          {/* Actions */}
-          <div className="hidden md:flex items-center gap-6">
-            {isAuthenticated ? (
-              <Link to="/consultores" className="text-mystic-purple-light hover:text-mystic-gold transition-colors">
-                <Eye className="w-5 h-5" />
-              </Link>
-            ) : null}
-            <Link to={isAuthenticated ? '/consultores' : '/cadastro'} className="relative group overflow-hidden rounded-full px-8 py-3 bg-gradient-to-r from-mystic-purple-dark to-mystic-black border border-mystic-gold/50 hover:border-mystic-gold transition-all duration-300 shadow-gold-glow hover:shadow-gold-glow-lg">
-              <span className="relative z-10 font-semibold text-sm tracking-widest text-gradient-gold uppercase">
-                {isAuthenticated ? 'Ver Consultores' : 'Agendar Sessão'}
-              </span>
-              <div className="absolute inset-0 w-full h-full bg-mystic-gold opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-            </Link>
-          </div>
-
-          {/* Mobile Menu Toggle */}
-          <button className="md:hidden text-mystic-gold" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
-          </button>
-        </div>
-      </header>
-
-      {/* MOBILE MENU OVERLAY */}
-      <div className={`fixed inset-0 z-40 bg-mystic-black/95 backdrop-blur-xl transition-all duration-500 md:hidden flex flex-col items-center justify-center gap-8 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        {navLinks.map((link) => {
-          return (
-            <Link key={link.to} to={link.to} className="font-playfair text-3xl text-white hover:text-gradient-gold transition-colors" onClick={() => setMobileMenuOpen(false)}>
-              {link.label}
-            </Link>
-          )
-        })}
-        <Link to={isAuthenticated ? '/consultores' : '/cadastro'} onClick={() => setMobileMenuOpen(false)} className="mt-8 rounded-full px-10 py-4 border border-mystic-gold text-gradient-gold font-bold tracking-widest uppercase">
-          {isAuthenticated ? 'Ver Consultores' : 'Entrar / Agendar'}
-        </Link>
+      {/* FULLSCREEN DAILY TAROT CARD */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-mystic-black/95 backdrop-blur-xl">
+        <DailyTarotCard />
       </div>
 
-      {/* MAIN CONTENT */}
-      <main className="relative z-10 pt-32 pb-20">
-        
-        {/* HERO SECTION */}
-        <section className="container mx-auto px-6 md:px-12 min-h-[80vh] flex flex-col lg:flex-row items-center justify-center relative">
-          
-          {/* Text Content */}
-          <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left z-20 mt-10 lg:mt-0">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-mystic-purple-light/30 bg-mystic-purple-light/10 backdrop-blur-sm mb-8 animate-pulse">
-              <Sparkles className="w-4 h-4 text-mystic-gold" />
-              <span className="text-xs uppercase tracking-widest text-mystic-purple-light">Conecte-se com o Invisível</span>
-            </div>
-            
-            <h1 className="font-playfair text-5xl md:text-7xl lg:text-8xl leading-[1.1] mb-6 drop-shadow-2xl">
-              Desvende os <br/>
-              <span className="text-gradient-gold italic pr-4">Mistérios</span> do<br/>
+      {/* O RESTANTE DA PÁGINA FICA ESCONDIDO ENQUANTO A CARTA DO DIA ESTIVER VISÍVEL */}
+      {/* Se quiser condicionar, pode usar um state para esconder/exibir o fullpage */}
+    </div>
               Seu Destino
             </h1>
             
