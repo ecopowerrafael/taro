@@ -6,6 +6,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Forçar visibilidade do root após hidratação (revelando o conteúdo pré-renderizado se necessário) */
+#root {
+  opacity: 1 !important;
+  transition: opacity 0.4s ease-in-out;
+}
+
 @layer utilities {
   .perspective-1000 {
     perspective: 1000px;

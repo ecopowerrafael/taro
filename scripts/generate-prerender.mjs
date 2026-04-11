@@ -288,12 +288,20 @@ async function readTemplate() {
 }
 
 function applyTemplate(template, { headMarkup, bodyMarkup }) {
-  const withHead = template
-    .replace(/<title>[\s\S]*?<\/title>/i, headMarkup)
+  // Remove existing title and common meta tags from template first to avoid duplicates or conflicts
+  const templateCleaned = template
+    .replace(/<title>[\s\S]*?<\/title>/i, '')
     .replace(/<meta name="description"[\s\S]*?\/>/i, '')
     .replace(/<meta name="keywords"[\s\S]*?\/>/i, '')
 
-  return withHead.replace('<div id="root"></div>', `<div id="root">${bodyMarkup}</div>`)
+  // Inject new headMarkup before the </head> tag
+  const withHead = templateCleaned.replace('</head>', `${headMarkup}\n  </head>`)
+
+  // Inject bodyMarkup inside #root, but hide it visually for users to avoid "stuck" or "buggy" feeling
+  // It's still readable by search engine crawlers.
+  const bodyHidden = `<div id="root" style="opacity: 0; transition: opacity 0.5s ease;">${bodyMarkup}</div>`
+  
+  return withHead.replace('<div id="root"></div>', bodyHidden)
 }
 
 async function writeRouteHtml(route, html) {
