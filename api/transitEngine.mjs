@@ -169,15 +169,27 @@ export async function getDailyTransits(natalPlanets) {
   }
 
   // Priorização: 
-  // 1. Orbe mais estreito (aspecto mais exato)
-  // 2. Limitar a 12 aspectos mais importantes para evitar poluição visual
-  return activeAspects
-    .sort((a, b) => {
-      const distA = Math.abs(a.transitPlanet.longitude - a.natalPlanet.longitude);
-      const distB = Math.abs(b.transitPlanet.longitude - b.natalPlanet.longitude);
-      const orbA = distA > 180 ? 360 - distA : distA;
-      const orbB = distB > 180 ? 360 - distB : distB;
-      return orbA - orbB;
-    })
-    .slice(0, 12);
+  // 1. Garantir que cada planeta de trânsito (tp) apareça apenas uma vez no Oráculo
+  // 2. Escolher para cada tp o aspecto mais exato (menor orbe)
+  const uniqueTransits = [];
+  const processedPlanets = new Set();
+
+  // Ordenar todos os aspectos detectados pelo orbe (mais exato primeiro)
+  const sortedAspects = activeAspects.sort((a, b) => {
+    const distA = Math.abs(a.transitPlanet.longitude - a.natalPlanet.longitude);
+    const distB = Math.abs(b.transitPlanet.longitude - b.natalPlanet.longitude);
+    const orbA = distA > 180 ? 360 - distA : distA;
+    const orbB = distB > 180 ? 360 - distB : distB;
+    return orbA - orbB;
+  });
+
+  for (const aspect of sortedAspects) {
+    if (!processedPlanets.has(aspect.transitPlanet.name)) {
+      uniqueTransits.push(aspect);
+      processedPlanets.add(aspect.transitPlanet.name);
+    }
+  }
+
+  // Limitar aos 12 mais importantes (embora agora tenhamos no máximo 1 por planeta de trânsito)
+  return uniqueTransits.slice(0, 12);
 }

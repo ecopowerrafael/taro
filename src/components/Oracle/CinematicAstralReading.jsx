@@ -66,13 +66,16 @@ function StarField() {
   );
 }
 
-// CENAS: 'map_zoom' → 'zodiac_rise' → 'planet_scene' → 'grand_finale'
+// CENAS: 'map_zoom' → 'natal_entrance' → 'daily_transition' → 'planet_scene' → 'grand_finale'
 export function CinematicAstralReading({ planets, transits, mode = 'natal', lat, lng, onFinish }) {
   const [scene,       setScene]       = useState('map_zoom');
   const [planetIndex, setPlanetIndex] = useState(0);
   const [arrived,     setArrived]     = useState(false);
   const [textKey,     setTextKey]     = useState(0);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  
+  // Controle de animação de entrada dos planetas natais
+  const [natalVisibleCount, setNatalVisibleCount] = useState(0);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -83,17 +86,19 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
   const isDesktop = windowWidth >= 1024;
   const mapHeight = isDesktop ? '87.5vh' : '100vh';
   const centerY   = isDesktop ? (window.innerHeight * 0.875) / 2 : window.innerHeight / 2;
-  const centerYStr = isDesktop ? '43.75vh' : '50vh';
 
-  // Filtra e ordena planetas conforme PLANET_ORDER
+  // Filtra e ordena planetas natais conforme PLANET_ORDER
+  const sortedNatalPlanets = useMemo(() => 
+    PLANET_ORDER.map(name => planets?.find(p => p.name === name)).filter(Boolean),
+    [planets]
+  );
+
   const sortedItems = useMemo(() => {
     if (mode === 'daily') return transits || [];
-    return PLANET_ORDER.map(name => planets?.find(p => p.name === name)).filter(Boolean);
-  }, [planets, transits, mode]);
+    return sortedNatalPlanets;
+  }, [sortedNatalPlanets, transits, mode]);
 
   const currentItem = sortedItems[planetIndex];
-  
-  // Lógica específica por modo
   const currentPlanet = mode === 'daily' ? currentItem?.transitPlanet : currentItem;
   const planetPt   = PLANET_NAMES_PT[currentPlanet?.name] || currentPlanet?.name;
   
@@ -113,9 +118,23 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
   }, [mode, currentItem, planetPt, signPt]);
 
   const handleMapReady = useCallback(() => {
-    setScene('zodiac_rise');
-    setTimeout(() => setScene('planet_scene'), 1800);
-  }, []);
+    if (mode === 'daily') {
+      setScene('natal_entrance');
+      // Iniciar animação sequencial dos planetas natais
+      let count = 0;
+      const interval = setInterval(() => {
+        count++;
+        setNatalVisibleCount(count);
+        if (count >= sortedNatalPlanets.length) {
+          clearInterval(interval);
+          setTimeout(() => setScene('daily_transition'), 1000);
+        }
+      }, 200);
+    } else {
+      setScene('zodiac_rise');
+      setTimeout(() => setScene('planet_scene'), 1800);
+    }
+  }, [mode, sortedNatalPlanets.length]);
 
   const handleArrival = useCallback(() => {
     setArrived(true);
@@ -167,46 +186,23 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
         centerY={centerY}
       />
 
-      {/* Camada 25 — Planetas Natais em segundo plano (Modo Diário) */}
-      {mode === 'daily' && planets && planets.length > 0 && scene === 'planet_scene' && (
-        <>
-          <AnimatePresence>
-            {!arrived && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 text-center pointer-events-none"
-              >
-                <p className="font-serif text-xl sm:text-2xl text-mystic-gold drop-shadow-[0_0_15px_rgba(255,215,0,0.6)] px-6">
-                  Assim estava o Céu no dia do seu Nascimento
-                </p>
-                <motion.div 
-                  className="w-24 h-px bg-gradient-to-r from-transparent via-mystic-gold to-transparent mx-auto mt-4"
-                  initial={{ width: 0 }}
-                  animate={{ width: 96 }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="pointer-events-none opacity-30">
-            {planets.map((p) => (
-              <PlanetActor
-                key={`natal-${p.name}`}
-                planetName={p.name}
-                degree={p.longitude}
-                visible={true}
-                centerY={centerY}
-                isBackground={true}
-              />
-            ))}
-          </div>
-        </>
+      {/* Camada 25 — Planetas Natais (Modo Diário) */}
+      {mode === 'daily' && sortedNatalPlanets.length > 0 && (
+        <div className={`transition-opacity duration-1000 ${scene === 'planet_scene' ? 'opacity-30' : 'opacity-100'}`}>
+          {sortedNatalPlanets.map((p, idx) => (
+            <PlanetActor
+              key={`natal-${p.name}`}
+              planetName={p.name}
+              degree={p.longitude}
+              visible={idx < natalVisibleCount}
+              centerY={centerY}
+              isBackground={scene === 'planet_scene'}
+            />
+          ))}
+        </div>
       )}
 
-      {/* Camada 30 — Planeta ativo */}
+      {/* Camada 30 — Planeta ativo (Trânsito Diário ou Leitura Natal) */}
       {scene === 'planet_scene' && currentPlanet && (
         <PlanetActor
           planetName={currentPlanet.name}
@@ -216,6 +212,50 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
           centerY={centerY}
         />
       )}
+
+      {/* Mensagens de Transição */}
+      <AnimatePresence>
+        {scene === 'natal_entrance' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 text-center pointer-events-none"
+          >
+            <p className="font-serif text-xl sm:text-2xl text-mystic-gold drop-shadow-[0_0_15px_rgba(255,215,0,0.6)] px-6">
+              Assim estava o Céu no dia do seu Nascimento
+            </p>
+            <motion.div 
+              className="w-24 h-px bg-gradient-to-r from-transparent via-mystic-gold to-transparent mx-auto mt-4"
+              initial={{ width: 0 }}
+              animate={{ width: 96 }}
+              transition={{ duration: 1, delay: 0.5 }}
+            />
+          </motion.div>
+        )}
+
+        {scene === 'daily_transition' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 text-center pointer-events-none"
+          >
+            <div className="font-serif text-2xl sm:text-3xl text-mystic-gold drop-shadow-[0_0_20px_rgba(255,215,0,0.5)]">
+              <Typewriter
+                options={{ delay: 40, cursor: '✧' }}
+                onInit={(typewriter) => {
+                  typewriter
+                    .typeString('Agora faremos sua Leitura Diária')
+                    .pauseFor(1000)
+                    .callFunction(() => setScene('planet_scene'))
+                    .start();
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Grand Finale */}
       {scene === 'grand_finale' && (
