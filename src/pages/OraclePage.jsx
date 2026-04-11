@@ -91,6 +91,34 @@ export function OraclePage() {
   const [debugLog, setDebugLog] = useState([]);
   const [isExploding, setIsExploding] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
+  const [oracleTab, setOracleTab] = useState(urlParams?.get('tab') === 'diario' ? 'daily' : 'natal');
+  const [dailyTransits, setDailyTransits] = useState([]);
+  const [dailyLoading, setDailyLoading] = useState(false);
+
+  const fetchDailyTransits = async () => {
+    setDailyLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch(buildApiUrl('/api/oracle/transit'), {
+        headers: { Authorization: `Bearer ${localStorage.getItem('taro_token')}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao carregar trânsitos diários.');
+      
+      setDailyTransits(data.transits || []);
+    } catch (err) {
+      console.error('Erro trânsitos:', err);
+      setErrorMsg(err.message);
+    } finally {
+      setDailyLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (oracleTab === 'daily' && isAuthenticated && dailyTransits.length === 0) {
+      fetchDailyTransits();
+    }
+  }, [oracleTab, isAuthenticated]);
 
   const isValidCoordinatePair = (lat, lng) => {
     const nLat = Number(lat);
@@ -682,60 +710,114 @@ export function OraclePage() {
             animate={{ opacity: 1 }}
             className="space-y-6 w-full max-w-lg mx-auto"
           >
-            <p className="text-mystic-gold text-xl italic font-serif drop-shadow-md text-center">
-              "As estrelas se alinham para você, {profile?.name?.split(' ')[0] || 'Viajante'}..."
-            </p>
-            
-            <div className="w-full flex flex-col items-center justify-center relative z-10 transition-all mt-4">
-              <div className="mb-2 bg-black/40 px-4 py-1 rounded-full text-xs text-gray-400 border border-mystic-gold/20 flex flex-col gap-1 items-center">
-                <span>
-                  Destino traçado a partir de: <span className="text-mystic-gold font-bold ml-1">{birthLocation?.name}</span>
-                </span>
-                <span>
-                  Nascido em: <span className="text-mystic-gold font-bold ml-1">{birthDateStr}</span>
-                </span>
+            {/* Tab Switcher */}
+            <div className="flex justify-center mb-6">
+              <div className="bg-black/40 p-1 rounded-full border border-mystic-gold/30 flex gap-1">
+                <button
+                  onClick={() => setOracleTab('natal')}
+                  className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
+                    oracleTab === 'natal' ? 'bg-mystic-gold text-mystic-dark' : 'text-mystic-gold hover:bg-mystic-gold/10'
+                  }`}
+                >
+                  Mapa Natal
+                </button>
+                <button
+                  onClick={() => setOracleTab('daily')}
+                  className={`px-6 py-2 rounded-full text-xs font-bold transition-all ${
+                    oracleTab === 'daily' ? 'bg-mystic-gold text-mystic-dark' : 'text-mystic-gold hover:bg-mystic-gold/10'
+                  }`}
+                >
+                  Oráculo Diário
+                </button>
               </div>
-              
-              {chartLoading ? (
-                 <div className="flex flex-col items-center my-6">
-                   <Loader2 className="w-8 h-8 animate-spin text-mystic-gold mb-2" />
-                   <p className="text-sm text-mystic-gold">Desenhando seu céu natal...</p>
-                 </div>
-              ) : chartRequestAttempted && chartGenerationFailed && !hasGeneratedAstralMap ? (
-                <div className="mt-6 w-full max-w-2xl rounded-2xl border border-mystic-gold/25 bg-[#1a0f2e]/85 p-6 text-center shadow-[0_0_20px_rgba(255,215,0,0.08)]">
-                  <p className="text-base leading-relaxed text-amber-100 md:text-lg">
-                    Algumas nuvens impediram a leitura dos astros, espere 1 minuto e clique em gerar novamente.
-                  </p>
-                  <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                    <button
-                      onClick={handleRetryAstralMap}
-                      className="inline-flex items-center justify-center rounded-full bg-mystic-gold px-6 py-3 text-sm font-bold uppercase tracking-wider text-mystic-dark transition hover:scale-105"
-                    >
-                      Tentar novamente
-                    </button>
-                    {!hasSavedOracleData && (
-                      <button
-                        onClick={() => {
-                          resetChartState();
-                          setErrorMsg('');
-                          setStep('birth_city');
-                        }}
-                        className="inline-flex items-center justify-center rounded-full border border-mystic-gold/40 px-6 py-3 text-sm font-bold uppercase tracking-wider text-mystic-gold transition hover:bg-mystic-gold/10"
-                      >
-                        Preencher dados novamente
-                      </button>
-                    )}
+            </div>
+
+            {oracleTab === 'natal' ? (
+              <>
+                <p className="text-mystic-gold text-xl italic font-serif drop-shadow-md text-center">
+                  "As estrelas se alinham para você, {profile?.name?.split(' ')[0] || 'Viajante'}..."
+                </p>
+                
+                <div className="w-full flex flex-col items-center justify-center relative z-10 transition-all mt-4">
+                  <div className="mb-2 bg-black/40 px-4 py-1 rounded-full text-xs text-gray-400 border border-mystic-gold/20 flex flex-col gap-1 items-center">
+                    <span>
+                      Destino traçado a partir de: <span className="text-mystic-gold font-bold ml-1">{birthLocation?.name}</span>
+                    </span>
+                    <span>
+                      Nascido em: <span className="text-mystic-gold font-bold ml-1">{birthDateStr}</span>
+                    </span>
                   </div>
+                  
+                  {chartLoading ? (
+                     <div className="flex flex-col items-center my-6">
+                       <Loader2 className="w-8 h-8 animate-spin text-mystic-gold mb-2" />
+                       <p className="text-sm text-mystic-gold">Desenhando seu céu natal...</p>
+                     </div>
+                  ) : chartRequestAttempted && chartGenerationFailed && !hasGeneratedAstralMap ? (
+                    <div className="mt-6 w-full max-w-2xl rounded-2xl border border-mystic-gold/25 bg-[#1a0f2e]/85 p-6 text-center shadow-[0_0_20px_rgba(255,215,0,0.08)]">
+                      <p className="text-base leading-relaxed text-amber-100 md:text-lg">
+                        Algumas nuvens impediram a leitura dos astros, espere 1 minuto e clique em gerar novamente.
+                      </p>
+                      <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                        <button
+                          onClick={handleRetryAstralMap}
+                          className="inline-flex items-center justify-center rounded-full bg-mystic-gold px-6 py-3 text-sm font-bold uppercase tracking-wider text-mystic-dark transition hover:scale-105"
+                        >
+                          Tentar novamente
+                        </button>
+                        {!hasSavedOracleData && (
+                          <button
+                            onClick={() => {
+                              resetChartState();
+                              setErrorMsg('');
+                              setStep('birth_city');
+                            }}
+                            className="inline-flex items-center justify-center rounded-full border border-mystic-gold/40 px-6 py-3 text-sm font-bold uppercase tracking-wider text-mystic-gold transition hover:bg-mystic-gold/10"
+                          >
+                            Preencher dados novamente
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                   <CinematicAstralReading
+                     planets={oraclePlanets}
+                     lat={Number(profile?.oracle_lat ?? birthLocation?.lat)}
+                     lng={Number(profile?.oracle_lng ?? birthLocation?.lng)}
+                     onFinish={() => setShowAstralReadingModal(true)}
+                   />
+                  </>
+                )}
                 </div>
-              ) : (
-                <>
-               <CinematicAstralReading
-                 planets={oraclePlanets}
-                 lat={Number(profile?.oracle_lat ?? birthLocation?.lat)}
-                 lng={Number(profile?.oracle_lng ?? birthLocation?.lng)}
-                 onFinish={() => setShowAstralReadingModal(true)}
-               />
               </>
+            ) : (
+              <div className="w-full flex flex-col items-center justify-center relative z-10 transition-all">
+                {dailyLoading ? (
+                  <div className="flex flex-col items-center my-12">
+                    <Loader2 className="w-10 h-10 animate-spin text-mystic-gold mb-4" />
+                    <p className="text-mystic-gold font-serif">Consultando as efemérides de hoje...</p>
+                  </div>
+                ) : dailyTransits.length > 0 ? (
+                  <CinematicAstralReading
+                    mode="daily"
+                    transits={dailyTransits}
+                    lat={Number(profile?.oracle_lat ?? birthLocation?.lat)}
+                    lng={Number(profile?.oracle_lng ?? birthLocation?.lng)}
+                    onFinish={() => setOracleTab('natal')}
+                  />
+                ) : (
+                  <div className="p-8 text-center bg-black/40 border border-mystic-gold/20 rounded-2xl">
+                    <p className="text-gray-400 mb-4">Nenhum trânsito significativo detectado para hoje.</p>
+                    <button 
+                      onClick={fetchDailyTransits}
+                      className="text-mystic-gold font-bold uppercase text-xs tracking-widest border border-mystic-gold/40 px-4 py-2 rounded-full hover:bg-mystic-gold/10"
+                    >
+                      Recarregar
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
               {errorMsg && (
                  <div className="mt-4 text-red-400 bg-red-900/30 p-3 rounded text-sm w-full">

@@ -294,3 +294,77 @@ export async function calculateChart(birthDateIso, lat, lng) {
 
   return planets
 }
+
+/**
+ * Calcula apenas as posições planetárias (sem casas/ascendente) para uma data específica.
+ * Útil para trânsitos globais.
+ */
+export async function calculatePositions(dateIso) {
+  const dt = new Date(dateIso)
+  if (isNaN(dt.getTime())) {
+    throw new Error(`Data inválida: ${dateIso}`)
+  }
+
+  const year    = dt.getUTCFullYear()
+  const month   = dt.getUTCMonth() + 1
+  const dayFrac = dt.getUTCDate() + dt.getUTCHours() / 24 + dt.getUTCMinutes() / 1440
+
+  const jde = julian.CalendarGregorianToJD(year, month, dayFrac)
+  const T   = base.J2000Century(jde)
+  const ayanamsa = lahiriAyanamsa(jde)
+
+  const getGeoLon = (planet) => (j) => helioToGeoLon(planet, j)
+
+  // Cálculos
+  const sunSidereal     = toSidereal(norm360(solar.apparentLongitude(T) * DEG), ayanamsa)
+  const moonSidereal    = toSidereal(norm360(moonposition.position(jde)._ra * DEG), ayanamsa)
+  const mercurySidereal = toSidereal(helioToGeoLon(mercury, jde), ayanamsa)
+  const venusSidereal   = toSidereal(helioToGeoLon(venus,   jde), ayanamsa)
+  const marsSidereal    = toSidereal(helioToGeoLon(mars,     jde), ayanamsa)
+  const jupiterSidereal = toSidereal(helioToGeoLon(jupiter,  jde), ayanamsa)
+  const saturnSidereal  = toSidereal(helioToGeoLon(saturn,   jde), ayanamsa)
+  const uranusSidereal  = toSidereal(helioToGeoLon(uranus,   jde), ayanamsa)
+  const neptuneSidereal = toSidereal(helioToGeoLon(neptune,  jde), ayanamsa)
+  const rahuSidereal    = toSidereal(meanAscendingNode(jde), ayanamsa)
+  const ketuSidereal    = norm360(rahuSidereal + 180)
+
+  // Retrogradações
+  const retMercury = isRetrograde(getGeoLon(mercury), jde)
+  const retVenus   = isRetrograde(getGeoLon(venus),   jde)
+  const retMars    = isRetrograde(getGeoLon(mars),     jde)
+  const retJupiter = isRetrograde(getGeoLon(jupiter),  jde)
+  const retSaturn  = isRetrograde(getGeoLon(saturn),   jde)
+  const retUranus  = isRetrograde(getGeoLon(uranus),   jde)
+  const retNeptune = isRetrograde(getGeoLon(neptune),  jde)
+
+  return [
+    makePlanet('Sun',     sunSidereal,     null, false),
+    makePlanet('Moon',    moonSidereal,    null, false),
+    makePlanet('Mercury', mercurySidereal, null, retMercury),
+    makePlanet('Venus',   venusSidereal,   null, retVenus),
+    makePlanet('Mars',    marsSidereal,    null, retMars),
+    makePlanet('Jupiter', jupiterSidereal, null, retJupiter),
+    makePlanet('Saturn',  saturnSidereal,  null, retSaturn),
+    makePlanet('Uranus',  uranusSidereal,  null, retUranus),
+    makePlanet('Neptune', neptuneSidereal, null, retNeptune),
+    makePlanet('Rahu',    rahuSidereal,    null, true),
+    makePlanet('Ketu',    ketuSidereal,    null, true),
+  ]
+}
+
+/**
+ * Detecta o aspecto entre duas longitudes com um orbe específico.
+ * Retorna o nome do aspecto ou null.
+ */
+export function detectAspect(lon1, lon2, orb = 5) {
+  const diff = Math.abs(norm360(lon1) - norm360(lon2))
+  const dist = diff > 180 ? 360 - diff : diff
+
+  if (dist <= orb) return 'Conjunção'
+  if (Math.abs(dist - 60) <= orb) return 'Sextil'
+  if (Math.abs(dist - 90) <= orb) return 'Quadratura'
+  if (Math.abs(dist - 120) <= orb) return 'Trígono'
+  if (Math.abs(dist - 180) <= orb) return 'Oposição'
+
+  return null
+}

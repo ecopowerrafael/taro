@@ -67,7 +67,7 @@ function StarField() {
 }
 
 // CENAS: 'map_zoom' → 'zodiac_rise' → 'planet_scene' → 'grand_finale'
-export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
+export function CinematicAstralReading({ planets, transits, mode = 'natal', lat, lng, onFinish }) {
   const [scene,       setScene]       = useState('map_zoom');
   const [planetIndex, setPlanetIndex] = useState(0);
   const [arrived,     setArrived]     = useState(false);
@@ -86,19 +86,31 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
   const centerYStr = isDesktop ? '43.75vh' : '50vh';
 
   // Filtra e ordena planetas conforme PLANET_ORDER
-  const sortedPlanets = useMemo(() =>
-    PLANET_ORDER.map(name => planets.find(p => p.name === name)).filter(Boolean),
-    [planets]
-  );
+  const sortedItems = useMemo(() => {
+    if (mode === 'daily') return transits || [];
+    return PLANET_ORDER.map(name => planets?.find(p => p.name === name)).filter(Boolean);
+  }, [planets, transits, mode]);
 
-  const currentPlanet = sortedPlanets[planetIndex];
+  const currentItem = sortedItems[planetIndex];
+  
+  // Lógica específica por modo
+  const currentPlanet = mode === 'daily' ? currentItem?.transitPlanet : currentItem;
+  const planetPt   = PLANET_NAMES_PT[currentPlanet?.name] || currentPlanet?.name;
+  
   const signIdx    = Math.floor((Number(currentPlanet?.longitude) || 0) / 30);
   const signEn     = WESTERN_SIGNS[signIdx % 12];
   const signPt     = SIGN_NAMES_PT[signEn] || signEn;
-  const planetPt   = PLANET_NAMES_PT[currentPlanet?.name] || currentPlanet?.name;
-  const interpretation = currentPlanet
-    ? getInterpretationText(currentPlanet.name, signEn, Boolean(currentPlanet.is_retrograde), currentPlanet.position)
-    : '';
+
+  const interpretation = useMemo(() => {
+    if (mode === 'daily') return currentItem?.interpretation?.text || '';
+    if (!currentPlanet) return '';
+    return getInterpretationText(currentPlanet.name, signEn, Boolean(currentPlanet.is_retrograde), currentPlanet.position);
+  }, [mode, currentItem, currentPlanet, signEn]);
+
+  const titleText = useMemo(() => {
+    if (mode === 'daily') return `${currentItem?.interpretation?.title || 'Trânsito'}`;
+    return `${planetPt} em ${signPt}`;
+  }, [mode, currentItem, planetPt, signPt]);
 
   const handleMapReady = useCallback(() => {
     setScene('zodiac_rise');
@@ -110,7 +122,7 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
   }, []);
 
   const handleNext = () => {
-    if (planetIndex < sortedPlanets.length - 1) {
+    if (planetIndex < sortedItems.length - 1) {
       setArrived(false);
       setTextKey(k => k + 1);
       setPlanetIndex(i => i + 1);
@@ -129,7 +141,7 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
     }
   };
 
-  const isLastPlanet = planetIndex === sortedPlanets.length - 1;
+  const isLastPlanet = planetIndex === sortedItems.length - 1;
 
   return (
     <div className="fixed inset-0 z-50 bg-[#05000A]">
@@ -168,7 +180,11 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
 
       {/* Grand Finale */}
       {scene === 'grand_finale' && (
-        <GrandFinale planets={sortedPlanets} onFinish={onFinish} centerY={centerY} />
+        <GrandFinale 
+          planets={mode === 'daily' ? sortedItems.map(t => t.transitPlanet) : sortedItems} 
+          onFinish={onFinish} 
+          centerY={centerY} 
+        />
       )}
 
       {/* Camada 40 — Painel de texto (bottom sheet) */}
@@ -211,10 +227,12 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
             <div className={`${isDesktop ? 'px-8 flex items-center gap-6 flex-1' : 'mb-2'}`}>
               <div className={isDesktop ? 'flex-shrink-0 border-r border-mystic-gold/10 pr-6' : 'mb-2'}>
                 <p className="text-mystic-gold font-serif text-lg mb-0 drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">
-                  {planetPt} em {signPt}
+                  {titleText}
                 </p>
-                {currentPlanet?.is_retrograde && (
-                  <span className="text-[10px] text-amber-400 block uppercase tracking-tighter">Retrógrado</span>
+                {(mode === 'daily' || currentPlanet?.is_retrograde) && (
+                  <span className="text-[10px] text-amber-400 block uppercase tracking-tighter">
+                    {mode === 'daily' ? `${planetPt} em ${signPt}` : 'Retrógrado'}
+                  </span>
                 )}
               </div>
               <div className="text-gray-300 text-sm leading-relaxed font-serif overflow-y-auto max-h-full py-2">
@@ -230,7 +248,7 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
             {isDesktop && (
               <div className="pl-8 border-l border-mystic-gold/20 h-full flex items-center gap-6">
                 <span className="text-[10px] text-amber-100/30 uppercase tracking-[0.2em] font-serif">
-                  {planetIndex + 1} / {sortedPlanets.length}
+                  {planetIndex + 1} / {sortedItems.length}
                 </span>
                 <AnimatePresence>
                   {arrived && (
@@ -276,7 +294,7 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
             </button>
 
             <span className="text-xs text-amber-100/50 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md">
-              {planetIndex + 1} / {sortedPlanets.length}
+              {planetIndex + 1} / {sortedItems.length}
             </span>
 
             <AnimatePresence>

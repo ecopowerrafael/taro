@@ -1,0 +1,51 @@
+ID,Planeta (Hoje),Aspecto,Planeta (Natal),Categoria,Texto Sugerido para Push/App
+1,Sol,Conjunção,Sol,Especial,Feliz Aniversário Astral! Seu brilho e vitalidade estão renovados hoje. ✨
+2,Sol,Conjunção,Meio do Céu,Carreira,Os holofotes estão em você! Ótimo dia para visibilidade profissional. 👑
+3,Sol,Trígono,Júpiter,Sorte,Dia de Ouro: A confiança encontra a oportunidade. Expanda seus horizontes! 🚀
+4,Sol,Quadratura,Saturno,Alerta,Bloqueios temporários. Tenha paciência com atrasos e figuras de autoridade. ⏳
+5,Lua,Conjunção,Lua,Emoção,Retorno Lunar: Suas emoções estão à flor da pele. Escute sua intuição. 🌙
+6,Lua,Conjunção,Vênus,Amor,Momento de doçura e acolhimento. Ótimo para o romance e autocuidado. 💕
+7,Lua,Oposição,Marte,Alerta,Irritabilidade alta. Respire fundo antes de reagir a provocações. 🔥
+8,Lua,Trígono,Sol,Harmonia,Equilíbrio perfeito entre o que você sente e o que você faz. Flua! ✨
+9,Mercúrio,Conjunção,Mercúrio,Mente,"Sua mente está afiada! Ótimo para estudos, escritas e negociações. ✍️"
+10,Mercúrio,Conjunção,Sol,Comunicação,Sua voz ganha força. Dia ideal para reuniões e apresentações importantes. 🗣️
+11,Mercúrio,Quadratura,Marte,Alerta,Cuidado com palavras impulsivas. Discussões inúteis podem surgir hoje. 🤐
+12,Mercúrio,Trígono,Urano,Insight,Ideia Brilhante: Insights repentinos e soluções criativas estão no ar. 💡
+13,Mercúrio,Retrógrado,(Qualquer),Alerta,Mercúrio Retrógrado: Revise contratos e cuidado com falhas tecnológicas. 🔄
+14,Vênus,Conjunção,Vênus,Amor,Retorno de Vênus: Seu magnetismo atrai beleza e afeto. Celebre o amor! 💖
+15,Vênus,Conjunção,Marte,Paixão,Química intensa no ar! A atração física e o desejo estão acentuados. 🔥
+16,Vênus,Trígono,Júpiter,Dinheiro,Sorte Financeira: Excelente para investimentos ou para receber um bônus. 💰
+17,Vênus,Quadratura,Plutão,Alerta,Intensidade excessiva. Cuidado com ciúmes ou jogos de poder no amor. 🕸️
+18,Vênus,Conjunção,Sol,Autoestima,Você está radiante! Dia perfeito para mudar o visual ou se presentear. 💄
+19,Marte,Conjunção,Marte,Energia,Retorno de Marte: Ciclo de 2 anos se fecha. Hora de iniciar um novo projeto! ⚡
+20,Marte,Conjunção,Sol,Ação,Coragem total! Você tem a força necessária para vencer qualquer obstáculo. 🗡️
+21,Marte,Quadratura,Lua,Alerta,Tensão doméstica. Evite levar problemas do trabalho para dentro de casa. 🏠
+22,Marte,Trígono,Plutão,Poder,Determinação inabalável. Use essa energia para transformações profundas. 💪
+23,Marte,Oposição,Saturno,Alerta,O freio e o acelerador ao mesmo tempo. Não force situações bloqueadas. 🛑
+24,Júpiter,Conjunção,Júpiter,Sorte,Grande Retorno: Um dos anos mais abençoados da sua vida começa agora! 🌟
+25,Júpiter,Trígono,Sol,Sucesso,Portas se abrem sem esforço. Sua generosidade atrai milagres hoje. 🙌
+26,Júpiter,Conjunção,Vênus,Amor/Dinheiro,Expansão afetiva e financeira. O universo está sendo generoso com você. 🥂
+27,Júpiter,Sextil,Mercúrio,Mente,Novas perspectivas! Viagens ou cursos iniciados hoje serão prósperos. ✈️
+28,Saturno,Conjunção,Saturno,Destino,Retorno de Saturno: O grande amadurecimento. Colha o que plantou. 🪐
+29,Saturno,Conjunção,Sol,Alerta,Carga Pesada: Responsabilidades aumentam. Foco na disciplina e no realismo. 🏛️
+30,Saturno,Quadratura,Lua,Emoção,Melancolia passageira. Momento de cuidar da sua segurança emocional. 🌧️
+31,Saturno,Trígono,Marte,Construção,Produtividade sólida. Seus esforços hoje construirão algo duradouro. 🧱
+32,Urano,Conjunção,Sol,Mudança,Revolução: Desejo de liberdade. Algo novo e inesperado vai te despertar. ⚡
+33,Urano,Oposição,Vênus,Amor,Mudanças repentinas no coração. O inesperado bate à sua porta. 🌪️
+34,Netuno,Conjunção,Sol,Místico,Sensibilidade e inspiração. Conecte-se com sua espiritualidade e arte. 🧘
+35,Netuno,Quadratura,Mercúrio,Alerta,Confusão mental. Evite assinar documentos importantes hoje. 🌫️
+36,Plutão,Conjunção,Sol,Poder,Renascimento: Uma transformação profunda na sua identidade está em curso. 🌑
+37,Sol,Conjunção,Ascendente,Especial,Renovação da sua imagem. O mundo está te notando mais hoje. 👁️
+38,Lua,Conjunção,Descendente,Amor,Foco total nas parcerias e no seu par. Dia de escutar o outro. 🤝
+39,Mercúrio,Trígono,Saturno,Foco,Mente estruturada. Excelente para planejamento estratégico e finanças. 📊
+40,Vênus,Sextil,Netuno,Romance,Clima de sonho e poesia. Deixe-se levar pelo romantismo puro. 🌊
+41,Marte,Trígono,Júpiter,Vitória,A sorte favorece os audazes! Vá atrás do que você quer com fé. 🏆
+42,Saturno,Oposição,Mercúrio,Alerta,Comunicação barrada. Silêncio pode ser a melhor estratégia hoje. 😶
+43,Júpiter,Quadratura,Marte,Alerta,Excesso de confiança. Cuidado para não prometer mais do que pode cumprir. 🎈
+44,Sol,Trígono,Lua,Bem-estar,Paz interior. Seus desejos e suas ações estão em plena sintonia. 🍃
+45,Vênus,Oposição,Saturno,Alerta,Frieza afetiva ou limitações financeiras. Dia de economizar afeto e dinheiro. ❄️
+46,Mercúrio,Conjunção,Júpiter,Notícia,Boas Notícias: Uma informação importante pode trazer grande alegria. 📧
+47,Marte,Conjunção,Lua,Intensidade,Reações emocionais fortes. Proteja sua energia de ambientes pesados. 🛡️
+48,Sol,Sextil,Marte,Vitalidade,Disposição física em alta. Ótimo para exercícios e resolver pendências. 🏃
+49,Lua,Quadratura,Sol,Tensão,Pequeno conflito entre o que você quer e o que você precisa. Ajuste-se. ⚖️
+50,Júpiter,Trígono,Vênus,Luxo,Momento Premium: Aproveite o que a vida tem de melhor. Você merece. 💎

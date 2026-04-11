@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { authenticate } from '../middleware/auth.mjs'
-import { calculateChart } from '../astroEngine.mjs'
+import { calculateChart, calculatePositions, detectAspect } from '../astroEngine.mjs'
+import { getDailyTransits } from '../transitEngine.mjs'
 
 export const createOracleRouter = (pool) => {
   const router = Router()
@@ -310,6 +311,36 @@ export const createOracleRouter = (pool) => {
 
       return response.status(200).json({ planets: rawPlanets, debug: engineDebug })
     } catch (error) {
+      return response.status(500).json({ error: error.message })
+    }
+  })
+
+  // Obter o Oráculo Diário (Trânsitos)
+  router.get('/transit', authenticate, async (request, response) => {
+    try {
+      const userId = request.user.id
+      const [uRows] = await pool.query('SELECT birthDate, oracle_birth_date, oracle_lat, oracle_lng, oracle_chart_cache FROM users WHERE id = ?', [userId])
+      if (!uRows.length) return response.status(404).json({ error: 'Usuário não encontrado' })
+      const user = uRows[0]
+
+      let natalPlanets = parseCachedPlanets(user.oracle_chart_cache)
+      if (!natalPlanets) {
+        const { rawPlanets } = await getOracleChart(user, userId)
+        natalPlanets = rawPlanets
+      }
+
+      if (!Array.isArray(natalPlanets) || natalPlanets.length === 0) {
+        return response.status(422).json({ error: 'Mapa natal não disponível.' })
+      }
+
+      const activeTransits = await getDailyTransits(natalPlanets)
+
+      return response.status(200).json({ 
+        transits: activeTransits, 
+        currentDate: new Date().toISOString() 
+      })
+    } catch (error) {
+      console.error('[API/Oracle] Erro ao obter trânsitos:', error)
       return response.status(500).json({ error: error.message })
     }
   })

@@ -21,6 +21,7 @@ import webpush from 'web-push'
 import { authenticate, authorizeAdmin } from './middleware/auth.mjs'
 import { initializeFirebaseAdmin } from './firebaseAdmin.mjs'
 import { getUserIdsByRole, saveNativePushToken, savePushSubscription, sendPushToUsers } from './push.mjs'
+import { startCronManager } from './cronManager.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -498,6 +499,8 @@ try {
   initializeSchema(pool)
     .then(() => {
       console.log('[API] Schema inicializado com sucesso.')
+      // Iniciar Cron Manager após o DB estar OK
+      startCronManager(pool, firebaseAdmin, webpush, pushEnabled)
     })
     .catch((error) => {
       databaseConfigError = error.message
