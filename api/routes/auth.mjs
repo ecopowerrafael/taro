@@ -58,60 +58,69 @@ export const createAuthRouter = (pool) => {
     }
 
     try {
-      const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email])
-      if (existing.length > 0) {
-        return response.status(400).json({ message: 'Email já cadastrado.' })
-      }
-
-      const userId = 'u_' + Math.random().toString(36).substr(2, 9)
-      const consultantId = 'c_' + Math.random().toString(36).substr(2, 9)
-      const hashedPassword = await bcrypt.hash(password, 10)
+      const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email])
       const createdAt = new Date()
+      let userId, consultantId, token, userRole
+      let finalName = name
+      let finalPassword = password
+      let isNewUser = false
 
-      // Inicia transação
-      const connection = await pool.getConnection()
-      try {
-        await connection.beginTransaction()
-
-        await connection.query(
+      if (users.length > 0) {
+        const user = users[0]
+        userId = user.id
+        userRole = user.role
+        finalName = user.name || name
+        // Se já for consultor, não permitir duplicidade
+        if (user.role === 'consultant') {
+          return response.status(400).json({ message: 'Este email já está cadastrado como consultor.' })
+        }
+        // Atualiza role para consultant, mantém senha original
+        await pool.query('UPDATE users SET role = ?, name = ? WHERE id = ?', ['consultant', name, userId])
+        // Não altera senha!
+      } else {
+        // Novo usuário
+        userId = 'u_' + Math.random().toString(36).substr(2, 9)
+        const hashedPassword = await bcrypt.hash(password, 10)
+        await pool.query(
           `INSERT INTO users (id, name, email, password, role, createdAt) 
            VALUES (?, ?, ?, ?, ?, ?)`,
           [userId, name, email, hashedPassword, 'consultant', createdAt]
         )
-
-        await connection.query(
-          `INSERT INTO consultants (
-            id, name, email, tagline, description, photo, 
-            pricePerMinute, priceThreeQuestions, priceFiveQuestions, 
-            status, createdAt, userId
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            consultantId, name, email, tagline || null, description || null, photo || null,
-            pricePerMinute || 0, priceThreeQuestions || 0, priceFiveQuestions || 0,
-            'Pendente', createdAt, userId
-          ]
-        )
-
-        // Criar carteira
-        await connection.query(
-          'INSERT INTO consultant_wallets (consultantId, availableBalance) VALUES (?, 0)',
-          [consultantId]
-        )
-
-        await connection.commit()
-        
-        const token = jwt.sign({ id: userId, consultantId, role: 'consultant', email }, JWT_SECRET, { expiresIn: '7d' })
-
-        response.status(201).json({
-          token,
-          user: { id: userId, name, email, role: 'consultant', minutesBalance: 0 }
-        })
-      } catch (err) {
-        await connection.rollback()
-        throw err
-      } finally {
-        connection.release()
+        isNewUser = true
       }
+
+      // Verifica se já existe registro de consultor para este userId
+      const [consultants] = await pool.query('SELECT id FROM consultants WHERE userId = ?', [userId])
+      if (consultants.length > 0) {
+        return response.status(400).json({ message: 'Este usuário já possui cadastro de consultor pendente.' })
+      }
+
+      consultantId = 'c_' + Math.random().toString(36).substr(2, 9)
+      // Cria registro de consultor
+      await pool.query(
+        `INSERT INTO consultants (
+          id, name, email, tagline, description, photo, 
+          pricePerMinute, priceThreeQuestions, priceFiveQuestions, 
+          status, createdAt, userId
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          consultantId, name, email, tagline || null, description || null, photo || null,
+          pricePerMinute || 0, priceThreeQuestions || 0, priceFiveQuestions || 0,
+          'Pendente', createdAt, userId
+        ]
+      )
+      // Cria carteira
+      await pool.query(
+        'INSERT INTO consultant_wallets (consultantId, availableBalance) VALUES (?, 0)',
+        [consultantId]
+      )
+
+      token = jwt.sign({ id: userId, consultantId, role: 'consultant', email }, JWT_SECRET, { expiresIn: '7d' })
+
+      response.status(201).json({
+        token,
+        user: { id: userId, name, email, role: 'consultant', minutesBalance: 0 }
+      })
     } catch (error) {
       console.error('Erro no registro de consultor:', error)
       response.status(500).json({ message: 'Erro ao criar conta de consultor.' })
@@ -462,6 +471,37 @@ export const createAuthRouter = (pool) => {
       response.status(500).json({ message: 'Erro ao atualizar usuário.' })
     } finally {
       connection.release()
+    }
+  })
+
+  // Admin: resetar dados do mapa astral de um usuário
+  router.post('/admin/users/:id/reset-oracle', authenticate, authorizeAdmin, async (request, response) => {
+    const { id } = request.params
+
+    try {
+      const [user] = await pool.query('SELECT id FROM users WHERE id = ?', [id])
+      if (!user.length) {
+        return response.status(404).json({ message: 'Usuário não encontrado.' })
+      }
+
+      await pool.query(
+        `UPDATE users 
+         SET oracle_city = NULL, 
+             oracle_lat = NULL, 
+             oracle_lng = NULL, 
+             oracle_birth_date = NULL, 
+             oracle_chart_cache = NULL, 
+             oracle_chart_cache_key = NULL, 
+             oracle_chart_cached_at = NULL,
+             oracle_used_free = 0
+         WHERE id = ?`,
+        [id]
+      )
+
+      response.json({ ok: true, message: 'Dados do mapa astral resetados com sucesso.' })
+    } catch (error) {
+      console.error('[Admin Users] Erro ao resetar mapa astral:', error)
+      response.status(500).json({ message: 'Erro ao resetar dados do mapa astral.' })
     }
   })
 

@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import Typewriter from 'typewriter-effect';
 import { AstrologyChart } from '../components/Oracle/AstrologyChart';
 import { AstralReadingPurchaseModal } from '../components/AstralReadingPurchaseModal';
+import { CinematicAstralReading } from '../components/Oracle/CinematicAstralReading';
 import { buildApiUrl } from '../utils/runtimeConfig';
 
 // Explosion particle component for the button
@@ -728,21 +729,13 @@ export function OraclePage() {
                 </div>
               ) : (
                 <>
-                 <AstrologyChart planets={oraclePlanets} />
-
-               <div className="mt-8 text-center p-6 bg-[#1a0f2e]/80 border border-mystic-gold/30 rounded-2xl w-full max-w-2xl mx-auto shadow-[0_0_20px_rgba(255,215,0,0.1)]">
-                 <p className="text-gray-300 font-serif mb-3 text-lg md:text-xl relative z-10">Quer ir mais fundo no que os Astros podem revelar?</p>
-                 <p className="mx-auto mb-5 max-w-xl text-sm leading-relaxed text-amber-100/80 md:text-base">
-                   Receba por e-mail um PDF com cerca de 20 páginas com uma leitura completa do seu Mapa astral. É uma Jornada de AutoConhecimento que te guiará em muitos aspectos da sua vida.
-                 </p>
-                 <button
-                  onClick={() => setShowAstralReadingModal(true)}
-                  className="relative z-10 w-full md:w-auto inline-flex items-center justify-center bg-mystic-gold text-mystic-dark font-bold py-3 md:py-4 px-8 rounded-full shadow-[0_0_15px_rgba(255,215,0,0.5)] hover:scale-105 hover:shadow-[0_0_25px_rgba(255,215,0,0.8)] transition-all uppercase tracking-wider text-sm md:text-base border-2 border-transparent hover:border-white/20"
-                 >
-                  Solicitar sua Leitura Astral completa por Apenas R$ 49,90
-                 </button>
-               </div>
-               </>
+               <CinematicAstralReading
+                 planets={oraclePlanets}
+                 lat={Number(profile?.oracle_lat ?? birthLocation?.lat)}
+                 lng={Number(profile?.oracle_lng ?? birthLocation?.lng)}
+                 onFinish={() => setShowAstralReadingModal(true)}
+               />
+              </>
             )}
               {errorMsg && (
                  <div className="mt-4 text-red-400 bg-red-900/30 p-3 rounded text-sm w-full">

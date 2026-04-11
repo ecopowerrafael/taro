@@ -2,94 +2,30 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
-import { Loader2, Video, PhoneOff, Clock3, Wallet, XCircle } from 'lucide-react'
+import { Loader2, Video, PhoneOff } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
-import { io } from 'socket.io-client'
-import { ReviewModal } from '../components/ReviewModal'
-
-let dailyIframeModulePromise = null
-
-const loadDailyIframe = async () => {
-  if (!dailyIframeModulePromise) {
-    dailyIframeModulePromise = import('@daily-co/daily-js').then((module) => module.default || module)
-  }
-  return dailyIframeModulePromise
-}
-
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
-
-const getRealtimeServerUrl = () => {
-  if (!API_BASE_URL) {
-    return undefined
-  }
-
-  try {
-    return new URL(API_BASE_URL).origin
-  } catch {
-    return undefined
-  }
-}
-
-const buildApiUrl = (resource) => {
-  if (!API_BASE_URL) {
-    return resource
-  }
-
-  const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL
-  const path = resource.startsWith('/') ? resource : `/${resource}`
-  return `${base}${path}`
-}
+import DailyIframe from '@daily-co/daily-js'
 
 export function VideoRoomPage() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
-  const { token, billing, setSystemNotice, profile, updateProfile } = usePlatformContext()
+  const { token, billing, setSystemNotice } = usePlatformContext()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isCallActive, setIsCallActive] = useState(false)
-  const [callStartedAt, setCallStartedAt] = useState(null)
-  const [localElapsedSeconds, setLocalElapsedSeconds] = useState(0)
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
-  const [endModal, setEndModal] = useState(null)
-  const [reviewModal, setReviewModal] = useState({ isOpen: false, consultantId: '', consultantName: '', sessionId: '' })
-  const [presenceState, setPresenceState] = useState({ customerOnline: false, consultantOnline: false })
   const callFrameRef = useRef(null)
   const containerRef = useRef(null)
-  const socketRef = useRef(null)
-  const otherUserLeftRef = useRef(false)
-  const callAlreadyEndedRef = useRef(false) // Prevenir múltiplas chamadas a handleLeaveCall
-  const savedElapsedSecondsRef = useRef(0) // Salvar elapsedSeconds quando outra pessoa sai
-  const joinInProgressRef = useRef(false) // Prevenir chamadas simultâneas de joinCall
-  const wakeLockRef = useRef(null) // Screen wake lock para evitar descanso da tela
-  const resizeHandlerRef = useRef(null) // Handler de resize para layout PIP
-  const billingStartedRef = useRef(false)
-
-  const formatElapsed = (seconds) => {
-    const minutes = String(Math.floor(seconds / 60)).padStart(2, '0')
-    const secs = String(seconds % 60).padStart(2, '0')
-    return `${minutes}:${secs}`
-  }
 
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const res = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}`), {
+        const res = await fetch(`/api/video-sessions/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.message)
-        console.log('[VideoRoomPage] fetchSession - roomUrl:', data.roomUrl)
-        console.log('[VideoRoomPage] fetchSession - dailyToken:', data.dailyToken ? `${data.dailyToken.substring(0, 20)}...` : 'UNDEFINED')
-        console.log('[VideoRoomPage] fetchSession - isConsultant:', data.isConsultant)
-        console.log('[VideoRoomPage] fetchSession - pricePerMinute:', data.pricePerMinute)
-        setPresenceState({
-          customerOnline: Boolean(data.customerOnline),
-          consultantOnline: Boolean(data.consultantOnline),
-        })
         setSession(data)
-        // Pré-carregar SDK Daily enquanto usuário aguarda na sala
-        loadDailyIframe().catch(() => {})
       } catch (err) {
         setError(err.message || 'Erro ao carregar a sala.')
       } finally {
@@ -102,914 +38,121 @@ export function VideoRoomPage() {
     }
   }, [sessionId, token])
 
-  // ✅ AUTO-JOIN para Consultor - ingressar automaticamente na sala
-  useEffect(() => {
-    if (
-      session &&
-      session.isConsultant &&
-      !isCallActive &&
-      !joinInProgressRef.current &&
-      session.status === 'waiting' &&
-      presenceState.customerOnline
-    ) {
-      console.log('[VideoRoomPage] Auto-iniciando para consultor')
-      handleStartByConsultant()
-    }
-  }, [session, isCallActive, presenceState.customerOnline])
-
-  // Setup Socket.io para sincronizar encerramento de chamada
-  useEffect(() => {
-    socketRef.current = io(getRealtimeServerUrl())
-
-    socketRef.current.on('session_presence_update', (payload) => {
-      if (payload?.sessionId !== sessionId) {
-        return
-      }
-
-      const members = Array.isArray(payload.members) ? payload.members : []
-      setPresenceState({
-        customerOnline: members.some((member) => member.role === 'customer'),
-        consultantOnline: members.some((member) => member.role === 'consultant'),
-      })
-    })
-
-    return () => {
-      console.log('[VideoRoomPage] Desconectando socket.io')
-      if (socketRef.current) {
-        socketRef.current.disconnect()
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!socketRef.current || !sessionId || !profile?.id || !session) {
-      return undefined
-    }
-
-    const emitPresence = () => {
-      socketRef.current.emit('join_session_presence', {
-        sessionId,
-        userId: profile.id,
-        role: session.isConsultant ? 'consultant' : 'customer',
-      })
-    }
-
-    emitPresence()
-    socketRef.current.on('connect', emitPresence)
-    return () => {
-      socketRef.current?.emit('leave_session_presence', {
-        sessionId,
-        userId: profile.id,
-      })
-      socketRef.current?.off('connect', emitPresence)
-    }
-  }, [profile?.id, session, sessionId])
-
-  // Atualizar listener do socket.io quando billing mudar (para capturar elapsedSeconds correto)
-  useEffect(() => {
-    if (!socketRef.current) return
-    
-    // Remover listener antigo
-    socketRef.current.off('other_user_left_call')
-    
-    // Adicionar listener novo com billing atualizado
-    socketRef.current.on('other_user_left_call', () => {
-      console.log('[VideoRoomPage] Socket.io: other_user_left_call disparado')
-      otherUserLeftRef.current = true
-      // **CRITICAL**: Salvar elapsedSeconds IMEDIATAMENTE antes de qualquer coisa poder resetá-lo
-      savedElapsedSecondsRef.current = billing.elapsedSeconds
-      console.log('[VideoRoomPage] Socket.io: Salvando elapsedSeconds em ref:', savedElapsedSecondsRef.current)
-      setSystemNotice('O outro participante saiu da chamada.')
-      // Dar um tempo para o outro lado receber o evento antes de navegar
-      setTimeout(() => {
-        console.log('[VideoRoomPage] Socket.io: Chamando handleLeaveCall após delay')
-        handleLeaveCall()
-      }, 500)
-    })
-  }, [billing])
-
-  // Entrar na sala de chamada após conexão socket.io
-  useEffect(() => {
-    if (isCallActive && socketRef.current && sessionId) {
-      socketRef.current.emit('join_call_room', { sessionId })
-    }
-  }, [isCallActive, sessionId])
-
-  useEffect(() => {
-    if (!callStartedAt || !isCallActive) {
-      setLocalElapsedSeconds(0)
-      return undefined
-    }
-
-    const interval = window.setInterval(() => {
-      setLocalElapsedSeconds(Math.floor((Date.now() - callStartedAt) / 1000))
-    }, 1000)
-
-    return () => window.clearInterval(interval)
-  }, [callStartedAt, isCallActive])
-
   // Polling to check if the other person joined (simplified approach for waiting room)
   useEffect(() => {
     if (!session || isCallActive) return
     
-    // Se o consultor for quem estiver na tela, ele NÃO faz polling pra entrar sozinho,
-    // ele que clica no botão "Iniciar Atendimento" e muda o status.
-    if (session.isConsultant) return
-
     const interval = setInterval(async () => {
-      if (joinInProgressRef.current) return // Guard contra chamadas simultâneas
-      
-      // In a real prod environment we'd use WebSockets. Here we poll status every 10s
+      // In a real prod environment we'd use WebSockets. Here we poll status every 5s
       try {
-        const res = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}`), {
+        const res = await fetch(`/api/video-sessions/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         const data = await res.json()
         if (data.status === 'active' && !isCallActive) {
-          // Both are ready! O consultor já iniciou!
-          setIsCallActive(true) // Libera a div do iframe
-          setTimeout(() => {
-            joinCall(data)
-          }, 100)
+          // Both are ready!
+          joinCall(data)
         }
       } catch (e) {
         // ignore
       }
-    }, 2000)
+    }, 5000)
     return () => clearInterval(interval)
   }, [session, isCallActive, sessionId, token])
 
   const joinCall = async (sessionData) => {
-    console.log('[VideoRoomPage] joinCall chamado com sessionData.isConsultant:', sessionData.isConsultant)
+    if (!containerRef.current) return
     
-    // Guard contra chamadas simultâneas
-    if (joinInProgressRef.current) {
-      console.warn('[VideoRoomPage] ⚠️  joinCall já em progresso, ignorando chamada duplicada')
-      return
-    }
-    joinInProgressRef.current = true
-    
-    // Reset flag SEMPRE para nova entrada
-    callAlreadyEndedRef.current = false
-    billingStartedRef.current = false
-    
-    if (!containerRef.current) {
-      joinInProgressRef.current = false
-      return
+    // Marcar sessão como ativa no DB se ainda não estiver
+    if (sessionData.status !== 'active') {
+      await fetch(`/api/video-sessions/${sessionId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'active' })
+      })
     }
 
-    // 🔴 DESTRUIR FRAME ANTERIOR ANTES DE CRIAR NOVO (evita Duplicate DailyIframe error)
-    if (callFrameRef.current) {
-      console.log('[VideoRoomPage] 🗑️  Destruindo callFrame anterior')
-      try {
-        await callFrameRef.current.leave().catch(() => {})
-        callFrameRef.current.destroy()
-      } catch (e) {
-        console.warn('[VideoRoomPage] Erro ao destruir frame anterior:', e.message)
+    const callFrame = DailyIframe.createFrame(containerRef.current, {
+      iframeStyle: {
+        width: '100%',
+        height: '100%',
+        border: 'none',
+        borderRadius: '12px'
       }
-      callFrameRef.current = null
-      // Limpar o container para evitar conflitos
-      if (containerRef.current) {
-        containerRef.current.innerHTML = ''
-      }
-    }
-    
-    // Marcar sessão como ativa no DB se ainda não estiver, em paralelo com o carregamento do SDK
-    const activatePromise = sessionData.status !== 'active'
-      ? fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ status: 'active' })
-        }).then(async (r) => {
-          if (!r.ok) {
-            const payload = await r.json().catch(() => ({}))
-            throw new Error(payload.message || 'A sessão não pode ser iniciada agora.')
-          }
-        })
-      : Promise.resolve()
-
-    // Usar createCallObject ao invés de createFrame para controle 100% via código
-    // Isso elimina completamente a UI de prejoin do Daily
-    const [, DailyIframe] = await Promise.all([activatePromise, loadDailyIframe()])
-
-    if (!DailyIframe || typeof DailyIframe.createCallObject !== 'function') {
-      throw new Error('Nao foi possivel carregar o SDK de video.')
-    }
-
-    const callFrame = DailyIframe.createCallObject({
-      userName: profile?.name || sessionData.consultantName || 'Usuário',
-      videoSource: true,
-      audioSource: true
     })
     
     callFrameRef.current = callFrame
     
-    // Renderizar video element no container para mostrar chamada
-    if (containerRef.current) {
-      containerRef.current.innerHTML = '<div id="daily-video-container" style="width: 100%; height: 100%; background: #000; border-radius: 12px;"></div>'
-    }
-    
-    // Renderizar container HTML para vídeos com layout PIP
-    if (containerRef.current) {
-      containerRef.current.innerHTML = `
-        <style>
-          #daily-video-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-          }
-          
-          /* Desktop: Layout flexbox lado-a-lado */
-          @media (min-width: 769px) {
-            #daily-video-container {
-              display: flex;
-              flex-wrap: wrap;
-              gap: 12px;
-              padding: 12px;
-              overflow: auto;
-              align-content: flex-start;
-            }
-            
-            #daily-video-container > div {
-              position: relative !important;
-              top: auto !important;
-              left: auto !important;
-              bottom: auto !important;
-              right: auto !important;
-              width: calc(50% - 6px);
-              height: auto;
-              aspect-ratio: 16/9;
-              flex: 0 0 calc(50% - 6px);
-              border-radius: 8px;
-              overflow: hidden;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            }
-          }
-          
-          /* Mobile: Layout PIP */
-          @media (max-width: 768px) {
-            #daily-video-container {
-              display: block;
-            }
-            
-            #daily-video-container > div {
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-            }
-            
-            /* Remoto: fullscreen (z-index 1) */
-            #daily-video-container [data-participant-type="remote"] {
-              z-index: 1;
-            }
-            
-            /* Local: PIP corner (z-index 10) */
-            #daily-video-container [data-participant-type="local"] {
-              width: 120px !important;
-              height: 160px !important;
-              bottom: 16px !important;
-              right: 16px !important;
-              top: auto !important;
-              left: auto !important;
-              z-index: 10;
-              border: 3px solid rgba(255, 255, 255, 0.3);
-              border-radius: 8px;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            }
-          }
-        </style>
-        <div id="daily-video-container"></div>
-      `
-    }
-    
-    // Função para criar container de vídeo para um participante
-    const createVideoContainer = (participantId, isLocal = false) => {
-      const container = document.getElementById('daily-video-container')
-      if (!container) return
-      
-      if (document.getElementById(`video-container-${participantId}`)) {
-        return // Já existe
-      }
-      
-      const videoContainer = document.createElement('div')
-      videoContainer.id = `video-container-${participantId}`
-      videoContainer.setAttribute('data-participant-type', isLocal ? 'local' : 'remote')
-      // Sem estilos inline - CSS media queries vão gerenciar tudo
-      
-      const video = document.createElement('video')
-      video.className = 'video-element'
-      video.autoplay = true
-      video.muted = true
-      video.style.cssText = 'width: 100%; height: 100%; object-fit: cover;'
-      
-      videoContainer.appendChild(video)
-      container.appendChild(videoContainer)
-      console.log('[VideoRoomPage] ✓ Video container criado:', participantId, '| isLocal:', isLocal)
-    }
-    
-    // Função para criar elemento de áudio para participante remoto
-    const createAudioElement = (participantId) => {
-      if (document.getElementById(`audio-${participantId}`)) {
-        return
-      }
-      
-      const audio = document.createElement('audio')
-      audio.id = `audio-${participantId}`
-      audio.autoplay = true
-      document.body.appendChild(audio)
-      console.log('[VideoRoomPage] ✓ Audio element criado para:', participantId)
-    }
-    
-    // Função para anexar track ao elemento
-    const attachTrack = (trackType, track, participantId) => {
-      const selector = trackType === 'video'
-        ? `#video-container-${participantId} video.video-element`
-        : `#audio-${participantId}`
-      
-      const element = trackType === 'video'
-        ? document.querySelector(selector)
-        : document.getElementById(`audio-${participantId}`)
-      
-      if (!element) {
-        console.warn(`[VideoRoomPage] ⚠️ ${trackType} element não encontrado para ${participantId}`)
-        return
-      }
-      
-      // Verificar se já tem o track
-      const existingTracks = element.srcObject?.getTracks()
-      const needsUpdate = !existingTracks?.includes(track.persistentTrack)
-      
-      if (needsUpdate) {
-        element.srcObject = new MediaStream([track.persistentTrack])
-        console.log(`[VideoRoomPage] ✓ ${trackType} track anexado para ${participantId}`)
-      }
-    }
-    
-    const confirmConnectedSessionStart = async () => {
-      if (billingStartedRef.current) {
-        return
-      }
-
-      const startResponse = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status: 'active', confirmStart: true })
-      })
-
-      if (!startResponse.ok) {
-        const startPayload = await startResponse.json().catch(() => ({}))
-        throw new Error(startPayload.message || 'A sessão não pôde ser confirmada para cobrança.')
-      }
-
-      billingStartedRef.current = true
+    // Iniciar faturamento se for o cliente
+    if (!sessionData.isConsultant) {
       billing.startSession({
         consultantId: sessionData.consultantId,
         consultantName: sessionData.consultantName,
-        pricePerMinute: sessionData.pricePerMinute,
-        isConsultantMode: sessionData.isConsultant
+        pricePerMinute: sessionData.pricePerMinute
       })
-      setCallStartedAt((prev) => prev ?? Date.now())
     }
 
-    // Handler para participant-joined e participant-updated
-    const handleParticipantJoinedOrUpdated = (event) => {
-      const { participant } = event
-      const participantId = participant.session_id
-      const isLocal = participant.local
-      const tracks = participant.tracks
-      
-      console.log(`[VideoRoomPage] ${isLocal ? 'Local' : 'Remote'} participant updated: ${participant.user_name}`)
-      
-      // Criar containers se não existirem (passando isLocal)
-      if (!document.getElementById(`video-container-${participantId}`)) {
-        createVideoContainer(participantId, isLocal)
-      }
-      if (!isLocal && !document.getElementById(`audio-${participantId}`)) {
-        createAudioElement(participantId)
-      }
-      
-      // Processar cada tipo de track
-      Object.entries(tracks).forEach(([trackType, trackInfo]) => {
-        if (trackInfo.persistentTrack) {
-          // Track disponível - anexar
-          attachTrack(trackType, trackInfo, participantId)
-        } else {
-          // Track não disponível - remover elemento se existir
-          const elementId = `${trackType}-${participantId}`
-          const element = document.getElementById(elementId)
-          if (element) {
-            element.srcObject = null
-            element.remove()
-            console.log(`[VideoRoomPage] Track ${trackType} removido para ${participantId}`)
-          }
-        }
-      })
-
-      if (!isLocal) {
-        confirmConnectedSessionStart().catch((error) => {
-          console.error('[VideoRoomPage] Falha ao confirmar início real da sessão:', error)
-          setSystemNotice(error.message || 'Não foi possível confirmar o início da sessão.')
-        })
-      }
-    }
-    
-    // Quando participantes forem adicionados ou atualizados
-    callFrame.on('participant-joined', (evt) => {
-      console.log('[VideoRoomPage] ✓ participant-joined:', evt.participant.user_name)
-      handleParticipantJoinedOrUpdated(evt)
-    })
-    
-    callFrame.on('participant-updated', (evt) => {
-      console.log('[VideoRoomPage] participant-updated:', evt.participant.user_name)
-      handleParticipantJoinedOrUpdated(evt)
-    })
-    
-    // Quando participante sair
-    callFrame.on('participant-left', (evt) => {
-      const { participant } = evt
-      const participantId = participant.session_id
-      
-      console.log('[VideoRoomPage] participant-left:', participant.user_name)
-      
-      // Remover containers
-      const videoContainer = document.getElementById(`video-container-${participantId}`)
-      if (videoContainer) {
-        const video = videoContainer.querySelector('video')
-        if (video) {
-          video.srcObject = null
-        }
-        videoContainer.remove()
-      }
-      
-      const audio = document.getElementById(`audio-${participantId}`)
-      if (audio) {
-        audio.srcObject = null
-        audio.remove()
-      }
-    })
-    
-    // ADICIONAR LISTENERS ANTES DE JOIN (crucial!)
-    callFrame.on('joined-meeting', () => {
-      console.log('[VideoRoomPage] ✓ joined-meeting event disparado - entrou na sala com sucesso')
-      // Processar participantes existentes
-      const participants = callFrame.participants()
-      Object.entries(participants).forEach(([sessionId, participant]) => {
-        handleParticipantJoinedOrUpdated({ participant })
-      })
-    })
-    
     callFrame.on('left-meeting', () => {
-      console.log('[VideoRoomPage] Daily.io left-meeting event disparado. isCallActive:', isCallActive)
-      console.log('[VideoRoomPage] left-meeting reason: user or system disconnect')
-      const participants = callFrame?.participants?.() || {}
-      console.log('[VideoRoomPage] Participants at left-meeting time:', Object.keys(participants).length)
-      // Só chamar handleLeaveCall se realmente estamos em uma chamada
-      if (isCallActive && !callAlreadyEndedRef.current) {
-        console.log('[VideoRoomPage] Chamando handleLeaveCall do left-meeting event')
-        handleLeaveCall()
-      } else {
-        console.log('[VideoRoomPage] Ignorando left-meeting: isCallActive=', isCallActive, 'callAlreadyEnded=', callAlreadyEndedRef.current)
-      }
-    })
-    
-    callFrame.on('error', (e) => {
-      console.error('[VideoRoomPage] ✗ Daily.co error event:', e)
-      console.error('[VideoRoomPage] Error details:', {
-        type: e?.type,
-        message: e?.message,
-        reason: e?.reason,
-        full: JSON.stringify(e)
-      })
-    })
-    
-    callFrame.on('meeting-state-updated', (event) => {
-      console.log('[VideoRoomPage] meeting-state-updated:', {
-        status: event?.data?.status,
-        callState: event?.data?.callState,
-        participants: event?.data?.participants?.length
-      })
-    })
-    
-    // Listeners adicionais para logging/monitoramento
-    callFrame.on('participants-updated', (event) => {
-      const participants = event.participants || {}
-      console.log('[VideoRoomPage] ★ participants-updated event: ' + Object.keys(participants).length + ' total')
-      Object.entries(participants).forEach(([id, p]) => {
-        console.log(`  - [${id.substring(0, 8)}] ${p.user_name || 'unknown'} (local: ${p.local}, video: ${p.video}, audio: ${p.audio})`)
-      })
-    })
-    
-    callFrame.on('app-message', (event) => {
-      console.log('[VideoRoomPage] app-message:', event)
-    })
-    
-    callFrame.on('active-speaker-change', (event) => {
-      console.log('[VideoRoomPage] active-speaker-change:', event.activeSpeaker?.user_name)
-    })
-    
-    callFrame.on('recording-started', () => {
-      console.log('[VideoRoomPage] recording-started')
-    })
-    
-    callFrame.on('recording-stopped', () => {
-      console.log('[VideoRoomPage] recording-stopped')
-    })
-    
-    callFrame.on('access-state-updated', (event) => {
-      console.log('[VideoRoomPage] access-state-updated:', event)
-    })
-    
-    callFrame.on('network-quality-change', (event) => {
-      console.log('[VideoRoomPage] network-quality-change:', event)
+      handleLeaveCall()
     })
 
     try {
-      console.log('[VideoRoomPage] ═══════════════════════════════════════')
-      console.log('[VideoRoomPage] Iniciando entrada na room Daily.co')
-      console.log('[VideoRoomPage] Room URL:', sessionData.roomUrl)
-      console.log('[VideoRoomPage] Token válido:', !!sessionData.dailyToken)
-      console.log('[VideoRoomPage] Is Consultant (owner):', sessionData.isConsultant)
-      console.log('[VideoRoomPage] ═══════════════════════════════════════')
-      
-      // Com createCallObject, o join é mais simples e direto
-      const joinPromise = new Promise((resolve, reject) => {
-        let joined = false
-        
-        const onJoined = () => {
-          if (!joined) {
-            joined = true
-            console.log('[VideoRoomPage] ✓ Evento joined-meeting disparado')
-            cleanup()
-            resolve({ success: true, via: 'event' })
-          }
-        }
-        
-        const onError = (error) => {
-          if (!joined) {
-            joined = true
-            console.log('[VideoRoomPage] ✗ Erro no join:', error)
-            cleanup()
-            reject(error)
-          }
-        }
-        
-        const cleanup = () => {
-          callFrame.off('joined-meeting', onJoined)
-          callFrame.off('error', onError)
-        }
-        
-        callFrame.once('joined-meeting', onJoined)
-        callFrame.on('error', onError)
-        
-        // Chamar join diretamente - sem UI, sem prejoin!
-        console.log('[VideoRoomPage] 🔄 Chamando callFrame.join() com createCallObject...')
-        callFrame.join({
-          url: sessionData.roomUrl,
-          token: sessionData.dailyToken
-        }).catch(reject)
+      await callFrame.join({
+        url: sessionData.roomUrl,
+        token: sessionData.dailyToken // Usado se a sala for privada
       })
-      
-      console.log('[VideoRoomPage] 🔄 Join promise criada, aguardando resultado...')
-      
-      const joinResult = await Promise.race([
-        joinPromise,
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Join timeout after 90s')), 90000)
-        )
-      ])
-      
-      console.log('[VideoRoomPage] ✓ Join bem-sucedido')
-      console.log('[VideoRoomPage] Join result:', joinResult)
-      
-      const participants = callFrame.participants()
-      console.log('[VideoRoomPage] ★ Participants após 0.5s:', {
-        count: Object.keys(participants).length,
-        list: Object.entries(participants).map(([id, p]) => ({
-          id: id.substring(0, 8),
-          name: p.user_name,
-          local: p.local,
-          videoTrack: !!p.tracks.video?.persistentTrack,
-          audioTrack: !!p.tracks.audio?.persistentTrack
-        }))
-      })
-      
       setIsCallActive(true)
-      
-      // ═══════════════════════════════════════════════════════════════
-      // 📱 ADICIONAR LISTENER DE RESIZE PARA LAYOUT PIP
-      // ═══════════════════════════════════════════════════════════════
-      resizeHandlerRef.current = () => {
-        const container = document.getElementById('daily-video-container')
-        if (container) {
-          console.log('[VideoRoomPage] Window resized:', window.innerWidth, 'x', window.innerHeight)
-          // CSS media queries vão se adaptar automaticamente
-        }
-      }
-      window.addEventListener('resize', resizeHandlerRef.current)
-      console.log('[VideoRoomPage] ✓ Listener de resize adicionado para layout PIP')
-      
-      // ═══════════════════════════════════════════════════════════════
-      // 🎥 ATIVAR CÂMERA E MICROFONE
-      // ═══════════════════════════════════════════════════════════════
-      try {
-        const hasVideo = callFrame.localVideo()
-        const hasAudio = callFrame.localAudio()
-        
-        console.log('[VideoRoomPage] 🎥 Estado dos dispositivos locais:', {
-          video: hasVideo,
-          audio: hasAudio
-        })
-        
-        // Se não estiverem habilitados, habilitar
-        if (!hasVideo) {
-          console.log('[VideoRoomPage] ▶️  Habilitando vídeo local')
-          await callFrame.setLocalVideo(true)
-        }
-        if (!hasAudio) {
-          console.log('[VideoRoomPage] 🔊 Habilitando áudio local')
-          await callFrame.setLocalAudio(true)
-        }
-        
-        console.log('[VideoRoomPage] ✓ Câmera e Microfone habilitados')
-      } catch (err) {
-        console.warn('[VideoRoomPage] ⚠️  Erro ao habilitar dispositivos:', err.message)
-      }
-      
-      // ═══════════════════════════════════════════════════════════════
-      // 🔒 ATIVAR SCREEN WAKE LOCK (evita descanso da tela)
-      // ═══════════════════════════════════════════════════════════════
-      try {
-        if (navigator.wakeLock) {
-          wakeLockRef.current = await navigator.wakeLock.request('screen')
-          console.log('[VideoRoomPage] ✓ Screen Wake Lock ativado')
-          
-          wakeLockRef.current.addEventListener('release', () => {
-            console.log('[VideoRoomPage] Screen Wake Lock foi liberado')
-          })
-        }
-      } catch (err) {
-        console.warn('[VideoRoomPage] Screen Wake Lock não disponível:', err.message)
-      }
     } catch (e) {
-      console.error('[VideoRoomPage] ✗✗✗ ERRO ao entrar na sala')
-      console.error('[VideoRoomPage] Erro type:', typeof e)
-      console.error('[VideoRoomPage] Erro name:', e?.name)
-      console.error('[VideoRoomPage] Erro message:', e?.message)
-      console.error('[VideoRoomPage] Erro toString:', e?.toString())
-      console.error('[VideoRoomPage] Erro stack:', e?.stack)
-      
-      // Se for erro de permissão, informar
-      if (e?.message?.includes('token')) {
-        console.error('[VideoRoomPage] ⚠️  PROBLEMA COM TOKEN - verificar geração no backend')
-        setSystemNotice('Erro: Token inválido ou expirado. Tente novamente.')
-      } else if (e?.message?.includes('room')) {
-        console.error('[VideoRoomPage] ⚠️  PROBLEMA COM ROOM - verificar se room foi criada corretamente')
-        setSystemNotice('Erro: Sala não encontrada ou inválida.')
-      } else if (e?.message?.includes('timeout')) {
-        console.error('[VideoRoomPage] ⚠️  TIMEOUT ao conectar - servidor Daily.co pode estar lento')
-        setSystemNotice('Timeout ao conectar à sala. Verifique sua conexão e tente novamente.')
-      } else {
-        setSystemNotice('Erro ao conectar: ' + (e?.message || 'Erro desconhecido'))
-      }
-      
-      // ❌ Se o join falhou, resetar isCallActive
-      setIsCallActive(false)
-      callAlreadyEndedRef.current = false
-    } finally {
-      // Sempre resetar o guard, independente de sucesso ou erro
-      joinInProgressRef.current = false
+      console.error('Erro ao entrar na sala do Daily', e)
+      setSystemNotice('Erro ao conectar na sala de vídeo.')
     }
   }
 
-  const handleStartByConsultant = async () => {
-    callAlreadyEndedRef.current = false // Reset para nova sessão
-    billingStartedRef.current = false
-    
-    try {
-      // Refetch session para garantir dados atualizados, especialmente pricePerMinute
-      const res = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}`), {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const freshSession = await res.json()
-
-      if (!res.ok) {
-        throw new Error(freshSession.message || 'Erro ao carregar o estado da sessão.')
+  const handleStartByConsultant = () => {
+    // Para o container ser renderizado e a div ficar "block" primeiro,
+    // precisamos ativar isCallActive ANTES de chamar o joinCall, 
+    // ou usar um setTimeout para o React ter tempo de montar a DOM
+    setIsCallActive(true)
+    setTimeout(() => {
+      if (session) {
+        joinCall(session)
       }
-
-      setPresenceState({
-        customerOnline: Boolean(freshSession.customerOnline),
-        consultantOnline: Boolean(freshSession.consultantOnline),
-      })
-
-      if (['cancelled', 'rejected', 'finished'].includes(freshSession.status)) {
-        setSystemNotice('O cliente cancelou ou a chamada já foi encerrada. Não é possível iniciar o atendimento.')
-        navigate('/area-consultor')
-        return
-      }
-
-      if (!freshSession.customerOnline) {
-        setSystemNotice('O cliente ainda não está online na sala. Aguarde antes de iniciar.')
-        return
-      }
-      
-      console.log('[VideoRoomPage] Consultor iniciando. freshSession:', freshSession)
-      console.log('[VideoRoomPage] Consultor - roomUrl:', freshSession.roomUrl)
-      console.log('[VideoRoomPage] Consultor - dailyToken:', freshSession.dailyToken ? `${freshSession.dailyToken.substring(0, 20)}...` : 'UNDEFINED')
-      
-      if (freshSession) {
-        setIsCallActive(true)
-        // Chamando joinCall, que agora cuida de iniciar o billing APÓS conexão bem-sucedida
-        joinCall(freshSession)
-      }
-    } catch (err) {
-      console.error('Erro ao iniciar atendimento:', err)
-      setSystemNotice('Erro ao iniciar atendimento.')
-      setIsCallActive(false)
-      callAlreadyEndedRef.current = false
-    }
+    }, 100)
   }
 
   const handleLeaveCall = async () => {
-    console.log('[VideoRoomPage] handleLeaveCall chamado. callAlreadyEnded:', callAlreadyEndedRef.current)
-    
-    if (callAlreadyEndedRef.current) {
-      console.log('[VideoRoomPage] handleLeaveCall já foi executado, ignorando chamada duplicada')
-      return
-    }
-    
-    callAlreadyEndedRef.current = true
-    billingStartedRef.current = false
-    
-    // ═══════════════════════════════════════════════════════════════
-    // 🔓 LIBERAR SCREEN WAKE LOCK E REMOVER LISTENERS
-    // ═══════════════════════════════════════════════════════════════
-    if (wakeLockRef.current) {
-      try {
-        await wakeLockRef.current.release()
-        wakeLockRef.current = null
-        console.log('[VideoRoomPage] ✓ Screen Wake Lock liberado')
-      } catch (err) {
-        console.warn('[VideoRoomPage] Erro ao liberar Screen Wake Lock:', err.message)
-      }
-    }
-    
-    // Remover listener de resize
-    if (resizeHandlerRef.current) {
-      window.removeEventListener('resize', resizeHandlerRef.current)
-      resizeHandlerRef.current = null
-      console.log('[VideoRoomPage] ✓ Listener de resize removido')
-    }
-    
-    console.log('[VideoRoomPage] Estado atual:', { isCallActive, callStartedAt, sessionId, billingConnected: billing.isConnected, billingActive: !!billing.activeSession })
-    
     if (callFrameRef.current) {
-      console.log('[VideoRoomPage] Limpando Daily.io frame')
-      try {
-        await callFrameRef.current.leave()
-      } catch (e) {
-        console.error('[VideoRoomPage] Erro ao sair da room:', e)
-      }
-      if (callFrameRef.current) {
-        callFrameRef.current.destroy()
-      }
+      await callFrameRef.current.leave()
+      callFrameRef.current.destroy()
       callFrameRef.current = null
-    } else {
-      console.log('[VideoRoomPage] callFrameRef.current é null, pulando limpeza do Daily')
     }
     
-    // Usar tempo real acumulado do billing (prioridade 1)
-    // Se billing.elapsedSeconds for 0 mas tivermos callStartedAt válido, calcular diferença
-    let durationSeconds = 0
-    
-    if (billing.elapsedSeconds > 0) {
-      durationSeconds = billing.elapsedSeconds
-      console.log('[VideoRoomPage] Usando billing.elapsedSeconds:', durationSeconds)
-    } else if (savedElapsedSecondsRef.current > 0) {
-      // Fallback 2: Usar o elapsedSeconds que foi salvo quando other_user_left_call foi disparado
-      durationSeconds = savedElapsedSecondsRef.current
-      console.log('[VideoRoomPage] Usando savedElapsedSecondsRef (capturado no socket.io event):', durationSeconds)
-    } else if (callStartedAt) {
-      durationSeconds = Math.floor((Date.now() - callStartedAt) / 1000)
-      console.log('[VideoRoomPage] Usando wall clock (Date.now() - callStartedAt):', durationSeconds)
-    } else {
-      console.log('[VideoRoomPage] Nenhuma duração disponível (billing.elapsedSeconds=0, callStartedAt=null)')
-    }
-    
-    // Calcular consumo total (para qualquer participante)
-    const totalConsumption = (durationSeconds / 60) * (session?.pricePerMinute || 0)
-    
-    // Backend vai aplicar a comissão. Frontend apenas envia o valor total que o consultor "ganhou"
-    const consultantEarnings = totalConsumption
-
-    console.log('[VideoRoomPage] Chamada finalizada. durationSeconds:', durationSeconds, 'pricePerMinute:', session?.pricePerMinute, 'totalConsumption:', totalConsumption.toFixed(2), 'isConsultant:', session?.isConsultant, 'consultantEarnings:', consultantEarnings.toFixed(2))
-    console.log('[VideoRoomPage] billing state antes de stopSession:', { isConnected: billing.isConnected, elapsedSeconds: billing.elapsedSeconds, consumedValue: billing.consumedValue })
-
-    // Para faturamento (cliente ou consultor)
-    console.log('[VideoRoomPage] Chamando billing.stopSession()')
-    billing.stopSession('handleLeaveCall')
-    
-    console.log('[VideoRoomPage] billing state após stopSession:', { isConnected: billing.isConnected, elapsedSeconds: billing.elapsedSeconds })
-
-    // Salvar sessão com duração e earnings
-    try {
-      const finishResponse = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/finish`), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ 
-          status: 'finished',
-          durationSeconds,
-          totalConsumption,
-          consultantEarnings
-        })
-      })
-      
-      if (finishResponse.ok) {
-        const finishData = await finishResponse.json()
-        console.log('[VideoRoomPage] Sessão finalizada no backend. newUserBalance:', finishData.newUserBalance)
-        
-        // Atualizar saldo do usuário no contexto
-        if (finishData.newUserBalance !== undefined) {
-          console.log('[VideoRoomPage] Atualizando saldo do usuário para:', finishData.newUserBalance)
-          updateProfile({ minutesBalance: finishData.newUserBalance })
-        }
-      }
-    } catch (err) {
-      console.error('[VideoRoomPage] Erro ao finalizar sessão:', err)
+    if (!session?.isConsultant) {
+      billing.stopSession()
     }
 
-    // Emitir evento para o outro participante também sair
-    if (socketRef.current && !otherUserLeftRef.current) {
-      socketRef.current.emit('user_leaving_call', { sessionId })
-    }
+    await fetch(`/api/video-sessions/${sessionId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status: 'finished' })
+    })
 
-    if (session?.isConsultant) {
-      navigate('/area-consultor')
-      setSystemNotice('Chamada encerrada com sucesso.')
-    } else {
-      // Mostrar modal de avaliação para o cliente antes de navegar
-      setReviewModal({
-        isOpen: true,
-        consultantId: session?.consultantId ?? '',
-        consultantName: session?.consultantName ?? 'Consultor',
-        sessionId,
-      })
-    }
+    navigate(session?.isConsultant ? '/area-consultor' : '/consultores')
+    setSystemNotice('Chamada encerrada com sucesso.')
   }
-
-  const handleCancelWaiting = async () => {
-    setShowCancelConfirm(false)
-    try {
-      await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status: 'cancelled' })
-      })
-    } catch {
-      setSystemNotice('Não foi possível cancelar a chamada no momento.')
-    }
-    navigate('/consultores')
-  }
-
-  // Auto-encerrar chamada Daily quando billing parar por saldo zerado
-  useEffect(() => {
-    if (
-      !billing.isConnected &&
-      isCallActive &&
-      billingStartedRef.current &&
-      !callAlreadyEndedRef.current
-    ) {
-      console.log('[VideoRoomPage] Billing desconectou com chamada ativa — encerrando chamada por saldo zerado')
-      handleLeaveCall()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [billing.isConnected, isCallActive])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (resizeHandlerRef.current) {
-        window.removeEventListener('resize', resizeHandlerRef.current)
-        resizeHandlerRef.current = null
-      }
-      
-      // Liberar Screen Wake Lock ao desmontar
-      if (wakeLockRef.current) {
-        wakeLockRef.current.release().catch(() => {})
-        wakeLockRef.current = null
-      }
-      
       if (callFrameRef.current) {
         callFrameRef.current.leave()
         callFrameRef.current.destroy()
       }
-      // NÃO chamar billing.stopSession() aqui - deve ser explícito em handleLeaveCall
+      if (isCallActive && !session?.isConsultant) {
+        billing.stopSession()
+      }
     }
-  }, [])
+  }, [isCallActive, session])
 
   if (loading) {
     return (
@@ -1040,35 +183,6 @@ export function VideoRoomPage() {
         <div 
           className={`relative overflow-hidden rounded-2xl border border-mystic-gold/30 bg-black/50 shadow-[0_0_30px_rgba(197,160,89,0.15)] ${isCallActive ? 'h-[70vh]' : 'h-auto p-8 text-center'}`}
         >
-          {isCallActive && (
-            <div className="absolute left-4 top-4 right-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-mystic-gold/30 bg-black/60 px-4 py-3 backdrop-blur-md">
-              <div className="flex items-center gap-3 text-xs text-amber-50">
-                <span className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/40 px-3 py-2">
-                  <Clock3 size={16} className="text-mystic-goldSoft" />
-                  Tempo: {formatElapsed(localElapsedSeconds)}
-                </span>
-                {session.isConsultant ? (
-                  <span className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/40 px-3 py-2">
-                    <Wallet size={16} className="text-mystic-goldSoft" />
-                    Total (provisório): R$ {Number(billing.consumedValue ?? 0).toFixed(2)}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/20 bg-black/40 px-3 py-2">
-                    <Wallet size={16} className="text-mystic-goldSoft" />
-                    Minutos restantes: {Number(billing.remainingMinutes ?? 0).toFixed(2)}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={handleLeaveCall}
-                className="flex items-center gap-2 rounded-lg bg-red-600/90 px-4 py-2 text-xs font-bold text-white transition hover:bg-red-500"
-              >
-                <PhoneOff size={16} />
-                Encerrar
-              </button>
-            </div>
-          )}
-
           {/* Waiting Room */}
           {!isCallActive && (
             <div className="flex flex-col items-center justify-center py-12">
@@ -1080,18 +194,16 @@ export function VideoRoomPage() {
               </h2>
               <p className="max-w-md text-amber-100/70">
                 {session.isConsultant 
-                  ? (presenceState.customerOnline
-                      ? 'Cliente online detectado. Entrando na sala e validando a sessão.'
-                      : 'Aguardando o cliente ficar online na sala para liberar o atendimento.')
+                  ? 'O cliente está esperando. Clique no botão abaixo para iniciar a videochamada.'
                   : 'Sua sala já foi criada e o consultor foi notificado por e-mail e painel. Aguarde que estamos chamando o Consultor para lhe atender.'}
               </p>
               
-              {!session.isConsultant && (
+              {session.isConsultant && (
                 <button
-                  onClick={() => setShowCancelConfirm(true)}
-                  className="mt-4 rounded-lg border border-red-400/50 bg-red-600/20 px-6 py-3 text-sm font-bold text-red-200 transition hover:bg-red-600/30"
+                  onClick={handleStartByConsultant}
+                  className="mt-8 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 px-8 py-3 font-bold text-black transition hover:brightness-110"
                 >
-                  Cancelar Chamada
+                  Iniciar Atendimento
                 </button>
               )}
             </div>
@@ -1113,77 +225,6 @@ export function VideoRoomPage() {
           )}
         </div>
       </div>
-
-      {showCancelConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
-            <div className="mb-4 flex items-center justify-center text-amber-400">
-              <XCircle size={48} />
-            </div>
-            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">
-              Cancelar chamada?
-            </h3>
-            <p className="mb-6 text-center text-amber-100/80">
-              O consultor pode estar se preparando para te atender melhor. Tem certeza que deseja cancelar?
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={handleCancelWaiting}
-                className="w-full rounded-lg bg-red-600/90 py-3 font-bold text-white transition hover:bg-red-500"
-              >
-                Sim, cancelar
-              </button>
-              <button
-                onClick={() => setShowCancelConfirm(false)}
-                className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
-              >
-                Voltar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {endModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
-            <div className="mb-4 flex items-center justify-center text-amber-400">
-              <XCircle size={48} />
-            </div>
-            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">
-              {endModal.title}
-            </h3>
-            <p className="mb-6 text-center text-amber-100/80">
-              {endModal.message}
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => navigate('/consultores')}
-                className="w-full rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 py-3 font-bold text-black transition hover:brightness-110"
-              >
-                {endModal.actionLabel}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <ReviewModal
-        isOpen={reviewModal.isOpen}
-        consultantName={reviewModal.consultantName}
-        consultantId={reviewModal.consultantId}
-        referenceId={reviewModal.sessionId}
-        sessionType="video"
-        token={token}
-        onClose={() => {
-          setReviewModal(r => ({ ...r, isOpen: false }))
-          navigate('/consultores')
-          setSystemNotice('Chamada encerrada com sucesso.')
-        }}
-        onSubmitted={() => {
-          setSystemNotice('Avaliação enviada! Obrigado pelo feedback.')
-        }}
-      />
     </PageShell>
   )
 }

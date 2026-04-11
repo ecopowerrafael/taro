@@ -66,6 +66,7 @@ export function AdminPanel({
   onOracleCredentialsChange,
   adminUsers,
   onRefreshAdminUsers,
+  onResetUserOracle,
   onSendPushBroadcast,
   onUpdateAdminUser,
   adminDashboardStats,
@@ -252,6 +253,7 @@ export function AdminPanel({
   const [editingUser, setEditingUser] = useState(null)
   const [userEditDraft, setUserEditDraft] = useState(null)
   const [userEditSaving, setUserEditSaving] = useState(false)
+  const [userResetSaving, setUserResetSaving] = useState(false)
   const [userEditFeedback, setUserEditFeedback] = useState('')
 
   // Estados para criação de avaliação mock
@@ -655,6 +657,24 @@ export function AdminPanel({
     }
 
     setUserEditSaving(false)
+  }
+
+  const handleResetOracle = async () => {
+    if (!userEditDraft?.id) return
+    if (!window.confirm('Tem certeza que deseja zerar os dados do mapa astral deste usuário? Ele poderá gerar um novo mapa gratuito.')) return
+
+    setUserResetSaving(true)
+    setUserEditFeedback('')
+
+    const result = await onResetUserOracle?.(userEditDraft.id)
+
+    if (result?.ok) {
+      setUserEditFeedback('Dados do mapa astral resetados com sucesso.')
+    } else {
+      setUserEditFeedback(result?.message || 'Erro ao resetar dados do mapa astral.')
+    }
+
+    setUserResetSaving(false)
   }
 
   return (
@@ -2082,20 +2102,32 @@ export function AdminPanel({
 
             {userEditFeedback && <p className="mt-3 text-xs text-amber-100/80">{userEditFeedback}</p>}
 
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                onClick={() => setEditingUser(null)}
-                className="rounded-lg border border-amber-100/35 px-3 py-2 text-xs text-amber-100/80 transition hover:bg-white/5"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={saveEditedUser}
-                disabled={userEditSaving}
-                className="rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200 transition enabled:hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {userEditSaving ? 'Salvando...' : 'Salvar alterações'}
-              </button>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleResetOracle}
+                  disabled={userResetSaving || userEditSaving}
+                  className="rounded-lg border border-mystic-gold/60 bg-mystic-gold/10 px-3 py-2 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/20 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {userResetSaving ? 'Resetando...' : 'Zerar Mapa Astral'}
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditingUser(null)}
+                  className="rounded-lg border border-amber-100/35 px-3 py-2 text-xs text-amber-100/80 transition hover:bg-white/5"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={saveEditedUser}
+                  disabled={userEditSaving || userResetSaving}
+                  className="rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200 transition enabled:hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {userEditSaving ? 'Salvando...' : 'Salvar alterações'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2236,6 +2268,7 @@ export function AdminPanel({
                 <option>Online</option>
                 <option>Ocupado</option>
                 <option>Offline</option>
+                <option>Pendente</option>
               </select>
             </label>
           </div>

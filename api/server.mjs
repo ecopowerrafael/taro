@@ -547,7 +547,7 @@ app.use(express.static(distPath))
 
 // Middleware para diagnóstico de versão
 app.use((_req, res, next) => {
-  res.setHeader('X-Backend-Version', 'V5-STABLE')
+  res.setHeader('X-Backend-Version', 'V5-STABLE-RESET-ORACLE')
   next()
 })
 

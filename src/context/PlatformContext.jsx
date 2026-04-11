@@ -1404,6 +1404,28 @@ export function PlatformProvider({ children }) {
     }
   }
 
+  const resetUserOracleData = async (userId) => {
+    try {
+      const response = await fetch(buildApiUrl(`/api/auth/admin/users/${userId}/reset-oracle`), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.message || 'Erro ao resetar dados do mapa astral.' }
+      }
+
+      await fetchAdminUsers()
+      return { ok: true, message: payload.message || 'Dados do mapa astral resetados com sucesso.' }
+    } catch (error) {
+      console.error('[resetUserOracleData] Erro ao resetar dados:', error)
+      return { ok: false, message: 'Falha de conexão ao resetar dados.' }
+    }
+  }
+
   const fetchAdminDashboardStats = async () => {
     if (!token) {
       return
@@ -2397,6 +2419,7 @@ export function PlatformProvider({ children }) {
     fetchAdminUsers,
     sendAdminPushBroadcast,
     updateAdminUser,
+    resetUserOracleData,
     fetchAdminDashboardStats,
   }
 

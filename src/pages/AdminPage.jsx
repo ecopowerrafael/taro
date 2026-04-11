@@ -33,6 +33,7 @@ export function AdminPage() {
     fetchAdminUsers,
     sendAdminPushBroadcast,
     updateAdminUser,
+    resetUserOracleData,
     adminDashboardStats,
     fetchAdminDashboardStats,
     spells,
@@ -61,11 +62,19 @@ export function AdminPage() {
     fetchAdminDashboardStats()
   }, [])
 
+  // Filtra pendentes corretamente
+  const realPendingConsultants = Array.isArray(consultants)
+    ? consultants.filter(c => (c.status === 'Pendente' || c.status === 'pending'))
+    : [];
+  const realApprovedConsultants = Array.isArray(consultants)
+    ? consultants.filter(c => c.status !== 'Pendente' && c.status !== 'pending')
+    : [];
+
   return (
     <PageShell title="Painel Administrativo" subtitle="Gestão de consultores, finanças e plataforma.">
       <AdminPanel
-        consultants={consultants}
-        pendingConsultants={pendingConsultants}
+        consultants={realApprovedConsultants}
+        pendingConsultants={realPendingConsultants}
         minutePackages={minutePackages}
         updateMinutePackage={updateMinutePackage}
         setFeaturedPackage={setFeaturedPackage}
@@ -91,6 +100,7 @@ export function AdminPage() {
         updateWithdrawalStatus={updateWithdrawalStatus}
         adminUsers={adminUsers}
         onRefreshAdminUsers={fetchAdminUsers}
+        onResetUserOracle={resetUserOracleData}
         onSendPushBroadcast={sendAdminPushBroadcast}
         onUpdateAdminUser={updateAdminUser}
         adminDashboardStats={adminDashboardStats}

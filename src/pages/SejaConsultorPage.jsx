@@ -185,10 +185,21 @@ export function SejaConsultorPage() {
               <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
                 Data de Nascimento
                 <input
-                  type="date"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d{2}/\d{2}/\d{4}"
+                  maxLength={10}
                   required
+                  placeholder="DD/MM/AAAA"
                   value={form.birthDate}
-                  onChange={(event) => updateField('birthDate', event.target.value)}
+                  onChange={(event) => {
+                    let v = event.target.value.replace(/\D/g, "");
+                    if (v.length > 8) v = v.slice(0, 8);
+                    let masked = v;
+                    if (v.length > 4) masked = v.slice(0,2) + "/" + v.slice(2,4) + "/" + v.slice(4);
+                    else if (v.length > 2) masked = v.slice(0,2) + "/" + v.slice(2);
+                    updateField('birthDate', masked);
+                  }}
                   className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
                 />
               </label>
