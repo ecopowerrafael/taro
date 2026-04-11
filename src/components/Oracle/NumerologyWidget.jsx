@@ -246,13 +246,22 @@ export function NumerologyWidget() {
                   <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-mystic-gold" /> Compatibilidade Numerológica Profunda.</li>
                 </ul>
 
-                <Link 
-                  to="/numerologia"
+                <button
+                  onClick={() => setShowPurchaseModal(true)}
                   className="w-full py-4 rounded-xl bg-white text-black font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-mystic-gold transition-colors"
                 >
                   <Lock className="w-3 h-3" />
                   Desbloquear Mapa Completo
-                </Link>
+                </button>
+
+                {showPurchaseModal && (
+                  <NumerologyPurchaseModal
+                    onClose={() => setShowPurchaseModal(false)}
+                    onSuccess={() => setShowPurchaseModal(false)}
+                  />
+                )}
+              import { NumerologyPurchaseModal } from './NumerologyPurchaseModal'
+                const [showPurchaseModal, setShowPurchaseModal] = useState(false)
               </div>
 
               <button 
