@@ -97,6 +97,8 @@ export function HomePage() {
     // ...restante do código do useEffect...
   }, [shouldStartCounters])
 
+  return (
+    <div>
       {/* FOOTER */}
       <footer className="relative border-t border-mystic-gold/20 bg-mystic-black pt-20 pb-10 overflow-hidden">
         {/* Footer Glow */}
