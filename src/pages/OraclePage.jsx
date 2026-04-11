@@ -559,9 +559,27 @@ export function OraclePage() {
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-                className="absolute -inset-8 opacity-20"
+                className="absolute -inset-12 opacity-30"
               >
-                <img src="/zodiac-wheel.png" alt="" className="h-full w-full object-contain" />
+                <svg viewBox="0 0 200 200" className="h-full w-full">
+                  <defs>
+                    <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#D4AF37" stopOpacity="0.2" />
+                      <stop offset="50%" stopColor="#D4AF37" stopOpacity="0.6" />
+                      <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.2" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="100" cy="100" r="90" fill="none" stroke="url(#ring-grad)" strokeWidth="0.5" strokeDasharray="4 8" />
+                  <circle cx="100" cy="100" r="82" fill="none" stroke="url(#ring-grad)" strokeWidth="0.2" opacity="0.5" />
+                  {[...Array(12)].map((_, i) => (
+                    <line
+                      key={i}
+                      x1="100" y1="10" x2="100" y2="20"
+                      transform={`rotate(${i * 30} 100 100)`}
+                      stroke="#D4AF37" strokeWidth="0.5" opacity="0.4"
+                    />
+                  ))}
+                </svg>
               </motion.div>
               <motion.img
                 src="/oraculo.png"
