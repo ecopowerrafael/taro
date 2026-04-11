@@ -35,7 +35,7 @@ function degToRad(deg) {
   return (deg - 90) * (Math.PI / 180);
 }
 
-export function PlanetActor({ planetName, degree, visible, onArrival, centerY }) {
+export function PlanetActor({ planetName, degree, visible, onArrival, centerY, isBackground }) {
   const [arrived, setArrived] = useState(false);
 
   useEffect(() => {
@@ -50,6 +50,27 @@ export function PlanetActor({ planetName, degree, visible, onArrival, centerY })
   const rad     = degToRad(Number(degree) || 0);
   const targetX = cx + R * Math.cos(rad);
   const targetY = cy + R * Math.sin(rad);
+
+  if (isBackground) {
+    return (
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          left: targetX,
+          top: targetY,
+          transform: 'translate(-50%, -50%)',
+          zIndex: 25,
+        }}
+      >
+        <img
+          src={`/planets/${planetName.toLowerCase()}.png`}
+          alt={planetName}
+          className="w-6 h-6 sm:w-8 sm:h-8 opacity-40 grayscale-[0.5]"
+          onError={(e) => { e.target.src = '/planets/planet-default.png'; }}
+        />
+      </div>
+    );
+  }
 
   const src  = PLANET_PNG[planetName];
   const glow = PLANET_GLOW[planetName] || PLANET_GLOW.Sun;

@@ -4,7 +4,7 @@ import { usePlatformContext } from "../context/platform-context";
 import { useNavigate } from 'react-router-dom';
 import { SmokeBackground } from '../components/Oracle/SmokeBackground';
 import { CityAutocomplete } from '../components/Oracle/CityAutocomplete';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import Typewriter from 'typewriter-effect';
 import { AstrologyChart } from '../components/Oracle/AstrologyChart';
 import { AstralReadingPurchaseModal } from '../components/AstralReadingPurchaseModal';
@@ -94,11 +94,24 @@ export function OraclePage() {
   const [oracleTab, setOracleTab] = useState(urlParams?.get('tab') === 'diario' ? 'daily' : 'natal');
   const [dailyTransits, setDailyTransits] = useState([]);
   const [dailyLoading, setDailyLoading] = useState(false);
+  const [natalPlanetsForDaily, setNatalPlanetsForDaily] = useState([]);
 
   const fetchDailyTransits = async () => {
     setDailyLoading(true);
     setErrorMsg('');
     try {
+      // 1. Primeiro buscar os planetas natais se não tiver
+      if (natalPlanetsForDaily.length === 0) {
+        const resChart = await fetch(buildApiUrl('/api/oracle/chart'), {
+          headers: { Authorization: `Bearer ${localStorage.getItem('taro_token')}` }
+        });
+        const dataChart = await resChart.json();
+        if (resChart.ok && dataChart.planets) {
+          setNatalPlanetsForDaily(dataChart.planets);
+        }
+      }
+
+      // 2. Buscar trânsitos
       const res = await fetch(buildApiUrl('/api/oracle/transit'), {
         headers: { Authorization: `Bearer ${localStorage.getItem('taro_token')}` }
       });
@@ -535,41 +548,51 @@ export function OraclePage() {
       <div className="z-10 relative flex flex-col items-center max-w-lg mx-auto p-4 text-center">
       <AnimatePresence mode="wait">
         {step === 'intro' && (
-          <motion.div 
+          <motion.div
             key="intro"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.4 } }}
+            className="z-10 flex flex-col items-center gap-8 px-6 text-center"
           >
-          <img src="/mapa-astral.png" alt="Mapa Astral" className="w-32 h-32 mx-auto drop-shadow-[0_0_20px_rgba(255,215,0,0.5)] object-contain" />
-          <h1 className="text-3xl font-serif text-mystic-gold">Mapa Astral</h1>
-          <p className="text-gray-300 px-4 leading-relaxed">
-            Sincronize-se com o Universo. Na Astria, transformamos dados astronômicos em sabedoria ancestral. Descubra os segredos que moldam sua personalidade, seus desafios e sua força oculta. O Cosmo tem uma mensagem para você. Vamos ouvi-la?
-            </p>
-            <div className="relative inline-block mt-8">
-              <ButtonExplosion isExploding={isExploding} />
-              <button
-                onClick={handleNextStep}
-                className="relative z-10 bg-mystic-gold text-mystic-dark px-8 py-3 rounded-full font-bold shadow-[0_0_15px_rgba(255,215,0,0.5)] uppercase tracking-wider hover:scale-105 transition-transform"
+            <div className="relative">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+                className="absolute -inset-8 opacity-20"
               >
-                {profile?.oracle_city ? 'Ver meu Mapa Astral' : 'Gerar meu Mapa Astral'}
-              </button>
+                <img src="/zodiac-wheel.png" alt="" className="h-full w-full object-contain" />
+              </motion.div>
+              <motion.img
+                src="/oraculo.png"
+                alt="Oráculo"
+                className="relative h-48 w-48 object-contain drop-shadow-[0_0_30px_rgba(255,215,0,0.3)] sm:h-64 sm:w-64"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+              />
             </div>
 
-            <div className="mt-8 px-6 pb-6 pt-4 bg-black/40 border border-mystic-gold/20 rounded-2xl max-w-sm mx-auto shadow-inner">
-              <span className="block text-xs font-serif text-mystic-gold mb-2 font-bold tracking-widest uppercase">"Sua biografia escrita pelo Cosmo"</span>
-              <p className="text-[11px] text-gray-400 leading-relaxed text-justify">
-                Nosso Oráculo utiliza cálculos reais de órbitas planetárias — os mesmos dados usados para navegação espacial — para garantir que seu mapa seja tecnicamente perfeito. A partir dessa base científica, nossa inteligência interpreta os símbolos e arquétipos ocidentais, revelando o mapa da sua essência.
+            <div className="max-w-xl space-y-4">
+              <h1 className="font-playfair text-4xl font-bold tracking-tight text-mystic-gold sm:text-6xl">
+                Oráculo Diário
+              </h1>
+              <p className="font-serif text-lg leading-relaxed text-amber-100/80 sm:text-xl">
+                O céu nunca é o mesmo duas vezes. Hoje, os astros se alinham em uma configuração única para você. Deixe que o Oráculo decifre as frequências deste dia e revele onde sua energia deve brilhar. O Universo está sussurrando agora. Você está pronto para sintonizar?
               </p>
             </div>
 
-            <button
-              onClick={() => navigate(-1)}
-              className="block mx-auto text-sm text-gray-400 mt-4 hover:text-white"
-            >
-              Voltar
-            </button>
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <button
+                onClick={handleNextStep}
+                className="group relative flex items-center justify-center overflow-hidden rounded-full bg-mystic-gold px-10 py-4 font-bold uppercase tracking-widest text-mystic-dark shadow-[0_0_30px_rgba(255,215,0,0.4)] transition-all hover:scale-105 active:scale-95"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Fazer Minha Leitura Diária
+                </span>
+                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
+              </button>
+            </div>
           </motion.div>
         )}
 
@@ -808,6 +831,7 @@ export function OraclePage() {
                 ) : dailyTransits.length > 0 ? (
                   <CinematicAstralReading
                     mode="daily"
+                    planets={natalPlanetsForDaily}
                     transits={dailyTransits}
                     lat={Number(profile?.oracle_lat ?? birthLocation?.lat)}
                     lng={Number(profile?.oracle_lng ?? birthLocation?.lng)}

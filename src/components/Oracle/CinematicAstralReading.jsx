@@ -167,6 +167,22 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
         centerY={centerY}
       />
 
+      {/* Camada 25 — Planetas Natais em segundo plano (Modo Diário) */}
+      {mode === 'daily' && planets && planets.length > 0 && scene === 'planet_scene' && (
+        <div className="pointer-events-none opacity-30">
+          {planets.map((p) => (
+            <PlanetActor
+              key={`natal-${p.name}`}
+              planetName={p.name}
+              degree={p.longitude}
+              visible={true}
+              centerY={centerY}
+              isBackground={true}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Camada 30 — Planeta ativo */}
       {scene === 'planet_scene' && currentPlanet && (
         <PlanetActor

@@ -141,8 +141,17 @@ export async function getDailyTransits(natalPlanets) {
   const transitPlanets = await calculatePositions(now);
   const activeAspects = [];
 
+  // Planetas que queremos monitorar nos trânsitos (evitar asteroides ou pontos secundários se existirem)
+  const mainPlanets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Marte', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Rahu', 'Ketu'];
+
   for (const tp of transitPlanets) {
+    // Apenas processar planetas principais do trânsito
+    if (!mainPlanets.includes(tp.name) && tp.name !== 'Mars') continue;
+
     for (const np of natalPlanets) {
+      // Apenas processar planetas principais do natal
+      if (!mainPlanets.includes(np.name) && np.name !== 'Mars' && np.name !== 'Ascendant' && np.name !== 'Meio do Céu') continue;
+
       const aspect = detectAspect(tp.longitude, np.longitude);
       if (aspect) {
         const interpretation = generateInterpretation(tp.name, np.name, aspect);
@@ -152,19 +161,23 @@ export async function getDailyTransits(natalPlanets) {
             natalPlanet: np,
             aspect,
             interpretation,
-            orb: Math.abs(tp.longitude - np.longitude) // Simplificado, ideal usar a dist normalizada
+            orb: Math.abs(tp.longitude - np.longitude)
           });
         }
       }
     }
   }
 
-  // Priorização: Orbe mais estreito primeiro
-  return activeAspects.sort((a, b) => {
-    const distA = Math.abs(a.transitPlanet.longitude - a.natalPlanet.longitude);
-    const distB = Math.abs(b.transitPlanet.longitude - b.natalPlanet.longitude);
-    const orbA = distA > 180 ? 360 - distA : distA;
-    const orbB = distB > 180 ? 360 - distB : distB;
-    return orbA - orbB;
-  });
+  // Priorização: 
+  // 1. Orbe mais estreito (aspecto mais exato)
+  // 2. Limitar a 12 aspectos mais importantes para evitar poluição visual
+  return activeAspects
+    .sort((a, b) => {
+      const distA = Math.abs(a.transitPlanet.longitude - a.natalPlanet.longitude);
+      const distB = Math.abs(b.transitPlanet.longitude - b.natalPlanet.longitude);
+      const orbA = distA > 180 ? 360 - distA : distA;
+      const orbB = distB > 180 ? 360 - distB : distB;
+      return orbA - orbB;
+    })
+    .slice(0, 12);
 }
