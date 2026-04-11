@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Typewriter from 'typewriter-effect';
 import { MapBackground } from './MapBackground';
@@ -72,6 +72,18 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
   const [planetIndex, setPlanetIndex] = useState(0);
   const [arrived,     setArrived]     = useState(false);
   const [textKey,     setTextKey]     = useState(0);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isDesktop = windowWidth >= 1024;
+  const mapHeight = isDesktop ? '87.5vh' : '100vh';
+  const centerY   = isDesktop ? (window.innerHeight * 0.875) / 2 : window.innerHeight / 2;
+  const centerYStr = isDesktop ? '43.75vh' : '50vh';
 
   // Filtra e ordena planetas conforme PLANET_ORDER
   const sortedPlanets = useMemo(() =>
@@ -123,12 +135,14 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
     <div className="fixed inset-0 z-50 bg-[#05000A]">
 
       {/* Camada 0 — Mapa OSM */}
-      <MapBackground
-        lat={lat}
-        lng={lng}
-        onReady={handleMapReady}
-        zoomOut={scene === 'grand_finale'}
-      />
+      <div style={{ height: mapHeight, position: 'relative', overflow: 'hidden' }}>
+        <MapBackground
+          lat={lat}
+          lng={lng}
+          onReady={handleMapReady}
+          zoomOut={scene === 'grand_finale'}
+        />
+      </div>
 
       {/* Camada 10 — Poeira estelar */}
       <StarField />
@@ -137,6 +151,7 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
       <ZodiacOverlay
         visible={scene !== 'map_zoom'}
         activeSign={scene === 'planet_scene' ? signEn : null}
+        centerY={centerYStr}
       />
 
       {/* Camada 30 — Planeta ativo */}
@@ -146,6 +161,7 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
           degree={currentPlanet.longitude}
           visible={true}
           onArrival={handleArrival}
+          centerY={centerY}
         />
       )}
 
@@ -163,27 +179,34 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 220, opacity: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="fixed bottom-0 left-0 right-0 z-40"
+            className="fixed left-0 right-0 z-40"
             style={{
-              height: '42vh',
-              background: 'rgba(5,0,10,0.90)',
+              bottom: isDesktop ? 0 : '160px',
+              height: isDesktop ? '12.5vh' : '25vh',
+              background: 'rgba(5,0,10,0.95)',
               backdropFilter: 'blur(20px)',
               borderTop: '1px solid rgba(212,175,55,0.35)',
               overflowY: 'auto',
-              padding: '20px 24px 96px',
+              padding: isDesktop ? '12px 24px' : '16px 20px 20px',
+              display: isDesktop ? 'flex' : 'block',
+              alignItems: isDesktop ? 'center' : 'initial',
+              gap: '24px',
+              boxShadow: '0 -10px 30px rgba(0,0,0,0.5)'
             }}
           >
-            <p className="text-mystic-gold font-serif text-lg mb-1 drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">
-              {planetPt} em {signPt}
-            </p>
-            {currentPlanet?.is_retrograde && (
-              <span className="text-xs text-amber-400 mb-2 block">Retrógrado</span>
-            )}
-            <div className="text-gray-300 text-sm leading-relaxed font-serif">
+            <div className={isDesktop ? 'flex-shrink-0 min-w-[150px]' : 'mb-2'}>
+              <p className="text-mystic-gold font-serif text-lg mb-0 drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">
+                {planetPt} em {signPt}
+              </p>
+              {currentPlanet?.is_retrograde && (
+                <span className="text-[10px] text-amber-400 block uppercase tracking-tighter">Retrógrado</span>
+              )}
+            </div>
+            <div className="text-gray-300 text-sm leading-relaxed font-serif overflow-y-auto max-h-full">
               <Typewriter
                 key={textKey}
                 onInit={(tw) => tw.typeString(interpretation).start()}
-                options={{ delay: 28, cursor: '✧' }}
+                options={{ delay: 20, cursor: '✧' }}
               />
             </div>
           </motion.div>
@@ -196,41 +219,46 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
+          className="fixed left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
           style={{
-            background: 'rgba(5,0,10,0.75)',
-            backdropFilter: 'blur(12px)',
-            borderTop: '1px solid rgba(212,175,55,0.2)',
+            bottom: isDesktop ? 0 : '80px',
+            height: isDesktop ? 'auto' : '80px',
+            background: isDesktop ? 'transparent' : 'rgba(5,0,10,0.85)',
+            backdropFilter: isDesktop ? 'none' : 'blur(12px)',
+            borderTop: isDesktop ? 'none' : '1px solid rgba(212,175,55,0.2)',
+            pointerEvents: 'none'
           }}
         >
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-1 text-mystic-gold border border-mystic-gold/40 rounded-full px-4 py-2 text-sm font-semibold hover:bg-mystic-gold/10 transition-all"
-          >
-            <ChevronLeft size={16} /> Voltar
-          </button>
+          <div className="flex items-center justify-between w-full pointer-events-auto">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-1 text-mystic-gold border border-mystic-gold/40 rounded-full px-4 py-2 text-sm font-semibold hover:bg-mystic-gold/10 transition-all bg-black/40 backdrop-blur-md"
+            >
+              <ChevronLeft size={16} /> Voltar
+            </button>
 
-          <span className="text-xs text-amber-100/50">
-            {planetIndex + 1} / {sortedPlanets.length}
-          </span>
+            <span className="text-xs text-amber-100/50 bg-black/40 px-3 py-1 rounded-full backdrop-blur-md">
+              {planetIndex + 1} / {sortedPlanets.length}
+            </span>
 
-          <AnimatePresence>
-            {arrived && (
-              <motion.button
-                key="next-btn"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: [1, 1.06, 1] }}
-                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1.5 }}
-                onClick={handleNext}
-                className="flex items-center gap-1 bg-mystic-gold text-mystic-dark rounded-full px-4 py-2 text-sm font-bold uppercase tracking-wider shadow-[0_0_14px_rgba(255,215,0,0.4)] hover:scale-105"
-              >
-                {isLastPlanet
-                  ? <><CheckCircle size={16} /> Ver Resumo</>
-                  : <>Próxima Leitura <ChevronRight size={16} /></>
-                }
-              </motion.button>
-            )}
-          </AnimatePresence>
+            <AnimatePresence>
+              {arrived && (
+                <motion.button
+                  key="next-btn"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: [1, 1.06, 1] }}
+                  transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1.5 }}
+                  onClick={handleNext}
+                  className="flex items-center gap-1 bg-mystic-gold text-mystic-dark rounded-full px-4 py-2 text-sm font-bold uppercase tracking-wider shadow-[0_0_14px_rgba(255,215,0,0.4)] hover:scale-105"
+                >
+                  {isLastPlanet
+                    ? <><CheckCircle size={16} /> Ver Resumo</>
+                    : <>Próxima Leitura <ChevronRight size={16} /></>
+                  }
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
         </motion.div>
       )}
 

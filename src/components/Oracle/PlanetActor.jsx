@@ -35,7 +35,7 @@ function degToRad(deg) {
   return (deg - 90) * (Math.PI / 180);
 }
 
-export function PlanetActor({ planetName, degree, visible, onArrival }) {
+export function PlanetActor({ planetName, degree, visible, onArrival, centerY }) {
   const [arrived, setArrived] = useState(false);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function PlanetActor({ planetName, degree, visible, onArrival }) {
   const vmin = Math.min(window.innerWidth, window.innerHeight);
   const R    = 0.40 * vmin;
   const cx   = window.innerWidth  / 2;
-  const cy   = window.innerHeight / 2;
+  const cy   = centerY || window.innerHeight / 2;
 
   const rad     = degToRad(Number(degree) || 0);
   const targetX = cx + R * Math.cos(rad);

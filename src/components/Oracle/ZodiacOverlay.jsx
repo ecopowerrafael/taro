@@ -10,7 +10,7 @@ const R_LINE  = 42;
 
 function degToRad(deg) { return (deg - 90) * (Math.PI / 180); }
 
-export function ZodiacOverlay({ visible, activeSign }) {
+export function ZodiacOverlay({ visible, activeSign, centerY = '50vh' }) {
   const activeIdx = SIGN_NAMES_EN.indexOf(activeSign);
 
   return (
@@ -22,8 +22,8 @@ export function ZodiacOverlay({ visible, activeSign }) {
         transition={{ duration: 1.5, ease: 'easeOut' }}
       >
         {/* Círculos externos */}
-        <circle cx="50vw" cy="50vh" r={`${R_OUTER}vmin`} fill="none" stroke="#D4AF37" strokeWidth="1" opacity="0.5" />
-        <circle cx="50vw" cy="50vh" r={`${R_OUTER * 0.55}vmin`} fill="none" stroke="#D4AF37" strokeWidth="0.5" opacity="0.2" />
+        <circle cx="50vw" cy={centerY} r={`${R_OUTER}vmin`} fill="none" stroke="#D4AF37" strokeWidth="1" opacity="0.5" />
+        <circle cx="50vw" cy={centerY} r={`${R_OUTER * 0.55}vmin`} fill="none" stroke="#D4AF37" strokeWidth="0.5" opacity="0.2" />
 
         {SIGN_GLYPHS.map((glyph, i) => {
           const lineRad  = degToRad(i * 30);
@@ -39,7 +39,7 @@ export function ZodiacOverlay({ visible, activeSign }) {
           return (
             <g key={i}>
               <line
-                x1="50vw" y1="50vh"
+                x1="50vw" y1={centerY}
                 x2={`${x2}vmin`} y2={`${y2}vmin`}
                 stroke="#D4AF37" strokeWidth="0.5" opacity="0.3"
               />
