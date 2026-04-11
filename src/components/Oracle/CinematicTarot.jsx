@@ -20,6 +20,7 @@ const THEMES = [
   { id: 'Saúde', label: 'Saúde', icon: Activity, color: '#70e000' }
 ]
 
+
 export function CinematicTarot() {
   const { profile, token } = usePlatformContext()
   const [state, setState] = useState(STATES.INVITE)
@@ -27,6 +28,7 @@ export function CinematicTarot() {
   const [drawnCard, setDrawnCard] = useState(null)
   const [isHovered, setIsHovered] = useState(false)
   const [cards, setCards] = useState([])
+  const [loading, setLoading] = useState(true)
 
   // Inicializar 78 cartas (apenas para a animação de explosão)
   useEffect(() => {
@@ -39,6 +41,34 @@ export function CinematicTarot() {
     }))
     setCards(initialCards)
   }, [])
+
+  // Ao montar, buscar carta já sorteada do ciclo
+  useEffect(() => {
+    async function fetchExistingCard() {
+      setLoading(true)
+      try {
+        const response = await fetch('/api/tarot/tirar-carta', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ tema: 'Amor' }) // Tema padrão só para buscar carta já sorteada
+        })
+        const data = await response.json().catch(() => ({}))
+        if (response.ok && data && data.id) {
+          setDrawnCard(data)
+          setSelectedTheme(THEMES.find(t => t.id === data.tema) || null)
+          setState(STATES.INTERPRETATION)
+        }
+      } catch (e) {
+        // ignora
+      }
+      setLoading(false)
+    }
+    fetchExistingCard()
+    // eslint-disable-next-line
+  }, [token])
 
   const handleThemeSelect = async (theme) => {
     setSelectedTheme(theme)
@@ -63,7 +93,7 @@ export function CinematicTarot() {
         }
 
         setDrawnCard(data)
-        
+        setSelectedTheme(theme)
         // Mudar para o estado de tiragem após o "caos"
         setTimeout(() => {
           setState(STATES.DRAWING)
@@ -101,7 +131,7 @@ export function CinematicTarot() {
       <AnimatePresence mode="wait">
         
         {/* ESTADO 1: O CONVITE */}
-        {state === STATES.INVITE && (
+        {state === STATES.INVITE && !loading && (
           <motion.div 
             key="invite"
             initial={{ opacity: 0, y: 20 }}
@@ -109,6 +139,10 @@ export function CinematicTarot() {
             exit={{ opacity: 0, scale: 0.8 }}
             className="relative flex flex-col items-center"
           >
+            {/* Texto de instrução acima dos botões */}
+            <div className="mb-4 text-center text-xs text-mystic-goldSoft font-semibold">
+              Escolha o Tema que quer saber e pense forte na sua pergunta!
+            </div>
             {/* Baralho Levitando */}
             <motion.div
               animate={{ 
