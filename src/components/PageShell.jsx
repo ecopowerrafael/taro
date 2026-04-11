@@ -16,21 +16,7 @@ export function PageShell({ title, subtitle, children, mobileMenuFooter = null }
   }
 
   const mainLinks = buildHeaderLinks({ isAuthenticated, isConsultant, isAdmin })
-  const mobileMenuLinks = (() => {
-    const links = [...mainLinks]
-    const alreadyHasMap = links.some((link) => link.to === '/mapa-astral')
-
-    if (!alreadyHasMap) {
-      const perfilIndex = links.findIndex((link) => link.to === '/perfil')
-      if (perfilIndex >= 0) {
-        links.splice(perfilIndex + 1, 0, { to: '/mapa-astral', label: 'Mapa Astral' })
-      } else {
-        links.splice(1, 0, { to: '/mapa-astral', label: 'Mapa Astral' })
-      }
-    }
-
-    return links
-  })()
+  const mobileMenuLinks = [...mainLinks]
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-mystic-gradient px-4 py-8 pb-28 text-amber-50 md:px-8 md:pb-8">

@@ -174,8 +174,8 @@ export function PerfilPage() {
 
   // ─── Menu de navegação ────────────────────────────────────────────────────
   const menuItems = [
-    { label: 'Mapa Astral',   icon: '/mapa-astral.png',          to: '/mapa-astral',      external: false },
-    { label: 'Oráculo Diário', icon: '/oraculo.png',             to: '/mapa-astral?tab=diario', external: false },
+    { label: 'Mapa Astral',   icon: '/mapa-astral.png',          to: '/oraculo-diario',      external: false },
+    { label: 'Oráculo Diário', icon: '/oraculo.png',             to: '/oraculo-diario?tab=diario', external: false },
     { label: 'Sincronia',     icon: '/almas.png',                 to: '/sincronicidade',   external: false },
     { label: 'Especialistas', icon: '/especialistas-reais.png',   to: '/consultores',      external: false },
     { label: 'Respostas',     icon: '/respostas.png',             to: '/respostas',        external: false,

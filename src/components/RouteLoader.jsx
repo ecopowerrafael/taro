@@ -18,8 +18,8 @@ export function RouteLoader({ message = 'Carregando experiencia...' }) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(197,160,89,0.12),transparent_42%)]" />
       <div className="relative z-10 flex flex-col items-center gap-5 text-center">
         <Motion.img
-          src="/mapa-astral.png"
-          alt="Carregando mapa astral"
+          src="/oraculo.png"
+          alt="Carregando"
           className="h-28 w-28 object-contain drop-shadow-[0_0_28px_rgba(255,215,0,0.38)]"
           animate={{ rotate: 360 }}
           transition={{ duration: 2.4, ease: 'linear', repeat: Infinity }}

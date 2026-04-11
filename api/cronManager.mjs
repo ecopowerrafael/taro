@@ -62,8 +62,8 @@ async function processDailyTransits(pool, firebaseAdmin, webpush, pushEnabled) {
             payload: {
               title: `✨ Oráculo Astria: ${bestTransit.interpretation.title}`,
               body: bestTransit.interpretation.text,
-              url: `/mapa-astral?tab=diario&transitId=${bestTransit.transitPlanet.name}_${bestTransit.natalPlanet.name}`,
-              nativeRoute: `/mapa-astral?tab=diario&transitId=${bestTransit.transitPlanet.name}_${bestTransit.natalPlanet.name}`,
+              url: `/oraculo-diario?tab=diario&transitId=${bestTransit.transitPlanet.name}_${bestTransit.natalPlanet.name}`,
+              nativeRoute: `/oraculo-diario?tab=diario&transitId=${bestTransit.transitPlanet.name}_${bestTransit.natalPlanet.name}`,
               type: 'astral_transit',
             },
           });

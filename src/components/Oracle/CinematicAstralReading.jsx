@@ -121,17 +121,22 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
     if (mode === 'daily') {
       setScene('natal_entrance');
       // Iniciar animação sequencial dos planetas natais
+      if (sortedNatalPlanets.length === 0) {
+        setTimeout(() => setScene('daily_transition'), 1000);
+        return;
+      }
+
       let count = 0;
       const interval = setInterval(() => {
         setNatalVisibleCount(prev => {
           const newCount = prev + 1;
           if (newCount >= sortedNatalPlanets.length) {
             clearInterval(interval);
-            setTimeout(() => setScene('daily_transition'), 1000);
+            setTimeout(() => setScene('daily_transition'), 1500);
           }
           return newCount;
         });
-      }, 200);
+      }, 250);
     } else {
       setScene('zodiac_rise');
       setTimeout(() => setScene('planet_scene'), 1800);
@@ -190,7 +195,7 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
 
       {/* Camada 25 — Planetas Natais (Modo Diário) */}
       {mode === 'daily' && sortedNatalPlanets.length > 0 && (
-        <div className={`transition-opacity duration-1000 ${scene === 'planet_scene' ? 'opacity-30' : 'opacity-100'}`}>
+        <div className={`transition-opacity duration-1000 ${scene === 'planet_scene' || scene === 'grand_finale' ? 'opacity-30' : 'opacity-100'}`}>
           {sortedNatalPlanets.map((p, idx) => (
             <PlanetActor
               key={`natal-${p.name}`}
@@ -198,7 +203,7 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
               degree={p.longitude}
               visible={idx < natalVisibleCount}
               centerY={centerY}
-              isBackground={scene === 'planet_scene'}
+              isBackground={scene === 'planet_scene' || scene === 'grand_finale'}
             />
           ))}
         </div>

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlatformContext } from "../context/platform-context";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { SmokeBackground } from '../components/Oracle/SmokeBackground';
 import { CityAutocomplete } from '../components/Oracle/CityAutocomplete';
 import { Loader2, Sparkles } from 'lucide-react';
@@ -59,7 +59,12 @@ function StarsBackground() {
 export function OraclePage() {
   const { oracleCredentials, profile, refreshProfile, isAuthenticated, authLoading } = usePlatformContext();
   const navigate = useNavigate();
+  const location = useLocation();
   const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  
+  const isDailyPath = location.pathname === '/oraculo-diario' || location.pathname === '/oraculo';
+  const isNatalPath = location.pathname === '/mapa-astral';
+
   const debugParam = urlParams?.get('oracleDebug') || urlParams?.get('debug') || '';
   const forceDebugParam = urlParams?.get('forceOracleDebug') || '';
   const localDebugFlag = typeof window !== 'undefined' ? localStorage.getItem('oracle_debug') : '';
@@ -91,10 +96,31 @@ export function OraclePage() {
   const [debugLog, setDebugLog] = useState([]);
   const [isExploding, setIsExploding] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
-  const [oracleTab, setOracleTab] = useState(urlParams?.get('tab') === 'diario' ? 'daily' : 'natal');
+  const [oracleTab, setOracleTab] = useState(() => {
+    if (urlParams?.get('tab') === 'diario' || isDailyPath) return 'daily';
+    if (urlParams?.get('tab') === 'natal' || isNatalPath) return 'natal';
+    return 'natal';
+  });
   const [dailyTransits, setDailyTransits] = useState([]);
   const [dailyLoading, setDailyLoading] = useState(false);
   const [natalPlanetsForDaily, setNatalPlanetsForDaily] = useState([]);
+
+  const introData = useMemo(() => {
+    if (isDailyPath || oracleTab === 'daily') {
+      return {
+        title: 'Oráculo Diário',
+        text: 'O céu nunca é o mesmo duas vezes. Hoje, os astros se alinham em uma configuração única para você. Deixe que o Oráculo decifre as frequências deste dia e revele onde sua energia deve brilhar. O Universo está sussurrando agora. Você está pronto para sintonizar?',
+        buttonText: 'Fazer Minha Leitura Diária',
+        image: '/oraculo.png'
+      };
+    }
+    return {
+      title: 'Mapa Astral',
+      text: 'Sincronize-se com o Universo. Na Astria, transformamos dados astronômicos em sabedoria ancestral. Descubra os segredos que moldam sua personalidade, seus desafios e sua força oculta. O Cosmo tem uma mensagem para você. Vamos ouvi-la?',
+      buttonText: 'Gerar meu Mapa Astral',
+      image: '/mapa-astral.png'
+    };
+  }, [isDailyPath, oracleTab]);
 
   const fetchDailyTransits = async () => {
     setDailyLoading(true);
@@ -206,8 +232,20 @@ export function OraclePage() {
     setShowGuestModal(!isAuthenticated);
     if (!isAuthenticated) {
       setStep('intro');
+      return;
     }
-  }, [authLoading, isAuthenticated]);
+
+    // Se já tem os dados salvos, pula a intro e vai direto para o ritual/leitura
+    if (hasValidSavedProfileOracleData) {
+      if (isDailyPath) {
+        setOracleTab('daily');
+        setStep('ritual');
+      } else if (isNatalPath) {
+        setOracleTab('natal');
+        setStep('ritual');
+      }
+    }
+  }, [authLoading, isAuthenticated, hasValidSavedProfileOracleData, isDailyPath, isNatalPath]);
 
   const resetChartState = () => {
     setOraclePlanets([]);
@@ -464,7 +502,7 @@ export function OraclePage() {
         setErrorMsg('');
         resetChartState();
         if (hasValidSavedProfileOracleData) {
-          setOracleTab('daily');
+          setOracleTab(isDailyPath ? 'daily' : 'natal');
           setStep('ritual');
         } else {
           setStep('birth_city');
@@ -595,8 +633,8 @@ export function OraclePage() {
                 </svg>
               </motion.div>
               <motion.img
-                src="/oraculo.png"
-                alt="Oráculo"
+                src={introData.image}
+                alt={introData.title}
                 className="relative h-48 w-48 object-contain drop-shadow-[0_0_30px_rgba(255,215,0,0.3)] sm:h-64 sm:w-64"
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
@@ -605,10 +643,10 @@ export function OraclePage() {
 
             <div className="max-w-xl space-y-4">
               <h1 className="font-playfair text-4xl font-bold tracking-tight text-mystic-gold sm:text-6xl">
-                Oráculo Diário
+                {introData.title}
               </h1>
               <p className="font-serif text-lg leading-relaxed text-amber-100/80 sm:text-xl">
-                O céu nunca é o mesmo duas vezes. Hoje, os astros se alinham em uma configuração única para você. Deixe que o Oráculo decifre as frequências deste dia e revele onde sua energia deve brilhar. O Universo está sussurrando agora. Você está pronto para sintonizar?
+                {introData.text}
               </p>
             </div>
 
@@ -619,7 +657,7 @@ export function OraclePage() {
               >
                 <span className="relative z-10 flex items-center gap-2">
                   <Sparkles className="h-5 w-5" />
-                  Fazer Minha Leitura Diária
+                  {introData.buttonText}
                 </span>
                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
               </button>
@@ -794,12 +832,7 @@ export function OraclePage() {
             </div>
 
             {oracleTab === 'natal' ? (
-              <>
-                <p className="text-mystic-gold text-xl italic font-serif drop-shadow-md text-center">
-                  "As estrelas se alinham para você, {profile?.name?.split(' ')[0] || 'Viajante'}..."
-                </p>
-                
-                <div className="w-full flex flex-col items-center justify-center relative z-10 transition-all mt-4">
+              <div className="w-full flex flex-col items-center justify-center relative z-10 transition-all mt-4">
                   <div className="mb-2 bg-black/40 px-4 py-1 rounded-full text-xs text-gray-400 border border-mystic-gold/20 flex flex-col gap-1 items-center">
                     <span>
                       Destino traçado a partir de: <span className="text-mystic-gold font-bold ml-1">{birthLocation?.name}</span>
@@ -840,18 +873,22 @@ export function OraclePage() {
                         )}
                       </div>
                     </div>
-                  ) : (
-                    <>
+                  ) : hasGeneratedAstralMap ? (
                    <CinematicAstralReading
+                     key="natal-reading"
+                     mode="natal"
                      planets={oraclePlanets}
                      lat={Number(profile?.oracle_lat ?? birthLocation?.lat)}
                      lng={Number(profile?.oracle_lng ?? birthLocation?.lng)}
                      onFinish={() => setShowAstralReadingModal(true)}
                    />
-                  </>
+                ) : (
+                  <div className="flex flex-col items-center my-12">
+                    <Loader2 className="w-10 h-10 animate-spin text-mystic-gold mb-4" />
+                    <p className="text-mystic-gold font-serif">Preparando seu mapa natal...</p>
+                  </div>
                 )}
-                </div>
-              </>
+              </div>
             ) : (
               <div className="w-full flex flex-col items-center justify-center relative z-10 transition-all">
                 {dailyLoading ? (
@@ -859,14 +896,15 @@ export function OraclePage() {
                     <Loader2 className="w-10 h-10 animate-spin text-mystic-gold mb-4" />
                     <p className="text-mystic-gold font-serif">Consultando as efemérides de hoje...</p>
                   </div>
-                ) : dailyTransits.length > 0 ? (
+                ) : (dailyTransits.length > 0 && natalPlanetsForDaily.length > 0) ? (
                   <CinematicAstralReading
+                    key="daily-reading"
                     mode="daily"
                     planets={natalPlanetsForDaily}
                     transits={dailyTransits}
                     lat={Number(profile?.oracle_lat ?? birthLocation?.lat)}
                     lng={Number(profile?.oracle_lng ?? birthLocation?.lng)}
-                    onFinish={() => setOracleTab('natal')}
+                    onFinish={() => isDailyPath ? setStep('intro') : setOracleTab('natal')}
                   />
                 ) : (
                   <div className="p-8 text-center bg-black/40 border border-mystic-gold/20 rounded-2xl">
@@ -881,6 +919,7 @@ export function OraclePage() {
                 )}
               </div>
             )}
+            
             {errorMsg && (
               <div className="mt-4 text-red-400 bg-red-900/30 p-3 rounded text-sm w-full">
                 {errorMsg}
@@ -910,8 +949,8 @@ export function OraclePage() {
                Sua Revelação Astria
              </h2>
              
-<AstrologyChart planets={oraclePlanets} />
-               <div className="prose prose-invert prose-gold max-w-none text-gray-300 font-serif leading-relaxed text-left min-h-[150px] whitespace-pre-wrap">
+             <AstrologyChart planets={oraclePlanets} />
+             <div className="prose prose-invert prose-gold max-w-none text-gray-300 font-serif leading-relaxed text-left min-h-[150px] whitespace-pre-wrap">
                  <Typewriter
                    onInit={(typewriter) => {
                      typewriter
@@ -934,6 +973,7 @@ export function OraclePage() {
           </motion.div>
         )}
       </AnimatePresence>
+      
       {showAstralReadingModal && (
         <AstralReadingPurchaseModal onClose={() => setShowAstralReadingModal(false)} />
       )}
