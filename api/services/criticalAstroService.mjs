@@ -1,4 +1,9 @@
-import { calculatePositions, detectAspect, SIGN_NAMES } from '../astroEngine.mjs';
+import { calculatePositions, detectAspect } from '../astroEngine.mjs';
+
+const SIGN_NAMES = [
+  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
+];
 
 const MALEFICS = ['Saturn', 'Mars', 'Pluto'];
 const CRITICAL_HOUSES = [6, 8, 12];
