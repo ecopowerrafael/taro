@@ -18,6 +18,7 @@ import { createSpellsRouter } from './routes/spells.mjs'
 import { createAstralReadingsRouter } from './routes/astralReadings.mjs'
 import { createOracleRouter } from './routes/oracle.mjs'
 import { createTarotRouter } from './routes/tarot.mjs'
+import { createNumerologyRouter } from './routes/numerology.mjs'
 import webpush from 'web-push'
 import { authenticate, authorizeAdmin } from './middleware/auth.mjs'
 import { initializeFirebaseAdmin } from './firebaseAdmin.mjs'
@@ -326,6 +327,9 @@ try {
 
     app.use('/api/tarot', createTarotRouter(pool))
     console.log('[API] Router /tarot carregado.')
+
+    app.use('/api/numerology', createNumerologyRouter(pool))
+    console.log('[API] Router /numerology carregado.')
   app.post('/api/push/subscribe', authenticate, async (req, res) => {
     if (!pushEnabled) {
       return res.status(503).json({ error: 'Web Push desativado no servidor.' })

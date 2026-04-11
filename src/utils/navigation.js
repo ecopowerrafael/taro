@@ -1,6 +1,7 @@
 export const publicNavLinks = [
   { to: '/', label: 'Home' },
   { to: '/carta-do-dia', label: 'Carta do Dia' },
+  { to: '/numerologia', label: 'Numerologia' },
   { to: '/mapa-astral', label: 'Mapa Astral' },
   { to: '/consultores', label: 'Consultores' },
   { to: '/magias', label: 'Magias' },

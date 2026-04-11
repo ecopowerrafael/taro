@@ -175,6 +175,7 @@ export function PerfilPage() {
   // ─── Menu de navegação ────────────────────────────────────────────────────
   const menuItems = [
     { label: 'Mapa Astral',   icon: '/mapa-astral.png',          to: '/mapa-astral',      external: false },
+    { label: 'Numerologia',   icon: '/numerologia.png',          to: '/numerologia',      external: false },
     { label: 'Oráculo Diário', icon: '/oraculo.png',             to: '/oraculo-diario', external: false },
     { label: 'Sincronia',     icon: '/almas.png',                 to: '/sincronicidade',   external: false },
     { label: 'Especialistas', icon: '/especialistas-reais.png',   to: '/consultores',      external: false },
