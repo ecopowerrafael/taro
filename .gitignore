@@ -14,7 +14,7 @@ dist-ssr
 
 # Sensitive Firebase / environment files
 api/.env
-# api/firebase-service-account.json (Comentado para permitir subir ao Git se necessário, ou use ENV na Hostinger)
+api/firebase-service-account.json
 android/app/google-services.json
 
 # Public assets to keep

@@ -819,12 +819,11 @@ export function OraclePage() {
                 )}
               </div>
             )}
-              {errorMsg && (
-                 <div className="mt-4 text-red-400 bg-red-900/30 p-3 rounded text-sm w-full">
-                   {errorMsg}
-                 </div>
-              )}
-            </div>
+            {errorMsg && (
+              <div className="mt-4 text-red-400 bg-red-900/30 p-3 rounded text-sm w-full">
+                {errorMsg}
+              </div>
+            )}
 
             {!loadingAction && (
               <button
