@@ -189,6 +189,5 @@ export function HomePage() {
           </div>
         </div>
       </footer>
-    </div>
   );
 }
