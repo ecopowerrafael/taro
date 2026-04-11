@@ -6,6 +6,25 @@ import { getDailyTransits } from '../transitEngine.mjs'
 export const createOracleRouter = (pool) => {
   const router = Router()
 
+  const initializeSchema = async () => {
+    try {
+      // Adicionar colunas de cache se não existirem
+      const [columns] = await pool.query('SHOW COLUMNS FROM users')
+      const columnNames = columns.map(c => c.Field)
+      
+      if (!columnNames.includes('oracle_daily_cache')) {
+        await pool.query('ALTER TABLE users ADD COLUMN oracle_daily_cache TEXT DEFAULT NULL')
+      }
+      if (!columnNames.includes('oracle_daily_cached_at')) {
+        await pool.query('ALTER TABLE users ADD COLUMN oracle_daily_cached_at DATETIME DEFAULT NULL')
+      }
+      console.log('[API/Oracle] Schema atualizado com sucesso.')
+    } catch (err) {
+      console.error('[API/Oracle] Erro ao inicializar schema:', err)
+    }
+  }
+  initializeSchema()
+
   const toFiniteNumber = (value) => {
     const n = Number(value)
     return Number.isFinite(n) ? n : null
@@ -319,9 +338,24 @@ export const createOracleRouter = (pool) => {
   router.get('/transit', authenticate, async (request, response) => {
     try {
       const userId = request.user.id
-      const [uRows] = await pool.query('SELECT birthDate, oracle_birth_date, oracle_lat, oracle_lng, oracle_chart_cache FROM users WHERE id = ?', [userId])
+      const [uRows] = await pool.query('SELECT birthDate, oracle_birth_date, oracle_lat, oracle_lng, oracle_chart_cache, oracle_daily_cache, oracle_daily_cached_at FROM users WHERE id = ?', [userId])
       if (!uRows.length) return response.status(404).json({ error: 'Usuário não encontrado' })
       const user = uRows[0]
+
+      // Verificar cache de 24h
+      const now = new Date()
+      if (user.oracle_daily_cache && user.oracle_daily_cached_at) {
+        const cachedAt = new Date(user.oracle_daily_cached_at)
+        const diffHours = (now - cachedAt) / (1000 * 60 * 60)
+        
+        if (diffHours < 24) {
+          return response.status(200).json({ 
+            transits: JSON.parse(user.oracle_daily_cache), 
+            currentDate: user.oracle_daily_cached_at,
+            cached: true
+          })
+        }
+      }
 
       let natalPlanets = parseCachedPlanets(user.oracle_chart_cache)
       if (!natalPlanets) {
@@ -335,9 +369,16 @@ export const createOracleRouter = (pool) => {
 
       const activeTransits = await getDailyTransits(natalPlanets)
 
+      // Salvar no cache
+      await pool.query(
+        'UPDATE users SET oracle_daily_cache = ?, oracle_daily_cached_at = NOW() WHERE id = ?',
+        [JSON.stringify(activeTransits), userId]
+      )
+
       return response.status(200).json({ 
         transits: activeTransits, 
-        currentDate: new Date().toISOString() 
+        currentDate: now.toISOString(),
+        cached: false
       })
     } catch (error) {
       console.error('[API/Oracle] Erro ao obter trânsitos:', error)
