@@ -63,6 +63,7 @@ export const createTarotRouter = (pool) => {
           nome: user.oracle_daily_card_nome,
           face_img: user.oracle_daily_card_face_img,
           texto: user.oracle_daily_card_texto,
+          tema: user.oracle_daily_card_tema,
           criticalAstro: null,
           hasChart: false
         })
