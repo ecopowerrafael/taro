@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Typewriter from 'typewriter-effect'
 import { Sparkles, Heart, DollarSign, Users, Activity, RotateCcw, MessageCircle, AlertTriangle, Map, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { usePlatformContext } from '../../context/platform-context'
 
 const STATES = {
   INVITE: 'invite',
@@ -20,6 +21,7 @@ const THEMES = [
 ]
 
 export function CinematicTarot() {
+  const { profile, token } = usePlatformContext()
   const [state, setState] = useState(STATES.INVITE)
   const [selectedTheme, setSelectedTheme] = useState(null)
   const [drawnCard, setDrawnCard] = useState(null)
@@ -47,10 +49,19 @@ export function CinematicTarot() {
       try {
         const response = await fetch('/api/tarot/tirar-carta', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ tema: theme.id })
         })
-        const data = await response.json()
+
+        const data = await response.json().catch(() => ({}))
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Erro ao tirar carta')
+        }
+
         setDrawnCard(data)
         
         // Mudar para o estado de tiragem após o "caos"

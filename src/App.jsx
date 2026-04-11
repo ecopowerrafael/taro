@@ -126,8 +126,8 @@ function AppContent() {
           <Route path="/oraculo" element={wrapWithTransition(OraclePage)} />
           <Route path="/mapa-astral" element={wrapWithTransition(OraclePage)} />
           <Route path="/oraculo-diario" element={wrapWithTransition(OraclePage)} />
-          <Route path="/carta-do-dia" element={wrapWithTransition(TarotDiaPage)} />
-          <Route path="/numerologia" element={wrapWithTransition(NumerologiaPage)} />
+          <Route path="/carta-do-dia" element={<ProtectedRoute>{wrapWithTransition(TarotDiaPage)}</ProtectedRoute>} />
+          <Route path="/numerologia" element={<ProtectedRoute>{wrapWithTransition(NumerologiaPage)}</ProtectedRoute>} />
           <Route path="/sincronicidade" element={wrapWithTransition(SincronicidadePage)} />
           <Route path="/plataforma" element={wrapWithTransition(PlatformPage)} />
           <Route 

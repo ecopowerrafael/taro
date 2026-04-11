@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { usePlatformContext } from '../../context/platform-context'
 
 export function NumerologyWidget() {
-  const { profile } = usePlatformContext()
+  const { profile, token } = usePlatformContext()
   const [step, setStep] = useState('input') // 'input', 'loading', 'result'
   const [formData, setFormData] = useState({
     nomeCompleto: profile?.name || '',
@@ -20,11 +20,19 @@ export function NumerologyWidget() {
     try {
       const response = await fetch('/api/numerology/preview', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(formData)
       })
-      const data = await response.json()
-      
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao calcular numerologia')
+      }
+
       // Simular delay para aumentar valor percebido
       setTimeout(() => {
         setResult(data.data)
