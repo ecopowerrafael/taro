@@ -191,5 +191,5 @@ export function HomePage() {
       </footer>
 
     </div>
-  )
+  );
 }
