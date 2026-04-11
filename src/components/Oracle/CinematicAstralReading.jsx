@@ -113,7 +113,7 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
   }, [mode, currentItem, currentPlanet, signEn]);
 
   const titleText = useMemo(() => {
-    if (mode === 'daily') return `${currentItem?.interpretation?.title || 'Trânsito'}`;
+    if (mode === 'daily') return currentItem?.interpretation?.title || 'Trânsito';
     return `${planetPt} em ${signPt}`;
   }, [mode, currentItem, planetPt, signPt]);
 
@@ -123,12 +123,14 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
       // Iniciar animação sequencial dos planetas natais
       let count = 0;
       const interval = setInterval(() => {
-        count++;
-        setNatalVisibleCount(count);
-        if (count >= sortedNatalPlanets.length) {
-          clearInterval(interval);
-          setTimeout(() => setScene('daily_transition'), 1000);
-        }
+        setNatalVisibleCount(prev => {
+          const newCount = prev + 1;
+          if (newCount >= sortedNatalPlanets.length) {
+            clearInterval(interval);
+            setTimeout(() => setScene('daily_transition'), 1000);
+          }
+          return newCount;
+        });
       }, 200);
     } else {
       setScene('zodiac_rise');

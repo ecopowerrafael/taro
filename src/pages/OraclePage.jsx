@@ -458,11 +458,18 @@ export function OraclePage() {
         setErrorMsg('');
         resetChartState();
         if (hasValidSavedProfileOracleData) {
+          setOracleTab('daily');
           setStep('ritual');
         } else {
           setStep('birth_city');
         }
       }, 500); // Aguarda animação de explosão
+    } else if (step === 'birth_city') {
+      setStep('birth_date');
+    } else if (step === 'birth_date') {
+      setStep('birth_time');
+    } else if (step === 'birth_time') {
+      setStep('pre_ritual');
     }
   };
 
