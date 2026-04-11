@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
-import Particles from "react-tsparticles";
-import { loadFull } from "tsparticles";
+import { Particles } from "@tsparticles/react";
+import { loadFull } from "@tsparticles/engine";
 
 export function SmokeBackground() {
   const particlesInit = useCallback(async engine => {
