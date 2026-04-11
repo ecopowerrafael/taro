@@ -31,29 +31,32 @@ export function DailyTarotCard() {
   const [isFlipped, setIsFlipped] = useState(false)
   const [dailyCard, setDailyCard] = useState(null)
 
-  // Função para obter a data de referência (reset às 08:00)
-  function getDailyKeyDate() {
-    const now = new Date()
-    const ref = new Date(now)
-    if (now.getHours() < 8) {
-      // Antes das 08:00, considera o "dia anterior"
-      ref.setDate(ref.getDate() - 1)
+  // Função para obter o ciclo diário baseado em 08:00 local
+  function getCycleKey(date = new Date()) {
+    // Pega o horário local
+    const local = new Date(date)
+    // Se antes das 08:00, considera o "dia anterior" como ciclo vigente
+    if (local.getHours() < 8) {
+      local.setDate(local.getDate() - 1)
     }
-    return ref.toISOString().split('T')[0]
+    // Chave no formato YYYY-MM-DD referente ao ciclo das 08:00
+    return local.toISOString().split('T')[0]
   }
 
   useEffect(() => {
-    const keyDate = getDailyKeyDate()
+    const cycleKey = getCycleKey()
     const savedDataStr = localStorage.getItem('astria_daily_card')
     if (savedDataStr) {
       try {
         const savedData = JSON.parse(savedDataStr)
-        if (savedData.date === keyDate) {
+        if (savedData.cycleKey === cycleKey) {
           setDailyCard(savedData.card)
           setIsFlipped(true)
           return
         }
-      } catch (e) {}
+      } catch (e) {
+        // ignora e sorteia nova
+      }
     }
     // Se não tem ou expirou, prepara uma carta aleatória (mas não vira ainda)
     const randomCard = MAJOR_ARCANA[Math.floor(Math.random() * MAJOR_ARCANA.length)]
@@ -61,10 +64,11 @@ export function DailyTarotCard() {
   }, [])
 
   const handleFlip = () => {
-    if (isFlipped) return // Já foi virada hoje
-    const keyDate = getDailyKeyDate()
+    if (isFlipped) return // Já foi virada neste ciclo
+    const cycleKey = getCycleKey()
+    // Salva no localstorage
     localStorage.setItem('astria_daily_card', JSON.stringify({
-      date: keyDate,
+      cycleKey,
       card: dailyCard
     }))
     setIsFlipped(true)
@@ -73,35 +77,31 @@ export function DailyTarotCard() {
   if (!dailyCard) return null
 
   return (
-    <div className="w-full flex flex-col gap-2">
-      {/* Instrução acima dos botões */}
-      <div className="mb-2 text-center text-xs text-mystic-goldSoft font-semibold">
-        Escolha o Tema que quer saber e pense Forte na sua Pergunta!
-      </div>
-      <div className="group flex h-48 w-full perspective-1000">
-        <div 
-          onClick={handleFlip}
-          className={`relative h-full w-full transform-style-3d transition-transform duration-700 ease-in-out ${isFlipped ? 'rotate-y-180' : 'cursor-pointer hover:scale-105'}`}
-        >
-          {/* Frente da carta (Costas/Verso com o desenho da sorte) */}
-          <div className="absolute inset-0 backface-hidden rounded-xl border-2 border-mystic-gold/40 bg-gradient-to-br from-mystic-purple via-black to-mystic-gold/20 shadow-glow flex flex-col items-center justify-center p-4 text-center">
-            <Sparkles className="text-mystic-goldSoft mb-2 animate-pulse" size={32} />
-            <h3 className="font-display text-xl text-mystic-goldSoft">Sua Carta do Dia</h3>
-            <p className="text-xs text-amber-100/70 mt-2">Toque para revelar seu conselho cósmico</p>
-          </div>
+    <div className="group flex h-48 w-full perspective-1000">
+      <div 
+        onClick={handleFlip}
+        className={`relative h-full w-full transform-style-3d transition-transform duration-700 ease-in-out ${isFlipped ? 'rotate-y-180' : 'cursor-pointer hover:scale-105'}`}
+      >
+        {/* Frente da carta (Costas/Verso com o desenho da sorte) */}
+        <div className="absolute inset-0 backface-hidden rounded-xl border-2 border-mystic-gold/40 bg-gradient-to-br from-mystic-purple via-black to-mystic-gold/20 shadow-glow flex flex-col items-center justify-center p-4 text-center">
+          <Sparkles className="text-mystic-goldSoft mb-2 animate-pulse" size={32} />
+          <h3 className="font-display text-xl text-mystic-goldSoft">Sua Carta do Dia</h3>
+          <p className="text-xs text-amber-100/70 mt-2">Toque para revelar seu conselho cósmico</p>
+          <p className="text-[10px] text-ethereal-silver/60 mt-1">Disponível 1 vez por dia, sempre a partir das 08:00</p>
+        </div>
 
-          {/* Verso da carta (Face revelada com a mensagem) */}
-          <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-xl border border-mystic-gold/60 bg-gradient-to-b from-[#1f0f38] to-[#0b0715] p-5 shadow-[0_0_20px_rgba(197,160,89,0.2)] overflow-y-auto custom-scrollbar">
-            <div className="flex flex-col h-full justify-center text-center">
-              <h4 className="font-text font-bold text-xl text-mystic-goldSoft mb-2">{dailyCard.name}</h4>
-              <div className="h-[1px] w-12 bg-mystic-gold/50 mx-auto mb-3"></div>
-              <p className="text-sm text-amber-100/90 leading-relaxed italic">
-                "{dailyCard.message}"
-              </p>
-              <p className="text-[10px] text-ethereal-silver/50 mt-4 uppercase tracking-wider">
-                Volte amanhã para tirar uma nova carta, ou faça uma pergunta objetiva a um de nossos consultores.
-              </p>
-            </div>
+        {/* Verso da carta (Face revelada com a mensagem) */}
+        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-xl border border-mystic-gold/60 bg-gradient-to-b from-[#1f0f38] to-[#0b0715] p-5 shadow-[0_0_20px_rgba(197,160,89,0.2)] overflow-y-auto custom-scrollbar">
+          <div className="flex flex-col h-full justify-center text-center">
+            <h4 className="font-text font-bold text-xl text-mystic-goldSoft mb-2">{dailyCard.name}</h4>
+            <div className="h-[1px] w-12 bg-mystic-gold/50 mx-auto mb-3"></div>
+            <p className="text-sm text-amber-100/90 leading-relaxed italic">
+              "{dailyCard.message}"
+            </p>
+            <p className="text-[10px] text-ethereal-silver/50 mt-4 uppercase tracking-wider">
+              Volte amanhã após 08:00 para uma nova carta
+            </p>
+            <p className="text-[10px] text-ethereal-silver/40 mt-1">Escolha o Tema que quer saber e reflita sobre a mensagem recebida.</p>
           </div>
         </div>
       </div>

@@ -11,39 +11,40 @@ export function startCronManager(pool, firebaseAdmin, webpush, pushEnabled) {
   // Verifica a cada 1 minuto se é 03:00 AM ou 08:00 AM
   setInterval(async () => {
     const now = new Date();
-    // Horário de Brasília (GMT-3)
+    // Horário de Brasília (GMT-3) - Ajuste conforme necessário
     const hour = now.getHours();
     const minute = now.getMinutes();
 
-    // 03:00 - Trânsitos astrais
+    // Push diário da Carta do Dia às 08:00
+    if (hour === 8 && minute === 0) {
+      console.log('[Cron] Enviando push diário: Nova Carta do Dia disponível!');
+      try {
+        // Buscar todos os usuários
+        const [userRows] = await pool.query('SELECT id FROM users WHERE isActive = 1');
+        const userIds = userRows.map(u => u.id);
+        if (userIds.length > 0 && pushEnabled) {
+          await sendPushToUsers({
+            pool,
+            webpush,
+            firebaseAdmin,
+            userIds,
+            payload: {
+              title: 'Nova Carta do Dia',
+              body: 'Entre no Aplicativo e veja a mensagem dos Astros para hoje!',
+              url: '/carta-do-dia',
+              nativeRoute: '/carta-do-dia',
+              type: 'info',
+            },
+          });
+        }
+      } catch (err) {
+        console.error('[Cron] Erro ao enviar push da Carta do Dia:', err);
+      }
+    }
+
     if (hour === 3 && minute === 0) {
       console.log('[Cron] Iniciando processamento diário de trânsitos (03:00 AM)...');
       await processDailyTransits(pool, firebaseAdmin, webpush, pushEnabled);
-    }
-
-    // 08:00 - Nova Carta do Dia
-    if (hour === 8 && minute === 0) {
-      try {
-        console.log('[Cron] Enviando push: Nova Carta do Dia (08:00)');
-        // Buscar todos os usuários
-        const [users] = await pool.query('SELECT id FROM users');
-        const userIds = users.map(u => u.id);
-        await sendPushToUsers({
-          pool,
-          webpush,
-          firebaseAdmin,
-          userIds,
-          payload: {
-            title: 'Nova Carta do Dia',
-            body: 'Entre no Aplicativo e veja a mensagem dos Astros para hoje!',
-            url: '/perfil',
-            nativeRoute: '/perfil',
-            type: 'admin_broadcast',
-          },
-        });
-      } catch (err) {
-        console.error('[Cron] Erro ao enviar push de Nova Carta do Dia:', err);
-      }
     }
   }, 60000);
 }
