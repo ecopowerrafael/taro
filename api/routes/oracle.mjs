@@ -342,13 +342,14 @@ export const createOracleRouter = (pool) => {
       if (!uRows.length) return response.status(404).json({ error: 'Usuário não encontrado' })
       const user = uRows[0]
 
-      // Verificar cache de 24h
+      // Verificar cache de hoje (pós 03:00)
       const now = new Date()
+      const today3am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 3, 0, 0)
+
       if (user.oracle_daily_cache && user.oracle_daily_cached_at) {
         const cachedAt = new Date(user.oracle_daily_cached_at)
-        const diffHours = (now - cachedAt) / (1000 * 60 * 60)
         
-        if (diffHours < 24) {
+        if (cachedAt > today3am) {
           return response.status(200).json({ 
             transits: JSON.parse(user.oracle_daily_cache), 
             currentDate: user.oracle_daily_cached_at,

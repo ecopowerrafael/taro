@@ -93,29 +93,42 @@ function calculateCriticalityScore(planet, natalPlanets) {
 
 export const criticalAstroService = {
   /**
-   * Identifica o planeta mais crítico no trânsito atual
+   * Identifica o planeta mais crítico baseado no cache do oráculo diário ou cálculo atual
    */
-  getCriticalAstro: async (natalPlanets, ascendantLon) => {
+  getCriticalAstro: async (natalPlanets, ascendantLon, dailyCache = null) => {
     if (!natalPlanets || natalPlanets.length === 0) return null;
 
-    const now = new Date().toISOString();
-    // No calculatePositions, precisamos passar o Ascendente para calcular as casas corretamente para o usuário
-    // Se não passar, ele usa um padrão. Mas o engine original parece não receber ascendantLon.
-    // Vamos verificar como o astroEngine calcula casas.
-    
-    // Na verdade, o engine calcula casas baseadas no tempo/lat/lng. 
-    // Mas para trânsitos sobre o mapa do usuário, as casas são as casas do usuário.
-    // Whole Sign: Casa 1 é o signo do Ascendente Natal.
-    
-    const transitPlanetsRaw = await calculatePositions(now);
-    
+    let transitPlanets = [];
     const ascSignIdx = Math.floor(ascendantLon / 30);
-    
-    const transitPlanets = transitPlanetsRaw.map(tp => {
-      const planetSignIdx = Math.floor(tp.longitude / 30);
-      const house = ((planetSignIdx - ascSignIdx + 12) % 12) + 1;
-      return { ...tp, house };
-    });
+
+    if (dailyCache) {
+      try {
+        // O cache do oráculo diário já vem processado pelo transitEngine
+        // Precisamos apenas garantir o formato esperado para pontuação
+        const cachedTransits = typeof dailyCache === 'string' ? JSON.parse(dailyCache) : dailyCache;
+        
+        transitPlanets = cachedTransits.map(t => ({
+          name: t.name,
+          longitude: t.longitude,
+          house: t.house,
+          sign: { name: t.sign }
+        }));
+      } catch (err) {
+        console.error('[CriticalAstro] Erro ao ler dailyCache:', err);
+      }
+    }
+
+    // Se não tiver cache ou falhar, calcula posições atuais
+    if (transitPlanets.length === 0) {
+      const now = new Date().toISOString();
+      const transitPlanetsRaw = await calculatePositions(now);
+      
+      transitPlanets = transitPlanetsRaw.map(tp => {
+        const planetSignIdx = Math.floor(tp.longitude / 30);
+        const house = ((planetSignIdx - ascSignIdx + 12) % 12) + 1;
+        return { ...tp, house };
+      });
+    }
 
     const scoredPlanets = transitPlanets.map(tp => {
       const { score, reasons, hasTenseAspect } = calculateCriticalityScore(tp, natalPlanets);

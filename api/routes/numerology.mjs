@@ -23,7 +23,7 @@ export const createNumerologyRouter = (pool) => {
 
       // Buscar dados do usuário para o Astro Crítico
       const [uRows] = await pool.query(
-        'SELECT oracle_birth_date, birthDate, oracle_lat, oracle_lng, oracle_chart_cache FROM users WHERE id = ?',
+        'SELECT oracle_birth_date, birthDate, oracle_lat, oracle_lng, oracle_chart_cache, oracle_daily_cache, oracle_daily_cached_at FROM users WHERE id = ?',
         [userId]
       )
       const user = uRows[0]
@@ -47,7 +47,20 @@ export const createNumerologyRouter = (pool) => {
             
             const ascendant = rawPlanets.find(p => p.name === 'Ascendant')
             if (ascendant) {
-              criticalAstro = await criticalAstroService.getCriticalAstro(rawPlanets, ascendant.longitude)
+              // Verificar se o cache do oráculo diário é de hoje (pós 03:00)
+              let dailyCache = null
+              const now = new Date()
+              const today3am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 3, 0, 0)
+              
+              if (user.oracle_daily_cache && user.oracle_daily_cached_at) {
+                const cachedAt = new Date(user.oracle_daily_cached_at)
+                // Se o cache foi gerado após as 3 da manhã de hoje, usamos ele
+                if (cachedAt > today3am) {
+                  dailyCache = user.oracle_daily_cache
+                }
+              }
+
+              criticalAstro = await criticalAstroService.getCriticalAstro(rawPlanets, ascendant.longitude, dailyCache)
             }
           } catch (err) {
             console.error('[API/Numerologia] Erro ao calcular astro crítico:', err)
