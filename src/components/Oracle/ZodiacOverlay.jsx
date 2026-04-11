@@ -10,8 +10,10 @@ const R_LINE  = 42;
 
 function degToRad(deg) { return (deg - 90) * (Math.PI / 180); }
 
-export function ZodiacOverlay({ visible, activeSign, centerY = '50vh' }) {
+export function ZodiacOverlay({ visible, activeSign, centerX, centerY }) {
   const activeIdx = SIGN_NAMES_EN.indexOf(activeSign);
+  const cx = centerX || window.innerWidth / 2;
+  const cy = centerY || window.innerHeight / 2;
 
   return (
     <div className="fixed inset-0 z-20 pointer-events-none">
@@ -21,51 +23,73 @@ export function ZodiacOverlay({ visible, activeSign, centerY = '50vh' }) {
         animate={visible ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
         transition={{ duration: 1.5, ease: 'easeOut' }}
       >
+        <defs>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
         {/* Círculos externos */}
-        <circle cx="50vw" cy={centerY} r={`${R_OUTER}vmin`} fill="none" stroke="#D4AF37" strokeWidth="1" opacity="0.5" />
-        <circle cx="50vw" cy={centerY} r={`${R_OUTER * 0.55}vmin`} fill="none" stroke="#D4AF37" strokeWidth="0.5" opacity="0.2" />
+        <circle cx={cx} cy={cy} r={`${R_OUTER}vmin`} fill="none" stroke="#D4AF37" strokeWidth="1.5" opacity="0.4" />
+        <circle cx={cx} cy={cy} r={`${R_OUTER * 0.55}vmin`} fill="none" stroke="#D4AF37" strokeWidth="0.5" opacity="0.15" />
 
         {SIGN_GLYPHS.map((glyph, i) => {
           const lineRad  = degToRad(i * 30);
-          const x2 = 50 + R_LINE  * Math.cos(lineRad);
-          const y2 = 50 + R_LINE  * Math.sin(lineRad);
+          const lx1 = cx + (R_OUTER * 0.55 * Math.min(window.innerWidth, window.innerHeight) / 100) * Math.cos(lineRad);
+          const ly1 = cy + (R_OUTER * 0.55 * Math.min(window.innerWidth, window.innerHeight) / 100) * Math.sin(lineRad);
+          const lx2 = cx + (R_LINE  * Math.min(window.innerWidth, window.innerHeight) / 100) * Math.cos(lineRad);
+          const ly2 = cy + (R_LINE  * Math.min(window.innerWidth, window.innerHeight) / 100) * Math.sin(lineRad);
 
           const labelRad = degToRad(i * 30 + 15);
-          const lx = 50 + R_LABEL * Math.cos(labelRad);
-          const ly = 50 + R_LABEL * Math.sin(labelRad);
+          const tx = cx + (R_LABEL * Math.min(window.innerWidth, window.innerHeight) / 100) * Math.cos(labelRad);
+          const ty = cy + (R_LABEL * Math.min(window.innerWidth, window.innerHeight) / 100) * Math.sin(labelRad);
 
           const isActive = i === activeIdx;
 
           return (
             <g key={i}>
               <line
-                x1="50vw" y1={centerY}
-                x2={`${x2}vmin`} y2={`${y2}vmin`}
-                stroke="#D4AF37" strokeWidth="0.5" opacity="0.3"
+                x1={lx1} y1={ly1}
+                x2={lx2} y2={ly2}
+                stroke="#D4AF37" strokeWidth="0.5" opacity="0.25"
               />
-              <text
-                x={`${lx}vmin`}
-                y={`${ly}vmin`}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fill={isActive ? '#FFD700' : '#D4AF37'}
-                fontSize="3.5vmin"
-                opacity={isActive ? 1 : 0.5}
-                style={isActive ? { filter: 'drop-shadow(0 0 8px #FFD700)' } : {}}
-              >
-                {glyph}
-              </text>
-              <text
-                x={`${lx}vmin`}
-                y={`${ly + 4}vmin`}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fill={isActive ? '#FFD700' : '#D4AF37'}
-                fontSize="1.6vmin"
-                opacity={isActive ? 0.9 : 0.35}
-              >
-                {SIGN_NAMES_PT[i]}
-              </text>
+              
+              {/* Sign Glyph Container */}
+              <g style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)', transformOrigin: `${tx}px ${ty}px`, transition: 'transform 0.5s ease' }}>
+                <text
+                  x={tx}
+                  y={ty}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill={isActive ? '#FFD700' : '#D4AF37'}
+                  fontSize="4.2vmin"
+                  opacity={isActive ? 1 : 0.45}
+                  style={{ 
+                    filter: isActive ? 'url(#glow)' : 'none',
+                    fontFamily: 'serif',
+                    transition: 'all 0.5s ease'
+                  }}
+                >
+                  {glyph}
+                </text>
+                
+                {isActive && (
+                   <motion.text
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    x={tx}
+                    y={ty + (4.5 * Math.min(window.innerWidth, window.innerHeight) / 100)}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fill="#FFD700"
+                    fontSize="1.8vmin"
+                    style={{ fontFamily: 'serif', letterSpacing: '0.1em', fontWeight: 'bold' }}
+                  >
+                    {SIGN_NAMES_PT[i].toUpperCase()}
+                  </motion.text>
+                )}
+              </g>
             </g>
           );
         })}

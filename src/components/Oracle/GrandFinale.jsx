@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { PlanetActorStatic } from './PlanetActor';
+import { Home, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const PLANET_ORDER = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Rahu','Ketu','Ascendant'];
 
@@ -19,13 +21,14 @@ function getAspectColor(diff) {
   return null;
 }
 
-export function GrandFinale({ planets, onFinish }) {
+export function GrandFinale({ planets, onFinish, centerY }) {
   const [showLines,  setShowLines]  = useState(false);
   const [showButton, setShowButton] = useState(false);
+  const navigate = useNavigate();
 
   const vmin = Math.min(window.innerWidth, window.innerHeight);
   const cx   = window.innerWidth  / 2;
-  const cy   = window.innerHeight / 2;
+  const cy   = centerY || window.innerHeight / 2;
 
   const sorted = PLANET_ORDER
     .map(name => planets.find(p => p.name === name))
@@ -80,6 +83,7 @@ export function GrandFinale({ planets, onFinish }) {
           planetName={p.name}
           degree={p.longitude}
           delay={i * 0.15}
+          centerY={cy}
         />
       ))}
 
@@ -89,25 +93,37 @@ export function GrandFinale({ planets, onFinish }) {
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center gap-4 p-8"
+          className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center gap-4 p-6 pb-24 md:pb-10"
           style={{
-            background: 'rgba(5,0,10,0.88)',
+            background: 'rgba(5,0,10,0.92)',
             backdropFilter: 'blur(20px)',
             borderTop: '1px solid rgba(212,175,55,0.4)',
+            boxShadow: '0 -15px 40px rgba(0,0,0,0.6)'
           }}
         >
           <p className="text-mystic-gold font-serif text-xl text-center drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]">
             Seu Céu Natal está completo
           </p>
-          <p className="text-amber-100/70 text-sm text-center max-w-xs">
-            Todos os astros foram revelados. O mapa da sua essência está traçado.
+          
+          <div className="flex flex-col md:flex-row items-center gap-3 w-full max-w-md">
+            <button
+              onClick={() => navigate('/')}
+              className="w-full flex items-center justify-center gap-2 border border-mystic-gold/40 text-mystic-gold px-6 py-3 rounded-full font-bold uppercase tracking-wider hover:bg-mystic-gold/10 transition-all"
+            >
+              <Home size={18} /> Home
+            </button>
+            
+            <button
+              onClick={onFinish}
+              className="w-full flex items-center justify-center gap-2 bg-mystic-gold text-mystic-dark px-6 py-3 rounded-full font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(255,215,0,0.5)] hover:scale-105 transition-transform"
+            >
+              <Sparkles size={18} /> Solicitar Mapa Completo
+            </button>
+          </div>
+          
+          <p className="text-amber-100/50 text-[10px] text-center uppercase tracking-widest mt-2">
+            O mapa da sua essência foi traçado
           </p>
-          <button
-            onClick={onFinish}
-            className="bg-mystic-gold text-mystic-dark px-10 py-3 rounded-full font-bold uppercase tracking-wider shadow-[0_0_20px_rgba(255,215,0,0.5)] hover:scale-105 transition-transform"
-          >
-            Concluir Jornada
-          </button>
         </motion.div>
       )}
     </>

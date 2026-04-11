@@ -151,7 +151,8 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
       <ZodiacOverlay
         visible={scene !== 'map_zoom'}
         activeSign={scene === 'planet_scene' ? signEn : null}
-        centerY={centerYStr}
+        centerX={windowWidth / 2}
+        centerY={centerY}
       />
 
       {/* Camada 30 — Planeta ativo */}
@@ -167,7 +168,7 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
 
       {/* Grand Finale */}
       {scene === 'grand_finale' && (
-        <GrandFinale planets={sortedPlanets} onFinish={onFinish} />
+        <GrandFinale planets={sortedPlanets} onFinish={onFinish} centerY={centerY} />
       )}
 
       {/* Camada 40 — Painel de texto (bottom sheet) */}
@@ -183,49 +184,86 @@ export function CinematicAstralReading({ planets, lat, lng, onFinish }) {
             style={{
               bottom: isDesktop ? 0 : '160px',
               height: isDesktop ? '12.5vh' : '25vh',
-              background: 'rgba(5,0,10,0.95)',
-              backdropFilter: 'blur(20px)',
+              background: 'rgba(5,0,10,0.96)',
+              backdropFilter: 'blur(24px)',
               borderTop: '1px solid rgba(212,175,55,0.35)',
               overflowY: 'auto',
-              padding: isDesktop ? '12px 24px' : '16px 20px 20px',
-              display: isDesktop ? 'flex' : 'block',
+              padding: isDesktop ? '0 24px' : '16px 20px 20px',
+              display: 'flex',
+              flexDirection: isDesktop ? 'row' : 'column',
               alignItems: isDesktop ? 'center' : 'initial',
-              gap: '24px',
-              boxShadow: '0 -10px 30px rgba(0,0,0,0.5)'
+              gap: isDesktop ? '0' : '12px',
+              boxShadow: '0 -10px 40px rgba(0,0,0,0.7)'
             }}
           >
-            <div className={isDesktop ? 'flex-shrink-0 min-w-[150px]' : 'mb-2'}>
-              <p className="text-mystic-gold font-serif text-lg mb-0 drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">
-                {planetPt} em {signPt}
-              </p>
-              {currentPlanet?.is_retrograde && (
-                <span className="text-[10px] text-amber-400 block uppercase tracking-tighter">Retrógrado</span>
-              )}
+            {/* Desktop Navigation - Integrated into the bar */}
+            {isDesktop && (
+              <div className="flex items-center gap-4 pr-8 border-r border-mystic-gold/20 h-full">
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-2 text-mystic-gold hover:text-mystic-goldSoft transition-colors font-serif uppercase tracking-widest text-xs"
+                >
+                  <ChevronLeft size={18} /> Voltar
+                </button>
+              </div>
+            )}
+
+            <div className={`${isDesktop ? 'px-8 flex items-center gap-6 flex-1' : 'mb-2'}`}>
+              <div className={isDesktop ? 'flex-shrink-0 border-r border-mystic-gold/10 pr-6' : 'mb-2'}>
+                <p className="text-mystic-gold font-serif text-lg mb-0 drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]">
+                  {planetPt} em {signPt}
+                </p>
+                {currentPlanet?.is_retrograde && (
+                  <span className="text-[10px] text-amber-400 block uppercase tracking-tighter">Retrógrado</span>
+                )}
+              </div>
+              <div className="text-gray-300 text-sm leading-relaxed font-serif overflow-y-auto max-h-full py-2">
+                <Typewriter
+                  key={textKey}
+                  onInit={(tw) => tw.typeString(interpretation).start()}
+                  options={{ delay: 18, cursor: '✧' }}
+                />
+              </div>
             </div>
-            <div className="text-gray-300 text-sm leading-relaxed font-serif overflow-y-auto max-h-full">
-              <Typewriter
-                key={textKey}
-                onInit={(tw) => tw.typeString(interpretation).start()}
-                options={{ delay: 20, cursor: '✧' }}
-              />
-            </div>
+
+            {/* Desktop Next Button - Integrated */}
+            {isDesktop && (
+              <div className="pl-8 border-l border-mystic-gold/20 h-full flex items-center gap-6">
+                <span className="text-[10px] text-amber-100/30 uppercase tracking-[0.2em] font-serif">
+                  {planetIndex + 1} / {sortedPlanets.length}
+                </span>
+                <AnimatePresence>
+                  {arrived && (
+                    <motion.button
+                      key="next-btn-desktop"
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      onClick={handleNext}
+                      className="flex items-center gap-2 bg-mystic-gold text-mystic-dark rounded-full px-6 py-2 text-xs font-bold uppercase tracking-widest shadow-[0_0_15px_rgba(255,215,0,0.3)] hover:scale-105 transition-all"
+                    >
+                      {isLastPlanet ? 'Ver Resumo' : 'Próxima'} <ChevronRight size={16} />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Camada 50 — Barra de navegação */}
-      {scene === 'planet_scene' && (
+      {/* Camada 50 — Barra de navegação (Mobile Only) */}
+      {scene === 'planet_scene' && !isDesktop && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           className="fixed left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
           style={{
-            bottom: isDesktop ? 0 : '80px',
-            height: isDesktop ? 'auto' : '80px',
-            background: isDesktop ? 'transparent' : 'rgba(5,0,10,0.85)',
-            backdropFilter: isDesktop ? 'none' : 'blur(12px)',
-            borderTop: isDesktop ? 'none' : '1px solid rgba(212,175,55,0.2)',
+            bottom: '80px',
+            height: '80px',
+            background: 'rgba(5,0,10,0.85)',
+            backdropFilter: 'blur(12px)',
+            borderTop: '1px solid rgba(212,175,55,0.2)',
             pointerEvents: 'none'
           }}
         >

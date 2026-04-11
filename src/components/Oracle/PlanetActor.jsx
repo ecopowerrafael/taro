@@ -104,11 +104,11 @@ export function PlanetActor({ planetName, degree, visible, onArrival, centerY })
 }
 
 // Versão estática para o Grand Finale (todos os planetas simultaneamente)
-export function PlanetActorStatic({ planetName, degree, delay = 0 }) {
+export function PlanetActorStatic({ planetName, degree, delay = 0, centerY }) {
   const vmin = Math.min(window.innerWidth, window.innerHeight);
   const R    = 0.40 * vmin;
   const cx   = window.innerWidth  / 2;
-  const cy   = window.innerHeight / 2;
+  const cy   = centerY || window.innerHeight / 2;
 
   const rad     = degToRad(Number(degree) || 0);
   const targetX = cx + R * Math.cos(rad);
