@@ -92,31 +92,21 @@ export function HomePage() {
   useEffect(() => {
     const target = statsSectionRef.current
     if (!target || shouldStartCounters) {
-      return undefined
-    }
+      return (
+        <div className="min-h-screen bg-mystic-black text-white overflow-x-hidden font-lato selection:bg-mystic-gold/30 selection:text-mystic-gold">
+          {/* BACKGROUND EFFECTS */}
+          <div className="fixed inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-mystic-purple-dark/40 via-mystic-black to-mystic-black" />
+          <div className="fixed inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen" style={{ backgroundImage: 'url(\"https://www.transparenttextures.com/patterns/stardust.png\")' }} />
+          <SacredGeometry />
+          {/* HEADER e outros elementos mantidos... */}
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) {
-          return
-        }
-        setShouldStartCounters(true)
-        observer.disconnect()
-      },
-      { threshold: 0.35 },
-    )
-
-    observer.observe(target)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [shouldStartCounters])
-
-  return (
-    <div className="min-h-screen bg-mystic-black text-white overflow-x-hidden font-lato selection:bg-mystic-gold/30 selection:text-mystic-gold">
-      {/* BACKGROUND EFFECTS */}
-      <div className="fixed inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-mystic-purple-dark/40 via-mystic-black to-mystic-black" />
+          {/* FULLSCREEN DAILY TAROT CARD */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-mystic-black/95 backdrop-blur-xl">
+            <DailyTarotCard />
+          </div>
+          {/* O RESTANTE DA PÁGINA FICA ESCONDIDO ENQUANTO A CARTA DO DIA ESTIVER VISÍVEL */}
+          {/* Se quiser condicionar, pode usar um state para esconder/exibir o fullpage */}
+        </div>
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen" style={{ backgroundImage: 'url(\"https://www.transparenttextures.com/patterns/stardust.png\")' }} />
       <SacredGeometry />
       {/* HEADER e outros elementos mantidos... */}
