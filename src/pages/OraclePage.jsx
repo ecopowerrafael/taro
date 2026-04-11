@@ -135,9 +135,9 @@ export function OraclePage() {
   };
 
   useEffect(() => {
-    if (oracleTab === 'daily' && isAuthenticated && dailyTransits.length === 0) {
-      fetchDailyTransits();
-    }
+    // if (oracleTab === 'daily' && isAuthenticated && dailyTransits.length === 0) {
+    //   fetchDailyTransits();
+    // }
   }, [oracleTab, isAuthenticated]);
 
   const isValidCoordinatePair = (lat, lng) => {
@@ -377,15 +377,20 @@ export function OraclePage() {
   };
 
   useEffect(() => {
-    if (step === 'ritual' && oraclePlanets.length === 0) {
+    if (step === 'ritual') {
       addDebugLog('chart:auto-fetch:ritual-entered', {
         step,
         hasGeneratedAstralMap,
         planetsCount: oraclePlanets.length,
+        oracleTab,
       });
-      fetchChart();
+      if (oracleTab === 'natal' && oraclePlanets.length === 0) {
+        fetchChart();
+      } else if (oracleTab === 'daily' && dailyTransits.length === 0) {
+        fetchDailyTransits();
+      }
     }
-  }, [step]);
+  }, [step, oracleTab]);
 
   const handleConsultSubmit = async () => {
     setLoadingAction(true);
@@ -410,6 +415,7 @@ export function OraclePage() {
       
       // Pagou ou usou a grátis com sucesso
       await refreshProfile();
+      setOracleTab('natal'); // Reset para natal ao pagar se for a primeira vez
       setStep('ritual');
     } catch (e) {
       console.error(e);
@@ -552,7 +558,7 @@ export function OraclePage() {
         )}
       </AnimatePresence>
 
-      <div className="z-10 relative flex flex-col items-center max-w-lg mx-auto p-4 text-center">
+      <div className="z-10 relative flex flex-col items-center w-full max-w-lg mx-auto p-4 text-center">
       <AnimatePresence mode="wait">
         {step === 'intro' && (
           <motion.div
