@@ -199,14 +199,18 @@ export function CinematicTarot() {
           >
             <motion.div
               animate={{ 
-                rotateY: [0, 360],
-                scale: [1, 1.1, 1],
-                y: [0, -10, 0]
+                rotateX: [-5, 5, -5],
+                rotateY: [-8, 8, -8],
+                rotateZ: [-1, 1, -1],
+                scale: [1, 1.05, 1],
+                y: [0, -20, 0]
               }}
               transition={{ 
-                rotateY: { duration: 3, repeat: Infinity, ease: "linear" },
+                rotateX: { duration: 5, repeat: Infinity, ease: "easeInOut" },
+                rotateY: { duration: 7, repeat: Infinity, ease: "easeInOut" },
+                rotateZ: { duration: 6, repeat: Infinity, ease: "easeInOut" },
                 scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-                y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+                y: { duration: 6, repeat: Infinity, ease: "easeInOut" }
               }}
               onClick={handleCardClick}
               className="relative w-56 h-84 cursor-pointer"
@@ -214,6 +218,8 @@ export function CinematicTarot() {
             >
               <div className="absolute inset-0 rounded-2xl border-2 border-mystic-gold bg-black shadow-[0_0_50px_rgba(197,160,89,0.4)] overflow-hidden">
                 <img src="/cartas/verso.png" alt="Verso" className="w-full h-full object-cover" />
+                {/* Overlay de brilho sutil */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-mystic-gold/10 to-transparent pointer-events-none" />
               </div>
             </motion.div>
             <motion.p 
