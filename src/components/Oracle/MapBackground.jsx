@@ -57,7 +57,7 @@ export function MapBackground({ lat, lng, onReady, zoomOut }) {
   return (
     <div
       className="fixed inset-0 z-0"
-      style={{ filter: 'grayscale(30%) brightness(0.45) contrast(1.15)' }}
+      style={{ filter: 'grayscale(10%) brightness(0.7) contrast(1.05)' }}
     >
       <MapContainer
         center={[lat, lng]}
