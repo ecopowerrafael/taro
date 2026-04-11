@@ -359,7 +359,14 @@ export const createOracleRouter = (pool) => {
 
       let natalPlanets = parseCachedPlanets(user.oracle_chart_cache)
       if (!natalPlanets) {
-        const { rawPlanets } = await getOracleChart(user, userId)
+        const { rawPlanets, validationError } = await getOracleChart(user, userId)
+        if (validationError) {
+          return response.status(422).json({
+            error: validationError.message,
+            code: validationError.code,
+            details: validationError.details || null
+          })
+        }
         natalPlanets = rawPlanets
       }
 

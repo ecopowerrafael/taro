@@ -103,7 +103,14 @@ export function OraclePage() {
         headers: { Authorization: `Bearer ${localStorage.getItem('taro_token')}` }
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao carregar trânsitos diários.');
+      
+      if (!res.ok) {
+        if (data.code === 'MISSING_ORACLE_BIRTH_DATA' || data.code === 'INVALID_ORACLE_COORDINATES') {
+          setStep('birth_city');
+          return;
+        }
+        throw new Error(data.error || 'Erro ao carregar trânsitos diários.');
+      }
       
       setDailyTransits(data.transits || []);
     } catch (err) {
