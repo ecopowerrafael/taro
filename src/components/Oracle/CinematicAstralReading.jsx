@@ -169,18 +169,41 @@ export function CinematicAstralReading({ planets, transits, mode = 'natal', lat,
 
       {/* Camada 25 — Planetas Natais em segundo plano (Modo Diário) */}
       {mode === 'daily' && planets && planets.length > 0 && scene === 'planet_scene' && (
-        <div className="pointer-events-none opacity-30">
-          {planets.map((p) => (
-            <PlanetActor
-              key={`natal-${p.name}`}
-              planetName={p.name}
-              degree={p.longitude}
-              visible={true}
-              centerY={centerY}
-              isBackground={true}
-            />
-          ))}
-        </div>
+        <>
+          <AnimatePresence>
+            {!arrived && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 text-center pointer-events-none"
+              >
+                <p className="font-serif text-xl sm:text-2xl text-mystic-gold drop-shadow-[0_0_15px_rgba(255,215,0,0.6)] px-6">
+                  Assim estava o Céu no dia do seu Nascimento
+                </p>
+                <motion.div 
+                  className="w-24 h-px bg-gradient-to-r from-transparent via-mystic-gold to-transparent mx-auto mt-4"
+                  initial={{ width: 0 }}
+                  animate={{ width: 96 }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="pointer-events-none opacity-30">
+            {planets.map((p) => (
+              <PlanetActor
+                key={`natal-${p.name}`}
+                planetName={p.name}
+                degree={p.longitude}
+                visible={true}
+                centerY={centerY}
+                isBackground={true}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       {/* Camada 30 — Planeta ativo */}
