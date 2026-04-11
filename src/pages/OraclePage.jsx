@@ -225,6 +225,11 @@ export function OraclePage() {
   }, [profile]);
 
   useEffect(() => {
+    if (isDailyPath) setOracleTab('daily');
+    if (isNatalPath) setOracleTab('natal');
+  }, [isDailyPath, isNatalPath]);
+
+  useEffect(() => {
     if (authLoading) {
       return;
     }
@@ -234,18 +239,7 @@ export function OraclePage() {
       setStep('intro');
       return;
     }
-
-    // Se já tem os dados salvos, pula a intro e vai direto para o ritual/leitura
-    if (hasValidSavedProfileOracleData) {
-      if (isDailyPath) {
-        setOracleTab('daily');
-        setStep('ritual');
-      } else if (isNatalPath) {
-        setOracleTab('natal');
-        setStep('ritual');
-      }
-    }
-  }, [authLoading, isAuthenticated, hasValidSavedProfileOracleData, isDailyPath, isNatalPath]);
+  }, [authLoading, isAuthenticated]);
 
   const resetChartState = () => {
     setOraclePlanets([]);

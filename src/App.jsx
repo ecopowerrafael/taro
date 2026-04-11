@@ -44,6 +44,7 @@ const ConsultorPerfilPage = lazyNamed(() => import('./pages/ConsultorPerfilPage'
 const OraclePage = lazyNamed(() => import('./pages/OraclePage'), 'OraclePage')
 const SincronicidadePage = lazyNamed(() => import('./pages/SincronicidadePage'), 'SincronicidadePage')
 const RespostasPage = lazyNamed(() => import('./pages/RespostasPage'), 'RespostasPage')
+const TarotDiaPage = lazyNamed(() => import('./pages/TarotDiaPage'), 'TarotDiaPage')
 
 function RouteFallback() {
   return <RouteLoader message="Abrindo portal..." />
@@ -124,6 +125,7 @@ function AppContent() {
           <Route path="/oraculo" element={wrapWithTransition(OraclePage)} />
           <Route path="/mapa-astral" element={wrapWithTransition(OraclePage)} />
           <Route path="/oraculo-diario" element={wrapWithTransition(OraclePage)} />
+          <Route path="/carta-do-dia" element={wrapWithTransition(TarotDiaPage)} />
           <Route path="/sincronicidade" element={wrapWithTransition(SincronicidadePage)} />
           <Route path="/plataforma" element={wrapWithTransition(PlatformPage)} />
           <Route 

@@ -10,7 +10,7 @@ export function MobileBottomNav() {
   const mobileLinks = [
     { to: '/consultores', label: 'Consultores', icon: Moon },
     { to: '/sincronicidade', label: 'Sincronia', icon: Heart },
-    { to: '/oraculo-diario', label: 'Oráculo', icon: Compass },
+    { to: '/carta-do-dia', label: 'Tarot', icon: Compass },
     { to: '/magias', label: 'Magias', icon: Sparkles },
   ]
 
