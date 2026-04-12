@@ -2,40 +2,68 @@ import React, { useState } from 'react'
 import styled, { css } from 'styled-components'
 import { User, Calendar } from 'lucide-react'
 
-const InputWrapper = styled.label`
+const SacredInputWrapper = styled.label`
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+`
+
+const Label = styled.span`
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #ffe066cc;
+  font-family: 'EB Garamond', serif;
+  font-weight: 600;
+  margin-left: 0.2rem;
+`
+
+const InputRow = styled.div`
   display: flex;
   align-items: center;
   position: relative;
-  margin-bottom: 1.5rem;
-  font-family: 'EB Garamond', serif;
-  color: #ffe9b6;
-  font-size: 1.08rem;
-  letter-spacing: 0.01em;
 `
 
 const StyledInput = styled.input`
   background: transparent;
   border: none;
-  border-bottom: 1.5px solid rgba(255, 215, 80, 0.35);
+  border-bottom: 1.7px solid #ffe06655;
   outline: none;
   color: #fffbe9;
   font-size: 1.13rem;
-  padding: 0.7rem 2.2rem 0.7rem 0.2rem;
+  padding: 0.7rem 0.2rem 0.7rem 2.2rem;
   width: 100%;
-  transition: border-color 0.2s;
   font-family: 'EB Garamond', serif;
+  transition: border-color 0.2s;
   z-index: 1;
-
   &::placeholder {
     color: #ffe9b6a0;
     font-style: italic;
     opacity: 0.7;
   }
+`
 
-  &:focus ~ .golden-underline::after {
-    width: 100%;
+const goldenExpand = styled.keyframes`
+  0% { left: 50%; right: 50%; opacity: 0; }
+  40% { opacity: 1; }
+  100% { left: 0; right: 0; opacity: 1; }
+`
+
+const GoldenLine = styled.span`
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #ffe066 0%, #bfa14a 100%);
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  ${({ $focused }) => $focused && css`
+    animation: ${goldenExpand} 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
     opacity: 1;
-  }
+  `}
 `
 
 const GoldenUnderline = styled.span`
@@ -60,7 +88,7 @@ const GoldenUnderline = styled.span`
 
 const Icon = styled.span`
   position: absolute;
-  right: 0.7rem;
+  left: 0.2rem;
   top: 50%;
   transform: translateY(-50%);
   color: #b6b6b6;
@@ -77,23 +105,25 @@ const Icon = styled.span`
 export function SacredInput({ label, icon, ...props }) {
   const [focused, setFocused] = useState(false)
   return (
-    <InputWrapper>
-      {label && <span style={{ marginRight: 8 }}>{label}</span>}
-      <StyledInput
-        {...props}
-        onFocus={e => {
-          setFocused(true)
-          props.onFocus && props.onFocus(e)
-        }}
-        onBlur={e => {
-          setFocused(false)
-          props.onBlur && props.onBlur(e)
-        }}
-      />
-      <GoldenUnderline className="golden-underline" />
-      <Icon $focused={focused}>
-        {icon === 'user' ? <User size={18} /> : icon === 'calendar' ? <Calendar size={18} /> : null}
-      </Icon>
-    </InputWrapper>
+    <SacredInputWrapper>
+      <Label>{label}</Label>
+      <InputRow>
+        <Icon $focused={focused}>
+          {icon === 'user' ? <User size={18} /> : icon === 'calendar' ? <Calendar size={18} /> : null}
+        </Icon>
+        <StyledInput
+          {...props}
+          onFocus={e => {
+            setFocused(true)
+            props.onFocus && props.onFocus(e)
+          }}
+          onBlur={e => {
+            setFocused(false)
+            props.onBlur && props.onBlur(e)
+          }}
+        />
+        <GoldenLine $focused={focused} />
+      </InputRow>
+    </SacredInputWrapper>
   )
 }

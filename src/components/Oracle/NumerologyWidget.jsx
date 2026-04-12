@@ -4,6 +4,7 @@ import { Hash, User, Calendar, ArrowRight, Lock, Sparkles, Loader2, AlertTriangl
 import { Link } from 'react-router-dom'
 import { usePlatformContext } from '../../context/platform-context'
 import { NumerologyPurchaseModal } from './NumerologyPurchaseModal'
+import { SacredInput } from './SacredInput'
 import { NumerologyProcessingImmersive } from './NumerologyProcessingImmersive'
 import { NumerologyResultArt } from './NumerologyResultArt'
 import { FrequencyAlert } from './FrequencyAlert'
@@ -82,34 +83,24 @@ export function NumerologyWidget() {
               </p>
 
               <form onSubmit={handleCalculate} className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-[0.2em] text-mystic-goldSoft font-bold ml-1">Nome Completo de Registro</label>
-                  <div className="relative group">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-mystic-gold/40 group-focus-within:text-mystic-gold transition-colors" />
-                    <input 
-                      type="text" 
-                      required
-                      value={formData.nomeCompleto}
-                      onChange={(e) => setFormData({...formData, nomeCompleto: e.target.value})}
-                      className="w-full bg-black/40 border border-stardust-gold/20 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:border-mystic-gold/50 transition-all"
-                      placeholder="Seu nome completo"
-                    />
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-[0.2em] text-mystic-goldSoft font-bold ml-1">Data de Nascimento</label>
-                  <div className="relative group">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-mystic-gold/40 group-focus-within:text-mystic-gold transition-colors" />
-                    <input 
-                      type="date" 
-                      required
-                      value={formData.dataNascimento}
-                      onChange={(e) => setFormData({...formData, dataNascimento: e.target.value})}
-                      className="w-full bg-black/40 border border-stardust-gold/20 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-mystic-gold/50 transition-all"
-                    />
-                  </div>
-                </div>
+                <SacredInput
+                  label="Nome Completo de Registro"
+                  icon="user"
+                  type="text"
+                  required
+                  value={formData.nomeCompleto}
+                  onChange={e => setFormData({ ...formData, nomeCompleto: e.target.value })}
+                  placeholder="Seu nome completo"
+                />
+                <SacredInput
+                  label="Data de Nascimento"
+                  icon="calendar"
+                  type="date"
+                  required
+                  value={formData.dataNascimento}
+                  onChange={e => setFormData({ ...formData, dataNascimento: e.target.value })}
+                />
 
                 <motion.button
                   whileHover={{ scale: 1.02, boxShadow: '0 0 20px rgba(197,160,89,0.2)' }}
@@ -140,105 +131,9 @@ export function NumerologyWidget() {
               setShowPurchaseModal={setShowPurchaseModal}
             />
           )}
-
-// Wrapper para disparar confetti só na primeira visualização do resultado
-function ResultWithConfetti({ result, setShowPurchaseModal }) {
-  const [showConfetti, setShowConfetti] = React.useState(false)
-  const shown = React.useRef(false)
-  React.useEffect(() => {
-    if (!shown.current) {
-      setShowConfetti(true)
-      shown.current = true
-      setTimeout(() => setShowConfetti(false), 2200)
-    }
-  }, [])
-  return (
-    <>
-      <GoldConfetti trigger={showConfetti} />
-      <NumerologyResultArt
-        numero={result.caminho_vida.numero}
-        titulo={result.caminho_vida.titulo}
-        teaser={result.caminho_vida.teaser}
-      />
-      <FrequencyAlert
-        desc={result.caminho_vida.alerta || 'Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.'}
-        onClick={() => alert('Em breve: dicas personalizadas para lidar com sua frequência!')}
-      />
-      <UpsellBlurredMap onUnlock={() => setShowPurchaseModal(true)} />
-    </>
-  )
-}
-// (Fim do arquivo)
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <AlertTriangle className="w-12 h-12 text-red-500" />
-                    </div>
-                    
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/30">
-                        <AlertTriangle className="w-4 h-4 text-red-500" />
-                      </div>
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-red-400 font-bold">Alerta de Frequência</span>
-                    </div>
-
-                    <p className="text-white text-sm leading-relaxed mb-4">
-                      {result.criticalAstro.interpretacao}
-                    </p>
-
-                    <Link 
-                      to="/consultores"
-                      className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-mystic-gold font-bold hover:text-white transition-colors"
-                    >
-                      Saber como lidar com isso <ArrowRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-2xl border border-mystic-gold/10 bg-mystic-gold/5 text-center">
-                    <p className="text-ethereal-silver/40 text-[10px] uppercase tracking-widest">Frequência astrológica estável no momento</p>
-                  </div>
-                )}
-              </motion.div>
-
-              {/* CTA Section */}
-              <div className="w-full p-8 rounded-[24px] bg-mystic-purple/20 border border-mystic-gold/20 relative overflow-hidden text-center">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-mystic-gold to-transparent opacity-50" />
-                
-                <h4 className="text-xl font-playfair text-white mb-4">Desvende seu Mapa Numerológico Completo</h4>
-                
-                <ul className="text-xs text-ethereal-silver/70 space-y-3 mb-8 text-left inline-block">
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-mystic-gold" /> Ciclos de Vida e Desafios para 2026.</li>
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-mystic-gold" /> Sua "máscara" social e a primeira impressão.</li>
-                  <li className="flex items-center gap-2"><div className="w-1 h-1 rounded-full bg-mystic-gold" /> Compatibilidade Numerológica Profunda.</li>
-                </ul>
-
-                <button
-                  onClick={() => setShowPurchaseModal(true)}
-                  className="w-full py-4 rounded-xl bg-white text-black font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 hover:bg-mystic-gold transition-colors"
-                >
-                  <Lock className="w-3 h-3" />
-                  Desbloquear Mapa Completo
-                </button>
-
-                {showPurchaseModal && (
-                  <NumerologyPurchaseModal
-                    onClose={() => setShowPurchaseModal(false)}
-                    onSuccess={() => setShowPurchaseModal(false)}
-                    nomeCompleto={formData.nomeCompleto}
-                    dataNascimento={formData.dataNascimento}
-                  />
-                )}
-              </div>
-
-              <button 
-                onClick={() => setStep('input')}
-                className="mt-6 text-[10px] text-ethereal-silver/40 uppercase tracking-widest hover:text-mystic-gold transition-colors"
-              >
-                Recalcular Dados
-              </button>
-            </motion.div>
-          )}
-
         </AnimatePresence>
       </div>
     </div>
   )
 }
+// (Fim do arquivo)
