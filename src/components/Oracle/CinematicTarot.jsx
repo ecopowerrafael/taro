@@ -54,7 +54,7 @@ export function CinematicTarot() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ tema: 'Amor' }) // Tema padrão só para buscar carta já sorteada
+          body: JSON.stringify({}) // Não envia tema na requisição inicial
         })
         const data = await response.json().catch(() => ({}))
         if (response.ok && data && data.id) {
