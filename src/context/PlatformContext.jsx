@@ -1,6 +1,7 @@
   // Cria pedido de numerologia via PIX
-  const createNumerologyPixOrder = async ({ nomeCompleto, dataNascimento }) => {
-    if (!token) {
+  const createNumerologyPixOrder = async ({ nomeCompleto, dataNascimento, token: overrideToken }) => {
+    const authToken = overrideToken || token;
+    if (!authToken) {
       return { ok: false, message: 'Entre na sua conta para solicitar o mapa numerológico.' }
     }
     try {
@@ -20,7 +21,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({ nomeCompleto, dataNascimento, pixKey, pixPayload }),
       })

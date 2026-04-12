@@ -10,7 +10,7 @@ const NUMEROLOGY_PRICE = 49.9
 const NUMEROLOGY_TITLE = 'Leitura Numerológica Completa'
 
 export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto, dataNascimento }) {
-  const { profile, isAuthenticated, mpCredentials, createNumerologyPixOrder } = usePlatformContext()
+  const { profile, isAuthenticated, mpCredentials, createNumerologyPixOrder, token } = usePlatformContext()
   const [paymentMethod, setPaymentMethod] = useState(null)
   const [copied, setCopied] = useState(false)
   const [pixSubmitting, setPixSubmitting] = useState(false)
@@ -45,7 +45,7 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto, data
   const handlePixSubmit = async () => {
     setPixSubmitting(true)
     setPixFeedback('')
-    const result = await createNumerologyPixOrder({ nomeCompleto, dataNascimento })
+    const result = await createNumerologyPixOrder({ nomeCompleto, dataNascimento, token })
     setPixSubmitting(false)
     setPixFeedback(result?.message || 'Pedido PIX registrado.')
     if (result?.ok) onSuccess?.()
