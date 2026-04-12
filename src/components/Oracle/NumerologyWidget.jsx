@@ -168,16 +168,7 @@ function ResultWithConfetti({ result, setShowPurchaseModal }) {
     </>
   )
 }
-                transition={{ delay: 1 }}
-                className="w-full mb-8"
-              >
-                {!result.hasChart ? (
-                  <Link 
-                    to="/mapa-astral"
-                    className="flex items-center gap-4 p-6 rounded-2xl border border-mystic-gold/20 bg-mystic-gold/5 hover:bg-mystic-gold/10 transition-colors group"
-                  >
-                    <div className="p-3 rounded-full bg-mystic-gold/10 border border-mystic-gold/30 group-hover:scale-110 transition-transform">
-                      <Map className="w-5 h-5 text-mystic-gold" />
+// (Fim do arquivo)
                     </div>
                     <div className="text-left">
                       <h4 className="text-white font-playfair text-lg">Potencialize sua Leitura</h4>
