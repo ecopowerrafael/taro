@@ -5,6 +5,10 @@ import { Link } from 'react-router-dom'
 import { usePlatformContext } from '../../context/platform-context'
 import { NumerologyPurchaseModal } from './NumerologyPurchaseModal'
 import { NumerologyProcessingImmersive } from './NumerologyProcessingImmersive'
+import { NumerologyResultArt } from './NumerologyResultArt'
+import { FrequencyAlert } from './FrequencyAlert'
+import { UpsellBlurredMap } from './UpsellBlurredMap'
+import { GoldConfetti } from './GoldConfetti'
 
 export function NumerologyWidget() {
   const { profile, token } = usePlatformContext()
@@ -131,53 +135,40 @@ export function NumerologyWidget() {
 
           {/* STEP 3: RESULT */}
           {step === 'result' && result && (
-            <motion.div 
-              key="result"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center"
-            >
-              <div className="flex items-center gap-2 mb-8">
-                <Sparkles className="w-4 h-4 text-mystic-gold" />
-                <span className="text-[10px] uppercase tracking-[0.3em] text-mystic-goldSoft font-bold">Sua Essência Numérica</span>
-                <Sparkles className="w-4 h-4 text-mystic-gold" />
-              </div>
+            <ResultWithConfetti
+              result={result}
+              setShowPurchaseModal={setShowPurchaseModal}
+            />
+          )}
 
-              {/* Bento-like Grid for Numbers */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mb-8">
-                
-                {/* Caminho da Vida - Destaque */}
-                <div className="col-span-1 md:col-span-2 p-6 rounded-[24px] bg-gradient-to-br from-mystic-gold/10 to-transparent border border-mystic-gold/30 flex flex-col items-center text-center">
-                  <div className="text-6xl font-display text-mystic-goldSoft mb-2 drop-shadow-gold">{result.caminho_vida.numero}</div>
-                  <h4 className="text-lg font-playfair text-white mb-2">Seu Número de Destino: {result.caminho_vida.titulo}</h4>
-                  <p className="text-sm text-ethereal-silver/80 leading-relaxed italic relative">
-                    "{result.caminho_vida.teaser}"
-                    <span className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-                  </p>
-                </div>
-
-                {/* Expressão & Alma */}
-                <div className="p-5 rounded-[24px] bg-black/40 border border-stardust-gold/10 flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] uppercase tracking-widest text-mystic-goldSoft/60 mb-1">Expressão</span>
-                    <span className="text-white text-sm font-medium">Talentos Naturais</span>
-                  </div>
-                  <div className="text-3xl font-display text-mystic-gold">{result.expressao.numero}</div>
-                </div>
-
-                <div className="p-5 rounded-[24px] bg-black/40 border border-stardust-gold/10 flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] uppercase tracking-widest text-mystic-goldSoft/60 mb-1">Desejo da Alma</span>
-                    <span className="text-white text-sm font-medium">Motivação Íntima</span>
-                  </div>
-                  <div className="text-3xl font-display text-mystic-gold">{result.desejo_alma.numero}</div>
-                </div>
-              </div>
-
-              {/* Alerta de Frequência / Astro Crítico */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                // Wrapper para disparar confetti só na primeira visualização do resultado
+                import React, { useRef, useEffect, useState } from 'react'
+                function ResultWithConfetti({ result, setShowPurchaseModal }) {
+                  const [showConfetti, setShowConfetti] = useState(false)
+                  const shown = useRef(false)
+                  useEffect(() => {
+                    if (!shown.current) {
+                      setShowConfetti(true)
+                      shown.current = true
+                      setTimeout(() => setShowConfetti(false), 2200)
+                    }
+                  }, [])
+                  return (
+                    <>
+                      <GoldConfetti trigger={showConfetti} />
+                      <NumerologyResultArt
+                        numero={result.caminho_vida.numero}
+                        titulo={result.caminho_vida.titulo}
+                        teaser={result.caminho_vida.teaser}
+                      />
+                      <FrequencyAlert
+                        desc={result.caminho_vida.alerta || 'Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.'}
+                        onClick={() => alert('Em breve: dicas personalizadas para lidar com sua frequência!')}
+                      />
+                      <UpsellBlurredMap onUnlock={() => setShowPurchaseModal(true)} />
+                    </>
+                  )
+                }
                 transition={{ delay: 1 }}
                 className="w-full mb-8"
               >
