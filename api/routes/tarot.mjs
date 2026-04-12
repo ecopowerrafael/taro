@@ -33,6 +33,7 @@ export const createTarotRouter = (pool) => {
     try {
       const { tema } = req.body // 'Amor', 'Dinheiro', 'Saúde', 'Família'
       const userId = req.user.id
+      console.log('[TAROT] Requisição recebida:', { userId, tema })
       // Função para obter o ciclo diário baseado em 08:00 local (igual frontend)
       function getCycleKey(date = new Date()) {
         const local = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)) // local time
@@ -49,11 +50,19 @@ export const createTarotRouter = (pool) => {
         [userId]
       )
       const user = uRows[0]
+      console.log('[TAROT] Usuário carregado:', user)
       let criticalAstro = null
       let hasChart = false
 
       // Se já tirou carta neste ciclo, retorna a mesma (independente do tema)
       if (user && user.oracle_daily_card_cycle === cycleKey && user.oracle_daily_card_id) {
+        console.log('[TAROT] Carta do ciclo já existente, retornando:', {
+          id: user.oracle_daily_card_id,
+          nome: user.oracle_daily_card_nome,
+          face_img: user.oracle_daily_card_face_img,
+          texto: user.oracle_daily_card_texto,
+          tema: user.oracle_daily_card_tema
+        })
         return res.json({
           id: user.oracle_daily_card_id,
           nome: user.oracle_daily_card_nome,
@@ -67,6 +76,7 @@ export const createTarotRouter = (pool) => {
 
       // Se não enviou tema, não sorteia carta nova
       if (!tema) {
+        console.warn('[TAROT] Tentativa de sortear carta sem tema!')
         return res.status(400).json({ error: 'Tema é obrigatório para sortear nova carta' })
       }
 
@@ -120,6 +130,8 @@ export const createTarotRouter = (pool) => {
         cardName = `${template?.nome || rank} de ${suitMap[suit] || suit}`
       }
 
+      console.log('[TAROT] Nova carta sorteada:', { selectedCardId, cardName, interpretacao, tema })
+
       // Salvar tiragem do ciclo no usuário
       await pool.query(
         `UPDATE users SET oracle_daily_card_cycle = ?, oracle_daily_card_id = ?, oracle_daily_card_tema = ?, oracle_daily_card_nome = ?, oracle_daily_card_texto = ?, oracle_daily_card_face_img = ?, oracle_daily_card_at = NOW() WHERE id = ?`,
@@ -136,7 +148,7 @@ export const createTarotRouter = (pool) => {
       })
     } catch (err) {
       console.error('[API/Tarot] Erro ao tirar carta:', err)
-      res.status(500).json({ error: 'Erro interno ao processar sua jogada.' })
+      res.status(500).json({ error: 'Erro interno ao processar sua jogada.', details: err?.message, stack: err?.stack })
     }
   })
 
