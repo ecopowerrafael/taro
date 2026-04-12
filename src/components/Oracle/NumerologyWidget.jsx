@@ -169,15 +169,6 @@ function ResultWithConfetti({ result, setShowPurchaseModal }) {
   )
 }
 // (Fim do arquivo)
-                    </div>
-                    <div className="text-left">
-                      <h4 className="text-white font-playfair text-lg">Potencialize sua Leitura</h4>
-                      <p className="text-ethereal-silver/60 text-[10px] uppercase tracking-widest">Complemente fazendo seu Mapa Astral Grátis</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-mystic-gold ml-auto group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                ) : result.criticalAstro ? (
-                  <div className="p-6 rounded-2xl border border-red-500/20 bg-red-500/5 relative overflow-hidden group text-left">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                       <AlertTriangle className="w-12 h-12 text-red-500" />
                     </div>
