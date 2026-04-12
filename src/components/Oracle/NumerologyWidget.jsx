@@ -136,4 +136,38 @@ export function NumerologyWidget() {
     </div>
   )
 }
+
+// Wrapper para disparar confetti só na primeira visualização do resultado
+function ResultWithConfetti({ result, setShowPurchaseModal }) {
+  const [showConfetti, setShowConfetti] = React.useState(false)
+  const shown = React.useRef(false)
+  React.useEffect(() => {
+    if (!shown.current) {
+      setShowConfetti(true)
+      shown.current = true
+      setTimeout(() => setShowConfetti(false), 2200)
+    }
+  }, [])
+  return (
+    <>
+      <GoldConfetti trigger={showConfetti} />
+      <NumerologyResultArt
+        numero={result.caminho_vida.numero}
+        titulo={result.caminho_vida.titulo}
+        teaser={result.caminho_vida.teaser}
+      />
+      <FrequencyAlert
+        desc={result.caminho_vida.alerta || 'Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.'}
+        onClick={() => alert('Em breve: dicas personalizadas para lidar com sua frequência!')}
+      />
+      <UpsellBlurredMap onUnlock={() => setShowPurchaseModal(true)} />
+    </>
+  )
+}
+// (Fim do arquivo)
+        </AnimatePresence>
+      </div>
+    </div>
+  )
+}
 // (Fim do arquivo)
