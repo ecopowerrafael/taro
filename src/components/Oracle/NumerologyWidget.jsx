@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Hash, User, Calendar, ArrowRight, Lock, Sparkles, Loader2, AlertTriangle, Map } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { usePlatformContext } from '../../context/platform-context'
+import { NumerologyPurchaseModal } from './NumerologyPurchaseModal'
 
 export function NumerologyWidget() {
   const { profile, token } = usePlatformContext()
@@ -12,6 +13,7 @@ export function NumerologyWidget() {
     dataNascimento: profile?.birthDate?.split('T')[0] || ''
   })
   const [result, setResult] = useState(null)
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false)
 
   const handleCalculate = async (e) => {
     e.preventDefault()
@@ -260,8 +262,6 @@ export function NumerologyWidget() {
                     onSuccess={() => setShowPurchaseModal(false)}
                   />
                 )}
-              import { NumerologyPurchaseModal } from './NumerologyPurchaseModal'
-                const [showPurchaseModal, setShowPurchaseModal] = useState(false)
               </div>
 
               <button 

@@ -56,12 +56,37 @@ export const createTarotRouter = (pool) => {
 
       // Se já tirou carta neste ciclo, retorna a mesma (independente do tema)
       if (user && user.oracle_daily_card_cycle === cycleKey && user.oracle_daily_card_id) {
+        // Buscar dados astrais se possível
+        let criticalAstro = null
+        let hasChart = false
+        const birthDate = user.oracle_birth_date || user.birthDate
+        const lat = user.oracle_lat
+        const lng = user.oracle_lng
+        if (birthDate && lat != null && lng != null) {
+          hasChart = true
+          let rawPlanets = []
+          try {
+            if (user.oracle_chart_cache) {
+              rawPlanets = JSON.parse(user.oracle_chart_cache)
+            } else {
+              rawPlanets = await calculateChart(birthDate, lat, lng)
+            }
+            const ascendant = rawPlanets.find(p => p.name === 'Ascendant')
+            if (ascendant) {
+              criticalAstro = await criticalAstroService.getCriticalAstro(rawPlanets, ascendant.longitude)
+            }
+          } catch (err) {
+            console.error('[API/Tarot] Erro ao calcular astro crítico (ciclo):', err)
+          }
+        }
         console.log('[TAROT] Carta do ciclo já existente, retornando:', {
           id: user.oracle_daily_card_id,
           nome: user.oracle_daily_card_nome,
           face_img: user.oracle_daily_card_face_img,
           texto: user.oracle_daily_card_texto,
-          tema: user.oracle_daily_card_tema
+          tema: user.oracle_daily_card_tema,
+          hasChart,
+          criticalAstro
         })
         return res.json({
           id: user.oracle_daily_card_id,
@@ -69,8 +94,8 @@ export const createTarotRouter = (pool) => {
           face_img: user.oracle_daily_card_face_img,
           texto: user.oracle_daily_card_texto,
           tema: user.oracle_daily_card_tema,
-          criticalAstro: null,
-          hasChart: false
+          criticalAstro,
+          hasChart
         })
       }
 
