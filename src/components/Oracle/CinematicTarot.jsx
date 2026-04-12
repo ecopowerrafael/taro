@@ -71,40 +71,7 @@ export function CinematicTarot() {
     // eslint-disable-next-line
   }, [token])
 
-  // Função para garantir que sempre exibe a carta/tema do ciclo
-  const handleThemeSelect = async (theme) => {
-    setSelectedTheme(theme)
-    setState(STATES.SHUFFLING)
 
-    setTimeout(async () => {
-      try {
-        const response = await fetch('/api/tarot/tirar-carta', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ tema: theme.id })
-        })
-
-        const data = await response.json().catch(() => ({}))
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Erro ao tirar carta')
-        }
-
-        // Sempre usa o tema salvo do ciclo, não o clicado
-        setDrawnCard(data)
-        setSelectedTheme(THEMES.find(t => t.id === data.tema) || theme)
-        setTimeout(() => {
-          setState(STATES.DRAWING)
-        }, 2000)
-      } catch (error) {
-        console.error('Erro ao tirar carta:', error)
-        setState(STATES.INVITE)
-      }
-    }, 1500)
-  }
 
   const handleThemeSelect = async (theme) => {
     setSelectedTheme(theme)
