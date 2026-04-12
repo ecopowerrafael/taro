@@ -33,10 +33,6 @@ export const createTarotRouter = (pool) => {
     try {
       const { tema } = req.body // 'Amor', 'Dinheiro', 'Saúde', 'Família'
       const userId = req.user.id
-      if (!tema) {
-        return res.status(400).json({ error: 'Tema é obrigatório' })
-      }
-
       // Função para obter o ciclo diário baseado em 08:00 local (igual frontend)
       function getCycleKey(date = new Date()) {
         const local = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)) // local time
@@ -56,7 +52,7 @@ export const createTarotRouter = (pool) => {
       let criticalAstro = null
       let hasChart = false
 
-      // Se já tirou carta neste ciclo, retorna a mesma
+      // Se já tirou carta neste ciclo, retorna a mesma (independente do tema)
       if (user && user.oracle_daily_card_cycle === cycleKey && user.oracle_daily_card_id) {
         return res.json({
           id: user.oracle_daily_card_id,
@@ -67,6 +63,11 @@ export const createTarotRouter = (pool) => {
           criticalAstro: null,
           hasChart: false
         })
+      }
+
+      // Se não enviou tema, não sorteia carta nova
+      if (!tema) {
+        return res.status(400).json({ error: 'Tema é obrigatório para sortear nova carta' })
       }
 
       if (user) {
