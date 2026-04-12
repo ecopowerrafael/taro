@@ -81,8 +81,16 @@ export function AdminPanel({
   onDeleteSpell,
   onSpellOrderAction,
   onAstralReadingOrderAction,
+  adminNumerologyOrders = [],
+  fetchAdminNumerologyOrders,
 }) {
-  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'consultores' | 'usuarios' | 'financeiro' | 'magias' | 'leituras' | 'credenciais' | 'notificacoes' | 'recharges' | 'saques'
+  const [activeTab, setActiveTab] = useState('dashboard') // ... | 'numerologia'
+    // Buscar pedidos de numerologia ao ativar a aba
+    useEffect(() => {
+      if (activeTab === 'numerologia') {
+        fetchAdminNumerologyOrders?.()
+      }
+    }, [activeTab, fetchAdminNumerologyOrders])
   const [searchQuery, setSearchSearchQuery] = useState('')
   const [editingConsultantId, setEditingConsultantId] = useState(null)
   const [editForm, setEditForm] = useState(null)
@@ -721,6 +729,59 @@ export function AdminPanel({
           <Landmark size={14} />
           Credenciais
         </button>
+        <button className={tabButtonClass('numerologia')} onClick={() => setActiveTab('numerologia')}>
+          <FileText size={14} />
+          Numerologia
+        </button>
+              {activeTab === 'numerologia' && (
+                <section className="grid gap-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display text-2xl text-mystic-goldSoft">Pedidos de Numerologia</h3>
+                    <button
+                      onClick={() => fetchAdminNumerologyOrders?.()}
+                      className="rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 px-3 py-1.5 text-xs text-mystic-goldSoft transition hover:bg-mystic-gold/20"
+                    >
+                      Atualizar lista
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border border-mystic-gold/25">
+                    <table className="min-w-full divide-y divide-mystic-gold/20 text-sm">
+                      <thead className="bg-black/35">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Nome</th>
+                          <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Email</th>
+                          <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Data Nasc.</th>
+                          <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Status</th>
+                          <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Criado em</th>
+                          <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Chave PIX</th>
+                          <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide text-amber-100/70">Payload</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-mystic-gold/15 bg-black/20">
+                        {Array.isArray(adminNumerologyOrders) && adminNumerologyOrders.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="px-3 py-8 text-center text-ethereal-silver/70">
+                              Nenhum pedido de numerologia encontrado.
+                            </td>
+                          </tr>
+                        ) : (
+                          adminNumerologyOrders.map((order) => (
+                            <tr key={order.id}>
+                              <td className="px-3 py-2 text-amber-50">{order.nome_completo}</td>
+                              <td className="px-3 py-2 text-amber-100/80">{order.email}</td>
+                              <td className="px-3 py-2 text-mystic-goldSoft">{order.data_nascimento}</td>
+                              <td className="px-3 py-2 text-ethereal-silver/85">{order.status}</td>
+                              <td className="px-3 py-2 text-ethereal-silver/85">{order.created_at ? new Date(order.created_at).toLocaleString('pt-BR') : ''}</td>
+                              <td className="px-3 py-2 text-ethereal-silver/85">{order.pix_key || '-'}</td>
+                              <td className="px-3 py-2 text-ethereal-silver/85 break-all max-w-xs">{order.pix_payload || '-'}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              )}
         <button className={tabButtonClass('notificacoes')} onClick={() => setActiveTab('notificacoes')}>
           <AlertCircle size={14} />
           Notificações

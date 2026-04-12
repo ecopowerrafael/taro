@@ -1,3 +1,38 @@
+  // Cria pedido de numerologia via PIX
+  const createNumerologyPixOrder = async ({ nomeCompleto, dataNascimento }) => {
+    if (!token) {
+      return { ok: false, message: 'Entre na sua conta para solicitar o mapa numerológico.' }
+    }
+    try {
+      const pixKey = mpCredentials?.pixKey || ''
+      // Gera payload PIX igual ao modal
+      let pixPayload = ''
+      try {
+        pixPayload = generatePixPayload({
+          key: pixKey,
+          name: mpCredentials?.pixReceiverName || 'Astria Tarot',
+          city: mpCredentials?.pixReceiverCity || 'SAO PAULO',
+          amount: 49.9,
+          description: 'Leitura Numerológica Completa',
+        })
+      } catch {}
+      const response = await fetch(buildApiUrl('/api/numerology/orders/pix'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ nomeCompleto, dataNascimento, pixKey, pixPayload }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { ok: false, message: payload.error || 'Erro ao registrar pedido PIX.' }
+      }
+      return { ok: true, message: payload.message || 'Pedido PIX registrado!' }
+    } catch (error) {
+      return { ok: false, message: 'Erro de conexão ao registrar pedido PIX.' }
+    }
+  }
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { getZodiacSign } from '../utils/zodiac'
@@ -316,6 +351,23 @@ export function PlatformProvider({ children }) {
   const [adminSpellOrders, setAdminSpellOrders] = useState([])
   const [pendingAstralReadingOrders, setPendingAstralReadingOrders] = useState([])
   const [adminAstralReadingOrders, setAdminAstralReadingOrders] = useState([])
+  // Numerologia admin
+  const [adminNumerologyOrders, setAdminNumerologyOrders] = useState([])
+    // Busca pedidos de numerologia para admin
+    const fetchAdminNumerologyOrders = async () => {
+      if (!token) return
+      try {
+        const response = await fetch(buildApiUrl('/api/numerology/orders/admin'), {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!response.ok) return
+        const payload = await response.json()
+        if (!payload.ok || !Array.isArray(payload.orders)) return
+        setAdminNumerologyOrders(payload.orders)
+      } catch (err) {
+        console.error('[fetchAdminNumerologyOrders] Erro ao buscar pedidos numerologia:', err)
+      }
+    }
   const [mpCredentials, setMpCredentialsState] = useState({
     publicKey: '',
     accessToken: '',
@@ -2314,6 +2366,7 @@ export function PlatformProvider({ children }) {
   }
 
   const value = {
+      createNumerologyPixOrder,
     profile,
     sign,
     minutesBalance,
@@ -2363,6 +2416,8 @@ export function PlatformProvider({ children }) {
     adminSpellOrders,
     pendingAstralReadingOrders,
     adminAstralReadingOrders,
+    adminNumerologyOrders,
+    fetchAdminNumerologyOrders,
     setMinutePackages,
     updateMinutePackage,
     setFeaturedPackage,

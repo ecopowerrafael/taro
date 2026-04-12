@@ -260,6 +260,8 @@ export function NumerologyWidget() {
                   <NumerologyPurchaseModal
                     onClose={() => setShowPurchaseModal(false)}
                     onSuccess={() => setShowPurchaseModal(false)}
+                    nomeCompleto={formData.nomeCompleto}
+                    dataNascimento={formData.dataNascimento}
                   />
                 )}
               </div>

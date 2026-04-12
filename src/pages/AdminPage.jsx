@@ -50,6 +50,8 @@ export function AdminPage() {
     processSpellOrderAction,
     processAstralReadingOrderAction,
     token,
+    adminNumerologyOrders,
+    fetchAdminNumerologyOrders,
   } = usePlatformContext()
 
   useEffect(() => {
@@ -115,6 +117,8 @@ export function AdminPage() {
         onDeleteSpell={deleteSpell}
         onSpellOrderAction={processSpellOrderAction}
         onAstralReadingOrderAction={processAstralReadingOrderAction}
+        adminNumerologyOrders={adminNumerologyOrders}
+        fetchAdminNumerologyOrders={fetchAdminNumerologyOrders}
       />
     </PageShell>
   )

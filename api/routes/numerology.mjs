@@ -69,5 +69,49 @@ export const createNumerologyRouter = (pool) => {
     }
   })
 
+  /**
+   * Rota para criar pedido de numerologia via PIX
+   */
+  router.post('/orders/pix', authenticate, async (req, res) => {
+    try {
+      const userId = req.user.id
+      const { nomeCompleto, dataNascimento, pixKey, pixPayload } = req.body
+      if (!nomeCompleto || !dataNascimento) {
+        return res.status(400).json({ error: 'Nome completo e data de nascimento são obrigatórios' })
+      }
+      // Cria pedido pendente
+      await pool.query(
+        `INSERT INTO numerology_orders (user_id, nome_completo, data_nascimento, status, pix_key, pix_payload)
+         VALUES (?, ?, ?, 'pending', ?, ?)`,
+        [userId, nomeCompleto, dataNascimento, pixKey || null, pixPayload || null]
+      )
+      res.json({ ok: true, message: 'Pedido PIX registrado! Aguarde aprovação manual.' })
+    } catch (err) {
+      console.error('[API/Numerologia] Erro ao criar pedido PIX:', err)
+      res.status(500).json({ error: 'Erro ao registrar pedido PIX.' })
+    }
+  })
+
+  /**
+   * Rota para listar pedidos de numerologia para admin
+   */
+  router.get('/orders/admin', authenticate, async (req, res) => {
+    try {
+      // Apenas admin pode acessar
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Acesso restrito ao admin.' })
+      }
+      const [rows] = await pool.query(
+        `SELECT o.*, u.email, u.name as user_name FROM numerology_orders o
+         LEFT JOIN users u ON o.user_id = u.id
+         ORDER BY o.created_at DESC`
+      )
+      res.json({ ok: true, orders: rows })
+    } catch (err) {
+      console.error('[API/Numerologia] Erro ao listar pedidos admin:', err)
+      res.status(500).json({ error: 'Erro ao buscar pedidos.' })
+    }
+  })
+
   return router
 }

@@ -1,3 +1,19 @@
+  // --- Numerology Orders Table ---
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS numerology_orders (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id VARCHAR(50) NOT NULL,
+      nome_completo VARCHAR(120) NOT NULL,
+      data_nascimento DATE NOT NULL,
+      status ENUM('pending', 'paid', 'cancelled', 'completed') NOT NULL DEFAULT 'pending',
+      pix_key VARCHAR(255) NULL,
+      pix_payload TEXT NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_numerology_user_status (user_id, status),
+      CONSTRAINT fk_numerology_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `)
 import mysql from 'mysql2/promise'
 import bcrypt from 'bcryptjs'
 

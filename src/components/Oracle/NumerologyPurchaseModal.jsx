@@ -8,7 +8,7 @@ import { NumerologyStripeCheckoutForm } from './NumerologyStripeCheckoutForm'
 const NUMEROLOGY_TITLE = 'Leitura Numerológica Completa'
 const NUMEROLOGY_PRICE = 49.9
 
-export function NumerologyPurchaseModal({ onClose, onSuccess }) {
+export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto, dataNascimento }) {
   const { profile, mpCredentials, stripeCredentials, createNumerologyPixOrder, createNumerologyStripePaymentIntent } = usePlatformContext()
   const [paymentMethod, setPaymentMethod] = useState(null)
   const [pixSubmitting, setPixSubmitting] = useState(false)
@@ -34,7 +34,7 @@ export function NumerologyPurchaseModal({ onClose, onSuccess }) {
   const handlePixSubmit = async () => {
     setPixSubmitting(true)
     setPixFeedback('')
-    const result = await createNumerologyPixOrder()
+    const result = await createNumerologyPixOrder({ nomeCompleto, dataNascimento })
     if (result?.ok) {
       setPixFeedback('Pedido enviado! Aguarde validação do pagamento.')
       onSuccess?.()
