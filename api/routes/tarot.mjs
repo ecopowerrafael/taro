@@ -5,7 +5,14 @@ import { criticalAstroService } from '../services/criticalAstroService.mjs'
 import { calculateChart } from '../astroEngine.mjs'
 
 export const createTarotRouter = (pool) => {
-  const router = Router()
+  let router
+  try {
+    router = Router()
+    console.log('[TAROT] Router criado')
+  } catch (e) {
+    console.error('[TAROT] Erro ao criar Router:', e)
+    throw e
+  }
 
   // Lista de IDs de todas as 78 cartas
   const MAJOR_ARCANA_IDS = [
@@ -33,7 +40,8 @@ export const createTarotRouter = (pool) => {
     try {
       const { tema } = req.body // 'Amor', 'Dinheiro', 'Saúde', 'Família'
       const userId = req.user.id
-      console.log('[TAROT] Requisição recebida:', { userId, tema })
+      try {
+        console.log('[TAROT] Handler /tirar-carta iniciado')
       // Função para obter o ciclo diário baseado em 08:00 local (igual frontend)
       function getCycleKey(date = new Date()) {
         const local = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)) // local time
@@ -148,9 +156,20 @@ export const createTarotRouter = (pool) => {
       })
     } catch (err) {
       console.error('[API/Tarot] Erro ao tirar carta:', err)
-      res.status(500).json({ error: 'Erro interno ao processar sua jogada.', details: err?.message, stack: err?.stack })
+      try {
+        res.status(500).json({ error: 'Erro interno ao processar sua jogada.', details: err?.message, stack: err?.stack })
+      } catch (e2) {
+        console.error('[TAROT] Falha ao enviar resposta de erro:', e2)
+      }
     }
   })
 
   return router
+  try {
+    console.log('[TAROT] Retornando router')
+    return router
+  } catch (e) {
+    console.error('[TAROT] Erro ao retornar router:', e)
+    throw e
+  }
 }
