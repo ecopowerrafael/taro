@@ -357,35 +357,56 @@ export function CinematicTarot() {
                   )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-4 mt-10">
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                <div className="flex flex-col items-center gap-4 mt-10 w-full">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 3 }}
-                    onClick={reset}
-                    className="flex items-center gap-2 text-mystic-gold hover:text-white transition-colors text-sm uppercase tracking-widest font-bold group"
+                    className="w-full"
                   >
-                    <RotateCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-                    Nova Tiragem
-                  </motion.button>
-
-                  {state === STATES.INTERPRETATION && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 4 }}
-                      className="w-full sm:w-auto"
-                    >
+                    <div className="bg-gradient-to-br from-mystic-gold/30 via-black/80 to-mystic-gold/10 border-2 border-mystic-gold/40 rounded-3xl p-6 shadow-xl flex flex-col items-center text-center animate-pulse-mystic">
+                      <div className="mb-2 flex items-center justify-center gap-2">
+                        <Sparkles className="w-6 h-6 text-mystic-gold animate-spin-slow" />
+                        <span className="text-mystic-gold font-playfair text-xl drop-shadow-glow">Tire uma nova carta Amanhã!</span>
+                        <Sparkles className="w-6 h-6 text-mystic-gold animate-spin-slow-reverse" />
+                      </div>
+                      <div className="text-amber-100/90 font-bold text-lg mb-2 font-playfair drop-shadow-glow">Fale com um de nossos Consultores ao Vivo</div>
+                      <div className="text-mystic-goldSoft text-sm mb-2">Tiragem Completa a partir de <span className="font-bold text-mystic-gold">R$ 1,97/Min</span></div>
+                      <div className="text-ethereal-silver/80 text-xs mb-4">Ou faça <span className="font-bold text-mystic-gold">3 Perguntas Objetivas</span> a partir de <span className="font-bold text-mystic-gold">R$ 7,00</span></div>
                       <Link 
                         to="/consultores"
-                        className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-mystic-gold/10 border border-mystic-gold/50 text-mystic-gold hover:bg-mystic-gold hover:text-black transition-all duration-500 text-xs font-bold uppercase tracking-widest group"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-mystic-gold/10 border border-mystic-gold/50 text-mystic-gold hover:bg-mystic-gold hover:text-black transition-all duration-500 text-xs font-bold uppercase tracking-widest group shadow-lg mt-2"
                       >
                         <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        Falar com Consultor (R$ 1,97)
+                        Falar com Consultor Agora
                       </Link>
-                    </motion.div>
-                  )}
+                    </div>
+                  </motion.div>
                 </div>
+      <style jsx>{`
+        .drop-shadow-glow {
+          text-shadow: 0 0 8px #ffe9a5, 0 0 16px #c5a059;
+        }
+        .animate-pulse-mystic {
+          animation: pulse-mystic 2.5s infinite alternate;
+        }
+        @keyframes pulse-mystic {
+          0% { box-shadow: 0 0 24px 0 #c5a05944; }
+          100% { box-shadow: 0 0 48px 8px #ffe9a544; }
+        }
+        .animate-spin-slow {
+          animation: spin 6s linear infinite;
+        }
+        .animate-spin-slow-reverse {
+          animation: spin-reverse 6s linear infinite;
+        }
+        @keyframes spin {
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes spin-reverse {
+          100% { transform: rotate(-360deg); }
+        }
+      `}</style>
 
                 {/* Alerta de Frequência / Astro Crítico */}
                 {state === STATES.INTERPRETATION && (
