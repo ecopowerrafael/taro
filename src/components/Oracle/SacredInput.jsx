@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import styled, { css } from 'styled-components'
+import styled, { css, keyframes } from 'styled-components'
 import { User, Calendar } from 'lucide-react'
 
 const SacredInputWrapper = styled.label`
@@ -45,7 +45,7 @@ const StyledInput = styled.input`
   }
 `
 
-const goldenExpand = styled.keyframes`
+const goldenExpand = keyframes`
   0% { left: 50%; right: 50%; opacity: 0; }
   40% { opacity: 1; }
   100% { left: 0; right: 0; opacity: 1; }
