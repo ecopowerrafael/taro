@@ -4,6 +4,7 @@ import { Hash, User, Calendar, ArrowRight, Lock, Sparkles, Loader2, AlertTriangl
 import { Link } from 'react-router-dom'
 import { usePlatformContext } from '../../context/platform-context'
 import { NumerologyPurchaseModal } from './NumerologyPurchaseModal'
+import { NumerologyProcessingImmersive } from './NumerologyProcessingImmersive'
 
 export function NumerologyWidget() {
   const { profile, token } = usePlatformContext()
@@ -121,22 +122,11 @@ export function NumerologyWidget() {
 
           {/* STEP 2: LOADING */}
           {step === 'loading' && (
-            <motion.div 
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="py-20 flex flex-col items-center justify-center text-center"
-            >
-              <div className="relative mb-8">
-                <Loader2 className="w-16 h-16 text-mystic-gold animate-spin" />
-                <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-mystic-gold animate-pulse" />
-              </div>
-              <h3 className="text-2xl font-playfair text-white mb-2 italic">Sincronizando Numerologia...</h3>
-              <p className="text-mystic-purple-light text-sm max-w-xs mx-auto">
-                Mapeando as vibrações pitagóricas do seu nome e destino.
-              </p>
-            </motion.div>
+            <NumerologyProcessingImmersive
+              nome={formData.nomeCompleto}
+              dataNascimento={formData.dataNascimento}
+              onDone={() => setStep('result')}
+            />
           )}
 
           {/* STEP 3: RESULT */}
