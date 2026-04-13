@@ -122,30 +122,28 @@ export function NumerologyWidget() {
           {step === 'result' && result && (
             <ResultWithConfetti
               result={result}
-              setShowPurchaseModal={setShowPurchaseModal}
+              onUnlock={() => setShowPurchaseModal(true)}
             />
           )}
         </AnimatePresence>
-        {/* Modal de compra: agora sincroniza formData */}
-        <AnimatePresence>
-          {showPurchaseModal && (
-            <NumerologyPurchaseModal
-              onClose={() => setShowPurchaseModal(false)}
-              onSuccess={() => setShowPurchaseModal(false)}
-              nomeCompleto={formData.nomeCompleto}
-              dataNascimento={formData.dataNascimento}
-              setFormData={setFormData}
-              formData={formData}
-            />
-          )}
-        </AnimatePresence>
+        {/* Modal de compra: só fora do AnimatePresence principal */}
+        {showPurchaseModal && (
+          <NumerologyPurchaseModal
+            onClose={() => setShowPurchaseModal(false)}
+            onSuccess={() => setShowPurchaseModal(false)}
+            nomeCompleto={formData.nomeCompleto}
+            dataNascimento={formData.dataNascimento}
+            setFormData={setFormData}
+            formData={formData}
+          />
+        )}
       </div>
     </div>
   )
 }
 
 // Wrapper para disparar confetti só na primeira visualização do resultado
-function ResultWithConfetti({ result, setShowPurchaseModal }) {
+function ResultWithConfetti({ result, onUnlock }) {
   const [showConfetti, setShowConfetti] = React.useState(false)
   const shown = React.useRef(false)
   React.useEffect(() => {
@@ -167,7 +165,7 @@ function ResultWithConfetti({ result, setShowPurchaseModal }) {
         desc={result.caminho_vida.alerta || 'Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.'}
         onClick={() => alert('Em breve: dicas personalizadas para lidar com sua frequência!')}
       />
-      <UpsellBlurredMap onUnlock={() => setShowPurchaseModal(true)} />
+      <UpsellBlurredMap onUnlock={onUnlock} />
     </>
   )
 }
