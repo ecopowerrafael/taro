@@ -165,9 +165,3 @@ function ResultWithConfetti({ result, setShowPurchaseModal }) {
   )
 }
 // (Fim do arquivo)
-        </AnimatePresence>
-      </div>
-    </div>
-  )
-}
-// (Fim do arquivo)
