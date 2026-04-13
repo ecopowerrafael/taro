@@ -24,7 +24,6 @@ export function NumerologyWidget() {
   const handleCalculate = async (e) => {
     e.preventDefault()
     setStep('loading')
-    
     try {
       const response = await fetch('/api/numerology/preview', {
         method: 'POST',
@@ -45,7 +44,7 @@ export function NumerologyWidget() {
       setTimeout(() => {
         setResult(data.data)
         setStep('result')
-      }, 2000)
+      }, 4000) // 4 segundos
     } catch (err) {
       console.error('Erro ao calcular numerologia:', err)
       setStep('input')
@@ -126,8 +125,8 @@ export function NumerologyWidget() {
             />
           )}
         </AnimatePresence>
-        {/* Modal de compra: só fora do AnimatePresence principal */}
-        {showPurchaseModal && (
+        {/* Modal de compra: só fora do AnimatePresence principal e nunca sobre o resultado ou loading */}
+        {showPurchaseModal && step === 'input' && (
           <NumerologyPurchaseModal
             onClose={() => setShowPurchaseModal(false)}
             onSuccess={() => setShowPurchaseModal(false)}
