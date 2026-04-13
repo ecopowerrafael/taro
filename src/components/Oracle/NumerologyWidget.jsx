@@ -56,10 +56,8 @@ export function NumerologyWidget() {
     <div className="w-full max-w-2xl mx-auto glass-panel border border-stardust-gold/20 rounded-[32px] overflow-hidden shadow-2xl relative">
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-mystic-gold/5 blur-3xl pointer-events-none" />
-      
       <div className="p-8">
         <AnimatePresence mode="wait">
-          
           {/* STEP 1: INPUT */}
           {step === 'input' && (
             <motion.div 
@@ -83,7 +81,6 @@ export function NumerologyWidget() {
               </p>
 
               <form onSubmit={handleCalculate} className="space-y-5">
-
                 <SacredInput
                   label="Nome Completo de Registro"
                   icon="user"
@@ -101,7 +98,6 @@ export function NumerologyWidget() {
                   value={formData.dataNascimento}
                   onChange={e => setFormData({ ...formData, dataNascimento: e.target.value })}
                 />
-
                 <motion.button
                   whileHover={{ scale: 1.02, boxShadow: '0 0 20px rgba(197,160,89,0.2)' }}
                   whileTap={{ scale: 0.98 }}
@@ -114,7 +110,6 @@ export function NumerologyWidget() {
               </form>
             </motion.div>
           )}
-
           {/* STEP 2: LOADING */}
           {step === 'loading' && (
             <NumerologyProcessingImmersive
@@ -123,12 +118,24 @@ export function NumerologyWidget() {
               onDone={() => setStep('result')}
             />
           )}
-
           {/* STEP 3: RESULT */}
           {step === 'result' && result && (
             <ResultWithConfetti
               result={result}
               setShowPurchaseModal={setShowPurchaseModal}
+            />
+          )}
+        </AnimatePresence>
+        {/* Modal de compra: agora sincroniza formData */}
+        <AnimatePresence>
+          {showPurchaseModal && (
+            <NumerologyPurchaseModal
+              onClose={() => setShowPurchaseModal(false)}
+              onSuccess={() => setShowPurchaseModal(false)}
+              nomeCompleto={formData.nomeCompleto}
+              dataNascimento={formData.dataNascimento}
+              setFormData={setFormData}
+              formData={formData}
             />
           )}
         </AnimatePresence>

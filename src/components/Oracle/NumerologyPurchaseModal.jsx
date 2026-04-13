@@ -12,13 +12,26 @@ import styled, { keyframes } from 'styled-components'
 const NUMEROLOGY_PRICE = 49.9
 const NUMEROLOGY_TITLE = 'Leitura Numerológica Completa'
 
-export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto, dataNascimento }) {
+
+export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: initialNomeCompleto, dataNascimento: initialDataNascimento, setFormData, formData }) {
   const { profile, isAuthenticated, mpCredentials, createNumerologyPixOrder, token } = usePlatformContext()
   const [paymentMethod, setPaymentMethod] = useState(null)
   const [copied, setCopied] = useState(false)
   const [pixSubmitting, setPixSubmitting] = useState(false)
   const [pixFeedback, setPixFeedback] = useState('')
   const [stripeSuccess, setStripeSuccess] = useState('')
+  const [nomeCompleto, setNomeCompleto] = useState(initialNomeCompleto || '')
+  const [dataNascimento, setDataNascimento] = useState(initialDataNascimento || '')
+
+  // Sincroniza alterações locais com o formData do componente pai
+  const handleNomeChange = (e) => {
+    setNomeCompleto(e.target.value)
+    setFormData && setFormData({ ...formData, nomeCompleto: e.target.value })
+  }
+  const handleDataChange = (e) => {
+    setDataNascimento(e.target.value)
+    setFormData && setFormData({ ...formData, dataNascimento: e.target.value })
+  }
 
   const pixPayload = useMemo(() => {
     if (!mpCredentials?.pixKey) {
@@ -215,14 +228,17 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto, data
                 label="Nome completo"
                 icon="user"
                 value={nomeCompleto}
-                readOnly
+                onChange={handleNomeChange}
+                placeholder="Seu nome completo"
                 style={{ marginBottom: 18 }}
               />
               <SacredInput
                 label="Data de nascimento"
                 icon="calendar"
+                type="date"
                 value={dataNascimento}
-                readOnly
+                onChange={handleDataChange}
+                placeholder="dd/mm/aaaa"
               />
             </div>
             <div style={{ margin: '30px 0 0 0', textAlign: 'center' }}>
