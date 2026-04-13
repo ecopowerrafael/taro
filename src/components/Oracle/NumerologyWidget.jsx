@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Hash, User, Calendar, ArrowRight, Lock, Sparkles, Loader2, AlertTriangle, Map } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Hash, ArrowRight } from 'lucide-react'
 import { usePlatformContext } from '../../context/platform-context'
 import { NumerologyPurchaseModal } from './NumerologyPurchaseModal'
 import { SacredInput } from './SacredInput'
@@ -10,6 +9,64 @@ import { NumerologyResultArt } from './NumerologyResultArt'
 import { FrequencyAlert } from './FrequencyAlert'
 import { UpsellBlurredMap } from './UpsellBlurredMap'
 import { GoldConfetti } from './GoldConfetti'
+import styled, { keyframes } from 'styled-components'
+
+const PortalBg = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(10, 2, 25, 0.82);
+  backdrop-filter: blur(15px);
+  overflow-y: auto;
+`
+const ModalContainer = styled(motion.div)`
+  width: 100%;
+  max-width: 540px;
+  max-height: calc(100vh - 2rem);
+  position: relative;
+  border-radius: 2.2rem;
+  background: rgba(25, 10, 40, 0.7);
+  border: 1px solid;
+  border-image: linear-gradient(90deg, #ffe066 0%, #bfa14a 100%);
+  border-image-slice: 1;
+  box-shadow: 0 0 32px 0 #a259ff44, 0 0 0 2px #a259ff22;
+  overflow: hidden;
+  will-change: transform;
+  z-index: 200;
+`
+const auraPulse = keyframes`
+  0% { box-shadow: 0 0 32px 0 #a259ff44, 0 0 0 2px #a259ff22; }
+  50% { box-shadow: 0 0 48px 8px #a259ff77, 0 0 0 2px #ffe06633; }
+  100% { box-shadow: 0 0 32px 0 #a259ff44, 0 0 0 2px #a259ff22; }
+`
+const Aura = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 2.2rem;
+  animation: ${auraPulse} 3.5s infinite;
+`
+const rotateBg = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`
+const SacredBg = styled.div`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  opacity: 0.05;
+  pointer-events: none;
+  width: 420px;
+  height: 420px;
+  animation: ${rotateBg} 120s linear infinite;
+`
 
 export function NumerologyWidget() {
   const { profile, token } = usePlatformContext()
@@ -52,19 +109,32 @@ export function NumerologyWidget() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto glass-panel border border-stardust-gold/20 rounded-[32px] overflow-hidden shadow-2xl relative">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-mystic-gold/5 blur-3xl pointer-events-none" />
-      <div className="p-8">
-        <AnimatePresence mode="wait">
-          {/* STEP 1: INPUT */}
-          {step === 'input' && (
-            <motion.div 
-              key="input"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
+    <>
+      {/* Modal de input numerológico (Portal de Entrada) */}
+      {step === 'input' && !showPurchaseModal && (
+        <PortalBg>
+          <ModalContainer
+            key="input-modal"
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.7 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+          >
+            <Aura />
+            <SacredBg>
+              <svg width="420" height="420" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g stroke="#ffe066" strokeWidth="0.5">
+                  {[...Array(7)].map((_, i) => (
+                    <circle key={i} cx="210" cy="210" r={30 + i * 30} />
+                  ))}
+                  {[...Array(6)].map((_, i) => (
+                    <circle key={i+10} cx={210 + 90 * Math.cos((i * Math.PI) / 3)} cy={210 + 90 * Math.sin((i * Math.PI) / 3)} r={90} />
+                  ))}
+                  <circle cx="210" cy="210" r="90" />
+                </g>
+              </svg>
+            </SacredBg>
+            <div style={{ position: 'relative', zIndex: 2, padding: 36 }}>
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 rounded-xl bg-mystic-gold/10 border border-mystic-gold/30">
                   <Hash className="w-5 h-5 text-mystic-gold" />
@@ -74,11 +144,9 @@ export function NumerologyWidget() {
                   <p className="text-xs text-ethereal-silver/60 uppercase tracking-widest">Sincronize seus números</p>
                 </div>
               </div>
-
               <p className="text-mystic-purple-light text-sm mb-8 leading-relaxed">
                 Os astros e os números caminham juntos. Confirme seus dados para a análise numérica sagrada:
               </p>
-
               <form onSubmit={handleCalculate} className="space-y-5">
                 <SacredInput
                   label="Nome Completo de Registro"
@@ -107,37 +175,37 @@ export function NumerologyWidget() {
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </motion.button>
               </form>
-            </motion.div>
-          )}
-          {/* STEP 2: LOADING */}
-          {step === 'loading' && (
-            <NumerologyProcessingImmersive
-              nome={formData.nomeCompleto}
-              dataNascimento={formData.dataNascimento}
-              onDone={() => setStep('result')}
-            />
-          )}
-          {/* STEP 3: RESULT */}
-          {step === 'result' && result && (
-            <ResultWithConfetti
-              result={result}
-              onUnlock={() => setShowPurchaseModal(true)}
-            />
-          )}
-        </AnimatePresence>
-        {/* Modal de compra: só fora do AnimatePresence principal e nunca sobre o resultado ou loading */}
-        {showPurchaseModal && step === 'input' && (
-          <NumerologyPurchaseModal
-            onClose={() => setShowPurchaseModal(false)}
-            onSuccess={() => setShowPurchaseModal(false)}
-            nomeCompleto={formData.nomeCompleto}
-            dataNascimento={formData.dataNascimento}
-            setFormData={setFormData}
-            formData={formData}
-          />
-        )}
-      </div>
-    </div>
+            </div>
+          </ModalContainer>
+        </PortalBg>
+      )}
+      {/* Tela de processamento */}
+      {step === 'loading' && (
+        <NumerologyProcessingImmersive
+          nome={formData.nomeCompleto}
+          dataNascimento={formData.dataNascimento}
+          onDone={() => setStep('result')}
+        />
+      )}
+      {/* Tela de resultado */}
+      {step === 'result' && result && (
+        <ResultWithConfetti
+          result={result}
+          onUnlock={() => setShowPurchaseModal(true)}
+        />
+      )}
+      {/* Modal de compra: só aparece sozinho */}
+      {showPurchaseModal && (
+        <NumerologyPurchaseModal
+          onClose={() => setShowPurchaseModal(false)}
+          onSuccess={() => setShowPurchaseModal(false)}
+          nomeCompleto={formData.nomeCompleto}
+          dataNascimento={formData.dataNascimento}
+          setFormData={setFormData}
+          formData={formData}
+        />
+      )}
+    </>
   )
 }
 
