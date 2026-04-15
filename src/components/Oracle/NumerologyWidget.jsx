@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Moon, ArrowRight } from 'lucide-react'
 import { usePlatformContext } from '../../context/platform-context'
+import { calculateAllNumerologyNumbers } from '../../utils/numerologyCalculator'
 import { NumerologyPurchaseModal } from './NumerologyPurchaseModal'
 import { SacredInput } from './SacredInput'
 import { NumerologyProcessingImmersive } from './NumerologyProcessingImmersive'
@@ -70,6 +71,12 @@ export function NumerologyWidget() {
     e.preventDefault()
     setStep('loading')
     try {
+      // Calcula os números localmente
+      const calculatedNumbers = calculateAllNumerologyNumbers(
+        formData.nomeCompleto,
+        formData.dataNascimento
+      )
+      
       const response = await fetch('/api/numerology/preview', {
         method: 'POST',
         headers: { 
@@ -85,9 +92,15 @@ export function NumerologyWidget() {
         throw new Error(data.error || 'Erro ao calcular numerologia')
       }
 
+      // Combina dados da API com números calculados localmente
+      const enrichedData = {
+        ...data.data,
+        ...calculatedNumbers
+      }
+
       // Simular delay para aumentar valor percebido
       setTimeout(() => {
-        setResult(data.data)
+        setResult(enrichedData)
         setStep('result')
       }, 4000) // 4 segundos
     } catch (err) {
@@ -211,13 +224,13 @@ function ResultWithConfetti({ result, onUnlock }) {
       <GoldConfetti trigger={showConfetti} />
       <div className="w-full px-0 md:px-4">
         <NumerologyResultArt
-          numero={result.caminho_vida.numero}
-          titulo={result.caminho_vida.titulo}
-          teaser={result.caminho_vida.teaser}
-          destino={result.destino?.numero}
-          expressao={result.expressao?.numero}
-          motivacao={result.motivacao?.numero}
-          impressao={result.impressao?.numero}
+          numero={result.caminhoVida}
+          titulo={result.caminho_vida?.titulo || 'Seu Número de Destino'}
+          teaser={result.caminho_vida?.teaser || 'Sua jornada numerológica revelada'}
+          destino={result.destino}
+          expressao={result.expressao}
+          motivacao={result.motivacao}
+          impressao={result.impressao}
         />
         <FrequencyAlert
           desc={result.caminho_vida.alerta || 'Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.'}
