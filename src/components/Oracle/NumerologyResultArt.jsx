@@ -2,7 +2,6 @@ import React from 'react'
 import styled, { keyframes } from 'styled-components'
 import { motion } from 'framer-motion'
 import { VibrantNumber } from './VibrantNumber'
-import { NumerologyInfoTable } from './NumerologyInfoTable'
 
 const NebulaBg = styled.div`
   position: relative;
@@ -115,12 +114,11 @@ export function NumerologyResultArt({ numero, titulo, teaser }) {
           Sua Identidade Cósmica
         </Title>
         <VibrantNumber value={numero} />
-        <NumerologyInfoTable />
-        <Desc style={{ marginTop: '1rem', marginBottom: '0.8rem' }}>
+        <Desc style={{ marginTop: '1rem', marginBottom: '0.6rem' }}>
           <span style={{ fontFamily: 'EB Garamond, serif', fontWeight: 600, fontSize: '1.1rem', color: '#ffe066' }}>{titulo}</span>
         </Desc>
-        <Desc style={{ fontSize: '0.95rem', color: '#fffbe9bb', fontStyle: 'italic', marginBottom: 0 }}>
-          “{teaser}”
+        <Desc style={{ fontSize: '0.95rem', color: '#fffbe9bb', marginBottom: 0 }}>
+          {teaser}
         </Desc>
       </GlassCard>
     </NebulaBg>
