@@ -214,6 +214,10 @@ function ResultWithConfetti({ result, onUnlock }) {
           numero={result.caminho_vida.numero}
           titulo={result.caminho_vida.titulo}
           teaser={result.caminho_vida.teaser}
+          destino={result.destino?.numero}
+          expressao={result.expressao?.numero}
+          motivacao={result.motivacao?.numero}
+          impressao={result.impressao?.numero}
         />
         <FrequencyAlert
           desc={result.caminho_vida.alerta || 'Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.'}

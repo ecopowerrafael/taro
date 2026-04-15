@@ -2,6 +2,7 @@ import React from 'react'
 import styled, { keyframes } from 'styled-components'
 import { motion } from 'framer-motion'
 import { VibrantNumber } from './VibrantNumber'
+import { NumerologyFourNumbers } from './NumerologyFourNumbers'
 
 const NebulaBg = styled.div`
   position: relative;
@@ -97,7 +98,7 @@ const Desc = styled.p`
   }
 `
 
-export function NumerologyResultArt({ numero, titulo, teaser }) {
+export function NumerologyResultArt({ numero, titulo, teaser, destino, expressao, motivacao, impressao }) {
   return (
     <NebulaBg>
       <GlassCard
@@ -120,6 +121,14 @@ export function NumerologyResultArt({ numero, titulo, teaser }) {
         <Desc style={{ fontSize: '0.95rem', color: '#fffbe9bb', marginBottom: 0 }}>
           {teaser}
         </Desc>
+        {destino && expressao && motivacao && impressao && (
+          <NumerologyFourNumbers 
+            destino={destino} 
+            expressao={expressao} 
+            motivacao={motivacao} 
+            impressao={impressao} 
+          />
+        )}
       </GlassCard>
     </NebulaBg>
   )
