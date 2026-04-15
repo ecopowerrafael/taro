@@ -70,31 +70,17 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: init
 
   // Glassmorphism, SVG, animações e botão styled-components
   // --- Styled Components ---
-  const PortalBg = styled.div`
-    position: fixed;
-    inset: 0;
-    z-index: 130;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
-    background: rgba(10, 2, 25, 0.82);
-    backdrop-filter: blur(15px);
-    overflow-y: auto;
-  `
   const ModalContainer = styled.div`
     width: 100%;
     max-width: 540px;
-    max-height: calc(100vh - 2rem);
     position: relative;
     border-radius: 2.2rem;
     background: rgba(25, 10, 40, 0.7);
-    border: 1px solid;
-    border-image: linear-gradient(90deg, #ffe066 0%, #bfa14a 100%);
-    border-image-slice: 1;
-    box-shadow: 0 0 32px 0 #a259ff44, 0 0 0 2px #a259ff22;
+    border: 2px solid #ffe066;
+    box-shadow: 0 0 32px 0 #a259ff44, 0 0 0 2px #a259ff22, inset 0 0 20px 0 #ffe06611;
     overflow: hidden;
     will-change: transform;
+    margin: 48px auto 0 auto;
   `
   const auraPulse = keyframes`
     0% { box-shadow: 0 0 32px 0 #a259ff44, 0 0 0 2px #a259ff22; }
@@ -180,10 +166,9 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: init
 
   // --- Render ---
   return (
-    <PortalBg>
-      <ModalContainer>
-        <Aura />
-        <SacredBg>
+    <ModalContainer>
+      <Aura />
+      <SacredBg>
           {/* SVG Flor da Vida, stroke 0.5px */}
           <svg width="420" height="420" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g stroke="#ffe066" strokeWidth="0.5">
@@ -358,6 +343,5 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: init
           </GlassCard>
         </AnimatedContent>
       </ModalContainer>
-    </PortalBg>
   )
 }

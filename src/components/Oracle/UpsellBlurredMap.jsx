@@ -15,28 +15,39 @@ const topics = [
 ]
 
 const UpsellBox = styled(motion.div)`
-  margin: 2.8rem auto 0 auto;
+  margin: 1.6rem auto 0 auto;
   max-width: 420px;
+  width: 100%;
   background: rgba(25, 10, 40, 0.68);
   border-radius: 1.6rem;
   border: 1.5px solid #ffe06699;
   box-shadow: 0 2px 16px 0 #ffe06622;
-  padding: 2.2rem 1.7rem 2.7rem 1.7rem;
+  padding: 1.6rem 1.4rem 1.8rem 1.4rem;
   position: relative;
   z-index: 3;
   overflow: hidden;
+  
+  @media (max-width: 640px) {
+    margin: 1.2rem auto 0 auto;
+    padding: 1.3rem 1.1rem 1.5rem 1.1rem;
+  }
 `
 
 const Topic = styled.div`
   color: #ffe066;
   font-family: 'EB Garamond', serif;
-  font-size: 1.08rem;
-  margin-bottom: 0.7rem;
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
   font-weight: 500;
   letter-spacing: 0.01em;
   filter: ${({ blur }) => `blur(${blur}px)`};
   opacity: ${({ blur }) => (blur > 0 ? 0.7 : 1)};
   transition: filter 0.4s, opacity 0.4s;
+  
+  @media (max-width: 640px) {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
 `
 
 const shimmer = keyframes`
@@ -46,8 +57,8 @@ const shimmer = keyframes`
 
 const UnlockButton = styled(motion.button)`
   width: 100%;
-  margin-top: 2.2rem;
-  padding: 1.1rem 0;
+  margin-top: 1.6rem;
+  padding: 0.95rem 0;
   border: none;
   border-radius: 1.2rem;
   background: linear-gradient(92deg, #ffe066 0%, #fffbe9 40%, #bfa14a 100%);
@@ -55,7 +66,7 @@ const UnlockButton = styled(motion.button)`
   color: #2d1a00;
   font-family: 'EB Garamond', serif;
   font-weight: 700;
-  font-size: 1.18rem;
+  font-size: 1.05rem;
   box-shadow: 0 2px 16px 0 #ffe06633;
   cursor: pointer;
   position: relative;
@@ -75,6 +86,12 @@ const UnlockButton = styled(motion.button)`
     pointer-events: none;
     animation: ${shimmer} 1.2s linear infinite;
   }
+  
+  @media (max-width: 640px) {
+    margin-top: 1.2rem;
+    padding: 0.8rem 0;
+    font-size: 0.95rem;
+  }
 `
 
 const LockIcon = styled(Lock)`
@@ -86,16 +103,22 @@ const LockIcon = styled(Lock)`
 
 export function UpsellBlurredMap({ onUnlock }) {
   const [lockOpen, setLockOpen] = React.useState(false)
+  const displayedTopics = React.useMemo(() => {
+    return typeof window !== 'undefined' && window.innerWidth < 640 
+      ? topics.slice(0, 4)
+      : topics
+  }, [])
+
   return (
     <UpsellBox
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.7, duration: 0.7 }}
     >
-      <div style={{ marginBottom: 18, color: '#ffe066', fontFamily: 'EB Garamond, serif', fontWeight: 700, fontSize: 18, textAlign: 'center' }}>
-        Desbloqueie seu Mapa Numerológico Completo
+      <div style={{ marginBottom: 1.2, color: '#ffe066', fontFamily: 'EB Garamond, serif', fontWeight: 700, fontSize: '1rem', textAlign: 'center' }}>
+        Desbloqueie seu Mapa Completo
       </div>
-      {topics.map((t, i) => (
+      {displayedTopics.map((t, i) => (
         <Topic key={i} blur={i > 3 ? (i - 3) * 2.5 : 0}>{t}</Topic>
       ))}
       <UnlockButton
@@ -105,8 +128,8 @@ export function UpsellBlurredMap({ onUnlock }) {
         onMouseLeave={() => setLockOpen(false)}
         onClick={onUnlock}
       >
-        <LockIcon size={22} open={lockOpen ? 1 : 0} />
-        DESBLOQUEAR MAPA NUMEROLÓGICO COMPLETO
+        <LockIcon size={20} open={lockOpen ? 1 : 0} />
+        DESBLOQUEAR COMPLETO
       </UnlockButton>
     </UpsellBox>
   )

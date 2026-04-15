@@ -1,92 +1,105 @@
 import React from 'react'
 import styled, { keyframes } from 'styled-components'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { VibrantNumber } from './VibrantNumber'
 
-// Gradiente de luz central
-const LightBeam = styled.div`
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: 320px;
-  height: 100%;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at center top, #ffe06655 0%, transparent 80%);
-  pointer-events: none;
-  z-index: 1;
-`
-
 const NebulaBg = styled.div`
-  position: fixed;
-  inset: 0;
+  position: relative;
   z-index: 0;
-  background: linear-gradient(120deg, #1a0933 0%, #2d1a40 100%);
-  overflow: hidden;
+  background: transparent;
+  overflow: visible;
+  margin-top: 1.5rem;
+  
+  @media (max-width: 640px) {
+    margin-top: 1rem;
+  }
 `
 
 const GlassCard = styled(motion.div)`
   position: relative;
   margin: 0 auto;
-  margin-top: 3.5rem;
+  margin-top: 1.8rem;
   max-width: 520px;
+  width: 100%;
   background: rgba(25, 10, 40, 0.7);
   border-radius: 2.2rem;
-  border: 2px solid;
-  border-image: linear-gradient(90deg, #ffe066 0%, #bfa14a 100%);
-  border-image-slice: 1;
-  box-shadow: 0 0 48px 0 #a259ff44, 0 0 0 2px #a259ff22;
+  border: 2px solid #ffe066;
+  box-shadow: 0 0 48px 0 #a259ff44, 0 0 0 2px #a259ff22, inset 0 0 20px 0 #ffe06611;
   backdrop-filter: blur(18px);
-  padding: 2.8rem 2.2rem 2.2rem 2.2rem;
+  padding: 1.8rem 1.6rem 1.8rem 1.6rem;
   z-index: 2;
   overflow: visible;
+  
+  @media (max-width: 640px) {
+    padding: 1.2rem 1rem 1.2rem 1rem;
+    margin-top: 1rem;
+  }
 `
 
 const Seal = styled.div`
   position: absolute;
   left: 50%;
-  top: -38px;
+  top: -28px;
   transform: translateX(-50%);
   z-index: 3;
-  width: 76px;
-  height: 76px;
+  width: 56px;
+  height: 56px;
   background: radial-gradient(circle, #ffe066 60%, #bfa14a 100%);
   border-radius: 50%;
   box-shadow: 0 0 0 4px #fffbe933, 0 2px 16px 0 #ffe06633;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   color: #bfa14a;
   border: 2.5px solid #fffbe9cc;
   font-family: 'EB Garamond', serif;
   font-weight: 700;
   letter-spacing: 0.04em;
+  
+  @media (max-width: 640px) {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+    top: -24px;
+  }
 `
 
 const Title = styled(motion.h2)`
   font-family: 'EB Garamond', serif;
-  font-size: 2.1rem;
+  font-size: 1.8rem;
   color: #ffe066;
   text-align: center;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.8rem;
+  margin-top: 0.4rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   text-shadow: 0 2px 16px #ffe06633;
+  
+  @media (max-width: 640px) {
+    font-size: 1.4rem;
+    margin-bottom: 0.6rem;
+    margin-top: 0.2rem;
+  }
 `
 
 const Desc = styled.p`
   font-family: 'Inter', sans-serif;
   color: #fffbe9cc;
-  font-size: 1.13rem;
+  font-size: 1rem;
   text-align: center;
-  margin-bottom: 2.2rem;
+  margin-bottom: 1.2rem;
   font-weight: 400;
+  
+  @media (max-width: 640px) {
+    font-size: 0.95rem;
+    margin-bottom: 0.8rem;
+  }
 `
 
 export function NumerologyResultArt({ numero, titulo, teaser }) {
   return (
     <NebulaBg>
-      <LightBeam />
       <GlassCard
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -98,13 +111,13 @@ export function NumerologyResultArt({ numero, titulo, teaser }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.7 }}
         >
-          Sua Identidade Cósmica Revelada
+          Sua Identidade Cósmica
         </Title>
         <VibrantNumber value={numero} />
-        <Desc style={{ marginTop: 18, marginBottom: 10 }}>
-          <span style={{ fontFamily: 'EB Garamond, serif', fontWeight: 600, fontSize: 20, color: '#ffe066' }}>{titulo}</span>
+        <Desc style={{ marginTop: 1rem, marginBottom: 0.8rem }}>
+          <span style={{ fontFamily: 'EB Garamond, serif', fontWeight: 600, fontSize: '1.1rem', color: '#ffe066' }}>{titulo}</span>
         </Desc>
-        <Desc style={{ fontSize: 16, color: '#fffbe9bb', fontStyle: 'italic', marginBottom: 0 }}>
+        <Desc style={{ fontSize: '0.95rem', color: '#fffbe9bb', fontStyle: 'italic', marginBottom: 0 }}>
           “{teaser}”
         </Desc>
       </GlassCard>

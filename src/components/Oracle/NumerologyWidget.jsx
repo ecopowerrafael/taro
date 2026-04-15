@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Hash, ArrowRight } from 'lucide-react'
+import { Moon, ArrowRight } from 'lucide-react'
 import { usePlatformContext } from '../../context/platform-context'
 import { NumerologyPurchaseModal } from './NumerologyPurchaseModal'
 import { SacredInput } from './SacredInput'
@@ -18,10 +18,9 @@ const PanelContainer = styled(motion.div)`
   position: relative;
   border-radius: 2.2rem;
   background: rgba(25, 10, 40, 0.7);
-  border: 1px solid;
-  border-image: linear-gradient(90deg, #ffe066 0%, #bfa14a 100%);
-  border-image-slice: 1;
-  box-shadow: 0 0 32px 0 #a259ff44, 0 0 0 2px #a259ff22;
+  border: 2px solid;
+  border-color: #ffe066;
+  box-shadow: 0 0 32px 0 #a259ff44, 0 0 0 2px #a259ff22, inset 0 0 20px 0 #ffe06611;
   overflow: visible;
   will-change: transform;
   z-index: 2;
@@ -125,7 +124,7 @@ export function NumerologyWidget() {
           <div style={{ position: 'relative', zIndex: 2 }}>
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-xl bg-mystic-gold/10 border border-mystic-gold/30">
-                <Hash className="w-5 h-5 text-mystic-gold" />
+                <Moon className="w-5 h-5 text-mystic-gold" />
               </div>
               <div>
                 <h3 className="text-xl font-playfair text-white tracking-tight">Portal da Numerologia</h3>
@@ -210,16 +209,18 @@ function ResultWithConfetti({ result, onUnlock }) {
   return (
     <>
       <GoldConfetti trigger={showConfetti} />
-      <NumerologyResultArt
-        numero={result.caminho_vida.numero}
-        titulo={result.caminho_vida.titulo}
-        teaser={result.caminho_vida.teaser}
-      />
-      <FrequencyAlert
-        desc={result.caminho_vida.alerta || 'Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.'}
-        onClick={() => alert('Em breve: dicas personalizadas para lidar com sua frequência!')}
-      />
-      <UpsellBlurredMap onUnlock={onUnlock} />
+      <div className="w-full px-0 md:px-4">
+        <NumerologyResultArt
+          numero={result.caminho_vida.numero}
+          titulo={result.caminho_vida.titulo}
+          teaser={result.caminho_vida.teaser}
+        />
+        <FrequencyAlert
+          desc={result.caminho_vida.alerta || 'Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.'}
+          onClick={() => alert('Em breve: dicas personalizadas para lidar com sua frequência!')}
+        />
+        <UpsellBlurredMap onUnlock={onUnlock} />
+      </div>
     </>
   )
 }

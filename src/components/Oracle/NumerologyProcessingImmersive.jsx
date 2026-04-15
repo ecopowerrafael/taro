@@ -10,10 +10,8 @@ const GlassContainer = styled.div`
   margin: 0 auto;
   background: rgba(25, 10, 40, 0.7);
   border-radius: 2.2rem;
-  border: 1px solid;
-  border-image: linear-gradient(90deg, #ffe066 0%, #bfa14a 100%);
-  border-image-slice: 1;
-  box-shadow: 0 0 32px 0 #a259ff44, 0 0 0 2px #a259ff22;
+  border: 2px solid #ffe066;
+  box-shadow: 0 0 32px 0 #a259ff44, 0 0 0 2px #a259ff22, inset 0 0 20px 0 #ffe06611;
   backdrop-filter: blur(20px);
   overflow: hidden;
   will-change: transform;

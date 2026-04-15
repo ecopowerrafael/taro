@@ -31,6 +31,11 @@ const NumberWrap = styled(motion.div)`
   color: transparent;
   -webkit-text-fill-color: transparent;
   animation-name: ${goldPulse};
+  
+  @media (max-width: 640px) {
+    font-size: 4rem;
+  }
+  
   &::after {
     content: '';
     position: absolute;

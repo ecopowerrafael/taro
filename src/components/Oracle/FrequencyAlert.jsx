@@ -12,16 +12,23 @@ const pulseRadar = keyframes`
 const AlertBox = styled(motion.div)`
   display: flex;
   align-items: center;
-  gap: 1.1rem;
+  gap: 0.8rem;
   background: rgba(40, 20, 10, 0.82);
   border: 1.5px solid #ffb300cc;
   border-radius: 1.2rem;
-  padding: 1.2rem 1.6rem;
-  margin: 2.2rem auto 0 auto;
+  padding: 1rem 1.2rem;
+  margin: 1.6rem auto 0 auto;
   max-width: 420px;
+  width: 100%;
   box-shadow: 0 2px 16px 0 #ffb30022;
   position: relative;
   z-index: 4;
+  
+  @media (max-width: 640px) {
+    gap: 0.7rem;
+    padding: 0.9rem 1rem;
+    margin: 1.2rem auto 0 auto;
+  }
 `
 
 const RadarIcon = styled.div`
@@ -30,10 +37,19 @@ const RadarIcon = styled.div`
   justify-content: center;
   background: #ffe06622;
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   animation: ${pulseRadar} 1.6s infinite;
   box-shadow: 0 0 0 0 #ffe06655;
+  
+  @media (max-width: 640px) {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
 `
 
 const AlertContent = styled.div`
@@ -46,17 +62,27 @@ const AlertContent = styled.div`
 const AlertTitle = styled.div`
   color: #ffe066;
   font-family: 'EB Garamond', serif;
-  font-size: 1.18rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.2rem;
   letter-spacing: 0.01em;
+  
+  @media (max-width: 640px) {
+    font-size: 0.95rem;
+    margin-bottom: 0.15rem;
+  }
 `
 
 const AlertDesc = styled.div`
   color: #fffbe9cc;
   font-family: 'Inter', sans-serif;
-  font-size: 1.01rem;
-  margin-bottom: 0.2rem;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+  
+  @media (max-width: 640px) {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
 `
 
 const ShineAnim = keyframes`
@@ -67,16 +93,22 @@ const ShineAnim = keyframes`
 const AlertLink = styled.a`
   color: #ffe066;
   font-weight: 600;
-  font-size: 1.01rem;
+  font-size: 0.95rem;
   text-decoration: underline;
   cursor: pointer;
   animation: ${ShineAnim} 1.2s infinite;
   letter-spacing: 0.01em;
-  margin-top: 0.1rem;
+  margin-top: 0.15rem;
   transition: color 0.2s;
+  display: inline-block;
   &:hover {
     color: #fffbe9;
     text-shadow: 0 0 8px #ffe06699;
+  }
+  
+  @media (max-width: 640px) {
+    font-size: 0.9rem;
+    margin-top: 0.1rem;
   }
 `
 
