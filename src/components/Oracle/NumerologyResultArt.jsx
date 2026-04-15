@@ -114,7 +114,7 @@ export function NumerologyResultArt({ numero, titulo, teaser }) {
           Sua Identidade Cósmica
         </Title>
         <VibrantNumber value={numero} />
-        <Desc style={{ marginTop: 1rem, marginBottom: 0.8rem }}>
+        <Desc style={{ marginTop: '1rem', marginBottom: '0.8rem' }}>
           <span style={{ fontFamily: 'EB Garamond, serif', fontWeight: 600, fontSize: '1.1rem', color: '#ffe066' }}>{titulo}</span>
         </Desc>
         <Desc style={{ fontSize: '0.95rem', color: '#fffbe9bb', fontStyle: 'italic', marginBottom: 0 }}>
