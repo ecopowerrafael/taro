@@ -35,19 +35,6 @@ const NumberWrap = styled(motion.div)`
   @media (max-width: 640px) {
     font-size: 4rem;
   }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; width: 100%; height: 100%;
-    background: linear-gradient(100deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.01) 100%);
-    background-size: 220px 100%;
-    background-repeat: no-repeat;
-    background-position: -120px 0;
-    mix-blend-mode: lighten;
-    pointer-events: none;
-    animation: ${metallicShine} 2.8s linear infinite;
-  }
 `
 
 export function VibrantNumber({ value }) {
