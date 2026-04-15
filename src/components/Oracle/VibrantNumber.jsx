@@ -15,7 +15,9 @@ const metallicShine = keyframes`
 
 const NumberWrap = styled(motion.div)`
   position: relative;
-  display: inline-block;
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
   font-family: 'EB Garamond', serif;
   font-size: 5.5rem;
   font-weight: 700;
