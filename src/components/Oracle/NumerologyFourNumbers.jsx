@@ -1,6 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
+import { getInterpretation } from '../../utils/numerologyInterpretations'
 
 const Container = styled.div`
   width: 100%;
@@ -116,6 +117,7 @@ const numbers = [
 
 export function NumerologyFourNumbers({ destino, expressao, motivacao, impressao }) {
   const values = [destino, expressao, motivacao, impressao]
+  const aspectNames = ['destino', 'expressao', 'motivacao', 'impressao']
   
   return (
     <Container
@@ -128,7 +130,7 @@ export function NumerologyFourNumbers({ destino, expressao, motivacao, impressao
         <NumberCard key={idx} variants={cardVariants}>
           <NumberValue>{value}</NumberValue>
           <NumberLabel>{numbers[idx].label}</NumberLabel>
-          <NumberDesc>{numbers[idx].desc}</NumberDesc>
+          <NumberDesc>{getInterpretation(aspectNames[idx], value)}</NumberDesc>
         </NumberCard>
       ))}
     </Container>
