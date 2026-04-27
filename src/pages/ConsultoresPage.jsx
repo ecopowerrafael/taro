@@ -36,7 +36,7 @@ export function ConsultoresPage() {
   })
 
   // Novos estados para os modais
-  const [insufficientBalanceModal, setInsufficientBalanceModal] = useState({ isOpen: false, minRequired: 0 })
+  const [insufficientBalanceModal, setInsufficientBalanceModal] = useState({ isOpen: false, minRequired: 0, type: 'video' })
   const [confirmCallModal, setConfirmCallModal] = useState({ isOpen: false, consultant: null })
 
   const handleChooseService = (consultant, mode) => {
@@ -53,7 +53,7 @@ export function ConsultoresPage() {
 
       const minRequired = consultant.pricePerMinute * 5
       if (minutesBalance < minRequired) {
-        setInsufficientBalanceModal({ isOpen: true, minRequired })
+        setInsufficientBalanceModal({ isOpen: true, minRequired, type: 'video' })
         return
       }
 
@@ -72,7 +72,7 @@ export function ConsultoresPage() {
         : { questionCount: 5, price: consultant.priceFiveQuestions }
 
     if (minutesBalance < config.price) {
-      setSystemNotice('Saldo insuficiente para o pacote de perguntas selecionado.')
+      setInsufficientBalanceModal({ isOpen: true, minRequired: config.price, type: 'questions' })
       return
     }
 
@@ -176,7 +176,7 @@ export function ConsultoresPage() {
         onConfirmSend={confirmSendQuestions}
       />
 
-      {/* Modal: Saldo Insuficiente para Vídeo */}
+      {/* Modal: Saldo Insuficiente */}
       {insufficientBalanceModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
@@ -187,7 +187,11 @@ export function ConsultoresPage() {
               Saldo Insuficiente
             </h3>
             <p className="mb-6 text-center text-amber-100/80">
-              Você precisa ter saldo para no mínimo 5 minutos (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para iniciar esta chamada de vídeo.
+              {insufficientBalanceModal.type === 'video' ? (
+                <>Você precisa ter saldo para no mínimo 5 minutos (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para iniciar esta chamada de vídeo.</>
+              ) : (
+                <>Você precisa ter um saldo de no mínimo (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para enviar este pacote de perguntas.</>
+              )}
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -197,7 +201,7 @@ export function ConsultoresPage() {
                 Faça uma recarga
               </button>
               <button
-                onClick={() => setInsufficientBalanceModal({ isOpen: false, minRequired: 0 })}
+                onClick={() => setInsufficientBalanceModal({ isOpen: false, minRequired: 0, type: 'video' })}
                 className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
               >
                 Voltar

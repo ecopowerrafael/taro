@@ -51,7 +51,7 @@ export function ConsultorPerfilPage() {
     questionCount: 0,
     price: 0,
   })
-  const [insufficientBalanceModal, setInsufficientBalanceModal] = useState({ isOpen: false, minRequired: 0 })
+  const [insufficientBalanceModal, setInsufficientBalanceModal] = useState({ isOpen: false, minRequired: 0, type: 'video' })
   const [confirmCallModal, setConfirmCallModal] = useState({ isOpen: false, consultant: null })
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export function ConsultorPerfilPage() {
 
       const minRequired = Number(consultant.pricePerMinute) * 5
       if (minutesBalance < minRequired) {
-        setInsufficientBalanceModal({ isOpen: true, minRequired })
+        setInsufficientBalanceModal({ isOpen: true, minRequired, type: 'video' })
         return
       }
 
@@ -180,7 +180,7 @@ export function ConsultorPerfilPage() {
         : { questionCount: 5, price: Number(consultant.priceFiveQuestions) }
 
     if (minutesBalance < config.price) {
-      setSystemNotice('Saldo insuficiente para o pacote de perguntas selecionado.')
+      setInsufficientBalanceModal({ isOpen: true, minRequired: config.price, type: 'questions' })
       return
     }
 
@@ -467,7 +467,11 @@ export function ConsultorPerfilPage() {
             </div>
             <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">Saldo Insuficiente</h3>
             <p className="mb-6 text-center text-amber-100/80">
-              Você precisa ter saldo para no mínimo 5 minutos (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para iniciar esta chamada de vídeo.
+              {insufficientBalanceModal.type === 'video' ? (
+                <>Você precisa ter saldo para no mínimo 5 minutos (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para iniciar esta chamada de vídeo.</>
+              ) : (
+                <>Você precisa ter um saldo de no mínimo (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para enviar este pacote de perguntas.</>
+              )}
             </p>
             <div className="flex flex-col gap-3">
               <button
@@ -477,7 +481,7 @@ export function ConsultorPerfilPage() {
                 Fazer recarga
               </button>
               <button
-                onClick={() => setInsufficientBalanceModal({ isOpen: false, minRequired: 0 })}
+                onClick={() => setInsufficientBalanceModal({ isOpen: false, minRequired: 0, type: 'video' })}
                 className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
               >
                 Voltar
