@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Sparkles, Moon, ArrowRight, Sun, Eye, Menu, X } from 'lucide-react'
@@ -68,6 +69,7 @@ function useCountAnimation({ start, end, duration, shouldStart }) {
 }
 
 export function HomePage() {
+  const { t } = useTranslation()
   const statsSectionRef = useRef(null)
   const [shouldStartCounters, setShouldStartCounters] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -228,22 +230,22 @@ export function HomePage() {
             </div>
             
             <h1 className="font-playfair text-5xl md:text-7xl lg:text-8xl leading-[1.1] mb-6 drop-shadow-2xl">
-              Desvende os <br/>
-              <span className="text-gradient-gold italic pr-4">Mistérios</span> do<br/>
-              Seu Destino
+              {t('home.hero_title_1', 'Desvende os')} <br/>
+              <span className="text-gradient-gold italic pr-4">{t('home.hero_title_2', 'Mistérios')}</span> {t('home.hero_title_3', 'do')}<br/>
+              {t('home.hero_title_4', 'Seu Destino')}
             </h1>
             
             <p className="text-lg md:text-xl text-mystic-purple-light mb-10 max-w-lg leading-relaxed font-light">
-              Consulte os melhores oraculistas em uma plataforma imersiva. Encontre respostas, paz e direção espiritual.
+              {t('home.hero_desc', 'Consulte os melhores oraculistas em uma plataforma imersiva. Encontre respostas, paz e direção espiritual.')}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto">
               <Link to={isAuthenticated ? '/consultores' : '/cadastro'} className="rounded-full px-8 py-4 bg-mystic-gold text-mystic-black font-bold text-sm uppercase tracking-widest hover:bg-mystic-gold-light transition-colors shadow-gold-glow flex items-center justify-center gap-2 group">
-                {isAuthenticated ? 'Encontrar Consultor' : 'Encontrar Guia'}
+                {isAuthenticated ? t('home.hero_btn_consultant', 'Encontrar Consultor') : t('home.hero_btn_guide', 'Encontrar Guia')}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link to="/consultores" className="rounded-full px-8 py-4 border border-mystic-purple-light/50 text-white font-bold text-sm uppercase tracking-widest hover:bg-mystic-purple-light/10 transition-colors glass-panel flex items-center justify-center">
-                Explorar Tarólogos
+                {t('home.hero_btn_explore', 'Explorar Tarólogos')}
               </Link>
             </div>
           </div>
@@ -352,45 +354,42 @@ export function HomePage() {
                 <span className="font-playfair text-3xl font-bold text-white">Astria</span>
               </div>
               <p className="text-mystic-purple-light text-sm leading-relaxed mb-6">
-                A ponte entre o seu momento atual e o destino que o universo preparou para você.
+                {t('footer.brand_desc', 'A ponte entre o seu momento atual e o destino que o universo preparou para você.')}
               </p>
             </div>
 
             {/* Links */}
             <div>
-              <h4 className="font-playfair text-lg text-white mb-6">Plataforma</h4>
+              <h4 className="font-playfair text-lg text-white mb-6">{t('footer.platform', 'Plataforma')}</h4>
               <ul className="space-y-4">
-                {['Consultores', 'Serviços', 'Como Funciona', 'Blog'].map((link, i) => {
-                  const paths = {
-                    'Consultores': '/consultores',
-                    'Serviços': '/magias',
-                    'Como Funciona': '/como-funciona',
-                    'Blog': '/blog'
-                  }
-                  return (
-                    <li key={i}>
-                      <a href={paths[link]} className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors flex items-center gap-2">
-                        <span className="w-1 h-1 rounded-full bg-mystic-gold/50" /> {link}
-                      </a>
-                    </li>
-                  )
-                })}
+                {[
+                  { label: t('nav.consultants', 'Consultores'), to: '/consultores' },
+                  { label: t('nav.spells', 'Serviços'), to: '/magias' },
+                  { label: t('nav.how_it_works', 'Como Funciona'), to: '/como-funciona' },
+                  { label: 'Blog', to: '/blog' }
+                ].map((link, i) => (
+                  <li key={i}>
+                    <Link to={link.to} className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors flex items-center gap-2">
+                      <span className="w-1 h-1 rounded-full bg-mystic-gold/50" /> {link.label}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
             {/* Para Consultores */}
             <div>
-              <h4 className="font-playfair text-lg text-white mb-6">Para Consultores</h4>
+              <h4 className="font-playfair text-lg text-white mb-6">{t('footer.for_consultants', 'Para Consultores')}</h4>
               <ul className="space-y-4">
                 {[
-                  { name: 'Seja Consultor', path: '/seja-consultor' },
-                  { name: 'Área do Consultor', path: '/area-consultor' },
-                  { name: 'Suporte', path: '/suporte' }
+                  { name: t('footer.be_consultant', 'Seja Consultor'), path: '/seja-consultor' },
+                  { name: t('footer.consultant_area', 'Área do Consultor'), path: '/area-consultor' },
+                  { name: t('footer.support', 'Suporte'), path: '/suporte' }
                 ].map((link, i) => (
                   <li key={i}>
-                    <a href={link.path} className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors">
+                    <Link to={link.path} className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors">
                       {link.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -398,18 +397,18 @@ export function HomePage() {
 
             {/* Legal */}
             <div>
-              <h4 className="font-playfair text-lg text-white mb-6">Legal</h4>
+              <h4 className="font-playfair text-lg text-white mb-6">{t('footer.legal', 'Legal')}</h4>
               <ul className="space-y-4">
                 {[
-                  { name: 'Termos de Uso', path: '/termos' },
-                  { name: 'Privacidade', path: '/privacidade' },
-                  { name: 'Central de Ajuda', path: '/ajuda' },
-                  { name: 'Contato', path: '/contato' }
+                  { name: t('footer.terms', 'Termos de Uso'), path: '/termos' },
+                  { name: t('footer.privacy', 'Privacidade'), path: '/privacidade' },
+                  { name: t('footer.help_center', 'Central de Ajuda'), path: '/ajuda' },
+                  { name: t('footer.contact', 'Contato'), path: '/contato' }
                 ].map((link, i) => (
                   <li key={i}>
-                    <a href={link.path} className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors">
+                    <Link to={link.path} className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors">
                       {link.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -420,7 +419,7 @@ export function HomePage() {
           {/* Copyright & Security */}
           <div className="pt-8 border-t border-mystic-purple-light/20 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-mystic-purple-light/60 text-xs">
-              © {new Date().getFullYear()} Astria. Todos os direitos reservados.
+              © {new Date().getFullYear()} Astria. {t('footer.rights', 'Todos os direitos reservados.')}
             </p>
             <div className="flex items-center gap-4">
               <span className="text-mystic-purple-light/60 text-xs flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span> Conexão Segura</span>

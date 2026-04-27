@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Star, ArrowLeft, MessageCircle, Video, Users, Loader2, Wallet } from 'lucide-react'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
@@ -33,6 +34,7 @@ function StarRating({ value }) {
 export function ConsultorPerfilPage() {
   const { consultantId } = useParams()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const {
     profile,
     minutesBalance,
@@ -60,7 +62,7 @@ export function ConsultorPerfilPage() {
         const res = await fetch(`/api/consultants/${consultantId}/public`)
         if (!res.ok) {
           const data = await res.json()
-          throw new Error(data.message || 'Consultor não encontrado.')
+          throw new Error(data.message || t('consultant_profile.not_found', 'Consultor não encontrado.'))
         }
         const data = await res.json()
         setConsultant(data)
@@ -118,7 +120,7 @@ export function ConsultorPerfilPage() {
 
   if (loading) {
     return (
-      <PageShell title="Perfil do Consultor" subtitle="Carregando...">
+      <PageShell title={t('consultant_profile.page_title', 'Perfil do Consultor')} subtitle={t('common.loading', 'Carregando...')}>
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="animate-spin text-mystic-gold" size={48} />
         </div>
@@ -128,15 +130,15 @@ export function ConsultorPerfilPage() {
 
   if (error || !consultant) {
     return (
-      <PageShell title="Perfil do Consultor" subtitle="">
+      <PageShell title={t('consultant_profile.page_title', 'Perfil do Consultor')} subtitle="">
         <GlassCard>
-          <p className="text-center text-red-400">{error || 'Consultor não encontrado.'}</p>
+          <p className="text-center text-red-400">{error || t('consultant_profile.not_found', 'Consultor não encontrado.')}</p>
           <div className="mt-4 flex justify-center">
             <button
               onClick={() => navigate(-1)}
               className="inline-flex items-center gap-2 text-sm text-mystic-goldSoft underline"
             >
-              <ArrowLeft size={16} /> Voltar
+              <ArrowLeft size={16} /> {t('common.back', 'Voltar')}
             </button>
           </div>
         </GlassCard>
@@ -150,12 +152,12 @@ export function ConsultorPerfilPage() {
   const handleChooseService = (mode) => {
     if (mode === 'video') {
       if (!profile) {
-        setSystemNotice('Faça login ou cadastre-se para iniciar a consulta.')
+        setSystemNotice(t('consultants.login_to_start', 'Faça login ou cadastre-se para iniciar a consulta.'))
         return
       }
 
       if (!isConsultantOnline(consultant)) {
-        setSystemNotice('Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.')
+        setSystemNotice(t('consultants.consultant_offline', 'Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.'))
         return
       }
 
@@ -170,7 +172,7 @@ export function ConsultorPerfilPage() {
     }
 
     if (!profile) {
-      setSystemNotice('Faça login ou cadastre-se para enviar perguntas ao consultor.')
+      setSystemNotice(t('consultants.login_to_send_questions', 'Faça login ou cadastre-se para enviar perguntas ao consultor.'))
       return
     }
 
@@ -214,17 +216,17 @@ export function ConsultorPerfilPage() {
 
     if (!isConsultantOnline(confirmCallModal.consultant)) {
       setConfirmCallModal({ isOpen: false, consultant: null })
-      setSystemNotice('Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.')
+      setSystemNotice(t('consultants.consultant_offline', 'Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.'))
       return
     }
 
     const selectedConsultantId = confirmCallModal.consultant.id
     setConfirmCallModal({ isOpen: false, consultant: null })
-    setSystemNotice('Criando sala segura e notificando consultor...')
+    setSystemNotice(t('consultants.creating_room', 'Criando sala segura e notificando consultor...'))
 
     try {
       if (!token) {
-        setSystemNotice('Sessão expirada. Faça login para iniciar uma consulta de vídeo.')
+        setSystemNotice(t('consultants.session_expired', 'Sessão expirada. Faça login para iniciar uma consulta de vídeo.'))
         return
       }
 
@@ -240,7 +242,7 @@ export function ConsultorPerfilPage() {
 
       const data = await response.json()
       if (!response.ok) {
-        setSystemNotice(data.message || 'Erro ao iniciar sessão de vídeo.')
+        setSystemNotice(data.message || t('consultants.error_starting', 'Erro ao iniciar sessão de vídeo.'))
         return
       }
 
@@ -248,12 +250,12 @@ export function ConsultorPerfilPage() {
       navigate(`/sala/${data.sessionId}`)
     } catch (requestError) {
       console.error(requestError)
-      setSystemNotice('Erro de conexão ao tentar iniciar a sala.')
+      setSystemNotice(t('consultants.error_connection', 'Erro de conexão ao tentar iniciar a sala.'))
     }
   }
 
   return (
-    <PageShell title="Perfil do Consultor" subtitle="Conheça o especialista antes de iniciar sua consulta.">
+    <PageShell title={t('consultant_profile.page_title', 'Perfil do Consultor')} subtitle={t('consultant_profile.page_subtitle', 'Conheça o especialista antes de iniciar sua consulta.')}>
       <SeoHead
         title={`${consultant.name} | Consultor espiritual online na Astria`}
         description={
@@ -283,7 +285,7 @@ export function ConsultorPerfilPage() {
         onClick={() => navigate(-1)}
         className="mb-4 inline-flex items-center gap-2 text-sm text-amber-100/70 transition hover:text-mystic-goldSoft"
       >
-        <ArrowLeft size={16} /> Voltar
+        <ArrowLeft size={16} /> {t('common.back', 'Voltar')}
       </button>
 
       <GlassCard>
@@ -321,7 +323,7 @@ export function ConsultorPerfilPage() {
             <div className="flex flex-wrap gap-5 text-sm text-ethereal-silver/80">
               <span className="inline-flex items-center gap-1.5">
                 <Users size={15} className="text-mystic-goldSoft" />
-                <span>{totalConsultations} consultas realizadas</span>
+                <span>{totalConsultations} {t('consultant_profile.completed_consultations', 'consultas realizadas')}</span>
               </span>
               <span className="inline-flex items-center gap-2">
                 <Star size={15} className="fill-stardust-gold text-stardust-gold" />
@@ -329,7 +331,7 @@ export function ConsultorPerfilPage() {
                   {consultant.ratingAverage?.toFixed(1) ?? '0.0'}
                 </span>
                 <span className="text-xs text-ethereal-silver/60">
-                  ({reviews.length} avaliação{reviews.length !== 1 ? 'ões' : ''})
+                  ({reviews.length} {t('consultant_profile.reviews', 'avaliação', { count: reviews.length })})
                 </span>
               </span>
             </div>
@@ -344,7 +346,7 @@ export function ConsultorPerfilPage() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.22em] text-emerald-200/70">Vídeo ao vivo</p>
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-emerald-200/70">{t('consultant_profile.live_video', 'Vídeo ao vivo')}</p>
                       <p className="mt-1 text-xl font-semibold text-emerald-100">
                         R$ {Number(consultant.pricePerMinute).toFixed(2)}
                         <span className="ml-1 text-sm font-normal text-emerald-200/70">/ min</span>
@@ -354,8 +356,8 @@ export function ConsultorPerfilPage() {
                   </div>
                   <p className="mt-3 text-sm text-emerald-100/80">
                     {isConsultantOnline(consultant)
-                      ? 'Iniciar chamada de vídeo com este consultor.'
-                      : 'Chamada ao vivo disponível apenas quando o consultor estiver online.'}
+                      ? t('consultant_profile.start_video_desc', 'Iniciar chamada de vídeo com este consultor.')
+                      : t('consultant_profile.video_offline_desc', 'Chamada ao vivo disponível apenas quando o consultor estiver online.')}
                   </p>
                 </button>
               )}
@@ -367,12 +369,12 @@ export function ConsultorPerfilPage() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.22em] text-mystic-goldSoft/75">Pacote de perguntas</p>
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-mystic-goldSoft/75">{t('consultant_profile.questions_package', 'Pacote de perguntas')}</p>
                       <p className="mt-1 text-xl font-semibold text-amber-50">R$ {Number(consultant.priceThreeQuestions).toFixed(2)}</p>
                     </div>
                     <MessageCircle size={20} className="text-mystic-goldSoft transition group-hover:scale-110" />
                   </div>
-                  <p className="mt-3 text-sm text-amber-100/80">Enviar 3 perguntas para resposta detalhada.</p>
+                  <p className="mt-3 text-sm text-amber-100/80">{t('consultant_profile.send_3_questions', 'Enviar 3 perguntas para resposta detalhada.')}</p>
                 </button>
               )}
               {Number(consultant.priceFiveQuestions) > 0 && (
@@ -383,12 +385,12 @@ export function ConsultorPerfilPage() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-[11px] uppercase tracking-[0.22em] text-mystic-goldSoft/75">Pacote estendido</p>
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-mystic-goldSoft/75">{t('consultant_profile.extended_package', 'Pacote estendido')}</p>
                       <p className="mt-1 text-xl font-semibold text-amber-50">R$ {Number(consultant.priceFiveQuestions).toFixed(2)}</p>
                     </div>
                     <MessageCircle size={20} className="text-mystic-goldSoft transition group-hover:scale-110" />
                   </div>
-                  <p className="mt-3 text-sm text-amber-100/80">Enviar 5 perguntas e aprofundar a leitura.</p>
+                  <p className="mt-3 text-sm text-amber-100/80">{t('consultant_profile.send_5_questions', 'Enviar 5 perguntas e aprofundar a leitura.')}</p>
                 </button>
               )}
             </div>
@@ -398,7 +400,7 @@ export function ConsultorPerfilPage() {
         {consultant.description && (
           <div className="mt-6 border-t border-mystic-gold/20 pt-5">
             <h2 className="mb-2 text-sm font-semibold uppercase tracking-widest text-mystic-goldSoft/70">
-              Sobre
+              {t('consultant_profile.about', 'Sobre')}
             </h2>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-amber-100/80">
               {consultant.description}
@@ -408,16 +410,16 @@ export function ConsultorPerfilPage() {
       </GlassCard>
 
       <GlassCard
-        title="Avaliações dos Clientes"
+        title={t('consultant_profile.reviews_title', 'Avaliações dos Clientes')}
         subtitle={
           reviews.length > 0
-            ? `${reviews.length} avaliação${reviews.length !== 1 ? 'ões' : ''} recebida${reviews.length !== 1 ? 's' : ''}`
-            : 'Ainda sem avaliações'
+            ? `${reviews.length} ${t('consultant_profile.reviews_received', 'avaliação recebida', { count: reviews.length })}`
+            : t('consultant_profile.no_reviews_yet', 'Ainda sem avaliações')
         }
       >
         {reviews.length === 0 ? (
           <p className="py-6 text-center text-sm text-ethereal-silver/60">
-            Este consultor ainda não recebeu avaliações. Seja o primeiro!
+            {t('consultant_profile.be_the_first', 'Este consultor ainda não recebeu avaliações. Seja o primeiro!')}
           </p>
         ) : (
           <div className="grid gap-4">
@@ -430,7 +432,7 @@ export function ConsultorPerfilPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-amber-50">{review.userName}</span>
                     <span className="rounded-full border border-mystic-gold/20 bg-black/30 px-2 py-0.5 text-xs text-amber-100/60">
-                      {review.sessionType === 'video' ? 'Vídeo' : 'Perguntas'}
+                      {review.sessionType === 'video' ? t('consultant_profile.video', 'Vídeo') : t('consultant_profile.questions', 'Perguntas')}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -465,12 +467,12 @@ export function ConsultorPerfilPage() {
             <div className="mb-4 flex items-center justify-center text-amber-400">
               <Wallet size={48} />
             </div>
-            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">Saldo Insuficiente</h3>
+            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">{t('consultants.insufficient_balance', 'Saldo Insuficiente')}</h3>
             <p className="mb-6 text-center text-amber-100/80">
               {insufficientBalanceModal.type === 'video' ? (
-                <>Você precisa ter saldo para no mínimo 5 minutos (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para iniciar esta chamada de vídeo.</>
+                <>{t('consultants.need_balance_video', 'Você precisa ter saldo para no mínimo 5 minutos (R$ {{amount}}) para iniciar esta chamada de vídeo.', { amount: insufficientBalanceModal.minRequired.toFixed(2) })}</>
               ) : (
-                <>Você precisa ter um saldo de no mínimo (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para enviar este pacote de perguntas.</>
+                <>{t('consultants.need_balance_questions', 'Você precisa ter um saldo de no mínimo (R$ {{amount}}) para enviar este pacote de perguntas.', { amount: insufficientBalanceModal.minRequired.toFixed(2) })}</>
               )}
             </p>
             <div className="flex flex-col gap-3">
@@ -478,13 +480,13 @@ export function ConsultorPerfilPage() {
                 onClick={() => navigate('/recarregar')}
                 className="w-full rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 py-3 font-bold text-black transition hover:brightness-110"
               >
-                Fazer recarga
+                {t('consultants.recharge_now', 'Faça uma recarga')}
               </button>
               <button
                 onClick={() => setInsufficientBalanceModal({ isOpen: false, minRequired: 0, type: 'video' })}
                 className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
               >
-                Voltar
+                {t('common.back', 'Voltar')}
               </button>
             </div>
           </div>
@@ -497,23 +499,23 @@ export function ConsultorPerfilPage() {
             <div className="mb-4 flex items-center justify-center text-emerald-400">
               <Video size={48} />
             </div>
-            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">Confirmar Início da Consulta</h3>
+            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">{t('consultants.confirm_call_title', 'Confirmar Início da Consulta')}</h3>
             <p className="mb-6 text-center text-amber-100/80">
-              Você está prestes a iniciar uma chamada de vídeo com <strong className="text-amber-50">{confirmCallModal.consultant.name}</strong>.<br />
-              O valor é de R$ {Number(confirmCallModal.consultant.pricePerMinute).toFixed(2)} por minuto.
+              {t('consultants.confirm_call_desc', 'Você está prestes a iniciar uma chamada de vídeo com')} <strong className="text-amber-50">{confirmCallModal.consultant.name}</strong>.<br />
+              {t('consultants.confirm_call_price', 'O valor é de R$ {{amount}} por minuto.', { amount: Number(confirmCallModal.consultant.pricePerMinute).toFixed(2) })}
             </p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleStartVideoConsultation}
                 className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 font-bold text-black transition hover:brightness-110"
               >
-                Confirmar início
+                {t('consultants.confirm_start', 'Confirmar Início')}
               </button>
               <button
                 onClick={() => setConfirmCallModal({ isOpen: false, consultant: null })}
                 className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
               >
-                Voltar
+                {t('common.back', 'Voltar')}
               </button>
             </div>
           </div>

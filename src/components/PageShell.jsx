@@ -1,12 +1,15 @@
+import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogOut, Menu, X } from 'lucide-react'
 import { StarField } from './StarField'
 import { usePlatformContext } from '../context/platform-context'
 import { buildHeaderLinks } from '../utils/navigation'
+import { LanguageSelector } from './LanguageSelector'
 
 export function PageShell({ title, subtitle, children, mobileMenuFooter = null }) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { isAdmin, isConsultant, isAuthenticated, logout } = usePlatformContext()
 
@@ -15,7 +18,7 @@ export function PageShell({ title, subtitle, children, mobileMenuFooter = null }
     navigate('/')
   }
 
-  const mainLinks = buildHeaderLinks({ isAuthenticated, isConsultant, isAdmin })
+  const mainLinks = buildHeaderLinks({ isAuthenticated, isConsultant, isAdmin, t })
   const mobileMenuLinks = [...mainLinks]
 
   return (
@@ -48,26 +51,30 @@ export function PageShell({ title, subtitle, children, mobileMenuFooter = null }
                   {link.label}
                 </Link>
               ))}
+              <LanguageSelector />
               {isAuthenticated && (
                 <button
                   onClick={handleLogout}
-                  title="Sair da conta"
+                  title={t('nav.logout', 'Sair da conta')}
                   className="flex items-center gap-1 rounded-lg border border-red-500/35 px-3 py-1 text-xs text-red-400 transition hover:bg-red-500/10"
                 >
                   <LogOut size={14} />
-                  Sair
+                  {t('nav.logout', 'Sair')}
                 </button>
               )}
             </nav>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-lg border border-mystic-gold/35 p-2 text-mystic-goldSoft transition hover:bg-mystic-gold/10 md:hidden"
-              onClick={() => setMobileMenuOpen((current) => !current)}
-              aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
+            <div className="flex items-center gap-2 md:hidden">
+              <LanguageSelector />
+              <button
+                type="button"
+                className="inline-flex items-center justify-center rounded-lg border border-mystic-gold/35 p-2 text-mystic-goldSoft transition hover:bg-mystic-gold/10"
+                onClick={() => setMobileMenuOpen((current) => !current)}
+                aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+                aria-expanded={mobileMenuOpen}
+              >
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            </div>
           </div>
         </header>
         <div

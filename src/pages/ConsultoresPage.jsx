@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle, Wallet, Video } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ConsultantMarketplaceNew } from '../components/ConsultantMarketplaceNew'
 import { QuestionFlowModal } from '../components/QuestionFlowModal'
 import { VideoConsultationRoom } from '../components/VideoConsultationRoom'
@@ -11,6 +12,7 @@ const isConsultantOnline = (consultant) => consultant?.status === 'Online'
 
 export function ConsultoresPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const {
     consultants,
     statusFilter,
@@ -42,12 +44,12 @@ export function ConsultoresPage() {
   const handleChooseService = (consultant, mode) => {
     if (mode === 'video') {
       if (!profile) {
-        setSystemNotice('Faça login ou cadastre-se para iniciar a consulta.')
+        setSystemNotice(t('consultants.login_to_start', 'Faça login ou cadastre-se para iniciar a consulta.'))
         return
       }
 
       if (!isConsultantOnline(consultant)) {
-        setSystemNotice('Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.')
+        setSystemNotice(t('consultants.consultant_offline', 'Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.'))
         return
       }
 
@@ -62,7 +64,7 @@ export function ConsultoresPage() {
     }
 
     if (!profile) {
-      setSystemNotice('Faça login ou cadastre-se para enviar perguntas ao consultor.')
+      setSystemNotice(t('consultants.login_to_send_questions', 'Faça login ou cadastre-se para enviar perguntas ao consultor.'))
       return
     }
 
@@ -104,7 +106,7 @@ export function ConsultoresPage() {
 
     if (!isConsultantOnline(confirmCallModal.consultant)) {
       setConfirmCallModal({ isOpen: false, consultant: null })
-      setSystemNotice('Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.')
+      setSystemNotice(t('consultants.consultant_offline', 'Este consultor não está online no momento. Escolha um consultor online para iniciar a chamada ao vivo.'))
       return
     }
 
@@ -114,12 +116,12 @@ export function ConsultoresPage() {
     setConfirmCallModal({ isOpen: false, consultant: null })
     
     // Aqui faremos a requisição para o backend criar a sala, enviar emails e retornar a URL
-    setSystemNotice('Criando sala segura e notificando consultor...')
+    setSystemNotice(t('consultants.creating_room', 'Criando sala segura e notificando consultor...'))
     
     try {
       // Usar o token do contexto ao invés de buscar do localStorage cru
       if (!token) {
-        setSystemNotice('Sessão expirada. Faça login para iniciar uma consulta de vídeo.')
+        setSystemNotice(t('consultants.session_expired', 'Sessão expirada. Faça login para iniciar uma consulta de vídeo.'))
         return
       }
 
@@ -138,7 +140,7 @@ export function ConsultoresPage() {
       const data = await response.json()
       
       if (!response.ok) {
-        setSystemNotice(data.message || 'Erro ao iniciar sessão de vídeo.')
+        setSystemNotice(data.message || t('consultants.error_starting', 'Erro ao iniciar sessão de vídeo.'))
         return
       }
       
@@ -148,12 +150,12 @@ export function ConsultoresPage() {
       
     } catch (err) {
       console.error(err)
-      setSystemNotice('Erro de conexão ao tentar iniciar a sala.')
+      setSystemNotice(t('consultants.error_connection', 'Erro de conexão ao tentar iniciar a sala.'))
     }
   }
 
   return (
-    <PageShell title="Encontrar Consultor" subtitle="Filtre especialistas e inicie sua consulta em vídeo.">
+    <PageShell title={t('consultants.page_title', 'Encontrar Consultor')} subtitle={t('consultants.page_subtitle', 'Filtre especialistas e inicie sua consulta em vídeo.')}>
       {systemNotice && (
         <div className="inline-flex items-center gap-2 rounded-lg border border-amber-400/50 bg-amber-500/10 px-4 py-2 text-sm text-amber-200">
           <AlertTriangle size={16} />
@@ -184,13 +186,13 @@ export function ConsultoresPage() {
               <Wallet size={48} />
             </div>
             <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">
-              Saldo Insuficiente
+              {t('consultants.insufficient_balance', 'Saldo Insuficiente')}
             </h3>
             <p className="mb-6 text-center text-amber-100/80">
               {insufficientBalanceModal.type === 'video' ? (
-                <>Você precisa ter saldo para no mínimo 5 minutos (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para iniciar esta chamada de vídeo.</>
+                <>{t('consultants.need_balance_video', 'Você precisa ter saldo para no mínimo 5 minutos (R$ {{amount}}) para iniciar esta chamada de vídeo.', { amount: insufficientBalanceModal.minRequired.toFixed(2) })}</>
               ) : (
-                <>Você precisa ter um saldo de no mínimo (R$ {insufficientBalanceModal.minRequired.toFixed(2)}) para enviar este pacote de perguntas.</>
+                <>{t('consultants.need_balance_questions', 'Você precisa ter um saldo de no mínimo (R$ {{amount}}) para enviar este pacote de perguntas.', { amount: insufficientBalanceModal.minRequired.toFixed(2) })}</>
               )}
             </p>
             <div className="flex flex-col gap-3">
@@ -198,13 +200,13 @@ export function ConsultoresPage() {
                 onClick={() => navigate('/recarregar')}
                 className="w-full rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 py-3 font-bold text-black transition hover:brightness-110"
               >
-                Faça uma recarga
+                {t('consultants.recharge_now', 'Faça uma recarga')}
               </button>
               <button
                 onClick={() => setInsufficientBalanceModal({ isOpen: false, minRequired: 0, type: 'video' })}
                 className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
               >
-                Voltar
+                {t('common.back', 'Voltar')}
               </button>
             </div>
           </div>
@@ -219,24 +221,24 @@ export function ConsultoresPage() {
               <Video size={48} />
             </div>
             <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">
-              Confirmar Início da Consulta
+              {t('consultants.confirm_call_title', 'Confirmar Início da Consulta')}
             </h3>
             <p className="mb-6 text-center text-amber-100/80">
-              Você está prestes a iniciar uma chamada de vídeo com <strong className="text-amber-50">{confirmCallModal.consultant.name}</strong>.<br />
-              O valor é de R$ {confirmCallModal.consultant.pricePerMinute.toFixed(2)} por minuto.
+              {t('consultants.confirm_call_desc', 'Você está prestes a iniciar uma chamada de vídeo com')} <strong className="text-amber-50">{confirmCallModal.consultant.name}</strong>.<br />
+              {t('consultants.confirm_call_price', 'O valor é de R$ {{amount}} por minuto.', { amount: confirmCallModal.consultant.pricePerMinute.toFixed(2) })}
             </p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleStartVideoConsultation}
                 className="w-full rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 py-3 font-bold text-black transition hover:brightness-110"
               >
-                Confirmar Início
+                {t('consultants.confirm_start', 'Confirmar Início')}
               </button>
               <button
                 onClick={() => setConfirmCallModal({ isOpen: false, consultant: null })}
                 className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
               >
-                Voltar
+                {t('common.back', 'Voltar')}
               </button>
             </div>
           </div>
