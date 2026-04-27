@@ -1,3 +1,5 @@
+import i18n from '../i18n';
+
 export const astrologyInterpretations = {
   Sun: {
     Aries: 'Sua essência brilha através da coragem, iniciativa e afirmação de sua própria identidade.',
@@ -101,13 +103,29 @@ export const getHouseMeaning = (houseNum) => {
   return h[houseNum] || '';
 };
 
-export const getInterpretationText = (planetName, signWestern, isRetrograde, houseNum) => {
-  let text = astrologyInterpretations[planetName]?.[signWestern];
+export const getInterpretationText = (planet, sign, isRetrograde, house) => {
+  const planetKey = planet.replace(/\s+/g, '_');
+  const signKey = sign.replace(/\s+/g, '_');
+  
+  let text = i18n.t(`astrology_data.${planetKey}.${signKey}`, '');
+  
   if (!text) {
-    let gen = genericInterpretations[planetName] || `Características combinadas de ${planetName}`;
-    text = `${gen} na energia de modo ${signWestern}.`;
+    // Fallback to legacy object if translation is missing
+    const pData = astrologyInterpretations[planet];
+    text = pData ? pData[sign] : genericInterpretations[planet];
+    if (!text) return `${i18n.t('astrology.generic_position', 'Posição de')} ${planet} ${i18n.t('astrology.in', 'em')} ${sign}.`;
   }
-  let retroText = isRetrograde ? ' (Retrogrado: A energia volta-se para dentro, exigindo revisão constante.)' : '';
-  let houseText = houseNum ? ` na Casa ${houseNum} ${getHouseMeaning(houseNum)}.` : '.';
-  return text + retroText + houseText;
+  
+  let ret = '';
+  if (isRetrograde) {
+    ret = ` (${i18n.t('astrology.retrograde', 'Retrógrado')}) - ${i18n.t('astrology.retrograde_desc', 'Energia internalizada, pede revisão nesta área.')}`;
+  }
+
+  let hText = '';
+  if (house) {
+    const houseKey = `house_${house}`;
+    hText = ` [${i18n.t('astrology.house', 'Casa')} ${house} ${i18n.t(`astrology_data.houses.${houseKey}`, getHouseMeaning(house))}]`;
+  }
+
+  return `${text}${ret}${hText}`;
 };

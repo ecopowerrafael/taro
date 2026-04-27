@@ -94,6 +94,50 @@
     "flow_step_2": "2. O mentor entra em contato se precisar alinhar informações adicionais.",
     "flow_step_3": "3. O ritual é conduzido conforme a intenção e a demanda solicitada."
   },
+  "daily_card": {
+    "title": "Sua Carta do Dia",
+    "tap_to_reveal": "Toque para revelar seu conselho cósmico",
+    "available_once": "Disponível 1 vez por dia, sempre a partir das 08:00",
+    "come_back_tomorrow": "Volte amanhã após 08:00 para uma nova carta",
+    "reflect": "Escolha o Tema que quer saber e reflita sobre a mensagem recebida."
+  },
+  "numerology": {
+    "portal_title": "Portal da Numerologia",
+    "sync_numbers": "Sincronize seus números",
+    "portal_desc": "Os astros e os números caminham juntos. Confirme seus dados para a análise numérica sagrada:",
+    "full_name": "Nome Completo de Registro",
+    "name_placeholder": "Seu nome completo",
+    "birth_date": "Data de Nascimento",
+    "calculate_btn": "Calcular Minha Prévia Gratuita",
+    "destiny_number": "Seu Número de Destino",
+    "journey_revealed": "Sua jornada numerológica revelada",
+    "frequency_alert_desc": "Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.",
+    "frequency_alert_soon": "Em breve: dicas personalizadas para lidar com sua frequência!"
+  },
+  "tarot": {
+    "major_0": { "name": "O Louco", "message": "Um novo começo se aproxima. Abrace o desconhecido com coragem e otimismo. É hora de dar um salto de fé." },
+    "major_1": { "name": "O Mago", "message": "Você tem todas as ferramentas necessárias para alcançar seus objetivos. Manifeste sua vontade no mundo." },
+    "major_2": { "name": "A Sacerdotisa", "message": "Ouça sua intuição e confie na sua sabedoria interior. Segredos podem ser revelados hoje." },
+    "major_3": { "name": "A Imperatriz", "message": "Dia de abundância, criatividade e fertilidade. Cuide de si mesmo e daqueles ao seu redor." },
+    "major_4": { "name": "O Imperador", "message": "Momento de assumir a liderança, estabelecer ordem e organizar seus projetos com autoridade e estrutura." },
+    "major_5": { "name": "O Hierofante", "message": "Busque sabedoria nas tradições. O aprendizado e a orientação espiritual trarão as respostas que procura." },
+    "major_6": { "name": "Os Enamorados", "message": "Conexões profundas e escolhas importantes marcam o dia. Siga o caminho que ressoa com seu coração." },
+    "major_7": { "name": "O Carro", "message": "Avanço e vitória estão no horizonte. Mantenha o foco, supere os obstáculos e tome as rédeas da sua vida." },
+    "major_8": { "name": "A Força", "message": "Use sua força interior, paciência e compaixão para domar as adversidades, não a força bruta." },
+    "major_9": { "name": "O Eremita", "message": "Tempo de introspecção e reflexão. Afaste-se das distrações externas para encontrar a sua própria luz." },
+    "major_10": { "name": "A Roda da Fortuna", "message": "Mudanças estão a caminho. O ciclo da vida gira, trazendo sorte e novas oportunidades. Esteja aberto!" },
+    "major_11": { "name": "A Justiça", "message": "As coisas se equilibrarão. Decisões justas e consequências cármicas pautam as energias de hoje." },
+    "major_12": { "name": "O Enforcado", "message": "Pausa necessária. Olhe as coisas por uma nova perspectiva. Sacrifícios agora trarão iluminação depois." },
+    "major_13": { "name": "A Morte", "message": "Fim de um ciclo e início de outro. Deixe ir o que não lhe serve mais para abrir espaço para o novo." },
+    "major_14": { "name": "A Temperança", "message": "Equilíbrio e moderação são fundamentais hoje. Misture paciência e harmonia em suas ações." },
+    "major_15": { "name": "O Diabo", "message": "Atenção aos apegos e hábitos tóxicos. Reconheça as correntes que te prendem e encontre a chave para se libertar." },
+    "major_16": { "name": "A Torre", "message": "Estruturas instáveis podem ruir. Não tema as revelações bruscas, pois elas limpam o terreno para a verdade." },
+    "major_17": { "name": "A Estrela", "message": "Esperança, inspiração e renovação. Mantenha a fé, o universo está derramando bênçãos sobre você." },
+    "major_18": { "name": "A Lua", "message": "Ilusões podem nublar seu julgamento. Preste atenção aos seus sonhos e navegue com cuidado por sentimentos confusos." },
+    "major_19": { "name": "O Sol", "message": "Clareza, alegria e vitalidade brilham sobre seus projetos. É um dia de sucesso e de revelar sua verdadeira essência." },
+    "major_20": { "name": "O Julgamento", "message": "Hora de despertar. Você está sendo chamado para um propósito maior. Avalie o passado e siga renovado." },
+    "major_21": { "name": "O Mundo", "message": "Conclusão bem-sucedida de uma jornada! Celebre suas conquistas e prepare-se para abraçar a totalidade da vida." }
+  },
   "admin": {
     "magic_panel": {
       "title_pt": "Título (Português)",

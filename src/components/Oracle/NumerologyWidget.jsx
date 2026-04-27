@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Moon, ArrowRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { usePlatformContext } from '../../context/platform-context'
 import { calculateAllNumerologyNumbers } from '../../utils/numerologyCalculator'
 import { NumerologyPurchaseModal } from './NumerologyPurchaseModal'
@@ -58,6 +59,7 @@ const SacredBg = styled.div`
 `
 
 export function NumerologyWidget() {
+  const { t } = useTranslation()
   const { profile, token } = usePlatformContext()
   const [step, setStep] = useState('input') // 'input', 'loading', 'result'
   const [formData, setFormData] = useState({
@@ -140,25 +142,25 @@ export function NumerologyWidget() {
                 <Moon className="w-5 h-5 text-mystic-gold" />
               </div>
               <div>
-                <h3 className="text-xl font-playfair text-white tracking-tight">Portal da Numerologia</h3>
-                <p className="text-xs text-ethereal-silver/60 uppercase tracking-widest">Sincronize seus números</p>
+                <h3 className="text-xl font-playfair text-white tracking-tight">{t('numerology.portal_title', 'Portal da Numerologia')}</h3>
+                <p className="text-xs text-ethereal-silver/60 uppercase tracking-widest">{t('numerology.sync_numbers', 'Sincronize seus números')}</p>
               </div>
             </div>
             <p className="text-mystic-purple-light text-sm mb-8 leading-relaxed">
-              Os astros e os números caminham juntos. Confirme seus dados para a análise numérica sagrada:
+              {t('numerology.portal_desc', 'Os astros e os números caminham juntos. Confirme seus dados para a análise numérica sagrada:')}
             </p>
             <form onSubmit={handleCalculate} className="space-y-5">
               <SacredInput
-                label="Nome Completo de Registro"
+                label={t('numerology.full_name', 'Nome Completo de Registro')}
                 icon="user"
                 type="text"
                 required
                 value={formData.nomeCompleto}
                 onChange={e => setFormData({ ...formData, nomeCompleto: e.target.value })}
-                placeholder="Seu nome completo"
+                placeholder={t('numerology.name_placeholder', 'Seu nome completo')}
               />
               <SacredInput
-                label="Data de Nascimento"
+                label={t('numerology.birth_date', 'Data de Nascimento')}
                 icon="calendar"
                 type="date"
                 required
@@ -171,7 +173,7 @@ export function NumerologyWidget() {
                 type="submit"
                 className="w-full mt-4 py-4 rounded-2xl bg-gradient-to-r from-mystic-gold to-mystic-gold-light text-black font-bold uppercase tracking-[0.15em] text-xs shadow-lg flex items-center justify-center gap-2 group"
               >
-                Calcular Minha Prévia Gratuita
+                {t('numerology.calculate_btn', 'Calcular Minha Prévia Gratuita')}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </motion.button>
             </form>
@@ -210,6 +212,7 @@ export function NumerologyWidget() {
 
 // Wrapper para disparar confetti só na primeira visualização do resultado
 function ResultWithConfetti({ result, onUnlock }) {
+  const { t } = useTranslation()
   const [showConfetti, setShowConfetti] = React.useState(false)
   const shown = React.useRef(false)
   React.useEffect(() => {
@@ -225,16 +228,16 @@ function ResultWithConfetti({ result, onUnlock }) {
       <div className="w-full px-0 md:px-4">
         <NumerologyResultArt
           numero={result.caminhoVida}
-          titulo={result.caminho_vida?.titulo || 'Seu Número de Destino'}
-          teaser={result.caminho_vida?.teaser || 'Sua jornada numerológica revelada'}
+          titulo={result.caminho_vida?.titulo || t('numerology.destiny_number', 'Seu Número de Destino')}
+          teaser={result.caminho_vida?.teaser || t('numerology.journey_revealed', 'Sua jornada numerológica revelada')}
           destino={result.destino}
           expressao={result.expressao}
           motivacao={result.motivacao}
           impressao={result.impressao}
         />
         <FrequencyAlert
-          desc={result.caminho_vida.alerta || 'Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.'}
-          onClick={() => alert('Em breve: dicas personalizadas para lidar com sua frequência!')}
+          desc={result.caminho_vida?.alerta || t('numerology.frequency_alert_desc', 'Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.')}
+          onClick={() => alert(t('numerology.frequency_alert_soon', 'Em breve: dicas personalizadas para lidar com sua frequência!'))}
         />
         <UpsellBlurredMap onUnlock={onUnlock} />
       </div>

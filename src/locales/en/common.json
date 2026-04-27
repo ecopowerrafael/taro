@@ -94,6 +94,50 @@
     "flow_step_2": "2. The mentor gets in touch if they need to align additional information.",
     "flow_step_3": "3. The ritual is conducted according to the intention and requested demand."
   },
+  "daily_card": {
+    "title": "Your Daily Card",
+    "tap_to_reveal": "Tap to reveal your cosmic advice",
+    "available_once": "Available once a day, always after 08:00 AM",
+    "come_back_tomorrow": "Come back tomorrow after 08:00 AM for a new card",
+    "reflect": "Choose the topic you want to know about and reflect on the message received."
+  },
+  "numerology": {
+    "portal_title": "Numerology Portal",
+    "sync_numbers": "Synchronize your numbers",
+    "portal_desc": "Stars and numbers walk together. Confirm your data for sacred numerical analysis:",
+    "full_name": "Full Birth Name",
+    "name_placeholder": "Your full name",
+    "birth_date": "Date of Birth",
+    "calculate_btn": "Calculate My Free Preview",
+    "destiny_number": "Your Destiny Number",
+    "journey_revealed": "Your numerological journey revealed",
+    "frequency_alert_desc": "Energy oscillations detected in your current cycle. Special attention is recommended to repetitive patterns and important decisions.",
+    "frequency_alert_soon": "Coming soon: personalized tips to deal with your frequency!"
+  },
+  "tarot": {
+    "major_0": { "name": "The Fool", "message": "A new beginning approaches. Embrace the unknown with courage and optimism. It's time to take a leap of faith." },
+    "major_1": { "name": "The Magician", "message": "You have all the necessary tools to achieve your goals. Manifest your will in the world." },
+    "major_2": { "name": "The High Priestess", "message": "Listen to your intuition and trust your inner wisdom. Secrets may be revealed today." },
+    "major_3": { "name": "The Empress", "message": "A day of abundance, creativity, and fertility. Take care of yourself and those around you." },
+    "major_4": { "name": "The Emperor", "message": "Time to take the lead, establish order, and organize your projects with authority and structure." },
+    "major_5": { "name": "The Hierophant", "message": "Seek wisdom in traditions. Learning and spiritual guidance will bring the answers you seek." },
+    "major_6": { "name": "The Lovers", "message": "Deep connections and important choices mark the day. Follow the path that resonates with your heart." },
+    "major_7": { "name": "The Chariot", "message": "Progress and victory are on the horizon. Stay focused, overcome obstacles, and take the reins of your life." },
+    "major_8": { "name": "Strength", "message": "Use your inner strength, patience, and compassion to tame adversities, not brute force." },
+    "major_9": { "name": "The Hermit", "message": "Time for introspection and reflection. Step away from external distractions to find your own light." },
+    "major_10": { "name": "Wheel of Fortune", "message": "Changes are on the way. The cycle of life turns, bringing luck and new opportunities. Be open!" },
+    "major_11": { "name": "Justice", "message": "Things will balance out. Fair decisions and karmic consequences guide today's energies." },
+    "major_12": { "name": "The Hanged Man", "message": "A necessary pause. Look at things from a new perspective. Sacrifices now will bring enlightenment later." },
+    "major_13": { "name": "Death", "message": "End of one cycle and beginning of another. Let go of what no longer serves you to make room for the new." },
+    "major_14": { "name": "Temperance", "message": "Balance and moderation are key today. Blend patience and harmony in your actions." },
+    "major_15": { "name": "The Devil", "message": "Beware of attachments and toxic habits. Recognize the chains that bind you and find the key to free yourself." },
+    "major_16": { "name": "The Tower", "message": "Unstable structures may crumble. Do not fear sudden revelations, as they clear the ground for truth." },
+    "major_17": { "name": "The Star", "message": "Hope, inspiration, and renewal. Keep the faith, the universe is pouring blessings upon you." },
+    "major_18": { "name": "The Moon", "message": "Illusions may cloud your judgment. Pay attention to your dreams and navigate carefully through confusing feelings." },
+    "major_19": { "name": "The Sun", "message": "Clarity, joy, and vitality shine on your projects. It is a day of success and revealing your true essence." },
+    "major_20": { "name": "Judgement", "message": "Time to awaken. You are being called to a higher purpose. Evaluate the past and move forward renewed." },
+    "major_21": { "name": "The World", "message": "Successful conclusion of a journey! Celebrate your achievements and prepare to embrace the totality of life." }
+  },
   "admin": {
     "magic_panel": {
       "title_pt": "Title (Portuguese)",

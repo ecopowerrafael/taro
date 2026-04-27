@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { getInterpretationText } from '../../data/astrologyData';
 
 const translationMap = {
@@ -53,6 +54,7 @@ const westernSigns = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Li
 const t = (term) => translationMap[term] || term;
 
 export function AstrologyChart({ planets }) {
+  const { t: t18n } = useTranslation();
   if (!planets || planets.length === 0) return null;
 
   return (
@@ -128,7 +130,7 @@ export function AstrologyChart({ planets }) {
             >
                <div className="font-bold text-mystic-gold text-sm mb-1 flex items-center gap-2">
                  <span className="text-xl">{planetIcons[p.name] || '✧'}</span> 
-                 {t(p.name)} em {t(signWestern)}
+                 {t18n(`astrology.planets.${p.name}`, t(p.name))} {t18n('astrology.in', 'em')} {t18n(`astrology.signs.${signWestern}`, t(signWestern))}
                </div>
                <p className="leading-relaxed opacity-90">{interpretation}</p>
             </motion.div>

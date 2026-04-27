@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // Base dos 22 Arcanos Maiores do Tarot
 const MAJOR_ARCANA = [
@@ -28,6 +29,7 @@ const MAJOR_ARCANA = [
 ]
 
 export function DailyTarotCard() {
+  const { t } = useTranslation()
   const [isFlipped, setIsFlipped] = useState(false)
   const [dailyCard, setDailyCard] = useState(null)
 
@@ -85,23 +87,23 @@ export function DailyTarotCard() {
         {/* Frente da carta (Costas/Verso com o desenho da sorte) */}
         <div className="absolute inset-0 backface-hidden rounded-xl border-2 border-mystic-gold/40 bg-gradient-to-br from-mystic-purple via-black to-mystic-gold/20 shadow-glow flex flex-col items-center justify-center p-4 text-center">
           <Sparkles className="text-mystic-goldSoft mb-2 animate-pulse" size={32} />
-          <h3 className="font-display text-xl text-mystic-goldSoft">Sua Carta do Dia</h3>
-          <p className="text-xs text-amber-100/70 mt-2">Toque para revelar seu conselho cósmico</p>
-          <p className="text-[10px] text-ethereal-silver/60 mt-1">Disponível 1 vez por dia, sempre a partir das 08:00</p>
+          <h3 className="font-display text-xl text-mystic-goldSoft">{t('daily_card.title', 'Sua Carta do Dia')}</h3>
+          <p className="text-xs text-amber-100/70 mt-2">{t('daily_card.tap_to_reveal', 'Toque para revelar seu conselho cósmico')}</p>
+          <p className="text-[10px] text-ethereal-silver/60 mt-1">{t('daily_card.available_once', 'Disponível 1 vez por dia, sempre a partir das 08:00')}</p>
         </div>
 
         {/* Verso da carta (Face revelada com a mensagem) */}
         <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-xl border border-mystic-gold/60 bg-gradient-to-b from-[#1f0f38] to-[#0b0715] p-5 shadow-[0_0_20px_rgba(197,160,89,0.2)] overflow-y-auto custom-scrollbar">
           <div className="flex flex-col h-full justify-center text-center">
-            <h4 className="font-text font-bold text-xl text-mystic-goldSoft mb-2">{dailyCard.name}</h4>
+            <h4 className="font-text font-bold text-xl text-mystic-goldSoft mb-2">{t(`tarot.major_${MAJOR_ARCANA.findIndex(c => c.name === dailyCard.name)}.name`, dailyCard.name)}</h4>
             <div className="h-[1px] w-12 bg-mystic-gold/50 mx-auto mb-3"></div>
             <p className="text-sm text-amber-100/90 leading-relaxed italic">
-              "{dailyCard.message}"
+              "{t(`tarot.major_${MAJOR_ARCANA.findIndex(c => c.name === dailyCard.name)}.message`, dailyCard.message)}"
             </p>
             <p className="text-[10px] text-ethereal-silver/50 mt-4 uppercase tracking-wider">
-              Volte amanhã após 08:00 para uma nova carta
+              {t('daily_card.come_back_tomorrow', 'Volte amanhã após 08:00 para uma nova carta')}
             </p>
-            <p className="text-[10px] text-ethereal-silver/40 mt-1">Escolha o Tema que quer saber e reflita sobre a mensagem recebida.</p>
+            <p className="text-[10px] text-ethereal-silver/40 mt-1">{t('daily_card.reflect', 'Escolha o Tema que quer saber e reflita sobre a mensagem recebida.')}</p>
           </div>
         </div>
       </div>
