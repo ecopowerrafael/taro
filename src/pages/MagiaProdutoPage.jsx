@@ -8,7 +8,7 @@ import { SpellPurchaseModal } from '../components/SpellPurchaseModal'
 import { SeoHead } from '../components/SeoHead'
 import { usePlatformContext } from '../context/platform-context'
 import { buildAbsoluteImageUrl, buildAbsoluteUrl } from '../data/siteConfig'
-import { getTranslatedField } from '../utils/i18nHelper.js'
+import { getTranslatedField } from '../utils/i18nHelper'
 
 export function MagiaProdutoPage() {
   const { t } = useTranslation()
