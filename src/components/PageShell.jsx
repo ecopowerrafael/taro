@@ -5,7 +5,7 @@ import { LogOut, Menu, X } from 'lucide-react'
 import { StarField } from './StarField'
 import { usePlatformContext } from '../context/platform-context'
 import { buildHeaderLinks } from '../utils/navigation'
-import { LanguageSelector } from '../components/LanguageSelector.jsx'
+import { LanguageSelector } from './LanguageSelector.jsx'
 
 export function PageShell({ title, subtitle, children, mobileMenuFooter = null }) {
   const navigate = useNavigate()
