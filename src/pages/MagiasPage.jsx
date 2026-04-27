@@ -6,7 +6,7 @@ import { PageShell } from '../components/PageShell'
 import { SpellPurchaseModal } from '../components/SpellPurchaseModal'
 import { SacredGeometry } from '../components/SacredGeometry'
 import { usePlatformContext } from '../context/platform-context'
-import { getTranslatedField } from '../utils/i18nHelper.js'
+import { getTranslatedField } from '../utils/i18nHelper'
 
 export function MagiasPage() {
   const { t } = useTranslation()
