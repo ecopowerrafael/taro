@@ -328,6 +328,11 @@ export function AreaConsultorPage() {
     }
   }
 
+  const handleResponseAudioSave = async (requestId, questionIndex, blob, duration) => {
+    await handleResponseAudioRecorded(requestId, questionIndex, blob, duration)
+    setPanelNotice(`Áudio da resposta ${questionIndex + 1} salvo.`)
+  }
+
   const handleSubmitResponse = async (requestId) => {
     const request = pendingRequests.find((item) => item.id === requestId)
     if (!request) {
@@ -605,11 +610,12 @@ export function AreaConsultorPage() {
                       />
                     ) : (
                       <AudioRecorder
-                        onAudioRecorded={(blob, duration) => {
-                          void handleResponseAudioRecorded(request.id, index, blob, duration)
+                        onAudioRecorded={() => {}}
+                        onSave={(blob, duration) => {
+                          void handleResponseAudioSave(request.id, index, blob, duration)
                         }}
-                        onSave={() => {}}
                         maxDurationSeconds={120}
+                        autoSaveOnStop={false}
                       />
                     )}
                   </div>

@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Mic, Square, Play, Trash2, Check } from 'lucide-react'
 
-export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 120 }) {
+export function AudioRecorder({
+  onAudioRecorded,
+  onSave,
+  maxDurationSeconds = 120,
+  autoSaveOnStop = true,
+}) {
   const [isRecording, setIsRecording] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [recordedBlob, setRecordedBlob] = useState(null)
@@ -69,7 +74,7 @@ export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 12
         setElapsedSeconds(finalDuration)
         const previewUrl = URL.createObjectURL(blob)
         setRecordedUrl(previewUrl)
-        if (onAudioRecorded) {
+        if (onAudioRecorded && autoSaveOnStop) {
           onAudioRecorded(blob, finalDuration)
         }
         if (streamRef.current) {
@@ -159,7 +164,14 @@ export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 12
   }
 
   const saveRecording = () => {
-    if (onSave) onSave()
+    if (!recordedBlob) {
+      setError('Nenhum áudio gravado para salvar.')
+      return
+    }
+    if (!autoSaveOnStop && onAudioRecorded) {
+      onAudioRecorded(recordedBlob, elapsedSeconds)
+    }
+    if (onSave) onSave(recordedBlob, elapsedSeconds)
   }
 
   const formatTime = (seconds) => {
