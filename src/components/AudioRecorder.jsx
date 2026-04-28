@@ -5,6 +5,7 @@ export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 12
   const [isRecording, setIsRecording] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [recordedBlob, setRecordedBlob] = useState(null)
+  const [recordedUrl, setRecordedUrl] = useState('')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [error, setError] = useState('')
 
@@ -12,6 +13,8 @@ export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 12
   const audioChunksRef = useRef([])
   const streamRef = useRef(null)
   const timerIntervalRef = useRef(null)
+  const elapsedSecondsRef = useRef(0)
+  const recordingStartedAtRef = useRef(0)
   const audioElementRef = useRef(null)
 
   // Limpar recursos ao desmontar
@@ -26,15 +29,24 @@ export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 12
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
       }
+      if (recordedUrl) {
+        URL.revokeObjectURL(recordedUrl)
+      }
     }
-  }, [])
+  }, [recordedUrl])
 
   const startRecording = async () => {
     try {
       setError('')
       setElapsedSeconds(0)
+      elapsedSecondsRef.current = 0
+      recordingStartedAtRef.current = Date.now()
       audioChunksRef.current = []
       setRecordedBlob(null)
+      if (recordedUrl) {
+        URL.revokeObjectURL(recordedUrl)
+        setRecordedUrl('')
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
@@ -51,8 +63,14 @@ export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 12
       mediaRecorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' })
         setRecordedBlob(blob)
+        const safeElapsed = elapsedSecondsRef.current
+        const byClock = Math.round((Date.now() - recordingStartedAtRef.current) / 1000)
+        const finalDuration = Math.max(1, safeElapsed || byClock || 0)
+        setElapsedSeconds(finalDuration)
+        const previewUrl = URL.createObjectURL(blob)
+        setRecordedUrl(previewUrl)
         if (onAudioRecorded) {
-          onAudioRecorded(blob, elapsedSeconds)
+          onAudioRecorded(blob, finalDuration)
         }
         if (streamRef.current) {
           streamRef.current.getTracks().forEach((track) => track.stop())
@@ -68,6 +86,7 @@ export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 12
       timerIntervalRef.current = setInterval(() => {
         setElapsedSeconds((prev) => {
           const next = prev + 1
+          elapsedSecondsRef.current = next
           if (next >= maxDurationSeconds) {
             // Auto-stop quando atingir limite
             mediaRecorder.stop()
@@ -113,6 +132,7 @@ export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 12
       timerIntervalRef.current = setInterval(() => {
         setElapsedSeconds((prev) => {
           const next = prev + 1
+          elapsedSecondsRef.current = next
           if (next >= maxDurationSeconds) {
             mediaRecorderRef.current.stop()
             setIsRecording(false)
@@ -128,16 +148,14 @@ export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 12
   const resetRecording = () => {
     setRecordedBlob(null)
     setElapsedSeconds(0)
+    elapsedSecondsRef.current = 0
+    recordingStartedAtRef.current = 0
     audioChunksRef.current = []
-    setError('')
-  }
-
-  const playRecording = () => {
-    if (recordedBlob && audioElementRef.current) {
-      const url = URL.createObjectURL(recordedBlob)
-      audioElementRef.current.src = url
-      audioElementRef.current.play()
+    if (recordedUrl) {
+      URL.revokeObjectURL(recordedUrl)
+      setRecordedUrl('')
     }
+    setError('')
   }
 
   const saveRecording = () => {
@@ -236,6 +254,7 @@ export function AudioRecorder({ onAudioRecorded, onSave, maxDurationSeconds = 12
 
           <audio
             ref={audioElementRef}
+            src={recordedUrl}
             className="mb-3 w-full rounded-lg"
             controls
             controlsList="nodownload"
