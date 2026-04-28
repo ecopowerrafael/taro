@@ -6,6 +6,7 @@ import { usePlatformContext } from '../context/platform-context'
 import { generatePixPayload } from '../utils/pix'
 import { GlassCard } from './GlassCard'
 import { SpellStripeCheckoutForm } from './SpellStripeCheckoutForm'
+import { getTranslatedField } from '../utils/i18nHelper'
 
 export function SpellPurchaseModal({ spell, onClose }) {
   const { profile, isAuthenticated, mpCredentials, createSpellPixOrder } = usePlatformContext()
@@ -26,7 +27,7 @@ export function SpellPurchaseModal({ spell, onClose }) {
         name: mpCredentials.pixReceiverName || 'Astria Tarot',
         city: mpCredentials.pixReceiverCity || 'SAO PAULO',
         amount: spell.price,
-        description: `Magia ${spell.title}`,
+        description: `Magia ${getTranslatedField(spell, 'title')}`,
       })
     } catch (error) {
       console.error('[SpellPurchaseModal] Erro ao gerar payload PIX:', error)
@@ -73,7 +74,7 @@ export function SpellPurchaseModal({ spell, onClose }) {
             <div className="grid gap-5">
               <div className="rounded-2xl border border-mystic-gold/25 bg-black/25 p-5 text-center md:p-6">
                 <p className="text-lg leading-relaxed text-amber-50">
-                  Você está contratando <span className="font-semibold text-mystic-goldSoft">{spell.title}</span>, com o{' '}
+                  Você está contratando <span className="font-semibold text-mystic-goldSoft">{getTranslatedField(spell, 'title')}</span>, com o{' '}
                   <span className="font-semibold text-mystic-goldSoft">{spell.consultantName}</span>.
                 </p>
                 <p className="mt-3 text-base text-amber-100/85">
@@ -84,7 +85,7 @@ export function SpellPurchaseModal({ spell, onClose }) {
 
               {!isAuthenticated ? (
                 <div className="grid gap-4">
-                  <p className="text-sm text-amber-100/75">Faça login ou crie uma conta para concluir o pedido da magia {spell.title}.</p>
+                  <p className="text-sm text-amber-100/75">Faça login ou crie uma conta para concluir o pedido da magia {getTranslatedField(spell, 'title')}.</p>
                   <div className="flex flex-wrap justify-center gap-3">
                     <Link to="/entrar" className="rounded-lg bg-mystic-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110" onClick={onClose}>
                       Entrar

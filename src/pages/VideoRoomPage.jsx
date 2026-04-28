@@ -5,17 +5,33 @@ import { GlassCard } from '../components/GlassCard'
 import { Loader2, Video, PhoneOff } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
 import DailyIframe from '@daily-co/daily-js'
+import { io } from 'socket.io-client'
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
+
+const getRealtimeServerUrl = () => {
+  if (!API_BASE_URL) {
+    return window.location.origin
+  }
+
+  try {
+    return new URL(API_BASE_URL).origin
+  } catch {
+    return window.location.origin
+  }
+}
 
 export function VideoRoomPage() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
-  const { token, billing, setSystemNotice } = usePlatformContext()
+  const { token, profile, billing, setSystemNotice } = usePlatformContext()
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isCallActive, setIsCallActive] = useState(false)
   const callFrameRef = useRef(null)
   const containerRef = useRef(null)
+  const socketRef = useRef(null)
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -60,16 +76,73 @@ export function VideoRoomPage() {
     return () => clearInterval(interval)
   }, [session, isCallActive, sessionId, token])
 
+  useEffect(() => {
+    if (!session || !profile?.id) {
+      return
+    }
+
+    const role = session.isConsultant ? 'consultant' : 'customer'
+    const socket = io(getRealtimeServerUrl(), {
+      transports: ['websocket', 'polling'],
+      withCredentials: true,
+    })
+    socketRef.current = socket
+
+    const joinPresence = () => {
+      socket.emit('join_session_presence', {
+        sessionId,
+        userId: profile.id,
+        role,
+      })
+    }
+
+    socket.on('connect', joinPresence)
+    socket.on('reconnect', joinPresence)
+    joinPresence()
+
+    const leavePresence = () => {
+      socket.emit('leave_session_presence', {
+        sessionId,
+        userId: profile.id,
+      })
+    }
+
+    const handlePageHide = () => {
+      leavePresence()
+    }
+
+    window.addEventListener('pagehide', handlePageHide)
+
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide)
+      leavePresence()
+      socket.off('connect', joinPresence)
+      socket.off('reconnect', joinPresence)
+      socket.disconnect()
+      if (socketRef.current === socket) {
+        socketRef.current = null
+      }
+    }
+  }, [session, sessionId, profile?.id])
+
   const joinCall = async (sessionData) => {
     if (!containerRef.current) return
     
     // Marcar sessão como ativa no DB se ainda não estiver
     if (sessionData.status !== 'active') {
-      await fetch(`/api/video-sessions/${sessionId}/status`, {
+      const statusRes = await fetch(`/api/video-sessions/${sessionId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: 'active' })
       })
+      if (!statusRes.ok) {
+        const payload = await statusRes.json().catch(() => ({}))
+        setSystemNotice(
+          payload.message ||
+            'Não foi possível iniciar a chamada. Confirme que cliente e consultor estão online nesta página.',
+        )
+        return
+      }
     }
 
     const callFrame = DailyIframe.createFrame(containerRef.current, {
@@ -129,6 +202,13 @@ export function VideoRoomPage() {
     
     if (!session?.isConsultant) {
       billing.stopSession()
+    }
+
+    if (socketRef.current && profile?.id) {
+      socketRef.current.emit('leave_session_presence', {
+        sessionId,
+        userId: profile.id,
+      })
     }
 
     await fetch(`/api/video-sessions/${sessionId}/status`, {

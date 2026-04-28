@@ -3,9 +3,15 @@ import { Check, Loader2, Plus, Sparkles, Trash2 } from 'lucide-react'
 
 const emptyForm = {
   id: null,
-  title: '',
-  shortDescription: '',
-  description: '',
+  title_pt: '',
+  title_en: '',
+  title_es: '',
+  shortDescription_pt: '',
+  shortDescription_en: '',
+  shortDescription_es: '',
+  description_pt: '',
+  description_en: '',
+  description_es: '',
   imageUrl: '',
   consultantId: '',
   price: '',
@@ -24,6 +30,7 @@ export function AdminMagicPanel({
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [processingOrderId, setProcessingOrderId] = useState('')
+  const [activeLangTab, setActiveLangTab] = useState('pt')
 
   const sortedSpells = useMemo(
     () => [...spells].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0) || a.title.localeCompare(b.title)),
@@ -60,9 +67,15 @@ export function AdminMagicPanel({
 
     const result = await onSaveSpell?.({
       ...form,
-      title: form.title.trim(),
-      shortDescription: form.shortDescription.trim(),
-      description: form.description.trim(),
+      title_pt: form.title_pt.trim(),
+      title_en: form.title_en.trim(),
+      title_es: form.title_es.trim(),
+      shortDescription_pt: form.shortDescription_pt.trim(),
+      shortDescription_en: form.shortDescription_en.trim(),
+      shortDescription_es: form.shortDescription_es.trim(),
+      description_pt: form.description_pt.trim(),
+      description_en: form.description_en.trim(),
+      description_es: form.description_es.trim(),
       consultantId: form.consultantId,
       price: Number(form.price),
     })
@@ -81,9 +94,15 @@ export function AdminMagicPanel({
   const startEdit = (spell) => {
     setForm({
       id: spell.id,
-      title: spell.title || '',
-      shortDescription: spell.shortDescription || '',
-      description: spell.description || '',
+      title_pt: spell.title_pt || spell.title || '',
+      title_en: spell.title_en || '',
+      title_es: spell.title_es || '',
+      shortDescription_pt: spell.shortDescription_pt || spell.shortDescription || '',
+      shortDescription_en: spell.shortDescription_en || '',
+      shortDescription_es: spell.shortDescription_es || '',
+      description_pt: spell.description_pt || spell.description || '',
+      description_en: spell.description_en || '',
+      description_es: spell.description_es || '',
       imageUrl: spell.imageUrl || '',
       consultantId: spell.consultantId || '',
       price: spell.price?.toString() || '',
@@ -131,11 +150,35 @@ export function AdminMagicPanel({
           </div>
 
           <form onSubmit={handleSubmit} className="grid gap-3">
+            <div className="flex items-center gap-2 border-b border-mystic-gold/20 pb-2">
+              <button
+                type="button"
+                onClick={() => setActiveLangTab('pt')}
+                className={`rounded px-3 py-1 text-xs transition ${activeLangTab === 'pt' ? 'bg-mystic-gold/20 text-mystic-goldSoft' : 'text-amber-100/60 hover:bg-black/40'}`}
+              >
+                Português
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveLangTab('en')}
+                className={`rounded px-3 py-1 text-xs transition ${activeLangTab === 'en' ? 'bg-mystic-gold/20 text-mystic-goldSoft' : 'text-amber-100/60 hover:bg-black/40'}`}
+              >
+                Inglês
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveLangTab('es')}
+                className={`rounded px-3 py-1 text-xs transition ${activeLangTab === 'es' ? 'bg-mystic-gold/20 text-mystic-goldSoft' : 'text-amber-100/60 hover:bg-black/40'}`}
+              >
+                Espanhol
+              </button>
+            </div>
+
             <label className="grid gap-1 text-xs text-amber-100/70">
               Título
               <input
-                value={form.title}
-                onChange={(event) => handleChange('title', event.target.value)}
+                value={form[`title_${activeLangTab}`]}
+                onChange={(event) => handleChange(`title_${activeLangTab}`, event.target.value)}
                 className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/50"
                 placeholder="Ex: Amarração do Amor"
               />
@@ -144,8 +187,8 @@ export function AdminMagicPanel({
             <label className="grid gap-1 text-xs text-amber-100/70">
               Breve descrição
               <input
-                value={form.shortDescription}
-                onChange={(event) => handleChange('shortDescription', event.target.value)}
+                value={form[`shortDescription_${activeLangTab}`]}
+                onChange={(event) => handleChange(`shortDescription_${activeLangTab}`, event.target.value)}
                 className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/50"
                 placeholder="Chamada curta para a vitrine"
               />
@@ -155,8 +198,8 @@ export function AdminMagicPanel({
               Descrição completa
               <textarea
                 rows={5}
-                value={form.description}
-                onChange={(event) => handleChange('description', event.target.value)}
+                value={form[`description_${activeLangTab}`]}
+                onChange={(event) => handleChange(`description_${activeLangTab}`, event.target.value)}
                 className="resize-none rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/50"
                 placeholder="Explique o que o cliente está contratando e como funciona."
               />

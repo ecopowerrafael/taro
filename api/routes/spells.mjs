@@ -4,6 +4,18 @@ import { authenticate, authorizeAdmin, authorizeConsultant } from '../middleware
 
 const normalizeSpell = (row) => ({
   ...row,
+  title: row.title_pt || row.title,
+  title_pt: row.title_pt,
+  title_en: row.title_en,
+  title_es: row.title_es,
+  shortDescription: row.shortDescription_pt || row.shortDescription,
+  shortDescription_pt: row.shortDescription_pt,
+  shortDescription_en: row.shortDescription_en,
+  shortDescription_es: row.shortDescription_es,
+  description: row.description_pt || row.description,
+  description_pt: row.description_pt,
+  description_en: row.description_en,
+  description_es: row.description_es,
   price: Number(row.price) || 0,
   sortOrder: Number(row.sortOrder) || 0,
   isActive: Boolean(row.isActive),
@@ -128,9 +140,9 @@ const fetchSpellSnapshot = async (executor, spellId) => {
   const [rows] = await executor.query(
     `SELECT
        s.id,
-       s.title,
-       s.shortDescription,
-       s.description,
+       s.title_pt, s.title_en, s.title_es,
+       s.shortDescription_pt, s.shortDescription_en, s.shortDescription_es,
+       s.description_pt, s.description_en, s.description_es,
        s.imageUrl,
        s.consultantId,
        s.price,
@@ -149,7 +161,7 @@ const fetchSpellSnapshot = async (executor, spellId) => {
     [spellId],
   )
 
-  return rows[0] || null
+  return rows[0] ? normalizeSpell(rows[0]) : null
 }
 
 const creditConsultantWalletForSpellOrder = async (connection, order) => {
@@ -233,9 +245,15 @@ export const createSpellsRouter = (pool) => {
       const [rows] = await pool.query(
         `SELECT
            s.id,
-           s.title,
-           s.shortDescription,
-           s.description,
+           s.title_pt,
+           s.title_en,
+           s.title_es,
+           s.shortDescription_pt,
+           s.shortDescription_en,
+           s.shortDescription_es,
+           s.description_pt,
+           s.description_en,
+           s.description_es,
            s.imageUrl,
            s.consultantId,
            s.price,
@@ -597,9 +615,15 @@ export const createSpellsRouter = (pool) => {
       const [rows] = await pool.query(
         `SELECT
            s.id,
-           s.title,
-           s.shortDescription,
-           s.description,
+           s.title_pt,
+           s.title_en,
+           s.title_es,
+           s.shortDescription_pt,
+           s.shortDescription_en,
+           s.shortDescription_es,
+           s.description_pt,
+           s.description_en,
+           s.description_es,
            s.imageUrl,
            s.consultantId,
            s.price,
@@ -690,17 +714,17 @@ export const createSpellsRouter = (pool) => {
   router.post('/', async (request, response) => {
     try {
       const {
-        title,
-        shortDescription,
-        description,
+        title_pt, title_en, title_es,
+        shortDescription_pt, shortDescription_en, shortDescription_es,
+        description_pt, description_en, description_es,
         imageUrl,
         consultantId,
         price,
       } = request.body ?? {}
 
-      if (!title?.trim() || !description?.trim() || !consultantId || !Number(price)) {
+      if (!title_pt?.trim() || !description_pt?.trim() || !consultantId || !Number(price)) {
         return response.status(400).json({
-          message: 'Informe título, descrição, consultor e preço válido para a magia.',
+          message: 'Informe título, descrição, consultor e preço válido para a magia (no mínimo em Português).',
         })
       }
 
@@ -711,9 +735,9 @@ export const createSpellsRouter = (pool) => {
       await pool.query(
         `INSERT INTO spells (
            id,
-           title,
-           shortDescription,
-           description,
+           title_pt, title_en, title_es,
+           shortDescription_pt, shortDescription_en, shortDescription_es,
+           description_pt, description_en, description_es,
            imageUrl,
            consultantId,
            price,
@@ -721,12 +745,12 @@ export const createSpellsRouter = (pool) => {
            sortOrder,
            createdAt,
            updatedAt
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, NOW(), NOW())`,
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW(), NOW())`,
         [
           id,
-          title.trim(),
-          normalizeNullableText(shortDescription),
-          description.trim(),
+          title_pt.trim(), normalizeNullableText(title_en), normalizeNullableText(title_es),
+          normalizeNullableText(shortDescription_pt), normalizeNullableText(shortDescription_en), normalizeNullableText(shortDescription_es),
+          description_pt.trim(), normalizeNullableText(description_en), normalizeNullableText(description_es),
           normalizeNullableText(imageUrl),
           consultantId,
           parseCurrency(price),
@@ -735,7 +759,7 @@ export const createSpellsRouter = (pool) => {
       )
 
       const created = await fetchSpellSnapshot(pool, id)
-      response.status(201).json(normalizeSpell(created))
+      response.status(201).json(created)
     } catch (error) {
       console.error('[Spells/Admin] Erro ao criar magia:', error)
       response.status(500).json({ message: 'Erro ao criar magia.' })
@@ -746,27 +770,27 @@ export const createSpellsRouter = (pool) => {
     try {
       const { id } = request.params
       const {
-        title,
-        shortDescription,
-        description,
+        title_pt, title_en, title_es,
+        shortDescription_pt, shortDescription_en, shortDescription_es,
+        description_pt, description_en, description_es,
         imageUrl,
         consultantId,
         price,
         isActive,
       } = request.body ?? {}
 
-      if (!title?.trim() || !description?.trim() || !consultantId || !Number(price)) {
+      if (!title_pt?.trim() || !description_pt?.trim() || !consultantId || !Number(price)) {
         return response.status(400).json({
-          message: 'Informe título, descrição, consultor e preço válido para a magia.',
+          message: 'Informe título, descrição, consultor e preço válido para a magia (no mínimo em Português).',
         })
       }
 
       const [result] = await pool.query(
         `UPDATE spells
          SET
-           title = ?,
-           shortDescription = ?,
-           description = ?,
+           title_pt = ?, title_en = ?, title_es = ?,
+           shortDescription_pt = ?, shortDescription_en = ?, shortDescription_es = ?,
+           description_pt = ?, description_en = ?, description_es = ?,
            imageUrl = ?,
            consultantId = ?,
            price = ?,
@@ -774,9 +798,9 @@ export const createSpellsRouter = (pool) => {
            updatedAt = NOW()
          WHERE id = ?`,
         [
-          title.trim(),
-          normalizeNullableText(shortDescription),
-          description.trim(),
+          title_pt.trim(), normalizeNullableText(title_en), normalizeNullableText(title_es),
+          normalizeNullableText(shortDescription_pt), normalizeNullableText(shortDescription_en), normalizeNullableText(shortDescription_es),
+          description_pt.trim(), normalizeNullableText(description_en), normalizeNullableText(description_es),
           normalizeNullableText(imageUrl),
           consultantId,
           parseCurrency(price),
@@ -790,7 +814,7 @@ export const createSpellsRouter = (pool) => {
       }
 
       const updated = await fetchSpellSnapshot(pool, id)
-      response.json(normalizeSpell(updated))
+      response.json(updated)
     } catch (error) {
       console.error('[Spells/Admin] Erro ao atualizar magia:', error)
       response.status(500).json({ message: 'Erro ao atualizar magia.' })

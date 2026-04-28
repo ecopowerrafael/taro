@@ -202,6 +202,33 @@ const applicationServerKeyMatches = (subscription, expectedKey) => {
   }
 }
 
+const isSafariBrowser = () => {
+  if (typeof navigator === 'undefined') {
+    return false
+  }
+  const ua = navigator.userAgent || ''
+  const isSafariEngine = /Safari/i.test(ua) && !/Chrome|CriOS|Edg|OPR|FxiOS|Firefox/i.test(ua)
+  return isSafariEngine
+}
+
+const isIosDevice = () => {
+  if (typeof navigator === 'undefined') {
+    return false
+  }
+  const ua = navigator.userAgent || ''
+  return /iPhone|iPad|iPod/i.test(ua)
+}
+
+const isStandaloneDisplay = () => {
+  if (typeof window === 'undefined') {
+    return false
+  }
+  return (
+    window.matchMedia?.('(display-mode: standalone)')?.matches ||
+    window.navigator?.standalone === true
+  )
+}
+
 const normalizeConsultant = (consultant) => ({
   ...consultant,
   pricePerMinute: Number(consultant.pricePerMinute) || 0,
@@ -415,6 +442,7 @@ export function PlatformProvider({ children }) {
   const [unreadCount, setUnreadCount] = useState(0)
   const notificationCounterRef = useRef(0)
   const pushWarningPromptedRef = useRef(false)
+  const webPushNoticePromptedRef = useRef(false)
   const mpCredentialsRef = useRef(mpCredentials)
   const dailyCredentialsRef = useRef(dailyCredentials)
   const stripeCredentialsRef = useRef(stripeCredentials)
@@ -436,23 +464,64 @@ export function PlatformProvider({ children }) {
       return initializeNativePush({ authToken: token, userId })
     }
 
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    const isSafari = isSafariBrowser()
+    const isIos = isIosDevice()
+    const isStandalone = isStandaloneDisplay()
+
+    if (isSafari && isIos && !isStandalone) {
+      return {
+        ok: false,
+        reason: 'ios_requires_pwa',
+        message:
+          'No iPhone Safari, permita push abrindo o app pela Tela de Início (Adicionar à Tela de Início).',
+      }
+    }
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      return {
+        ok: false,
+        reason: 'unsupported_browser',
+        message: 'Push não suportado neste navegador/dispositivo.',
+      }
+    }
 
     try {
       if (!('Notification' in window)) {
-        return
+        return {
+          ok: false,
+          reason: 'notification_api_unavailable',
+          message: 'API de notificação indisponível neste navegador.',
+        }
       }
 
       let permission = Notification.permission
       if (permission === 'default') {
-        permission = await Notification.requestPermission()
+        try {
+          permission = await Notification.requestPermission()
+        } catch {
+          return {
+            ok: false,
+            reason: 'permission_request_failed',
+            message: isSafari
+              ? 'Safari bloqueou a solicitação de notificação. Tente novamente após interação do usuário.'
+              : 'Não foi possível solicitar permissão de notificação.',
+          }
+        }
       }
 
       if (permission !== 'granted') {
-        return
+        return {
+          ok: false,
+          reason: 'permission_denied',
+          message:
+            permission === 'denied'
+              ? 'Permissão de notificação negada. Ative nas configurações do navegador.'
+              : 'Permissão de notificação ainda não concedida.',
+        }
       }
 
-      const registration = await navigator.serviceWorker.register('/sw.js')
+      await navigator.serviceWorker.register('/sw.js')
+      const registration = await navigator.serviceWorker.ready
       const publicVapidKeyRes = await fetch(buildApiUrl('/api/push/public-key'))
       if (!publicVapidKeyRes.ok) {
         throw new Error('Não foi possível obter a chave pública de push.')
@@ -512,6 +581,17 @@ export function PlatformProvider({ children }) {
     const syncPushSubscription = async () => {
       const result = await registerPushSubscription(profile.id)
       const shouldGuardIncomingCalls = profile.role === 'consultant' || profile.role === 'admin'
+
+      if (
+        shouldGuardIncomingCalls &&
+        !isNativeAndroidApp() &&
+        !result?.ok &&
+        result?.message &&
+        !webPushNoticePromptedRef.current
+      ) {
+        webPushNoticePromptedRef.current = true
+        setSystemNotice(result.message)
+      }
 
       if (
         cancelled ||

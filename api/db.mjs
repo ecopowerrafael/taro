@@ -463,9 +463,15 @@ export const initializeSchema = async (pool) => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS spells (
       id VARCHAR(80) PRIMARY KEY,
-      title VARCHAR(180) NOT NULL,
-      shortDescription VARCHAR(280) NULL,
-      description TEXT NOT NULL,
+      title_pt VARCHAR(180) NOT NULL,
+      title_en VARCHAR(180) NULL,
+      title_es VARCHAR(180) NULL,
+      shortDescription_pt VARCHAR(280) NULL,
+      shortDescription_en VARCHAR(280) NULL,
+      shortDescription_es VARCHAR(280) NULL,
+      description_pt TEXT NOT NULL,
+      description_en TEXT NULL,
+      description_es TEXT NULL,
       imageUrl LONGTEXT NULL,
       consultantId VARCHAR(50) NOT NULL,
       price DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -479,6 +485,18 @@ export const initializeSchema = async (pool) => {
         ON DELETE RESTRICT
     )
   `)
+
+  try { await pool.query('ALTER TABLE spells CHANGE title title_pt VARCHAR(180) NOT NULL') } catch(e) {}
+  try { await pool.query('ALTER TABLE spells ADD COLUMN title_en VARCHAR(180) NULL') } catch(e) {}
+  try { await pool.query('ALTER TABLE spells ADD COLUMN title_es VARCHAR(180) NULL') } catch(e) {}
+
+  try { await pool.query('ALTER TABLE spells CHANGE shortDescription shortDescription_pt VARCHAR(280) NULL') } catch(e) {}
+  try { await pool.query('ALTER TABLE spells ADD COLUMN shortDescription_en VARCHAR(280) NULL') } catch(e) {}
+  try { await pool.query('ALTER TABLE spells ADD COLUMN shortDescription_es VARCHAR(280) NULL') } catch(e) {}
+
+  try { await pool.query('ALTER TABLE spells CHANGE description description_pt TEXT NOT NULL') } catch(e) {}
+  try { await pool.query('ALTER TABLE spells ADD COLUMN description_en TEXT NULL') } catch(e) {}
+  try { await pool.query('ALTER TABLE spells ADD COLUMN description_es TEXT NULL') } catch(e) {}
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS spell_orders (
