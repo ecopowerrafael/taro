@@ -232,18 +232,45 @@ export function AreaConsultorPage() {
     setPanelNotice('Alerta de chamada silenciado.')
   }
 
-  const handleRespond = (requestId) => {
-    const answerSummary = (responseDrafts[requestId] ?? '').trim()
-    if (!answerSummary) {
-      setPanelNotice('Preencha uma resposta antes de concluir o atendimento.')
+  const handleResponseChange = (requestId, questionIndex, value) => {
+    setResponseDrafts((prev) => {
+      const currentAnswers = Array.isArray(prev[requestId]) ? prev[requestId] : []
+      const nextAnswers = [...currentAnswers]
+      nextAnswers[questionIndex] = value
+      return { ...prev, [requestId]: nextAnswers }
+    })
+  }
+
+  const handleSubmitResponse = async (requestId) => {
+    const request = pendingRequests.find((item) => item.id === requestId)
+    if (!request) {
+      setPanelNotice('Atendimento não encontrado ou já respondido.')
       return
     }
-    respondToQuestionRequest({
+
+    const answers = Array.isArray(responseDrafts[requestId]) ? responseDrafts[requestId] : []
+    const missingAnswer = request.entries.some((_, index) => !String(answers[index] ?? '').trim())
+    if (missingAnswer) {
+      setPanelNotice('Responda todas as perguntas antes de enviar.')
+      return
+    }
+
+    const answeredEntries = request.entries.map((entry, index) => ({
+      ...entry,
+      answer: String(answers[index] ?? '').trim(),
+    }))
+    const answerSummary = answeredEntries
+      .map((entry, index) => `P${index + 1}: ${entry.answer}`)
+      .join('\n')
+
+    await respondToQuestionRequest({
       requestId,
       consultantId: selectedConsultantId,
       answerSummary,
+      answeredEntries,
     })
-    setResponseDrafts((prev) => ({ ...prev, [requestId]: '' }))
+
+    setResponseDrafts((prev) => ({ ...prev, [requestId]: [] }))
     setPanelNotice('Resposta enviada e valor líquido creditado na carteira do consultor.')
   }
 
