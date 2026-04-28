@@ -311,7 +311,7 @@ export function AreaConsultorPage() {
       text: value,
       audioDataUrl: '',
       durationSeconds: 0,
-    })
+    }))
   }
 
   const handleResponseAudioRecorded = async (requestId, questionIndex, blob, duration) => {
