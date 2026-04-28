@@ -2,6 +2,14 @@ import { useMemo, useState } from 'react'
 import { Mic, Send, X } from 'lucide-react'
 import { AudioRecorder } from './AudioRecorder'
 
+const inferAudioExtension = (mimeType) => {
+  const normalized = String(mimeType || '').toLowerCase()
+  if (normalized.includes('mp4') || normalized.includes('aac')) return 'm4a'
+  if (normalized.includes('ogg')) return 'ogg'
+  if (normalized.includes('webm')) return 'webm'
+  return 'webm'
+}
+
 const createInitialEntries = (questionCount) =>
   Array.from({ length: questionCount }, () => ({
     type: 'text',
@@ -160,7 +168,8 @@ export function QuestionFlowModal({
               <div className="grid gap-2">
                 <AudioRecorder
                   onAudioRecorded={(blob, duration) => {
-                    const file = new File([blob], `audio-${Date.now()}.webm`, { type: blob.type })
+                    const extension = inferAudioExtension(blob.type)
+                    const file = new File([blob], `audio-${Date.now()}.${extension}`, { type: blob.type })
                     setEntry(step, {
                       file,
                       durationSeconds: duration,

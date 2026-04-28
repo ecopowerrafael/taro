@@ -1,6 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { Mic, Square, Play, Trash2, Check } from 'lucide-react'
 
+const AUDIO_MIME_CANDIDATES = [
+  'audio/mp4;codecs=mp4a.40.2',
+  'audio/mp4',
+  'audio/webm;codecs=opus',
+  'audio/webm',
+  'audio/ogg;codecs=opus',
+  'audio/ogg',
+]
+
+const resolveRecorderMimeType = () => {
+  if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') {
+    return ''
+  }
+  return AUDIO_MIME_CANDIDATES.find((candidate) => MediaRecorder.isTypeSupported(candidate)) || ''
+}
+
 export function AudioRecorder({
   onAudioRecorded,
   onSave,
@@ -56,7 +72,14 @@ export function AudioRecorder({
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
 
-      const mediaRecorder = new MediaRecorder(stream)
+      if (typeof MediaRecorder === 'undefined') {
+        throw new Error('Seu navegador não suporta gravação de áudio nesta página.')
+      }
+
+      const preferredMimeType = resolveRecorderMimeType()
+      const mediaRecorder = preferredMimeType
+        ? new MediaRecorder(stream, { mimeType: preferredMimeType })
+        : new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder
 
       mediaRecorder.ondataavailable = (event) => {
@@ -66,7 +89,9 @@ export function AudioRecorder({
       }
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' })
+        const fallbackMimeType = preferredMimeType || mediaRecorder.mimeType || 'audio/webm'
+        const safeMimeType = audioChunksRef.current[0]?.type || fallbackMimeType
+        const blob = new Blob(audioChunksRef.current, { type: safeMimeType })
         setRecordedBlob(blob)
         const safeElapsed = elapsedSecondsRef.current
         const byClock = Math.round((Date.now() - recordingStartedAtRef.current) / 1000)
@@ -83,7 +108,7 @@ export function AudioRecorder({
         }
       }
 
-      mediaRecorder.start()
+      mediaRecorder.start(1000)
       setIsRecording(true)
       setIsPaused(false)
 
