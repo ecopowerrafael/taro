@@ -43,6 +43,7 @@ export function AreaConsultorPage() {
   const [pixDraft, setPixDraft] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [panelNotice, setPanelNotice] = useState('')
+  const [isSubmittingResponse, setIsSubmittingResponse] = useState(false)
   const [responseDrafts, setResponseDrafts] = useState({})
   const [profileDraft, setProfileDraft] = useState(null)
   const [pendingVideoSessions, setPendingVideoSessions] = useState([])
@@ -334,6 +335,9 @@ export function AreaConsultorPage() {
   }
 
   const handleSubmitResponse = async (requestId) => {
+    if (isSubmittingResponse) {
+      return
+    }
     const request = pendingRequests.find((item) => item.id === requestId)
     if (!request) {
       setPanelNotice('Atendimento não encontrado ou já respondido.')
@@ -387,15 +391,27 @@ export function AreaConsultorPage() {
       )
       .join('\n')
 
-    await respondToQuestionRequest({
-      requestId,
-      consultantId: selectedConsultantId,
-      answerSummary,
-      answeredEntries,
-    })
+    setIsSubmittingResponse(true)
+    try {
+      const result = await respondToQuestionRequest({
+        requestId,
+        consultantId: selectedConsultantId,
+        answerSummary,
+        answeredEntries,
+      })
 
-    setResponseDrafts((prev) => ({ ...prev, [requestId]: [] }))
-    setPanelNotice('Resposta enviada e valor líquido creditado na carteira do consultor.')
+      if (result?.ok === false) {
+        setPanelNotice(result.message || 'Não foi possível enviar a resposta.')
+        return
+      }
+
+      setResponseDrafts((prev) => ({ ...prev, [requestId]: [] }))
+      setPanelNotice('Resposta enviada e valor líquido creditado na carteira do consultor.')
+    } catch (error) {
+      setPanelNotice(error?.message || 'Erro ao enviar resposta. Tente novamente.')
+    } finally {
+      setIsSubmittingResponse(false)
+    }
   }
 
   const handleSavePix = () => {
@@ -502,6 +518,11 @@ export function AreaConsultorPage() {
       )}
 
       <GlassCard title="Atendimento de Perguntas" subtitle="Visualize e responda cada item enviado pelo cliente.">
+        {panelNotice && (
+          <p className="mb-3 rounded-lg border border-amber-400/35 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            {panelNotice}
+          </p>
+        )}
         <div className="mb-3 flex flex-wrap items-center gap-2">
           {isAdmin ? (
             <select
@@ -626,10 +647,11 @@ export function AreaConsultorPage() {
                   onClick={() => {
                     void handleSubmitResponse(request.id)
                   }}
+                  disabled={isSubmittingResponse}
                   className="flex items-center gap-2 rounded-lg bg-mystic-gold/90 px-4 py-2 text-sm font-bold text-black transition hover:brightness-110"
                 >
                   <SendHorizontal size={16} />
-                  Enviar Resposta
+                  {isSubmittingResponse ? 'Enviando...' : 'Enviar Resposta'}
                 </button>
               </div>
             </article>
