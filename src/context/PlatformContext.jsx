@@ -2247,7 +2247,7 @@ export function PlatformProvider({ children }) {
   const respondToQuestionRequest = async ({ requestId, consultantId, answerSummary, answeredEntries = [] }) => {
     const request = questionRequests.find((item) => item.id === requestId)
     if (!request || request.status === 'answered') {
-      return
+      return { ok: false, message: 'Atendimento não encontrado ou já respondido.' }
     }
 
     const consultant = consultants.find((item) => item.id === consultantId)
@@ -2276,7 +2276,7 @@ export function PlatformProvider({ children }) {
           item.id === consultantId ? { ...item, realSessions: (item.realSessions ?? 0) + 1 } : item,
         ),
       )
-      return
+      return { ok: true, mode: 'server' }
     } catch {
       setSystemNotice('Não foi possível sincronizar a resposta no servidor. Aplicando modo local.')
     }
@@ -2332,6 +2332,7 @@ export function PlatformProvider({ children }) {
           : consultant,
       ),
     )
+    return { ok: true, mode: 'local' }
   }
 
   const setConsultantPixKey = async ({ consultantId, pixKey, pixBeneficiaryName }) => {

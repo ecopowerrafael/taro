@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { Mic, Square, Play, Trash2, Check } from 'lucide-react'
 
-const AUDIO_MIME_CANDIDATES = [
+const AUDIO_MIME_CANDIDATES_DEFAULT = [
+  'audio/webm;codecs=opus',
+  'audio/webm',
+  'audio/ogg;codecs=opus',
+  'audio/ogg',
+  'audio/mp4;codecs=mp4a.40.2',
+  'audio/mp4',
+]
+
+const AUDIO_MIME_CANDIDATES_SAFARI = [
   'audio/mp4;codecs=mp4a.40.2',
   'audio/mp4',
   'audio/webm;codecs=opus',
@@ -10,11 +19,39 @@ const AUDIO_MIME_CANDIDATES = [
   'audio/ogg',
 ]
 
+const isSafariBrowser = () => {
+  if (typeof navigator === 'undefined') {
+    return false
+  }
+  const ua = navigator.userAgent || ''
+  return /Safari/i.test(ua) && !/Chrome|CriOS|Edg|OPR|FxiOS|Firefox|Android/i.test(ua)
+}
+
+const resolveMimeCandidates = () =>
+  isSafariBrowser() ? AUDIO_MIME_CANDIDATES_SAFARI : AUDIO_MIME_CANDIDATES_DEFAULT
+
 const resolveRecorderMimeType = () => {
   if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') {
     return ''
   }
-  return AUDIO_MIME_CANDIDATES.find((candidate) => MediaRecorder.isTypeSupported(candidate)) || ''
+  const candidates = resolveMimeCandidates()
+  return candidates.find((candidate) => MediaRecorder.isTypeSupported(candidate)) || ''
+}
+
+const resolveFallbackBlobType = (preferredMimeType, recorderMimeType) => {
+  if (preferredMimeType) return preferredMimeType
+  if (recorderMimeType) return recorderMimeType
+  return isSafariBrowser() ? 'audio/mp4' : 'audio/webm'
+}
+
+const hasAudioData = (chunks) => Array.isArray(chunks) && chunks.some((item) => Number(item?.size) > 0)
+
+const normalizeBlobType = (blobType, fallbackType) => {
+  const normalized = String(blobType || '').toLowerCase()
+  if (normalized.includes('mp4') || normalized.includes('aac')) return 'audio/mp4'
+  if (normalized.includes('ogg')) return 'audio/ogg'
+  if (normalized.includes('webm')) return 'audio/webm'
+  return fallbackType
 }
 
 export function AudioRecorder({
@@ -89,8 +126,19 @@ export function AudioRecorder({
       }
 
       mediaRecorder.onstop = () => {
-        const fallbackMimeType = preferredMimeType || mediaRecorder.mimeType || 'audio/webm'
-        const safeMimeType = audioChunksRef.current[0]?.type || fallbackMimeType
+        if (!hasAudioData(audioChunksRef.current)) {
+          setError('A gravação não gerou áudio válido. Tente novamente.')
+          setRecordedBlob(null)
+          setRecordedUrl('')
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop())
+            streamRef.current = null
+          }
+          return
+        }
+
+        const fallbackMimeType = resolveFallbackBlobType(preferredMimeType, mediaRecorder.mimeType)
+        const safeMimeType = normalizeBlobType(audioChunksRef.current[0]?.type, fallbackMimeType)
         const blob = new Blob(audioChunksRef.current, { type: safeMimeType })
         setRecordedBlob(blob)
         const safeElapsed = elapsedSecondsRef.current
