@@ -29,6 +29,8 @@ export function VideoRoomPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isCallActive, setIsCallActive] = useState(false)
+  const [canJoinCall, setCanJoinCall] = useState(false)
+  const [isJoining, setIsJoining] = useState(false)
   const callFrameRef = useRef(null)
   const containerRef = useRef(null)
   const socketRef = useRef(null)
@@ -54,20 +56,27 @@ export function VideoRoomPage() {
     }
   }, [sessionId, token])
 
-  // Polling to check if the other person joined (simplified approach for waiting room)
+  useEffect(() => {
+    if (session?.status === 'active') {
+      setCanJoinCall(true)
+    }
+  }, [session?.status])
+
+  // Polling to keep waiting room status in sync
   useEffect(() => {
     if (!session || isCallActive) return
     
     const interval = setInterval(async () => {
-      // In a real prod environment we'd use WebSockets. Here we poll status every 5s
       try {
         const res = await fetch(`/api/video-sessions/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         const data = await res.json()
-        if (data.status === 'active' && !isCallActive) {
-          // Both are ready!
-          joinCall(data)
+        if (!res.ok) return
+
+        setSession((prev) => ({ ...(prev || {}), ...data }))
+        if (data.status === 'active') {
+          setCanJoinCall(true)
         }
       } catch (e) {
         // ignore
@@ -125,8 +134,17 @@ export function VideoRoomPage() {
     }
   }, [session, sessionId, profile?.id])
 
-  const joinCall = async (sessionData) => {
+  const requestMediaPermissions = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error('Seu navegador não suporta câmera/microfone nesta página.')
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+    stream.getTracks().forEach((track) => track.stop())
+  }
+
+  const joinCall = async (sessionData, { requestPermissionFirst = false } = {}) => {
     if (!containerRef.current) return
+    if (callFrameRef.current) return
     
     // Marcar sessão como ativa no DB se ainda não estiver
     if (sessionData.status !== 'active') {
@@ -143,8 +161,20 @@ export function VideoRoomPage() {
         )
         return
       }
+      setSession((prev) => ({ ...(prev || {}), status: 'active' }))
+      setCanJoinCall(true)
     }
 
+    if (requestPermissionFirst) {
+      try {
+        await requestMediaPermissions()
+      } catch (permissionError) {
+        setSystemNotice(permissionError.message || 'Permissões de câmera/microfone não concedidas.')
+        return
+      }
+    }
+
+    setIsCallActive(true)
     const callFrame = DailyIframe.createFrame(containerRef.current, {
       iframeStyle: {
         width: '100%',
@@ -156,15 +186,6 @@ export function VideoRoomPage() {
     
     callFrameRef.current = callFrame
     
-    // Iniciar faturamento se for o cliente
-    if (!sessionData.isConsultant) {
-      billing.startSession({
-        consultantId: sessionData.consultantId,
-        consultantName: sessionData.consultantName,
-        pricePerMinute: sessionData.pricePerMinute
-      })
-    }
-
     callFrame.on('left-meeting', () => {
       handleLeaveCall()
     })
@@ -174,23 +195,44 @@ export function VideoRoomPage() {
         url: sessionData.roomUrl,
         token: sessionData.dailyToken // Usado se a sala for privada
       })
-      setIsCallActive(true)
+
+      // Iniciar faturamento apenas depois que entrou com sucesso na chamada
+      if (!sessionData.isConsultant) {
+        billing.startSession({
+          consultantId: sessionData.consultantId,
+          consultantName: sessionData.consultantName,
+          pricePerMinute: sessionData.pricePerMinute
+        })
+      }
     } catch (e) {
       console.error('Erro ao entrar na sala do Daily', e)
+      if (callFrameRef.current) {
+        callFrameRef.current.destroy()
+        callFrameRef.current = null
+      }
+      setIsCallActive(false)
       setSystemNotice('Erro ao conectar na sala de vídeo.')
     }
   }
 
-  const handleStartByConsultant = () => {
-    // Para o container ser renderizado e a div ficar "block" primeiro,
-    // precisamos ativar isCallActive ANTES de chamar o joinCall, 
-    // ou usar um setTimeout para o React ter tempo de montar a DOM
-    setIsCallActive(true)
-    setTimeout(() => {
-      if (session) {
-        joinCall(session)
-      }
-    }, 100)
+  const handleStartByConsultant = async () => {
+    if (!session || isJoining) return
+    setIsJoining(true)
+    try {
+      await joinCall(session, { requestPermissionFirst: true })
+    } finally {
+      setIsJoining(false)
+    }
+  }
+
+  const handleJoinAsCustomer = async () => {
+    if (!session || isJoining) return
+    setIsJoining(true)
+    try {
+      await joinCall(session, { requestPermissionFirst: true })
+    } finally {
+      setIsJoining(false)
+    }
   }
 
   const handleLeaveCall = async () => {
@@ -273,17 +315,30 @@ export function VideoRoomPage() {
                 {session.isConsultant ? 'Sala Pronta' : 'Aguardando Consultor'}
               </h2>
               <p className="max-w-md text-amber-100/70">
-                {session.isConsultant 
+                {session.isConsultant
                   ? 'O cliente está esperando. Clique no botão abaixo para iniciar a videochamada.'
-                  : 'Sua sala já foi criada e o consultor foi notificado por e-mail e painel. Aguarde que estamos chamando o Consultor para lhe atender.'}
+                  : canJoinCall
+                    ? 'Consultor disponível. Toque no botão abaixo para liberar câmera e microfone no Safari e entrar na chamada.'
+                    : 'Sua sala já foi criada e o consultor foi notificado por e-mail e painel. Aguarde que estamos chamando o consultor para lhe atender.'}
               </p>
               
               {session.isConsultant && (
                 <button
                   onClick={handleStartByConsultant}
+                  disabled={isJoining}
                   className="mt-8 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 px-8 py-3 font-bold text-black transition hover:brightness-110"
                 >
-                  Iniciar Atendimento
+                  {isJoining ? 'Conectando...' : 'Iniciar Atendimento'}
+                </button>
+              )}
+
+              {!session.isConsultant && canJoinCall && (
+                <button
+                  onClick={handleJoinAsCustomer}
+                  disabled={isJoining}
+                  className="mt-8 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 px-8 py-3 font-bold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isJoining ? 'Conectando...' : 'Entrar na Chamada'}
                 </button>
               )}
             </div>
