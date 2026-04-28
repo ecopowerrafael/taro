@@ -247,6 +247,18 @@ const normalizeQuestionRequest = (request) => {
   }
 }
 
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    if (!file) {
+      resolve('')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('Não foi possível processar o áudio da pergunta.'))
+    reader.readAsDataURL(file)
+  })
+
 const normalizeMinutePackage = (pack) => ({
   ...pack,
   minutes: Number(pack.minutes) || 0,
@@ -2090,17 +2102,26 @@ export function PlatformProvider({ children }) {
       return
     }
 
-    const payload = entries.map((entry, index) => ({
-      id: `${Date.now()}_${index}`,
-      type: entry.type,
-      text: entry.text ?? '',
-      question:
-        entry?.question ??
-        entry?.text ??
-        (entry?.file?.name ? `Áudio: ${entry.file.name}` : ''),
-      fileName: entry.file?.name ?? '',
-      durationSeconds: entry.durationSeconds ?? 0,
-    }))
+    let payload = []
+    try {
+      payload = await Promise.all(
+        entries.map(async (entry, index) => ({
+          id: `${Date.now()}_${index}`,
+          type: entry.type,
+          text: entry.text ?? '',
+          question:
+            entry?.question ??
+            entry?.text ??
+            (entry?.file?.name ? `Áudio: ${entry.file.name}` : ''),
+          fileName: entry.file?.name ?? '',
+          durationSeconds: entry.durationSeconds ?? 0,
+          audioDataUrl: entry.type === 'audio' ? await fileToDataUrl(entry.file) : '',
+        })),
+      )
+    } catch (error) {
+      setSystemNotice(error.message || 'Erro ao processar o áudio antes do envio.')
+      return
+    }
 
     const request = {
       id: `req_${consultant.id}_${Date.now()}`,

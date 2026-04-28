@@ -3,10 +3,23 @@ import { SendHorizontal, Wallet, Lock, UserPlus, Info } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
+import { AudioRecorder } from '../components/AudioRecorder'
 import { usePlatformContext } from '../context/platform-context'
 import { ConsultantAvailabilityService } from '../services/consultantAvailabilityService'
 
 export function AreaConsultorPage() {
+  const blobToDataUrl = (blob) =>
+    new Promise((resolve, reject) => {
+      if (!blob) {
+        resolve('')
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result || ''))
+      reader.onerror = () => reject(new Error('Não foi possível processar o áudio da resposta.'))
+      reader.readAsDataURL(blob)
+    })
+
   const {
     profile,
     isConsultant,
@@ -232,13 +245,87 @@ export function AreaConsultorPage() {
     setPanelNotice('Alerta de chamada silenciado.')
   }
 
-  const handleResponseChange = (requestId, questionIndex, value) => {
+  const getResponseEntryDraft = (requestId, questionIndex) => {
+    const currentAnswers = Array.isArray(responseDrafts[requestId]) ? responseDrafts[requestId] : []
+    const currentEntry = currentAnswers[questionIndex]
+
+    if (typeof currentEntry === 'string') {
+      return {
+        type: 'text',
+        text: currentEntry,
+        audioDataUrl: '',
+        durationSeconds: 0,
+      }
+    }
+
+    return {
+      type: currentEntry?.type === 'audio' ? 'audio' : 'text',
+      text: currentEntry?.text ?? '',
+      audioDataUrl: currentEntry?.audioDataUrl ?? '',
+      durationSeconds: Number(currentEntry?.durationSeconds) || 0,
+    }
+  }
+
+  const setResponseEntryDraft = (requestId, questionIndex, updater) => {
     setResponseDrafts((prev) => {
       const currentAnswers = Array.isArray(prev[requestId]) ? prev[requestId] : []
       const nextAnswers = [...currentAnswers]
-      nextAnswers[questionIndex] = value
+      const rawCurrentEntry = currentAnswers[questionIndex]
+      const currentEntry =
+        typeof rawCurrentEntry === 'string'
+          ? { type: 'text', text: rawCurrentEntry, audioDataUrl: '', durationSeconds: 0 }
+          : {
+              type: rawCurrentEntry?.type === 'audio' ? 'audio' : 'text',
+              text: rawCurrentEntry?.text ?? '',
+              audioDataUrl: rawCurrentEntry?.audioDataUrl ?? '',
+              durationSeconds: Number(rawCurrentEntry?.durationSeconds) || 0,
+            }
+      const nextEntry =
+        typeof updater === 'function' ? updater(currentEntry) : { ...currentEntry, ...updater }
+      nextAnswers[questionIndex] = nextEntry
       return { ...prev, [requestId]: nextAnswers }
     })
+  }
+
+  const handleResponseTypeChange = (requestId, questionIndex, type) => {
+    if (type === 'audio') {
+      setResponseEntryDraft(requestId, questionIndex, {
+        type: 'audio',
+        text: '',
+        audioDataUrl: '',
+        durationSeconds: 0,
+      })
+      return
+    }
+    setResponseEntryDraft(requestId, questionIndex, {
+      type: 'text',
+      audioDataUrl: '',
+      durationSeconds: 0,
+    })
+  }
+
+  const handleResponseChange = (requestId, questionIndex, value) => {
+    setResponseEntryDraft(requestId, questionIndex, (prevEntry) => ({
+      ...prevEntry,
+      type: 'text',
+      text: value,
+      audioDataUrl: '',
+      durationSeconds: 0,
+    })
+  }
+
+  const handleResponseAudioRecorded = async (requestId, questionIndex, blob, duration) => {
+    try {
+      const audioDataUrl = await blobToDataUrl(blob)
+      setResponseEntryDraft(requestId, questionIndex, {
+        type: 'audio',
+        text: '',
+        audioDataUrl,
+        durationSeconds: duration,
+      })
+    } catch (error) {
+      setPanelNotice(error.message || 'Erro ao preparar áudio da resposta.')
+    }
   }
 
   const handleSubmitResponse = async (requestId) => {
@@ -249,7 +336,29 @@ export function AreaConsultorPage() {
     }
 
     const answers = Array.isArray(responseDrafts[requestId]) ? responseDrafts[requestId] : []
-    const missingAnswer = request.entries.some((_, index) => !String(answers[index] ?? '').trim())
+    const normalizedAnswers = request.entries.map((_, index) => {
+      const answer = answers[index]
+      if (typeof answer === 'string') {
+        return {
+          type: 'text',
+          text: answer,
+          audioDataUrl: '',
+          durationSeconds: 0,
+        }
+      }
+      return {
+        type: answer?.type === 'audio' ? 'audio' : 'text',
+        text: answer?.text ?? '',
+        audioDataUrl: answer?.audioDataUrl ?? '',
+        durationSeconds: Number(answer?.durationSeconds) || 0,
+      }
+    })
+
+    const missingAnswer = normalizedAnswers.some(
+      (entry) =>
+        (entry.type === 'text' && !String(entry.text || '').trim()) ||
+        (entry.type === 'audio' && !entry.audioDataUrl),
+    )
     if (missingAnswer) {
       setPanelNotice('Responda todas as perguntas antes de enviar.')
       return
@@ -257,10 +366,20 @@ export function AreaConsultorPage() {
 
     const answeredEntries = request.entries.map((entry, index) => ({
       ...entry,
-      answer: String(answers[index] ?? '').trim(),
+      answerType: normalizedAnswers[index].type,
+      answer:
+        normalizedAnswers[index].type === 'text'
+          ? String(normalizedAnswers[index].text || '').trim()
+          : '',
+      answerAudioDataUrl:
+        normalizedAnswers[index].type === 'audio' ? normalizedAnswers[index].audioDataUrl : '',
+      answerDurationSeconds:
+        normalizedAnswers[index].type === 'audio' ? normalizedAnswers[index].durationSeconds : 0,
     }))
     const answerSummary = answeredEntries
-      .map((entry, index) => `P${index + 1}: ${entry.answer}`)
+      .map((entry, index) =>
+        entry.answerType === 'audio' ? `P${index + 1}: Resposta em áudio` : `P${index + 1}: ${entry.answer}`,
+      )
       .join('\n')
 
     await respondToQuestionRequest({
@@ -445,14 +564,54 @@ export function AreaConsultorPage() {
                       <span className="font-bold text-mystic-goldSoft">P{index + 1}: </span>
                       {entry.question}
                     </p>
-                    <textarea
-                      placeholder={`Digite a resposta para a Pergunta ${index + 1}...`}
-                      value={responseDrafts[request.id]?.[index] ?? ''}
-                      onChange={(event) =>
-                        handleResponseChange(request.id, index, event.target.value)
-                      }
-                      className="min-h-[80px] w-full resize-y rounded-lg border border-mystic-gold/35 bg-black/35 p-3 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
-                    />
+                    {entry.type === 'audio' && entry.audioDataUrl && (
+                      <audio
+                        controls
+                        src={entry.audioDataUrl}
+                        className="w-full"
+                        controlsList="nodownload"
+                      />
+                    )}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleResponseTypeChange(request.id, index, 'text')}
+                        className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                          getResponseEntryDraft(request.id, index).type === 'text'
+                            ? 'border-mystic-gold/70 bg-mystic-gold/20 text-mystic-goldSoft'
+                            : 'border-mystic-gold/35 text-ethereal-silver/80 hover:bg-mystic-gold/10'
+                        }`}
+                      >
+                        Responder em texto
+                      </button>
+                      <button
+                        onClick={() => handleResponseTypeChange(request.id, index, 'audio')}
+                        className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                          getResponseEntryDraft(request.id, index).type === 'audio'
+                            ? 'border-mystic-gold/70 bg-mystic-gold/20 text-mystic-goldSoft'
+                            : 'border-mystic-gold/35 text-ethereal-silver/80 hover:bg-mystic-gold/10'
+                        }`}
+                      >
+                        Responder em áudio
+                      </button>
+                    </div>
+                    {getResponseEntryDraft(request.id, index).type === 'text' ? (
+                      <textarea
+                        placeholder={`Digite a resposta para a Pergunta ${index + 1}...`}
+                        value={getResponseEntryDraft(request.id, index).text}
+                        onChange={(event) =>
+                          handleResponseChange(request.id, index, event.target.value)
+                        }
+                        className="min-h-[80px] w-full resize-y rounded-lg border border-mystic-gold/35 bg-black/35 p-3 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
+                      />
+                    ) : (
+                      <AudioRecorder
+                        onAudioRecorded={(blob, duration) => {
+                          void handleResponseAudioRecorded(request.id, index, blob, duration)
+                        }}
+                        onSave={() => {}}
+                        maxDurationSeconds={120}
+                      />
+                    )}
                   </div>
                 ))}
               </div>

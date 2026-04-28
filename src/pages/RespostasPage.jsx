@@ -130,7 +130,24 @@ export function RespostasPage() {
                           )}
                           <div className="rounded-xl bg-black/40 p-3">
                             <p className="mb-2 text-[11px] font-semibold tracking-widest uppercase text-stardust-gold/60">Resposta</p>
-                            <p className="whitespace-pre-wrap text-xs leading-relaxed text-amber-50">{answer.answerSummary}</p>
+                            {Array.isArray(answer.entries) && answer.entries.length > 0 ? (
+                              <div className="space-y-2">
+                                {answer.entries.map((entry, idx) => (
+                                  <div key={entry.id || idx} className="rounded-lg border border-stardust-gold/20 bg-black/30 p-2">
+                                    <p className="mb-1 text-[11px] text-ethereal-silver/70">Resposta {idx + 1}</p>
+                                    {entry.answerType === 'audio' && entry.answerAudioDataUrl ? (
+                                      <audio controls src={entry.answerAudioDataUrl} className="w-full" controlsList="nodownload" />
+                                    ) : (
+                                      <p className="whitespace-pre-wrap text-xs leading-relaxed text-amber-50">
+                                        {entry.answer || '—'}
+                                      </p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="whitespace-pre-wrap text-xs leading-relaxed text-amber-50">{answer.answerSummary}</p>
+                            )}
                           </div>
                           {!reviewedIds.has(answer.id) && (
                             <div className="flex justify-end">
