@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AlertTriangle, Wallet, Video } from 'lucide-react'
+import { AlertTriangle, UserPlus, Wallet, Video } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ConsultantMarketplaceNew } from '../components/ConsultantMarketplaceNew'
@@ -40,11 +40,12 @@ export function ConsultoresPage() {
   // Novos estados para os modais
   const [insufficientBalanceModal, setInsufficientBalanceModal] = useState({ isOpen: false, minRequired: 0, type: 'video' })
   const [confirmCallModal, setConfirmCallModal] = useState({ isOpen: false, consultant: null })
+  const [guestActionModal, setGuestActionModal] = useState({ isOpen: false, mode: 'video' })
 
   const handleChooseService = (consultant, mode) => {
     if (mode === 'video') {
       if (!profile) {
-        setSystemNotice(t('consultants.login_to_start', 'Faça login ou cadastre-se para iniciar a consulta.'))
+        setGuestActionModal({ isOpen: true, mode: 'video' })
         return
       }
 
@@ -64,7 +65,7 @@ export function ConsultoresPage() {
     }
 
     if (!profile) {
-      setSystemNotice(t('consultants.login_to_send_questions', 'Faça login ou cadastre-se para enviar perguntas ao consultor.'))
+      setGuestActionModal({ isOpen: true, mode: 'questions' })
       return
     }
 
@@ -236,6 +237,41 @@ export function ConsultoresPage() {
               </button>
               <button
                 onClick={() => setConfirmCallModal({ isOpen: false, consultant: null })}
+                className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
+              >
+                {t('common.back', 'Voltar')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {guestActionModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-mystic-gold/40 bg-mystic-purple/90 p-6 shadow-[0_0_40px_rgba(197,160,89,0.2)]">
+            <div className="mb-4 flex items-center justify-center text-mystic-goldSoft">
+              <UserPlus size={48} />
+            </div>
+            <h3 className="mb-2 text-center font-display text-2xl text-mystic-goldSoft">
+              {t('consultants.guest_modal_title', 'Crie sua conta para continuar')}
+            </h3>
+            <p className="mb-6 text-center text-amber-100/80">
+              {guestActionModal.mode === 'video'
+                ? t('consultants.login_to_start', 'Faça login ou cadastre-se para iniciar a consulta.')
+                : t('consultants.login_to_send_questions', 'Faça login ou cadastre-se para enviar perguntas ao consultor.')}
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setGuestActionModal({ isOpen: false, mode: 'video' })
+                  navigate('/cadastro')
+                }}
+                className="w-full rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 py-3 font-bold text-black transition hover:brightness-110"
+              >
+                {t('consultants.guest_modal_register', 'Ir para cadastro')}
+              </button>
+              <button
+                onClick={() => setGuestActionModal({ isOpen: false, mode: 'video' })}
                 className="w-full rounded-lg border border-mystic-gold/30 bg-black/40 py-3 font-medium text-amber-50 transition hover:bg-black/60"
               >
                 {t('common.back', 'Voltar')}

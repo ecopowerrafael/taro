@@ -39,6 +39,8 @@
     "confirm_call_desc": "Estás a punto de iniciar una llamada de video con",
     "confirm_call_price": "El valor es de R$ {{amount}} por minuto.",
     "confirm_start": "Confirmar Inicio",
+    "guest_modal_title": "Crea tu cuenta para continuar",
+    "guest_modal_register": "Ir al registro",
     "search_placeholder": "Busca por nombre, especialidad...",
     "filters": {
       "all": "Todos",
