@@ -50,12 +50,12 @@ export function MagiasPage() {
                     {spell.imageUrl ? (
                       <img src={spell.imageUrl} alt={getTranslatedField(spell, 'title')} className="h-56 w-full object-cover transition duration-700 group-hover:scale-105" />
                     ) : (
-                      <div className="flex h-56 items-center justify-center text-sm text-ethereal-silver/40">Imagem não informada</div>
+                      <div className="flex h-56 items-center justify-center text-sm text-ethereal-silver/40">{t('spells.image_not_provided', 'Imagem não informada')}</div>
                     )}
                   </div>
 
                   <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-mystic-goldSoft/75">Feita por {spell.consultantName}</p>
+                    <p className="text-xs uppercase tracking-[0.24em] text-mystic-goldSoft/75">{t('spells.made_by', 'Feita por')} {spell.consultantName}</p>
                     <h3 className="mt-2 font-playfair text-3xl text-white transition-colors group-hover:text-mystic-gold">
                       <Link to={`/magias/${spell.id}`} className="transition hover:text-mystic-gold">
                         {getTranslatedField(spell, 'title')}

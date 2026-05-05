@@ -2,8 +2,10 @@ import React from 'react'
 import { PageShell } from '../components/PageShell'
 import { NumerologyWidget } from '../components/Oracle/NumerologyWidget'
 import { Sparkles, Moon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function NumerologiaPage() {
+  const { t } = useTranslation()
   return (
     <PageShell>
       <div className="container mx-auto px-6 py-8 flex flex-col items-center min-h-[80vh] pb-8">
@@ -14,7 +16,7 @@ export function NumerologiaPage() {
           </div>
           
           <h1 className="font-playfair text-2xl md:text-5xl text-white mb-2 tracking-tighter">
-            Mapa <span className="text-gradient-gold italic">Numerológico</span>
+            {t('numerology.page_title_prefix', 'Mapa')} <span className="text-gradient-gold italic">{t('numerology.page_title_highlight', 'Numerológico')}</span>
           </h1>
           
           <div className="flex items-center justify-center gap-2">
@@ -38,8 +40,7 @@ export function NumerologiaPage() {
         {/* Footer info */}
         <div className="mt-12 md:mt-16 text-center text-ethereal-silver/40 text-sm max-w-lg">
           <p className="mb-4">
-            A numerologia pitagórica revela a vibração sagrada que seu nome e nascimento 
-            imprimem no tecido do universo.
+            {t('numerology.footer_text', 'A numerologia pitagórica revela a vibração sagrada que seu nome e nascimento imprimem no tecido do universo.')}
           </p>
           <div className="h-px w-24 bg-mystic-gold/20 mx-auto" />
         </div>

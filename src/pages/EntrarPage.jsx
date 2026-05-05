@@ -4,8 +4,10 @@ import { Loader2 } from 'lucide-react'
 import { GlassCard } from '../components/GlassCard'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
+import { useTranslation } from 'react-i18next'
 
 export function EntrarPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { login, setSystemNotice } = usePlatformContext()
   const [email, setEmail] = useState('')
@@ -19,19 +21,19 @@ export function EntrarPage() {
     setLoading(false)
 
     if (result.ok) {
-      setSystemNotice('Bem-vindo de volta!')
+      setSystemNotice(t('login.notices.welcome_back', 'Bem-vindo de volta!'))
       navigate('/')
     } else {
-      setSystemNotice(result.message || 'Erro ao entrar. Verifique suas credenciais.')
+      setSystemNotice(result.message || t('login.errors.invalid_credentials', 'Erro ao entrar. Verifique suas credenciais.'))
     }
   }
 
   return (
-    <PageShell title="Entrar" subtitle="Acesse sua conta para continuar sua jornada espiritual.">
-      <GlassCard title="Acesso do Cliente">
+    <PageShell title={t('login.page_title', 'Entrar')} subtitle={t('login.page_subtitle', 'Acesse sua conta para continuar sua jornada espiritual.')}>
+      <GlassCard title={t('login.card_title', 'Acesso do Cliente')}>
         <form onSubmit={handleSubmit} className="grid gap-4 md:max-w-md">
           <label className="grid gap-2 text-sm text-amber-100/80">
-            Email
+            {t('login.fields.email', 'Email')}
             <input
               type="email"
               required
@@ -41,7 +43,7 @@ export function EntrarPage() {
             />
           </label>
           <label className="grid gap-2 text-sm text-amber-100/80">
-            Senha
+            {t('login.fields.password', 'Senha')}
             <input
               type="password"
               required
@@ -58,10 +60,10 @@ export function EntrarPage() {
             {loading ? (
               <>
                 <Loader2 className="animate-spin" size={18} />
-                Entrando...
+                {t('login.actions.signing_in', 'Entrando...')}
               </>
             ) : (
-              'Entrar na Conta'
+              t('login.actions.sign_in', 'Entrar na Conta')
             )}
           </button>
         </form>
@@ -70,13 +72,13 @@ export function EntrarPage() {
             to="/cadastro"
             className="inline-flex items-center justify-center rounded-lg border border-mystic-gold/60 px-4 py-2 text-sm text-mystic-goldSoft transition hover:bg-mystic-gold/10"
           >
-            Ainda não tem conta? Criar agora
+            {t('login.actions.create_account_prompt', 'Ainda não tem conta? Criar agora')}
           </Link>
           <Link
             to="/seja-consultor"
             className="inline-flex items-center justify-center rounded-lg border border-mystic-gold/30 px-4 py-2 text-xs text-amber-100/60 transition hover:bg-white/5"
           >
-            Trabalhe conosco: Seja um consultor
+            {t('login.actions.become_consultant', 'Trabalhe conosco: Seja um consultor')}
           </Link>
         </div>
       </GlassCard>

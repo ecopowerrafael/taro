@@ -13,6 +13,7 @@ import { getRouteSeo } from './data/siteConfig'
 import { MobileBottomNav } from './components/MobileBottomNav'
 import { NotificationToast } from './components/NotificationToast'
 import { attachNativeAppUrlListener } from './services/nativeMobilePush'
+import { useTranslation } from 'react-i18next'
 
 import { isNativeAndroidApp } from './services/nativeMobilePush'
 
@@ -48,7 +49,8 @@ const TarotDiaPage = lazyNamed(() => import('./pages/TarotDiaPage'), 'TarotDiaPa
 const NumerologiaPage = lazyNamed(() => import('./pages/NumerologiaPage'), 'NumerologiaPage')
 
 function RouteFallback() {
-  return <RouteLoader message="Abrindo portal..." />
+  const { t } = useTranslation()
+  return <RouteLoader message={t('app.loader.opening_portal', 'Abrindo portal...')} />
 }
 
 const wrapWithTransition = (Component) => (
@@ -60,10 +62,11 @@ const wrapWithTransition = (Component) => (
 )
 
 function ProtectedRoute({ children, role }) {
+  const { t } = useTranslation()
   const { profile, authLoading, isAuthenticated, isAdmin, isConsultant } = usePlatformContext()
 
   if (authLoading) {
-    return <RouteLoader message="Sincronizando conta..." />
+    return <RouteLoader message={t('app.loader.syncing_account', 'Sincronizando conta...')} />
   }
 
   if (!isAuthenticated) {

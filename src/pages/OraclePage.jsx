@@ -10,6 +10,7 @@ import { AstrologyChart } from '../components/Oracle/AstrologyChart';
 import { AstralReadingPurchaseModal } from '../components/AstralReadingPurchaseModal';
 import { CinematicAstralReading } from '../components/Oracle/CinematicAstralReading';
 import { buildApiUrl } from '../utils/runtimeConfig';
+import { useTranslation } from 'react-i18next';
 
 // Explosion particle component for the button
 function ButtonExplosion({ isExploding, children }) {
@@ -57,6 +58,7 @@ function StarsBackground() {
 }
 
 export function OraclePage() {
+  const { t } = useTranslation();
   const { oracleCredentials, profile, refreshProfile, isAuthenticated, authLoading } = usePlatformContext();
   const navigate = useNavigate();
   const location = useLocation();
@@ -108,19 +110,19 @@ export function OraclePage() {
   const introData = useMemo(() => {
     if (isDailyPath || oracleTab === 'daily') {
       return {
-        title: 'Oráculo Diário',
-        text: 'O céu nunca é o mesmo duas vezes. Hoje, os astros se alinham em uma configuração única para você. Deixe que o Oráculo decifre as frequências deste dia e revele onde sua energia deve brilhar. O Universo está sussurrando agora. Você está pronto para sintonizar?',
-        buttonText: 'Fazer Minha Leitura Diária',
+        title: t('oracle.intro.daily.title', 'Oráculo Diário'),
+        text: t('oracle.intro.daily.text', 'O céu nunca é o mesmo duas vezes. Hoje, os astros se alinham em uma configuração única para você. Deixe que o Oráculo decifre as frequências deste dia e revele onde sua energia deve brilhar. O Universo está sussurrando agora. Você está pronto para sintonizar?'),
+        buttonText: t('oracle.intro.daily.button', 'Fazer Minha Leitura Diária'),
         image: '/oraculo.png'
       };
     }
     return {
-      title: 'Mapa Astral',
-      text: 'Sincronize-se com o Universo. Na Astria, transformamos dados astronômicos em sabedoria ancestral. Descubra os segredos que moldam sua personalidade, seus desafios e sua força oculta. O Cosmo tem uma mensagem para você. Vamos ouvi-la?',
-      buttonText: 'Gerar meu Mapa Astral',
+      title: t('oracle.intro.natal.title', 'Mapa Astral'),
+      text: t('oracle.intro.natal.text', 'Sincronize-se com o Universo. Na Astria, transformamos dados astronômicos em sabedoria ancestral. Descubra os segredos que moldam sua personalidade, seus desafios e sua força oculta. O Cosmo tem uma mensagem para você. Vamos ouvi-la?'),
+      buttonText: t('oracle.intro.natal.button', 'Gerar meu Mapa Astral'),
       image: '/mapa-astral.png'
     };
-  }, [isDailyPath, oracleTab]);
+  }, [isDailyPath, oracleTab, t]);
 
   const fetchDailyTransits = async () => {
     setDailyLoading(true);
@@ -148,7 +150,7 @@ export function OraclePage() {
           setStep('birth_city');
           return;
         }
-        throw new Error(data.error || 'Erro ao carregar trânsitos diários.');
+        throw new Error(data.error || t('oracle.messages.daily_transits_error', 'Erro ao carregar trânsitos diários.'));
       }
       
       setDailyTransits(data.transits || []);
@@ -280,7 +282,7 @@ export function OraclePage() {
       });
 
       if (!res.ok) {
-        const error = new Error(data.error || 'Não foi possível gerar o mapa astral agora.');
+        const error = new Error(data.error || t('oracle.messages.chart_generate_error', 'Não foi possível gerar o mapa astral agora.'));
         error.code = data?.code || null;
         error.details = data?.details || null;
         throw error;
@@ -301,7 +303,7 @@ export function OraclePage() {
       setChartGenerationFailed(true);
 
       if (err?.code === 'MISSING_ORACLE_BIRTH_DATA' || err?.code === 'INVALID_ORACLE_COORDINATES') {
-        const msg = err?.message || 'Faltam dados de nascimento válidos. Preencha novamente para gerar o mapa astral.';
+        const msg = err?.message || t('oracle.messages.missing_birth_data', 'Faltam dados de nascimento válidos. Preencha novamente para gerar o mapa astral.');
         setErrorMsg(msg);
         addDebugLog('chart:request:invalid-data', {
           code: err?.code,
@@ -313,7 +315,7 @@ export function OraclePage() {
       }
 
       if (err?.code === 'ORACLE_CHART_EMPTY') {
-        setErrorMsg(err?.message || 'Não foi possível gerar o mapa com os dados atuais. Revise e tente novamente.');
+        setErrorMsg(err?.message || t('oracle.messages.chart_empty', 'Não foi possível gerar o mapa com os dados atuais. Revise e tente novamente.'));
       }
 
       addDebugLog('chart:request:error', {
@@ -402,7 +404,7 @@ export function OraclePage() {
       addDebugLog('location:save:error', {
         message: e?.message || 'unknown_error',
       });
-      setErrorMsg('Erro salvar local: ' + e.message);
+      setErrorMsg(`${t('oracle.messages.save_location_error_prefix', 'Erro salvar local')}: ${e.message}`);
     } finally {
       setLoadingAction(false);
     }
@@ -439,10 +441,10 @@ export function OraclePage() {
       
       if (!res.ok) {
         if (data.code === 'INSUFFICIENT_FUNDS') {
-          setErrorMsg('Saldo insuficiente. Por favor, recarregue sua conta antes de continuar.');
+          setErrorMsg(t('oracle.messages.insufficient_balance', 'Saldo insuficiente. Por favor, recarregue sua conta antes de continuar.'));
           return;
         }
-        throw new Error(data.error || 'Erro ao processar pagamento.');
+        throw new Error(data.error || t('oracle.messages.payment_process_error', 'Erro ao processar pagamento.'));
       }
       
       // Pagou ou usou a grátis com sucesso
@@ -566,23 +568,23 @@ export function OraclePage() {
               exit={{ opacity: 0, y: 10, scale: 0.98 }}
               className="w-full max-w-md rounded-3xl border border-mystic-gold/30 bg-[linear-gradient(180deg,rgba(33,18,54,0.98),rgba(10,7,18,0.96))] p-6 text-center shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_30px_rgba(197,160,89,0.18)]"
             >
-              <img src="/mapa-astral.png" alt="Mapa Astral" className="mx-auto h-20 w-20 object-contain drop-shadow-[0_0_18px_rgba(255,215,0,0.4)]" />
-              <h2 className="mt-4 font-display text-3xl text-mystic-goldSoft">Mapa Astral</h2>
+              <img src="/mapa-astral.png" alt={t('oracle.guest_modal.alt', 'Mapa Astral')} className="mx-auto h-20 w-20 object-contain drop-shadow-[0_0_18px_rgba(255,215,0,0.4)]" />
+              <h2 className="mt-4 font-display text-3xl text-mystic-goldSoft">{t('oracle.guest_modal.title', 'Mapa Astral')}</h2>
               <p className="mt-4 text-sm leading-relaxed text-amber-100/80">
-                Para realizar seu mapa astral faça seu cadastro ou login e aceite receber notificações.
+                {t('oracle.guest_modal.description', 'Para realizar seu mapa astral faça seu cadastro ou login e aceite receber notificações.')}
               </p>
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={() => navigate('/cadastro')}
                   className="flex-1 rounded-xl border border-mystic-gold/40 px-4 py-3 font-bold text-mystic-goldSoft transition hover:bg-mystic-gold/10"
                 >
-                  Cadastro
+                  {t('oracle.guest_modal.register', 'Cadastro')}
                 </button>
                 <button
                   onClick={() => navigate('/entrar')}
                   className="flex-1 rounded-xl bg-mystic-gold px-4 py-3 font-bold text-mystic-dark transition hover:brightness-110"
                 >
-                  Login
+                  {t('oracle.guest_modal.login', 'Login')}
                 </button>
               </div>
             </motion.div>
@@ -669,35 +671,35 @@ export function OraclePage() {
           >
             <StarsBackground />
             <p className="text-mystic-gold text-2xl font-serif italic drop-shadow-md mb-8 relative z-20 text-center">
-              Onde e quando as estrelas brilharam no seu nascimento?
+              {t('oracle.birth_city.title', 'Onde e quando as estrelas brilharam no seu nascimento?')}
             </p>
             
             <div className="w-full relative z-20 space-y-4">
                <div className="flex gap-4">
   <div className="flex-1">
-    <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">Data de Nascimento</label>
+    <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">{t('oracle.birth_city.birth_date', 'Data de Nascimento')}</label>
     <input
       type="text"
       value={birthDateStr}
       onChange={handleDateChange}
-      placeholder="DD/MM/AAAA"
+      placeholder={t('oracle.birth_city.birth_date_placeholder', 'DD/MM/AAAA')}
       className="w-full bg-black/60 border border-mystic-purple/50 rounded-lg px-4 py-4 text-left text-white placeholder-gray-500 focus:outline-none focus:border-mystic-gold focus:ring-1 focus:ring-mystic-gold transition-all"
     />
   </div>
   <div className="flex-1">
-    <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">Horário de Nascimento</label>
+    <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">{t('oracle.birth_city.birth_time', 'Horário de Nascimento')}</label>
     <input
       type="text"
       value={birthTimeStr}
       onChange={handleTimeChange}
-      placeholder="HH:MM"
+      placeholder={t('oracle.birth_city.birth_time_placeholder', 'HH:MM')}
       className="w-full bg-black/60 border border-mystic-purple/50 rounded-lg px-4 py-4 text-left text-white placeholder-gray-500 focus:outline-none focus:border-mystic-gold focus:ring-1 focus:ring-mystic-gold transition-all"
     />
   </div>
 </div>
                
                <div>
-                 <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">Sua cidade natal (Onde você nasceu)</label>
+                 <label className="block text-sm font-medium text-mystic-gold/80 mb-2 text-left">{t('oracle.birth_city.city_label', 'Sua cidade natal (Onde você nasceu)')}</label>
                  <CityAutocomplete onSelect={(location) => {
                    setBirthLocation(location);
                    if (location && isValidCoordinatePair(location.lat, location.lng)) {
@@ -705,7 +707,7 @@ export function OraclePage() {
                    }
                  }} />
                  <p className="mt-2 text-left text-xs text-amber-100/80">
-                   Escolha uma opção da lista para validar a localização. Apenas digitar o nome da cidade não gera coordenadas.
+                   {t('oracle.birth_city.city_help', 'Escolha uma opção da lista para validar a localização. Apenas digitar o nome da cidade não gera coordenadas.')}
                  </p>
                </div>
             </div>
@@ -725,7 +727,7 @@ export function OraclePage() {
                  </div>
                )}
                {loadingAction && <Loader2 className="w-4 h-4 animate-spin" />}
-                   Sintonizar Cosmos
+                   {t('oracle.birth_city.submit', 'Sintonizar Cosmos')}
                  </motion.button>
                )}
             </div>
@@ -734,7 +736,7 @@ export function OraclePage() {
               onClick={() => setStep('intro')}
               className="block mx-auto text-sm text-gray-500 hover:text-mystic-gold transition-colors mt-6 relative z-0"
             >
-              Voltar
+              {t('common.back', 'Voltar')}
             </button>
           </motion.div>
         )}
@@ -747,18 +749,18 @@ export function OraclePage() {
             exit={{ opacity: 0 }}
             className="space-y-6 max-w-sm w-full mx-auto"
           >
-            <h2 className="text-2xl font-serif text-mystic-gold relative z-10">Cruzar o Limiar</h2>
+            <h2 className="text-2xl font-serif text-mystic-gold relative z-10">{t('oracle.payment.title', 'Cruzar o Limiar')}</h2>
             
             <div className="bg-[#1a0f2e]/80 border border-mystic-purple/50 rounded-xl p-6 shadow-2xl relative z-10">
                {isFree ? (
                  <>
-                   <p className="text-green-400 font-bold text-lg mb-2">Primeira Consulta Gratuita</p>
-                   <p className="text-gray-300 text-sm mb-6">Você tem direito a pedir orientação às estrelas sem custo. Use sabiamente, Viajante.</p>
+                   <p className="text-green-400 font-bold text-lg mb-2">{t('oracle.payment.first_free_title', 'Primeira Consulta Gratuita')}</p>
+                   <p className="text-gray-300 text-sm mb-6">{t('oracle.payment.first_free_desc', 'Você tem direito a pedir orientação às estrelas sem custo. Use sabiamente, Viajante.')}</p>
                  </>
                ) : (
                  <>
-                   <p className="text-amber-400 font-bold text-lg mb-2">Conexão Mística</p>
-                   <p className="text-gray-300 text-sm mb-4">Um tributo de <span className="font-bold text-white">R$ {oraclePrice.toFixed(2).replace('.', ',')}</span> é necessário para abrir os caminhos.</p>
+                   <p className="text-amber-400 font-bold text-lg mb-2">{t('oracle.payment.mystic_connection', 'Conexão Mística')}</p>
+                   <p className="text-gray-300 text-sm mb-4">{t('oracle.payment.price_prefix', 'Um tributo de')} <span className="font-bold text-white">R$ {oraclePrice.toFixed(2).replace('.', ',')}</span> {t('oracle.payment.price_suffix', 'é necessário para abrir os caminhos.')}</p>
                  </>
                )}
 
@@ -774,15 +776,15 @@ export function OraclePage() {
                  className="w-full bg-mystic-gold text-mystic-dark px-6 py-3 rounded-full font-bold shadow-[0_0_15px_rgba(255,215,0,0.5)] uppercase tracking-wider flex items-center justify-center gap-2 hover:scale-105 transition-transform disabled:opacity-50 disabled:scale-100 mt-4"
                >
                  {loadingAction && <Loader2 className="w-5 h-5 animate-spin text-mystic-dark" />}
-                 {isFree ? 'Iniciar Gratuitamente' : 'Ofertar e Iniciar'}
+                 {isFree ? t('oracle.payment.start_free', 'Iniciar Gratuitamente') : t('oracle.payment.offer_start', 'Ofertar e Iniciar')}
                </button>
 
-               {!isFree && errorMsg === 'Saldo insuficiente. Por favor, recarregue sua conta antes de continuar.' && (
+               {!isFree && errorMsg === t('oracle.messages.insufficient_balance', 'Saldo insuficiente. Por favor, recarregue sua conta antes de continuar.') && (
                  <button
                    onClick={() => navigate('/recarregar')}
                    className="w-full mt-4 bg-transparent border border-mystic-gold text-mystic-gold px-6 py-3 rounded-full font-bold uppercase tracking-wider hover:bg-mystic-gold/10 transition-colors"
                  >
-                   Realizar Recarga
+                   {t('oracle.payment.recharge', 'Realizar Recarga')}
                  </button>
                )}
             </div>
@@ -791,7 +793,7 @@ export function OraclePage() {
                onClick={() => setStep('intro')}
                className="block mx-auto text-sm text-gray-500 hover:text-white mt-8 relative z-10"
              >
-               Cancelar Preparação
+               {t('oracle.payment.cancel_setup', 'Cancelar Preparação')}
              </button>
           </motion.div>
         )}
@@ -812,7 +814,7 @@ export function OraclePage() {
                     oracleTab === 'natal' ? 'bg-mystic-gold text-mystic-dark' : 'text-mystic-gold hover:bg-mystic-gold/10'
                   }`}
                 >
-                  Mapa Natal
+                  {t('oracle.tabs.natal', 'Mapa Natal')}
                 </button>
                 <button
                   onClick={() => setOracleTab('daily')}
@@ -820,7 +822,7 @@ export function OraclePage() {
                     oracleTab === 'daily' ? 'bg-mystic-gold text-mystic-dark' : 'text-mystic-gold hover:bg-mystic-gold/10'
                   }`}
                 >
-                  Oráculo Diário
+                  {t('oracle.tabs.daily', 'Oráculo Diário')}
                 </button>
               </div>
             </div>
@@ -829,29 +831,29 @@ export function OraclePage() {
               <div className="w-full flex flex-col items-center justify-center relative z-10 transition-all mt-4">
                   <div className="mb-2 bg-black/40 px-4 py-1 rounded-full text-xs text-gray-400 border border-mystic-gold/20 flex flex-col gap-1 items-center">
                     <span>
-                      Destino traçado a partir de: <span className="text-mystic-gold font-bold ml-1">{birthLocation?.name}</span>
+                      {t('oracle.ritual.destiny_from', 'Destino traçado a partir de')}: <span className="text-mystic-gold font-bold ml-1">{birthLocation?.name}</span>
                     </span>
                     <span>
-                      Nascido em: <span className="text-mystic-gold font-bold ml-1">{birthDateStr}</span>
+                      {t('oracle.ritual.born_on', 'Nascido em')}: <span className="text-mystic-gold font-bold ml-1">{birthDateStr}</span>
                     </span>
                   </div>
                   
                   {chartLoading ? (
                      <div className="flex flex-col items-center my-6">
                        <Loader2 className="w-8 h-8 animate-spin text-mystic-gold mb-2" />
-                       <p className="text-sm text-mystic-gold">Desenhando seu céu natal...</p>
+                       <p className="text-sm text-mystic-gold">{t('oracle.ritual.drawing_natal_sky', 'Desenhando seu céu natal...')}</p>
                      </div>
                   ) : chartRequestAttempted && chartGenerationFailed && !hasGeneratedAstralMap ? (
                     <div className="mt-6 w-full max-w-2xl rounded-2xl border border-mystic-gold/25 bg-[#1a0f2e]/85 p-6 text-center shadow-[0_0_20px_rgba(255,215,0,0.08)]">
                       <p className="text-base leading-relaxed text-amber-100 md:text-lg">
-                        Algumas nuvens impediram a leitura dos astros, espere 1 minuto e clique em gerar novamente.
+                        {t('oracle.ritual.retry_message', 'Algumas nuvens impediram a leitura dos astros, espere 1 minuto e clique em gerar novamente.')}
                       </p>
                       <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
                         <button
                           onClick={handleRetryAstralMap}
                           className="inline-flex items-center justify-center rounded-full bg-mystic-gold px-6 py-3 text-sm font-bold uppercase tracking-wider text-mystic-dark transition hover:scale-105"
                         >
-                          Tentar novamente
+                          {t('oracle.ritual.try_again', 'Tentar novamente')}
                         </button>
                         {!hasSavedOracleData && (
                           <button
@@ -862,7 +864,7 @@ export function OraclePage() {
                             }}
                             className="inline-flex items-center justify-center rounded-full border border-mystic-gold/40 px-6 py-3 text-sm font-bold uppercase tracking-wider text-mystic-gold transition hover:bg-mystic-gold/10"
                           >
-                            Preencher dados novamente
+                            {t('oracle.ritual.fill_data_again', 'Preencher dados novamente')}
                           </button>
                         )}
                       </div>
@@ -879,7 +881,7 @@ export function OraclePage() {
                 ) : (
                   <div className="flex flex-col items-center my-12">
                     <Loader2 className="w-10 h-10 animate-spin text-mystic-gold mb-4" />
-                    <p className="text-mystic-gold font-serif">Preparando seu mapa natal...</p>
+                    <p className="text-mystic-gold font-serif">{t('oracle.ritual.preparing_natal_map', 'Preparando seu mapa natal...')}</p>
                   </div>
                 )}
               </div>
@@ -888,7 +890,7 @@ export function OraclePage() {
                 {dailyLoading ? (
                   <div className="flex flex-col items-center my-12">
                     <Loader2 className="w-10 h-10 animate-spin text-mystic-gold mb-4" />
-                    <p className="text-mystic-gold font-serif">Consultando as efemérides de hoje...</p>
+                    <p className="text-mystic-gold font-serif">{t('oracle.ritual.consulting_ephemerides', 'Consultando as efemérides de hoje...')}</p>
                   </div>
                 ) : (dailyTransits.length > 0 && natalPlanetsForDaily.length > 0) ? (
                   <CinematicAstralReading
@@ -902,12 +904,12 @@ export function OraclePage() {
                   />
                 ) : (
                   <div className="p-8 text-center bg-black/40 border border-mystic-gold/20 rounded-2xl">
-                    <p className="text-gray-400 mb-4">Nenhum trânsito significativo detectado para hoje.</p>
+                    <p className="text-gray-400 mb-4">{t('oracle.ritual.no_significant_transits', 'Nenhum trânsito significativo detectado para hoje.')}</p>
                     <button 
                       onClick={fetchDailyTransits}
                       className="text-mystic-gold font-bold uppercase text-xs tracking-widest border border-mystic-gold/40 px-4 py-2 rounded-full hover:bg-mystic-gold/10"
                     >
-                      Recarregar
+                      {t('oracle.ritual.reload', 'Recarregar')}
                     </button>
                   </div>
                 )}
@@ -926,7 +928,7 @@ export function OraclePage() {
                 className="block mx-auto text-sm text-gray-500 hover:text-white mt-8 transition-colors"
                 disabled={loadingAction}
               >
-                Abandonar Ritual
+                {t('oracle.ritual.abandon', 'Abandonar Ritual')}
               </button>
             )}
           </motion.div>
@@ -940,7 +942,7 @@ export function OraclePage() {
             className="space-y-6 w-full max-w-lg mx-auto bg-[#1a0f2e]/80 border border-mystic-gold/50 rounded-2xl p-6 shadow-[0_0_40px_rgba(255,215,0,0.1)] backdrop-blur-md"
           >
              <h2 className="text-2xl font-serif text-mystic-gold mb-4 relative z-10 text-center">
-               Sua Revelação Astria
+               {t('oracle.result.title', 'Sua Revelação Astria')}
              </h2>
              
              <AstrologyChart planets={oraclePlanets} />
@@ -962,7 +964,7 @@ export function OraclePage() {
                onClick={() => setStep('intro')}
                className="w-full mt-6 bg-transparent border-2 border-mystic-gold text-mystic-gold px-8 py-3 rounded-full font-bold uppercase tracking-wider flex items-center justify-center hover:bg-mystic-gold hover:text-mystic-dark transition-all"
              >
-               Finalizar Ritual
+               {t('oracle.result.finish', 'Finalizar Ritual')}
              </button>
           </motion.div>
         )}
@@ -974,7 +976,7 @@ export function OraclePage() {
 
       {showOracleDebug && (
         <div className="fixed bottom-3 left-3 right-3 z-[180] max-h-[44vh] overflow-auto rounded-xl border border-amber-400/40 bg-black/90 p-3 text-left text-xs text-amber-100 shadow-[0_0_24px_rgba(0,0,0,0.6)]">
-          <p className="font-semibold text-amber-300">DEBUG ORACLE (ativo para diagnóstico)</p>
+          <p className="font-semibold text-amber-300">{t('oracle.debug.title', 'DEBUG ORACLE (ativo para diagnóstico)')}</p>
           <p className="mt-1 text-amber-100/80">
             userId: {String(profile?.id || 'n/a')} | email: {profile?.email || 'n/a'} | step: {step}
           </p>
@@ -984,7 +986,7 @@ export function OraclePage() {
             </p>
           )}
           <p className="text-amber-100/80">
-            savedData: {hasSavedOracleData ? 'sim' : 'não'} | planets: {oraclePlanets.length} | chartFail: {chartGenerationFailed ? 'sim' : 'não'}
+            savedData: {hasSavedOracleData ? t('oracle.debug.yes', 'sim') : t('oracle.debug.no', 'não')} | planets: {oraclePlanets.length} | chartFail: {chartGenerationFailed ? t('oracle.debug.yes', 'sim') : t('oracle.debug.no', 'não')}
           </p>
 
           {chartApiDebug && (

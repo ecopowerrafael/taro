@@ -6,6 +6,7 @@ import { GlassCard } from '../components/GlassCard'
 import { PageShell } from '../components/PageShell'
 import { RechargeStripeForm } from '../components/RechargeStripeForm'
 import { usePlatformContext } from '../context/platform-context'
+import { useTranslation } from 'react-i18next'
 
 // Manual BRCode (PIX) Generator to avoid Node.js buffer issues
 function generatePixPayload({ key, name, city, amount, description }) {
@@ -80,7 +81,8 @@ function generatePixPayload({ key, name, city, amount, description }) {
 }
 
 export function RecarregarPage() {
-  const { minutePackages, rechargePackage, paymentResult, minutesBalance, mpCredentials, requestRecharge, stripeCredentials } = usePlatformContext()
+  const { t } = useTranslation()
+  const { minutePackages, paymentResult, minutesBalance, mpCredentials, requestRecharge } = usePlatformContext()
   const [paymentMethod, setPaymentMethod] = useState(null) // 'pix' | 'card'
   const [selectedPack, setSelectedPack] = useState(null)
   const [copied, setCopied] = useState(false)
@@ -100,13 +102,13 @@ export function RecarregarPage() {
         name: mpCredentials.pixReceiverName || 'Astria Tarot',
         city: mpCredentials.pixReceiverCity || 'SAO PAULO',
         amount: amount,
-        description: `Recarga Astria ${selectedPack.minutes}min`,
+        description: `${t('recharge.pix_description_prefix', 'Recarga Astria')} ${selectedPack.minutes}min`,
       })
     } catch (e) {
       console.error('Erro ao gerar PIX:', e)
       return null
     }
-  }, [selectedPack, mpCredentials])
+  }, [selectedPack, mpCredentials, t])
 
   useEffect(() => {
     if (paymentResult?.status !== 'approved' && !stripeSuccess) {
@@ -145,16 +147,16 @@ export function RecarregarPage() {
   }
 
   return (
-    <PageShell title="Recarregar Saldo" subtitle="Escolha como deseja adicionar créditos à sua conta.">
+    <PageShell title={t('recharge.page_title', 'Recarregar Saldo')} subtitle={t('recharge.page_subtitle', 'Escolha como deseja adicionar créditos à sua conta.')}>
       <GlassCard
-        title="Saldo atual"
-        subtitle="Você pode adicionar Saldo conforme sua necessidade."
+        title={t('recharge.current_balance_title', 'Saldo atual')}
+        subtitle={t('recharge.current_balance_subtitle', 'Você pode adicionar Saldo conforme sua necessidade.')}
       >
         <p className="font-display text-4xl text-mystic-goldSoft">R$ {minutesBalance.toFixed(2)}</p>
       </GlassCard>
 
       {!selectedPack ? (
-        <GlassCard title="Escolha um Pacote" subtitle="Selecione o valor desejado para recarga.">
+        <GlassCard title={t('recharge.choose_package_title', 'Escolha um Pacote')} subtitle={t('recharge.choose_package_subtitle', 'Selecione o valor desejado para recarga.')}>
           <div className="grid gap-4 md:grid-cols-3">
             {minutePackages.map((pack) => {
               const finalPrice = pack.promoPrice ?? pack.price
@@ -174,14 +176,14 @@ export function RecarregarPage() {
                     </div>
                     {pack.isFeatured && (
                       <span className="rounded-full border border-mystic-gold/70 bg-mystic-gold/20 px-2 py-1 text-[10px] uppercase tracking-wide text-mystic-goldSoft">
-                        Mais escolhido
+                        {t('recharge.most_selected', 'Mais escolhido')}
                       </span>
                     )}
                   </div>
                   <div className="flex flex-col gap-2 mt-4">
                     <div className="flex items-center justify-center gap-2 rounded-lg bg-mystic-gold/10 py-2 text-xs text-mystic-goldSoft">
                       <WalletCards size={14} />
-                      Selecionar este pacote
+                      {t('recharge.select_package', 'Selecionar este pacote')}
                     </div>
                   </div>
                 </article>
@@ -200,13 +202,13 @@ export function RecarregarPage() {
               }}
               className="text-sm text-mystic-goldSoft underline transition hover:text-mystic-gold"
             >
-              ← Voltar para pacotes
+              ← {t('recharge.back_to_packages', 'Voltar para pacotes')}
             </button>
           </div>
 
           <GlassCard 
-            title={`Pacote R$ ${(selectedPack.promoPrice ?? selectedPack.price).toFixed(2)}`} 
-            subtitle="Escolha o método de pagamento para este pacote."
+            title={`${t('recharge.package_prefix', 'Pacote')} R$ ${(selectedPack.promoPrice ?? selectedPack.price).toFixed(2)}`} 
+            subtitle={t('recharge.choose_payment_method', 'Escolha o método de pagamento para este pacote.')}
           >
             <div className="grid gap-4 md:grid-cols-2">
               <button
@@ -222,8 +224,8 @@ export function RecarregarPage() {
                   <QrCode size={32} />
                 </div>
                 <div className="text-center">
-                  <h3 className="font-display text-lg text-mystic-goldSoft">Pagar com Pix</h3>
-                  <p className="text-[10px] text-amber-100/60 uppercase">Manual / QR Code</p>
+                  <h3 className="font-display text-lg text-mystic-goldSoft">{t('recharge.pay_with_pix', 'Pagar com Pix')}</h3>
+                  <p className="text-[10px] text-amber-100/60 uppercase">{t('recharge.manual_qr', 'Manual / QR Code')}</p>
                 </div>
               </button>
               <button
@@ -239,7 +241,7 @@ export function RecarregarPage() {
                   <CreditCard size={32} />
                 </div>
                 <div className="text-center">
-                  <h3 className="font-display text-lg text-mystic-goldSoft">Cartão de Crédito</h3>
+                  <h3 className="font-display text-lg text-mystic-goldSoft">{t('recharge.credit_card', 'Cartão de Crédito')}</h3>
                 </div>
               </button>
             </div>
@@ -260,11 +262,11 @@ export function RecarregarPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/35 bg-black/40 px-3 py-2 text-sm text-amber-100/80 transition hover:bg-black/60"
               >
                 <X size={16} />
-                Fechar
+                {t('common.close', 'Fechar')}
               </button>
             </div>
 
-            <GlassCard title="Pagamento via Pix" subtitle="Escaneie o QR Code ou use o código Copia e Cola.">
+            <GlassCard title={t('recharge.pix_payment_title', 'Pagamento via Pix')} subtitle={t('recharge.pix_payment_subtitle', 'Escaneie o QR Code ou use o código Copia e Cola.')}>
               <div className="flex max-h-[75vh] flex-col items-center gap-6 overflow-y-auto pr-1">
                 {pixData ? (
                   <div className="rounded-xl border-4 border-white bg-white p-2">
@@ -272,16 +274,16 @@ export function RecarregarPage() {
                   </div>
                 ) : (
                   <div className="flex h-48 w-48 items-center justify-center rounded-xl border border-dashed border-mystic-gold/30 bg-black/20 text-center text-xs text-amber-100/40">
-                    Erro ao gerar QR Code. Verifique as configurações no admin.
+                    {t('recharge.qr_error', 'Erro ao gerar QR Code. Verifique as configurações no admin.')}
                   </div>
                 )}
 
                 <div className="w-full max-w-sm space-y-3">
-                  <p className="text-center text-sm font-medium text-amber-100/70">Código Copia e Cola</p>
+                  <p className="text-center text-sm font-medium text-amber-100/70">{t('recharge.copy_paste_code', 'Código Copia e Cola')}</p>
                   <div className="relative">
                     <input
                       readOnly
-                      value={pixData || 'Código não disponível'}
+                      value={pixData || t('recharge.code_unavailable', 'Código não disponível')}
                       className="w-full rounded-lg border border-mystic-gold/35 bg-black/35 py-3 pl-4 pr-12 text-xs text-amber-50 outline-none"
                     />
                     <button
@@ -300,10 +302,10 @@ export function RecarregarPage() {
                     disabled={requesting || !pixData}
                     className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 py-3 font-bold text-black transition hover:brightness-110 disabled:opacity-50"
                   >
-                    {requesting ? <Loader2 className="animate-spin" size={20} /> : 'Já realizei o pagamento'}
+                    {requesting ? <Loader2 className="animate-spin" size={20} /> : t('recharge.already_paid', 'Já realizei o pagamento')}
                   </button>
                   <p className="text-center text-[10px] text-amber-100/50">
-                    O saldo será liberado após a confirmação manual do administrador.
+                    {t('recharge.balance_release_note', 'O saldo será liberado após a confirmação manual do administrador.')}
                   </p>
                 </div>
               </div>
@@ -325,12 +327,12 @@ export function RecarregarPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/35 bg-black/40 px-3 py-2 text-sm text-amber-100/80 transition hover:bg-black/60"
               >
                 <X size={16} />
-                Fechar
+                {t('common.close', 'Fechar')}
               </button>
             </div>
 
             {stripeSuccess ? (
-              <GlassCard title="Pagamento Confirmado" subtitle="Seu pagamento foi processado com sucesso!">
+              <GlassCard title={t('recharge.payment_confirmed_title', 'Pagamento Confirmado')} subtitle={t('recharge.payment_confirmed_subtitle', 'Seu pagamento foi processado com sucesso!')}>
                 <div className="flex flex-col items-center gap-4 py-8">
                   <div className="rounded-full bg-emerald-500/20 p-4 text-emerald-400">
                     <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,11 +340,11 @@ export function RecarregarPage() {
                     </svg>
                   </div>
                   <div className="text-center">
-                    <p className="mb-2 text-lg font-semibold text-mystic-goldSoft">Pagamento Recebido!</p>
+                    <p className="mb-2 text-lg font-semibold text-mystic-goldSoft">{t('recharge.payment_received', 'Pagamento Recebido!')}</p>
                     <p className="mb-4 text-sm text-amber-100/70">
-                      Seus créditos foram processados e a confirmação do Stripe foi concluída.
+                      {t('recharge.stripe_success_detail', 'Seus créditos foram processados e a confirmação do Stripe foi concluída.')}
                     </p>
-                    <p className="text-xs text-amber-100/50">Você já pode voltar e conferir o saldo atualizado.</p>
+                    <p className="text-xs text-amber-100/50">{t('recharge.check_updated_balance', 'Você já pode voltar e conferir o saldo atualizado.')}</p>
                   </div>
                 </div>
               </GlassCard>

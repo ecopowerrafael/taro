@@ -7,8 +7,10 @@ import { generatePixPayload } from '../utils/pix'
 import { GlassCard } from './GlassCard'
 import { SpellStripeCheckoutForm } from './SpellStripeCheckoutForm'
 import { getTranslatedField } from '../utils/i18nHelper'
+import { useTranslation } from 'react-i18next'
 
 export function SpellPurchaseModal({ spell, onClose }) {
+  const { t } = useTranslation()
   const { profile, isAuthenticated, mpCredentials, createSpellPixOrder } = usePlatformContext()
   const [paymentMethod, setPaymentMethod] = useState(null)
   const [copied, setCopied] = useState(false)
@@ -49,7 +51,7 @@ export function SpellPurchaseModal({ spell, onClose }) {
     setPixFeedback('')
     const result = await createSpellPixOrder({ spellId: spell.id })
     setPixSubmitting(false)
-    setPixFeedback(result?.message || 'Pedido PIX registrado.')
+    setPixFeedback(result?.message || t('spell_purchase.pix_order_registered', 'Pedido PIX registrado.'))
   }
 
   if (!spell) {
@@ -65,33 +67,33 @@ export function SpellPurchaseModal({ spell, onClose }) {
             className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/35 bg-black/45 px-3 py-2 text-sm text-amber-100/85 transition hover:bg-black/60"
           >
             <X size={16} />
-            Fechar
+            {t('common.close', 'Fechar')}
           </button>
         </div>
 
         <div className="grid gap-4">
-          <GlassCard title="Finalizar contratação" subtitle="Confira os dados antes de escolher a forma de pagamento.">
+          <GlassCard title={t('spell_purchase.title', 'Finalizar contratação')} subtitle={t('spell_purchase.subtitle', 'Confira os dados antes de escolher a forma de pagamento.')}>
             <div className="grid gap-5">
               <div className="rounded-2xl border border-mystic-gold/25 bg-black/25 p-5 text-center md:p-6">
                 <p className="text-lg leading-relaxed text-amber-50">
-                  Você está contratando <span className="font-semibold text-mystic-goldSoft">{getTranslatedField(spell, 'title')}</span>, com o{' '}
+                  {t('spell_purchase.hiring_text_prefix', 'Você está contratando')} <span className="font-semibold text-mystic-goldSoft">{getTranslatedField(spell, 'title')}</span>, {t('spell_purchase.hiring_text_with', 'com o')}{' '}
                   <span className="font-semibold text-mystic-goldSoft">{spell.consultantName}</span>.
                 </p>
                 <p className="mt-3 text-base text-amber-100/85">
-                  O valor é de <span className="font-display text-2xl text-mystic-goldSoft">R$ {Number(spell.price).toFixed(2)}</span>
+                  {t('spell_purchase.price_prefix', 'O valor é de')} <span className="font-display text-2xl text-mystic-goldSoft">R$ {Number(spell.price).toFixed(2)}</span>
                 </p>
-                <p className="mt-4 text-sm uppercase tracking-[0.18em] text-amber-100/60">Como vc prefere pagar?</p>
+                <p className="mt-4 text-sm uppercase tracking-[0.18em] text-amber-100/60">{t('spell_purchase.payment_question', 'Como vc prefere pagar?')}</p>
               </div>
 
               {!isAuthenticated ? (
                 <div className="grid gap-4">
-                  <p className="text-sm text-amber-100/75">Faça login ou crie uma conta para concluir o pedido da magia {getTranslatedField(spell, 'title')}.</p>
+                  <p className="text-sm text-amber-100/75">{t('spell_purchase.login_required_prefix', 'Faça login ou crie uma conta para concluir o pedido da magia')} {getTranslatedField(spell, 'title')}.</p>
                   <div className="flex flex-wrap justify-center gap-3">
                     <Link to="/entrar" className="rounded-lg bg-mystic-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110" onClick={onClose}>
-                      Entrar
+                      {t('nav.login', 'Entrar')}
                     </Link>
                     <Link to="/cadastro" className="rounded-lg border border-mystic-gold/45 px-4 py-2 text-sm text-mystic-goldSoft transition hover:bg-mystic-gold/10" onClick={onClose}>
-                      Criar conta
+                      {t('spell_purchase.create_account', 'Criar conta')}
                     </Link>
                   </div>
                 </div>
@@ -101,7 +103,7 @@ export function SpellPurchaseModal({ spell, onClose }) {
                     <CheckCircle2 size={40} />
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-mystic-goldSoft">Compra aprovada</p>
+                    <p className="text-lg font-semibold text-mystic-goldSoft">{t('spell_purchase.purchase_approved', 'Compra aprovada')}</p>
                     <p className="mt-2 text-sm text-amber-100/70">{stripeSuccess}</p>
                   </div>
                 </div>
@@ -128,13 +130,13 @@ export function SpellPurchaseModal({ spell, onClose }) {
                       }`}
                     >
                       <CreditCard size={18} />
-                      Cartão de crédito
+                      {t('spell_purchase.credit_card', 'Cartão de crédito')}
                     </button>
                   </div>
 
                   {paymentMethod === 'pix' ? (
                     <div className="grid gap-4 rounded-2xl border border-mystic-gold/20 bg-black/20 p-4">
-                      <p className="text-sm text-amber-100/70">Escaneie o QR Code, conclua o PIX e depois registre o pedido para validação.</p>
+                      <p className="text-sm text-amber-100/70">{t('spell_purchase.pix_instructions', 'Escaneie o QR Code, conclua o PIX e depois registre o pedido para validação.')}</p>
                       <div className="grid gap-5 md:grid-cols-[220px_1fr] md:items-start">
                         <div className="flex justify-center">
                           {pixPayload ? (
@@ -143,17 +145,17 @@ export function SpellPurchaseModal({ spell, onClose }) {
                             </div>
                           ) : (
                             <div className="flex h-[216px] w-[216px] items-center justify-center rounded-xl border border-dashed border-mystic-gold/30 bg-black/20 text-center text-xs text-amber-100/40">
-                              PIX não configurado no admin.
+                              {t('spell_purchase.pix_not_configured', 'PIX não configurado no admin.')}
                             </div>
                           )}
                         </div>
                         <div className="grid gap-4">
                           <div className="rounded-xl border border-mystic-gold/25 bg-black/25 p-4">
-                            <p className="text-xs uppercase tracking-[0.18em] text-amber-100/55">Copia e cola</p>
+                            <p className="text-xs uppercase tracking-[0.18em] text-amber-100/55">{t('spell_purchase.copy_paste', 'Copia e cola')}</p>
                             <div className="mt-3 flex gap-2">
                               <textarea
                                 readOnly
-                                value={pixPayload || 'Código indisponível'}
+                                value={pixPayload || t('spell_purchase.code_unavailable', 'Código indisponível')}
                                 className="min-h-24 flex-1 resize-none rounded-lg border border-mystic-gold/25 bg-black/40 p-3 text-xs text-amber-50 outline-none"
                               />
                               <button
@@ -172,7 +174,7 @@ export function SpellPurchaseModal({ spell, onClose }) {
                             className="inline-flex items-center justify-center gap-2 rounded-lg border border-mystic-gold/55 bg-mystic-gold/90 px-4 py-3 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {pixSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                            {pixSubmitting ? 'Registrando pedido...' : 'Já paguei no PIX'}
+                            {pixSubmitting ? t('spell_purchase.registering_order', 'Registrando pedido...') : t('spell_purchase.already_paid_pix', 'Já paguei no PIX')}
                           </button>
 
                           {pixFeedback && <p className="text-sm text-amber-100/80">{pixFeedback}</p>}
@@ -184,7 +186,7 @@ export function SpellPurchaseModal({ spell, onClose }) {
                   {paymentMethod === 'card' ? (
                     <SpellStripeCheckoutForm
                       spell={spell}
-                      onSuccess={(result) => setStripeSuccess(result?.message || 'Pagamento confirmado e pedido registrado.')}
+                      onSuccess={(result) => setStripeSuccess(result?.message || t('spell_purchase.payment_confirmed', 'Pagamento confirmado e pedido registrado.'))}
                       onError={() => {}}
                     />
                   ) : null}

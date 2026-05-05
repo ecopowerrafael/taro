@@ -3,6 +3,7 @@ import { CircleDollarSign, Star, ChevronLeft, ChevronRight, ArrowUpDown } from '
 import { Link } from 'react-router-dom'
 import { motion as Motion } from 'framer-motion'
 import { GlassCard } from './GlassCard'
+import { useTranslation } from 'react-i18next'
 
 const statusStyles = {
   Online: 'border-emerald-400/70 bg-emerald-500/15 text-emerald-300',
@@ -16,6 +17,7 @@ export function ConsultantMarketplace({
   onStatusFilterChange,
   onChooseService,
 }) {
+  const { t } = useTranslation()
   const [sortOrder, setSortOrder] = useState('none') // none, asc, desc
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
@@ -57,18 +59,18 @@ export function ConsultantMarketplace({
 
   return (
     <GlassCard
-      title="Marketplace de Consultores"
-      subtitle="Escolha um especialista e prepare a chamada em tempo real."
+      title={t('consultants_marketplace.title', 'Marketplace de Consultores')}
+      subtitle={t('consultants_marketplace.subtitle', 'Escolha um especialista e prepare a chamada em tempo real.')}
       action={
         <div className="flex items-center gap-2">
           <button
             onClick={toggleSortOrder}
             className="flex items-center gap-2 rounded-lg border border-mystic-gold/60 bg-black/25 px-3 py-2 text-sm text-amber-50 outline-none transition hover:bg-mystic-gold/10 focus:ring-2 focus:ring-mystic-gold/60"
-            title="Ordenar por valor"
+            title={t('consultants_marketplace.sort_by_price', 'Ordenar por valor')}
           >
             <ArrowUpDown size={16} />
             <span className="hidden sm:inline">
-              {sortOrder === 'none' ? 'Preço' : sortOrder === 'asc' ? 'Menor Preço' : 'Maior Preço'}
+              {sortOrder === 'none' ? t('consultants.filters.price', 'Preço') : sortOrder === 'asc' ? t('consultants_marketplace.lowest_price', 'Menor Preço') : t('consultants_marketplace.highest_price', 'Maior Preço')}
             </span>
           </button>
           <select
@@ -76,16 +78,16 @@ export function ConsultantMarketplace({
             onChange={handleStatusChange}
             className="rounded-lg border border-mystic-gold/60 bg-black/25 px-3 py-2 text-sm text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
           >
-            <option>Todos</option>
-            <option>Online</option>
-            <option>Ocupado</option>
-            <option>Offline</option>
+            <option value="Todos">{t('consultants.filters.all', 'Todos')}</option>
+            <option value="Online">{t('consultants.filters.online', 'Online')}</option>
+            <option value="Ocupado">{t('consultants.filters.busy', 'Ocupado')}</option>
+            <option value="Offline">{t('consultants.filters.offline', 'Offline')}</option>
           </select>
         </div>
       }
     >
       {currentConsultants.length === 0 ? (
-        <p className="py-8 text-center text-ethereal-silver/60">Nenhum consultor encontrado com estes filtros.</p>
+        <p className="py-8 text-center text-ethereal-silver/60">{t('consultants.empty_filtered', 'Nenhum consultor encontrado com estes filtros.')}</p>
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2">
@@ -131,7 +133,7 @@ export function ConsultantMarketplace({
             <p className="text-sm leading-relaxed text-amber-100/75">{consultant.description}</p>
             <div className="flex flex-wrap items-center gap-3 text-xs text-ethereal-silver/80">
               <span>
-                Consultas totais:{' '}
+                {t('consultants.total_consultations', 'Consultas totais')}:{' '}
                 {(consultant.baseConsultations ?? 0) + (consultant.realSessions ?? 0)}
               </span>
               <span className="inline-flex items-center gap-1 text-stardust-gold">
@@ -146,21 +148,21 @@ export function ConsultantMarketplace({
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-mystic-gold/60 px-3 py-2 text-xs text-amber-50 transition enabled:hover:bg-mystic-gold/15 disabled:cursor-not-allowed disabled:opacity-45"
               >
                 <CircleDollarSign size={14} />
-                Atendimento por vídeo • R$ {consultant.pricePerMinute.toFixed(2)}/min
+                {t('consultants.services.video_service', 'Atendimento por vídeo')} • R$ {consultant.pricePerMinute.toFixed(2)}/min
               </button>
               <button
                 disabled={consultant.status !== 'Online'}
                 onClick={() => onChooseService(consultant, '3-questions')}
                 className="rounded-lg border border-mystic-gold/60 px-3 py-2 text-xs text-amber-50 transition enabled:hover:bg-mystic-gold/15 disabled:cursor-not-allowed disabled:opacity-45"
               >
-                Pacote 3 perguntas • R$ {consultant.priceThreeQuestions.toFixed(2)}
+                {t('consultants.services.package_three', 'Pacote 3 perguntas')} • R$ {consultant.priceThreeQuestions.toFixed(2)}
               </button>
               <button
                 disabled={consultant.status !== 'Online'}
                 onClick={() => onChooseService(consultant, '5-questions')}
                 className="rounded-lg border border-mystic-gold/60 px-3 py-2 text-xs text-amber-50 transition enabled:hover:bg-mystic-gold/15 disabled:cursor-not-allowed disabled:opacity-45"
               >
-                Pacote 5 perguntas • R$ {consultant.priceFiveQuestions.toFixed(2)}
+                {t('consultants.services.package_five', 'Pacote 5 perguntas')} • R$ {consultant.priceFiveQuestions.toFixed(2)}
               </button>
             </div>
           </Motion.article>
@@ -177,7 +179,7 @@ export function ConsultantMarketplace({
             <ChevronLeft size={20} />
           </button>
           <span className="text-sm text-amber-100/70">
-            Página {currentPage} de {totalPages}
+            {t('consultants.pagination.page_of', 'Página')} {currentPage} {t('consultants.pagination.of', 'de')} {totalPages}
           </span>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}

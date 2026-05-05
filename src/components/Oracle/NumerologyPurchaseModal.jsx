@@ -8,12 +8,14 @@ import { GlassCard } from '../GlassCard'
 import { NumerologyStripeCheckoutForm } from './NumerologyStripeCheckoutForm'
 import { SacredInput } from './SacredInput'
 import styled, { keyframes } from 'styled-components'
+import { useTranslation } from 'react-i18next'
 
 const NUMEROLOGY_PRICE = 49.9
 const NUMEROLOGY_TITLE = 'Leitura Numerológica Completa'
 
 
 export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: initialNomeCompleto, dataNascimento: initialDataNascimento, setFormData, formData }) {
+  const { t } = useTranslation()
   const { profile, isAuthenticated, mpCredentials, createNumerologyPixOrder, token } = usePlatformContext()
   const [paymentMethod, setPaymentMethod] = useState(null)
   const [copied, setCopied] = useState(false)
@@ -63,7 +65,7 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: init
     setPixFeedback('')
     const result = await createNumerologyPixOrder({ nomeCompleto, dataNascimento, token })
     setPixSubmitting(false)
-    setPixFeedback(result?.message || 'Pedido PIX registrado.')
+    setPixFeedback(result?.message || t('numerology_purchase.pix_registered', 'Pedido PIX registrado.'))
     if (result?.ok) onSuccess?.()
   }
 
@@ -201,54 +203,54 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: init
                 transition: 'background 0.2s',
               }}
             >
-              <X size={16} /> Fechar
+              <X size={16} /> {t('common.close', 'Fechar')}
             </button>
           </div>
           <GlassCard
-            title="Portal de Frequências Vibracionais"
-            subtitle="Sincronize sua identidade com a matemática do destino."
+            title={t('numerology_purchase.title', 'Portal de Frequências Vibracionais')}
+            subtitle={t('numerology_purchase.subtitle', 'Sincronize sua identidade com a matemática do destino.')}
           >
             <div style={{ margin: '18px 0 0 0' }}>
               <SacredInput
-                label="Nome completo"
+                label={t('numerology_purchase.fields.full_name', 'Nome completo')}
                 icon="user"
                 value={nomeCompleto}
                 onChange={handleNomeChange}
-                placeholder="Seu nome completo"
+                placeholder={t('numerology_purchase.fields.full_name_placeholder', 'Seu nome completo')}
                 style={{ marginBottom: 18 }}
               />
               <SacredInput
-                label="Data de nascimento"
+                label={t('numerology_purchase.fields.birth_date', 'Data de nascimento')}
                 icon="calendar"
                 type="date"
                 value={dataNascimento}
                 onChange={handleDataChange}
-                placeholder="dd/mm/aaaa"
+                placeholder={t('numerology_purchase.fields.birth_date_placeholder', 'dd/mm/aaaa')}
               />
             </div>
             <div style={{ margin: '30px 0 0 0', textAlign: 'center' }}>
               <p style={{ color: '#ffe066', fontSize: 18, fontFamily: 'EB Garamond, serif', marginBottom: 6 }}>
-                Você está contratando <span style={{ fontWeight: 600 }}>{NUMEROLOGY_TITLE}</span>.
+                {t('numerology_purchase.hiring_prefix', 'Você está contratando')} <span style={{ fontWeight: 600 }}>{NUMEROLOGY_TITLE}</span>.
               </p>
               <p style={{ color: '#ffe066', fontSize: 16, marginBottom: 8 }}>
-                Valor de <span style={{ fontFamily: 'EB Garamond, serif', fontSize: 22 }}>R$ {NUMEROLOGY_PRICE.toFixed(2)}</span>
+                {t('numerology_purchase.price_prefix', 'Valor de')} <span style={{ fontFamily: 'EB Garamond, serif', fontSize: 22 }}>R$ {NUMEROLOGY_PRICE.toFixed(2)}</span>
               </p>
               <p style={{ color: '#ffe066cc', fontSize: 14, marginBottom: 8 }}>
-                O material será enviado para <span style={{ fontWeight: 600 }}>{profile?.email || 'seu e-mail cadastrado'}</span>.
+                {t('numerology_purchase.delivery_prefix', 'O material será enviado para')} <span style={{ fontWeight: 600 }}>{profile?.email || t('numerology_purchase.registered_email', 'seu e-mail cadastrado')}</span>.
               </p>
               <p style={{ color: '#ffe06699', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 0 }}>
-                Como você prefere pagar?
+                {t('numerology_purchase.payment_question', 'Como você prefere pagar?')}
               </p>
             </div>
             {!isAuthenticated ? (
               <div style={{ margin: '22px 0 0 0', textAlign: 'center' }}>
-                <p style={{ color: '#ffe066bb', fontSize: 15, marginBottom: 12 }}>Faça login ou crie uma conta para concluir o pedido da sua leitura numerológica.</p>
+                <p style={{ color: '#ffe066bb', fontSize: 15, marginBottom: 12 }}>{t('numerology_purchase.login_required', 'Faça login ou crie uma conta para concluir o pedido da sua leitura numerológica.')}</p>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
                   <a href="/entrar" style={{ background: '#ffe066', color: '#2d1a00', borderRadius: 8, padding: '8px 22px', fontWeight: 600, textDecoration: 'none', fontSize: 15, marginRight: 4 }} onClick={onClose}>
-                    Entrar
+                    {t('nav.login', 'Entrar')}
                   </a>
                   <a href="/cadastro" style={{ border: '1px solid #ffe06699', color: '#ffe066', borderRadius: 8, padding: '8px 22px', textDecoration: 'none', fontSize: 15 }} onClick={onClose}>
-                    Criar conta
+                    {t('numerology_purchase.create_account', 'Criar conta')}
                   </a>
                 </div>
               </div>
@@ -258,7 +260,7 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: init
                   <CheckCircle2 size={40} />
                 </div>
                 <div>
-                  <p style={{ color: '#ffe066', fontWeight: 600, fontSize: 20 }}>Pedido confirmado</p>
+                  <p style={{ color: '#ffe066', fontWeight: 600, fontSize: 20 }}>{t('numerology_purchase.order_confirmed', 'Pedido confirmado')}</p>
                   <p style={{ color: '#ffe066cc', fontSize: 15, marginTop: 8 }}>{stripeSuccess}</p>
                 </div>
               </div>
@@ -278,13 +280,13 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: init
                     onClick={() => setPaymentMethod('card')}
                     style={paymentMethod === 'card' ? { boxShadow: '0 0 0 2px #ffe06699, 0 2px 16px 0 #ffe06633', filter: 'brightness(1.08)' } : {}}
                   >
-                    <CreditCard size={18} style={{ marginRight: 6 }} /> Cartão de crédito
+                    <CreditCard size={18} style={{ marginRight: 6 }} /> {t('numerology_purchase.credit_card', 'Cartão de crédito')}
                     <span className="shine" />
                   </GoldenButton>
                 </div>
                 {paymentMethod === 'pix' && (
                   <div style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid #ffe06633', borderRadius: 18, padding: 18, marginTop: 8 }}>
-                    <p style={{ color: '#ffe066cc', fontSize: 15, marginBottom: 10 }}>Escaneie o QR Code, conclua o PIX e depois registre o pedido para validação.</p>
+                    <p style={{ color: '#ffe066cc', fontSize: 15, marginBottom: 10 }}>{t('numerology_purchase.pix_instructions', 'Escaneie o QR Code, conclua o PIX e depois registre o pedido para validação.')}</p>
                     <div style={{ display: 'flex', flexDirection: 'row', gap: 18, alignItems: 'flex-start' }}>
                       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         {pixPayload ? (
@@ -293,24 +295,24 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: init
                           </div>
                         ) : (
                           <div style={{ width: 180, height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.18)', border: '1px dashed #ffe06655', borderRadius: 16, color: '#ffe06655', fontSize: 13, textAlign: 'center' }}>
-                            PIX não configurado no admin.
+                            {t('numerology_purchase.pix_not_configured', 'PIX não configurado no admin.')}
                           </div>
                         )}
                       </div>
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <div style={{ background: 'rgba(0,0,0,0.13)', border: '1px solid #ffe06633', borderRadius: 12, padding: 10 }}>
-                          <p style={{ color: '#ffe06699', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Copia e cola</p>
+                          <p style={{ color: '#ffe06699', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>{t('numerology_purchase.copy_paste', 'Copia e cola')}</p>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <textarea
                               readOnly
-                              value={pixPayload || 'Código indisponível'}
+                              value={pixPayload || t('numerology_purchase.code_unavailable', 'Código indisponível')}
                               style={{ minHeight: 60, flex: 1, resize: 'none', borderRadius: 8, border: '1px solid #ffe06633', background: 'rgba(0,0,0,0.18)', color: '#ffe066', fontSize: 13, padding: 8, outline: 'none' }}
                             />
                             <button
                               onClick={handleCopyPix}
                               style={{ background: 'rgba(255,224,102,0.13)', border: '1px solid #ffe06655', color: '#ffe066', borderRadius: 8, padding: '8px 12px', fontSize: 13, cursor: 'pointer', transition: 'background 0.2s' }}
                             >
-                              <Copy size={16} /> {copied ? 'Copiado!' : 'Copiar'}
+                              <Copy size={16} /> {copied ? t('numerology_purchase.copied', 'Copiado!') : t('numerology_purchase.copy', 'Copiar')}
                             </button>
                           </div>
                         </div>
@@ -320,7 +322,7 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: init
                           disabled={pixSubmitting || !pixPayload}
                         >
                           {pixSubmitting ? <Loader2 className="animate-spin" style={{ width: 18, height: 18, marginRight: 8, verticalAlign: -3 }} /> : <CheckCircle2 style={{ width: 18, height: 18, marginRight: 8, verticalAlign: -3 }} />}
-                          REVELAR MEU MAPA SAGRADO →
+                          {t('numerology_purchase.reveal_map', 'REVELAR MEU MAPA SAGRADO →')}
                           <span className="shine" />
                         </GoldenButton>
                         {pixFeedback && <div style={{ color: '#ffe066cc', fontSize: 13, textAlign: 'center', marginTop: 8 }}>{pixFeedback}</div>}
@@ -332,10 +334,10 @@ export function NumerologyPurchaseModal({ onClose, onSuccess, nomeCompleto: init
                   <NumerologyStripeCheckoutForm
                     amount={NUMEROLOGY_PRICE}
                     onSuccess={() => {
-                      setStripeSuccess('Pagamento confirmado! Pedido enviado ao admin.')
+                      setStripeSuccess(t('numerology_purchase.payment_confirmed', 'Pagamento confirmado! Pedido enviado ao admin.'))
                       onSuccess?.()
                     }}
-                    onError={() => setStripeSuccess('Erro ao processar pagamento.')}
+                    onError={() => setStripeSuccess(t('numerology_purchase.payment_error', 'Erro ao processar pagamento.'))}
                   />
                 )}
               </div>

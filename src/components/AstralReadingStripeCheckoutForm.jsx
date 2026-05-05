@@ -4,6 +4,7 @@ import { CardCvcElement, CardExpiryElement, CardNumberElement, Elements, useElem
 import { AlertCircle, Wallet } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
 import { GlassCard } from './GlassCard'
+import { useTranslation } from 'react-i18next'
 
 const stripeElementOptions = {
   style: {
@@ -24,6 +25,7 @@ const stripeElementOptions = {
 }
 
 function AstralReadingStripeInnerForm({ amount, onSuccess, onError }) {
+  const { t } = useTranslation()
   const stripe = useStripe()
   const elements = useElements()
   const { createAstralReadingStripePaymentIntent, confirmAstralReadingStripeOrder } = usePlatformContext()
@@ -33,7 +35,7 @@ function AstralReadingStripeInnerForm({ amount, onSuccess, onError }) {
   const handleSubmit = async (event) => {
     event.preventDefault()
     if (!stripe || !elements) {
-      setErrorMessage('Stripe não carregou corretamente.')
+      setErrorMessage(t('stripe_checkout.errors.not_loaded', 'Stripe não carregou corretamente.'))
       return
     }
 
@@ -43,12 +45,12 @@ function AstralReadingStripeInnerForm({ amount, onSuccess, onError }) {
     try {
       const intentResult = await createAstralReadingStripePaymentIntent()
       if (!intentResult?.ok || !intentResult.clientSecret) {
-        throw new Error(intentResult?.message || 'Erro ao iniciar pagamento com cartão.')
+        throw new Error(intentResult?.message || t('stripe_checkout.errors.start_payment', 'Erro ao iniciar pagamento com cartão.'))
       }
 
       const cardElement = elements.getElement(CardNumberElement)
       if (!cardElement) {
-        throw new Error('Campo de cartão não disponível.')
+        throw new Error(t('stripe_checkout.errors.card_field_missing', 'Campo de cartão não disponível.'))
       }
 
       const { error, paymentIntent } = await stripe.confirmCardPayment(intentResult.clientSecret, {
@@ -58,21 +60,21 @@ function AstralReadingStripeInnerForm({ amount, onSuccess, onError }) {
       })
 
       if (error) {
-        throw new Error(error.message || 'Erro ao processar pagamento.')
+        throw new Error(error.message || t('stripe_checkout.errors.processing', 'Erro ao processar pagamento.'))
       }
 
       if (paymentIntent?.status !== 'succeeded') {
-        throw new Error('Pagamento ainda não foi aprovado pela Stripe.')
+        throw new Error(t('stripe_checkout.errors.not_approved', 'Pagamento ainda não foi aprovado pela Stripe.'))
       }
 
       const confirmation = await confirmAstralReadingStripeOrder({ paymentIntentId: paymentIntent.id })
       if (!confirmation?.ok) {
-        throw new Error(confirmation?.message || 'Erro ao confirmar pagamento.')
+        throw new Error(confirmation?.message || t('stripe_checkout.errors.confirmation', 'Erro ao confirmar pagamento.'))
       }
 
       onSuccess?.(confirmation)
     } catch (error) {
-      const message = error.message || 'Erro ao pagar com cartão.'
+      const message = error.message || t('stripe_checkout.errors.pay_with_card', 'Erro ao pagar com cartão.')
       setErrorMessage(message)
       onError?.(message)
     } finally {
@@ -84,7 +86,7 @@ function AstralReadingStripeInnerForm({ amount, onSuccess, onError }) {
     <form onSubmit={handleSubmit} className="grid gap-4">
       <div className="grid gap-3 rounded-2xl border border-mystic-gold/25 bg-gradient-to-b from-black/40 to-black/20 p-4 shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
         <label className="grid gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/80">Número do cartão</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/80">{t('stripe_checkout.fields.card_number', 'Número do cartão')}</span>
           <div className="rounded-xl border border-mystic-gold/30 bg-black/35 px-4 py-4 transition focus-within:border-mystic-gold/70 focus-within:bg-black/50">
             <CardNumberElement options={stripeElementOptions} />
           </div>
@@ -92,14 +94,14 @@ function AstralReadingStripeInnerForm({ amount, onSuccess, onError }) {
 
         <div className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/80">Validade</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/80">{t('stripe_checkout.fields.expiry', 'Validade')}</span>
             <div className="rounded-xl border border-mystic-gold/30 bg-black/35 px-4 py-4 transition focus-within:border-mystic-gold/70 focus-within:bg-black/50">
               <CardExpiryElement options={stripeElementOptions} />
             </div>
           </label>
 
           <label className="grid gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/80">CVC</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/80">{t('stripe_checkout.fields.cvc', 'CVC')}</span>
             <div className="rounded-xl border border-mystic-gold/30 bg-black/35 px-4 py-4 transition focus-within:border-mystic-gold/70 focus-within:bg-black/50">
               <CardCvcElement options={stripeElementOptions} />
             </div>
@@ -122,12 +124,12 @@ function AstralReadingStripeInnerForm({ amount, onSuccess, onError }) {
         {loading ? (
           <span className="inline-flex items-center gap-2">
             <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-emerald-400 border-r-transparent" />
-            Processando...
+            {t('stripe_checkout.processing', 'Processando...')}
           </span>
         ) : (
           <span className="inline-flex items-center gap-2">
             <Wallet size={16} />
-            Pagar R$ {Number(amount).toFixed(2)}
+            {t('stripe_checkout.pay_amount', 'Pagar R$')} {Number(amount).toFixed(2)}
           </span>
         )}
       </button>
@@ -136,6 +138,7 @@ function AstralReadingStripeInnerForm({ amount, onSuccess, onError }) {
 }
 
 export function AstralReadingStripeCheckoutForm({ amount = 49.9, onSuccess, onError }) {
+  const { t } = useTranslation()
   const { stripeCredentials } = usePlatformContext()
   const publicKey = stripeCredentials?.publicKey?.trim()
   const stripePromise = useMemo(() => (publicKey ? loadStripe(publicKey) : null), [publicKey])
@@ -149,8 +152,8 @@ export function AstralReadingStripeCheckoutForm({ amount = 49.9, onSuccess, onEr
 
   if (!publicKey) {
     return (
-      <GlassCard title="Cartão indisponível" subtitle="Configure a chave pública da Stripe no admin para liberar o checkout com cartão.">
-        <p className="text-sm text-amber-100/75">A forma de pagamento por cartão depende das credenciais Stripe configuradas no painel administrativo.</p>
+      <GlassCard title={t('stripe_checkout.card_unavailable', 'Cartão indisponível')} subtitle={t('stripe_checkout.card_unavailable_subtitle', 'Configure a chave pública da Stripe no admin para liberar o checkout com cartão.')}>
+        <p className="text-sm text-amber-100/75">{t('stripe_checkout.card_unavailable_desc', 'A forma de pagamento por cartão depende das credenciais Stripe configuradas no painel administrativo.')}</p>
       </GlassCard>
     )
   }
@@ -161,7 +164,7 @@ export function AstralReadingStripeCheckoutForm({ amount = 49.9, onSuccess, onEr
 
   return (
     <Elements stripe={stripePromise} options={options}>
-      <GlassCard title="Pagamento com cartão" subtitle="Compra segura da sua Leitura Astral Completa.">
+      <GlassCard title={t('stripe_checkout.payment_with_card', 'Pagamento com cartão')} subtitle={t('astral_checkout.subtitle', 'Compra segura da sua Leitura Astral Completa.')}>
         <AstralReadingStripeInnerForm amount={amount} onSuccess={onSuccess} onError={onError} />
       </GlassCard>
     </Elements>

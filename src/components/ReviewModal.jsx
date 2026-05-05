@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Star, X, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function ReviewModal({ isOpen, consultantName, consultantId, referenceId, sessionType, token, onClose, onSubmitted }) {
+  const { t } = useTranslation()
   const [rating, setRating] = useState(0)
   const [hovered, setHovered] = useState(0)
   const [comment, setComment] = useState('')
@@ -12,7 +14,7 @@ export function ReviewModal({ isOpen, consultantName, consultantId, referenceId,
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      setError('Selecione uma nota de 1 a 5 estrelas.')
+      setError(t('review.errors.select_rating', 'Selecione uma nota de 1 a 5 estrelas.'))
       return
     }
     setSubmitting(true)
@@ -28,13 +30,13 @@ export function ReviewModal({ isOpen, consultantName, consultantId, referenceId,
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.message || 'Erro ao enviar avaliação.')
+        setError(data.message || t('review.errors.submit_failed', 'Erro ao enviar avaliação.'))
         return
       }
       onSubmitted?.()
       onClose()
     } catch {
-      setError('Erro de conexão. Tente novamente.')
+      setError(t('review.errors.connection', 'Erro de conexão. Tente novamente.'))
     } finally {
       setSubmitting(false)
     }
@@ -46,9 +48,9 @@ export function ReviewModal({ isOpen, consultantName, consultantId, referenceId,
         {/* Cabeçalho */}
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
-            <h3 className="font-display text-xl text-mystic-goldSoft">Avaliar Consultor</h3>
+            <h3 className="font-display text-xl text-mystic-goldSoft">{t('review.title', 'Avaliar Consultor')}</h3>
             <p className="mt-0.5 text-sm text-amber-100/70">
-              Como foi sua experiência com <strong className="text-amber-50">{consultantName}</strong>?
+              {t('review.subtitle_prefix', 'Como foi sua experiência com')} <strong className="text-amber-50">{consultantName}</strong>?
             </p>
           </div>
           <button
@@ -83,12 +85,12 @@ export function ReviewModal({ isOpen, consultantName, consultantId, referenceId,
             ))}
           </div>
           <p className="text-sm text-amber-100/60">
-            {rating === 0 && 'Toque nas estrelas para avaliar'}
-            {rating === 1 && 'Muito ruim'}
-            {rating === 2 && 'Ruim'}
-            {rating === 3 && 'Regular'}
-            {rating === 4 && 'Bom'}
-            {rating === 5 && 'Excelente!'}
+            {rating === 0 && t('review.rating_hint', 'Toque nas estrelas para avaliar')}
+            {rating === 1 && t('review.rating_1', 'Muito ruim')}
+            {rating === 2 && t('review.rating_2', 'Ruim')}
+            {rating === 3 && t('review.rating_3', 'Regular')}
+            {rating === 4 && t('review.rating_4', 'Bom')}
+            {rating === 5 && t('review.rating_5', 'Excelente!')}
           </p>
         </div>
 
@@ -96,7 +98,7 @@ export function ReviewModal({ isOpen, consultantName, consultantId, referenceId,
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Deixe um comentário (opcional)..."
+          placeholder={t('review.comment_placeholder', 'Deixe um comentário (opcional)...')}
           maxLength={500}
           rows={3}
           className="w-full resize-none rounded-lg border border-mystic-gold/30 bg-black/40 p-3 text-sm text-amber-50 placeholder-amber-100/40 outline-none focus:ring-1 focus:ring-mystic-gold/50"
@@ -117,13 +119,13 @@ export function ReviewModal({ isOpen, consultantName, consultantId, referenceId,
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-mystic-gold to-amber-500 py-3 font-bold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? <Loader2 size={18} className="animate-spin" /> : null}
-            {submitting ? 'Enviando...' : 'Enviar Avaliação'}
+            {submitting ? t('review.actions.sending', 'Enviando...') : t('review.actions.submit', 'Enviar Avaliação')}
           </button>
           <button
             onClick={onClose}
             className="w-full rounded-lg border border-mystic-gold/25 bg-black/30 py-2.5 text-sm font-medium text-amber-100/80 transition hover:bg-black/50"
           >
-            Pular por agora
+            {t('review.actions.skip', 'Pular por agora')}
           </button>
         </div>
       </div>

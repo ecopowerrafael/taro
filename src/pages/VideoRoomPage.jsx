@@ -6,6 +6,7 @@ import { Loader2, Video, PhoneOff } from 'lucide-react'
 import { usePlatformContext } from '../context/platform-context'
 import DailyIframe from '@daily-co/daily-js'
 import { io } from 'socket.io-client'
+import { useTranslation } from 'react-i18next'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
 
@@ -22,6 +23,7 @@ const getRealtimeServerUrl = () => {
 }
 
 export function VideoRoomPage() {
+  const { t } = useTranslation()
   const { sessionId } = useParams()
   const navigate = useNavigate()
   const { token, profile, billing, setSystemNotice } = usePlatformContext()
@@ -45,7 +47,7 @@ export function VideoRoomPage() {
         if (!res.ok) throw new Error(data.message)
         setSession(data)
       } catch (err) {
-        setError(err.message || 'Erro ao carregar a sala.')
+        setError(err.message || t('video_room.errors.load_room', 'Erro ao carregar a sala.'))
       } finally {
         setLoading(false)
       }
@@ -136,7 +138,7 @@ export function VideoRoomPage() {
 
   const requestMediaPermissions = async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
-      throw new Error('Seu navegador não suporta câmera/microfone nesta página.')
+      throw new Error(t('video_room.errors.browser_media_unsupported', 'Seu navegador não suporta câmera/microfone nesta página.'))
     }
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
     stream.getTracks().forEach((track) => track.stop())
@@ -157,7 +159,7 @@ export function VideoRoomPage() {
         const payload = await statusRes.json().catch(() => ({}))
         setSystemNotice(
           payload.message ||
-            'Não foi possível iniciar a chamada. Confirme que cliente e consultor estão online nesta página.',
+            t('video_room.errors.start_call_failed', 'Não foi possível iniciar a chamada. Confirme que cliente e consultor estão online nesta página.'),
         )
         return
       }
@@ -169,7 +171,7 @@ export function VideoRoomPage() {
       try {
         await requestMediaPermissions()
       } catch (permissionError) {
-        setSystemNotice(permissionError.message || 'Permissões de câmera/microfone não concedidas.')
+        setSystemNotice(permissionError.message || t('video_room.errors.media_permission_denied', 'Permissões de câmera/microfone não concedidas.'))
         return
       }
     }
@@ -211,7 +213,7 @@ export function VideoRoomPage() {
         callFrameRef.current = null
       }
       setIsCallActive(false)
-      setSystemNotice('Erro ao conectar na sala de vídeo.')
+      setSystemNotice(t('video_room.errors.connect_video_room', 'Erro ao conectar na sala de vídeo.'))
     }
   }
 
@@ -260,7 +262,7 @@ export function VideoRoomPage() {
     })
 
     navigate(session?.isConsultant ? '/area-consultor' : '/consultores')
-    setSystemNotice('Chamada encerrada com sucesso.')
+    setSystemNotice(t('video_room.notices.call_ended', 'Chamada encerrada com sucesso.'))
   }
 
   // Cleanup on unmount
@@ -278,7 +280,7 @@ export function VideoRoomPage() {
 
   if (loading) {
     return (
-      <PageShell title="Sala de Consulta" subtitle="Carregando...">
+      <PageShell title={t('video_room.title', 'Sala de Consulta')} subtitle={t('common.loading', 'Carregando...')}>
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="animate-spin text-mystic-gold" size={48} />
         </div>
@@ -288,11 +290,11 @@ export function VideoRoomPage() {
 
   if (error) {
     return (
-      <PageShell title="Sala de Consulta" subtitle="Acesso negado">
+      <PageShell title={t('video_room.title', 'Sala de Consulta')} subtitle={t('video_room.access_denied', 'Acesso negado')}>
         <GlassCard className="text-center">
           <p className="text-red-400">{error}</p>
           <button onClick={() => navigate('/')} className="mt-4 text-mystic-goldSoft underline">
-            Voltar ao Início
+            {t('video_room.back_home', 'Voltar ao Início')}
           </button>
         </GlassCard>
       </PageShell>
@@ -300,7 +302,7 @@ export function VideoRoomPage() {
   }
 
   return (
-    <PageShell title={`Consulta com ${session.consultantName}`} subtitle="Sessão de Vídeo Privada">
+    <PageShell title={`${t('video_room.consultation_with', 'Consulta com')} ${session.consultantName}`} subtitle={t('video_room.private_session', 'Sessão de Vídeo Privada')}>
       <div className="mx-auto w-full max-w-4xl">
         <div 
           className={`relative overflow-hidden rounded-2xl border border-mystic-gold/30 bg-black/50 shadow-[0_0_30px_rgba(197,160,89,0.15)] ${isCallActive ? 'h-[70vh]' : 'h-auto p-8 text-center'}`}
@@ -312,14 +314,14 @@ export function VideoRoomPage() {
                 <Video size={48} className="animate-pulse" />
               </div>
               <h2 className="mb-2 font-display text-3xl text-mystic-goldSoft">
-                {session.isConsultant ? 'Sala Pronta' : 'Aguardando Consultor'}
+                {session.isConsultant ? t('video_room.ready_room', 'Sala Pronta') : t('video_room.waiting_consultant', 'Aguardando Consultor')}
               </h2>
               <p className="max-w-md text-amber-100/70">
                 {session.isConsultant
-                  ? 'O cliente está esperando. Clique no botão abaixo para iniciar a videochamada.'
+                  ? t('video_room.messages.consultant_waiting', 'O cliente está esperando. Clique no botão abaixo para iniciar a videochamada.')
                   : canJoinCall
-                    ? 'Consultor disponível. Toque no botão abaixo para liberar câmera e microfone no Safari e entrar na chamada.'
-                    : 'Sua sala já foi criada e o consultor foi notificado por e-mail e painel. Aguarde que estamos chamando o consultor para lhe atender.'}
+                    ? t('video_room.messages.consultant_available', 'Consultor disponível. Toque no botão abaixo para liberar câmera e microfone no Safari e entrar na chamada.')
+                    : t('video_room.messages.room_created_wait', 'Sua sala já foi criada e o consultor foi notificado por e-mail e painel. Aguarde que estamos chamando o consultor para lhe atender.')}
               </p>
               
               {session.isConsultant && (
@@ -328,7 +330,7 @@ export function VideoRoomPage() {
                   disabled={isJoining}
                   className="mt-8 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 px-8 py-3 font-bold text-black transition hover:brightness-110"
                 >
-                  {isJoining ? 'Conectando...' : 'Iniciar Atendimento'}
+                  {isJoining ? t('video_room.actions.connecting', 'Conectando...') : t('video_room.actions.start_service', 'Iniciar Atendimento')}
                 </button>
               )}
 
@@ -338,7 +340,7 @@ export function VideoRoomPage() {
                   disabled={isJoining}
                   className="mt-8 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 px-8 py-3 font-bold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isJoining ? 'Conectando...' : 'Entrar na Chamada'}
+                  {isJoining ? t('video_room.actions.connecting', 'Conectando...') : t('video_room.actions.join_call', 'Entrar na Chamada')}
                 </button>
               )}
             </div>
@@ -354,7 +356,7 @@ export function VideoRoomPage() {
                 className="flex items-center gap-2 rounded-full bg-red-600/90 px-6 py-3 font-bold text-white shadow-lg backdrop-blur-md transition hover:bg-red-500"
               >
                 <PhoneOff size={20} />
-                Encerrar Chamada
+                {t('video_room.actions.end_call', 'Encerrar Chamada')}
               </button>
             </div>
           )}

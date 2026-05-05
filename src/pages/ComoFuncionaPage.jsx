@@ -3,6 +3,7 @@ import { Sparkles, Wallet, Users, MessageSquare, Video, Wand2, Eye } from 'lucid
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { SacredGeometry } from '../components/SacredGeometry'
+import { useTranslation } from 'react-i18next'
 
 const steps = [
   {
@@ -44,6 +45,7 @@ const steps = [
 ]
 
 export function ComoFuncionaPage() {
+  const { t } = useTranslation()
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -60,22 +62,22 @@ export function ComoFuncionaPage() {
       <SacredGeometry />
 
       {/* PAGE SHELL */}
-      <PageShell title="Como Funciona" subtitle="Guia completo para usar a plataforma Astria">
+      <PageShell title={t('how_it_works.page.title', 'Como Funciona')} subtitle={t('how_it_works.page.subtitle', 'Guia completo para usar a plataforma Astria')}>
         
         {/* INTRO SECTION */}
         <section className="mb-20 text-center">
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-mystic-purple-light/30 bg-mystic-purple-light/10 px-4 py-2 backdrop-blur-sm">
             <Sparkles className="w-4 h-4 text-mystic-gold" />
-            <span className="text-xs uppercase tracking-widest text-mystic-purple-light">Seu Caminho até as Respostas</span>
+            <span className="text-xs uppercase tracking-widest text-mystic-purple-light">{t('how_it_works.intro.badge', 'Seu Caminho até as Respostas')}</span>
           </div>
           
           <h1 className="font-playfair text-5xl md:text-6xl leading-[1.1] mb-6 drop-shadow-2xl">
-            6 Passos Simples <br/>
-            <span className="text-gradient-gold italic">para Transformação</span>
+            {t('how_it_works.intro.title_line_1', '6 Passos Simples')} <br/>
+            <span className="text-gradient-gold italic">{t('how_it_works.intro.title_line_2', 'para Transformação')}</span>
           </h1>
           
           <p className="mx-auto mb-8 max-w-3xl text-lg leading-relaxed font-light text-mystic-purple-light md:text-xl">
-            A plataforma Astria foi desenvolvida para ser intuitiva e acessível. Em apenas 6 passos, você terá acesso a consultas personalizadas, leituras de tarot, rituais mágicos e muito mais.
+            {t('how_it_works.intro.description', 'A plataforma Astria foi desenvolvida para ser intuitiva e acessível. Em apenas 6 passos, você terá acesso a consultas personalizadas, leituras de tarot, rituais mágicos e muito mais.')}
           </p>
         </section>
 
@@ -101,12 +103,12 @@ export function ComoFuncionaPage() {
                 
                 {/* Title */}
                 <h3 className="relative mb-3 font-playfair text-2xl text-white transition-colors group-hover:text-mystic-gold">
-                  {step.title}
+                  {t(`how_it_works.steps.${idx + 1}.title`, step.title)}
                 </h3>
                 
                 {/* Description */}
                 <p className="relative text-sm leading-relaxed text-mystic-purple-light">
-                  {step.description}
+                  {t(`how_it_works.steps.${idx + 1}.description`, step.description)}
                 </p>
               </div>
             )
@@ -116,45 +118,45 @@ export function ComoFuncionaPage() {
         {/* FEATURES SECTION */}
         <section className="rounded-2xl glass-panel border border-mystic-purple-light/20 p-12 mb-20">
           <h2 className="font-playfair text-4xl text-white mb-12 text-center">
-            O que você pode fazer em <span className="text-gradient-gold italic">Astria</span>
+            {t('how_it_works.features.title_prefix', 'O que você pode fazer em')} <span className="text-gradient-gold italic">Astria</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[
               {
-                title: 'Consultas com Tarólogos',
+                title: t('how_it_works.features.consultants.title', 'Consultas com Tarólogos'),
                 items: [
-                  '✨ Leitura de tarot presencial',
-                  '💭 Pacotes de perguntas (3 ou 5)',
-                  '📞 Chamadas ao vivo em vídeo',
-                  '⭐ Avaliação e histórico de consultas'
+                  t('how_it_works.features.consultants.item_1', '✨ Leitura de tarot presencial'),
+                  t('how_it_works.features.consultants.item_2', '💭 Pacotes de perguntas (3 ou 5)'),
+                  t('how_it_works.features.consultants.item_3', '📞 Chamadas ao vivo em vídeo'),
+                  t('how_it_works.features.consultants.item_4', '⭐ Avaliação e histórico de consultas')
                 ]
               },
               {
-                title: 'Serviços Mágicos',
+                title: t('how_it_works.features.magic.title', 'Serviços Mágicos'),
                 items: [
-                  '🔮 Ritua Personalizados',
-                  '💝 Trabalhos de Amarração',
-                  '🪙 Rituais de Prosperidade',
-                  '🛡️ Proteção Espiritual'
+                  t('how_it_works.features.magic.item_1', '🔮 Ritua Personalizados'),
+                  t('how_it_works.features.magic.item_2', '💝 Trabalhos de Amarração'),
+                  t('how_it_works.features.magic.item_3', '🪙 Rituais de Prosperidade'),
+                  t('how_it_works.features.magic.item_4', '🛡️ Proteção Espiritual')
                 ]
               },
               {
-                title: 'Segurança e Privacidade',
+                title: t('how_it_works.features.security.title', 'Segurança e Privacidade'),
                 items: [
-                  '🔒 Consultações 100% anônimas',
-                  '🔐 Criptografia SSL',
-                  '🛡️ Proteção de dados pessoais',
-                  '✅ Garantia de confidencialidade'
+                  t('how_it_works.features.security.item_1', '🔒 Consultações 100% anônimas'),
+                  t('how_it_works.features.security.item_2', '🔐 Criptografia SSL'),
+                  t('how_it_works.features.security.item_3', '🛡️ Proteção de dados pessoais'),
+                  t('how_it_works.features.security.item_4', '✅ Garantia de confidencialidade')
                 ]
               },
               {
-                title: 'Pagamento Flexível',
+                title: t('how_it_works.features.payment.title', 'Pagamento Flexível'),
                 items: [
-                  '💳 Múltiplas formas de pagamento',
-                  '⏱️ Cobrança por minuto em vídeo',
-                  '📊 Saldo sempre disponível',
-                  '🔄 Recargas rápidas e seguras'
+                  t('how_it_works.features.payment.item_1', '💳 Múltiplas formas de pagamento'),
+                  t('how_it_works.features.payment.item_2', '⏱️ Cobrança por minuto em vídeo'),
+                  t('how_it_works.features.payment.item_3', '📊 Saldo sempre disponível'),
+                  t('how_it_works.features.payment.item_4', '🔄 Recargas rápidas e seguras')
                 ]
               }
             ].map((section, idx) => (
@@ -176,34 +178,34 @@ export function ComoFuncionaPage() {
         {/* FAQ SECTION */}
         <section className="mb-20">
           <h2 className="font-playfair text-4xl text-white mb-12 text-center">
-            Perguntas Frequentes
+            {t('how_it_works.faq.title', 'Perguntas Frequentes')}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[
               {
-                q: 'Como faço para recarregar meu saldo?',
-                a: 'Acesse a seção "Recarregar" na sua área do cliente. Escolha o valor e a forma de pagamento. A recarrega é processada instantaneamente.'
+                q: t('how_it_works.faq.q1', 'Como faço para recarregar meu saldo?'),
+                a: t('how_it_works.faq.a1', 'Acesse a seção "Recarregar" na sua área do cliente. Escolha o valor e a forma de pagamento. A recarrega é processada instantaneamente.')
               },
               {
-                q: 'Posso confiar na privacidade das consultas?',
-                a: 'Sim! Todas as consultas são 100% anônimas e protegidas por criptografia SSL. Seus dados nunca são compartilhados.'
+                q: t('how_it_works.faq.q2', 'Posso confiar na privacidade das consultas?'),
+                a: t('how_it_works.faq.a2', 'Sim! Todas as consultas são 100% anônimas e protegidas por criptografia SSL. Seus dados nunca são compartilhados.')
               },
               {
-                q: 'Como os consultores são selecionados?',
-                a: 'Todos os consultores passam por um rigoroso processo de verificação. Avaliações e histórico de clientes garantem qualidade.'
+                q: t('how_it_works.faq.q3', 'Como os consultores são selecionados?'),
+                a: t('how_it_works.faq.a3', 'Todos os consultores passam por um rigoroso processo de verificação. Avaliações e histórico de clientes garantem qualidade.')
               },
               {
-                q: 'Posso fazer chamadas de vídeo com qualquer consultor?',
-                a: 'Sim, desde que o consultor esteja online ou você possa agendar uma chamada. Consultores oferecem diferentes disponibilidades.'
+                q: t('how_it_works.faq.q4', 'Posso fazer chamadas de vídeo com qualquer consultor?'),
+                a: t('how_it_works.faq.a4', 'Sim, desde que o consultor esteja online ou você possa agendar uma chamada. Consultores oferecem diferentes disponibilidades.')
               },
               {
-                q: 'O que fazer se não estiver satisfeito?',
-                a: 'Temos política de satisfação do cliente. Entre em contato com nosso suporte para resolução de qualquer problema.'
+                q: t('how_it_works.faq.q5', 'O que fazer se não estiver satisfeito?'),
+                a: t('how_it_works.faq.a5', 'Temos política de satisfação do cliente. Entre em contato com nosso suporte para resolução de qualquer problema.')
               },
               {
-                q: 'Quais são as opções de pagamento?',
-                a: 'Aceitamos cartões de crédito, débito, PIX, transferência bancária e várias carteiras digitais para sua comodidade.'
+                q: t('how_it_works.faq.q6', 'Quais são as opções de pagamento?'),
+                a: t('how_it_works.faq.a6', 'Aceitamos cartões de crédito, débito, PIX, transferência bancária e várias carteiras digitais para sua comodidade.')
               }
             ].map((faq, idx) => (
               <div key={idx} className="rounded-xl border border-mystic-purple-light/20 bg-mystic-purple/10 p-6 text-center transition-all hover:border-mystic-gold/50">
@@ -216,15 +218,15 @@ export function ComoFuncionaPage() {
 
         {/* CTA SECTION */}
         <section className="text-center bg-gradient-to-r from-mystic-purple-dark/40 to-mystic-purple-dark/20 rounded-2xl p-12">
-          <h2 className="font-playfair text-4xl text-white mb-4">Pronto para Começar?</h2>
+          <h2 className="font-playfair text-4xl text-white mb-4">{t('how_it_works.cta.title', 'Pronto para Começar?')}</h2>
           <p className="text-mystic-purple-light text-lg mb-8 max-w-2xl mx-auto">
-            Faça seu cadastro em poucos minutos e acesse imediatamente os melhores especialistas espirituais.
+            {t('how_it_works.cta.description', 'Faça seu cadastro em poucos minutos e acesse imediatamente os melhores especialistas espirituais.')}
           </p>
           <Link
             to="/cadastro"
             className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-gradient-to-r from-mystic-gold to-mystic-gold-light text-mystic-black font-bold uppercase tracking-widest text-sm hover:shadow-gold-glow-lg transition-shadow"
           >
-            Criar Minha Conta Agora
+            {t('how_it_works.cta.button', 'Criar Minha Conta Agora')}
           </Link>
         </section>
 

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Star, ChevronLeft, ChevronRight, ArrowUpDown, MessageCircle, Eye, Search, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { GlassCard } from './GlassCard'
+import { useTranslation } from 'react-i18next'
 
 const statusStyles = {
   Online: 'border-emerald-400/70 bg-emerald-500/15 text-emerald-300',
@@ -57,6 +58,7 @@ export function ConsultantMarketplaceNew({
   onChooseService,
   onSelectConsultant,
 }) {
+  const { t } = useTranslation()
   const [sortOrder, setSortOrder] = useState('none')
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
@@ -111,7 +113,7 @@ export function ConsultantMarketplaceNew({
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-mystic-purple-light" />
           <input 
             type="text" 
-            placeholder="Busque por nome, especialidade..." 
+            placeholder={t('consultants.search_placeholder', 'Busque por nome, especialidade...')} 
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value)
@@ -128,10 +130,10 @@ export function ConsultantMarketplaceNew({
             onChange={handleStatusChange}
             className="flex-shrink-0 px-5 py-2.5 rounded-full border border-mystic-gold/30 bg-mystic-purple-dark/30 hover:bg-mystic-purple-dark/80 text-mystic-purple-light hover:text-mystic-gold hover:border-mystic-gold transition-all text-sm whitespace-nowrap"
           >
-            <option>Todos</option>
-            <option>Online</option>
-            <option>Ocupado</option>
-            <option>Offline</option>
+            <option value="Todos">{t('consultants.filters.all', 'Todos')}</option>
+            <option value="Online">{t('consultants.filters.online', 'Online')}</option>
+            <option value="Ocupado">{t('consultants.filters.busy', 'Ocupado')}</option>
+            <option value="Offline">{t('consultants.filters.offline', 'Offline')}</option>
           </select>
 
           <button 
@@ -139,7 +141,7 @@ export function ConsultantMarketplaceNew({
             className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-full border border-mystic-gold/30 bg-mystic-purple-dark/30 hover:bg-mystic-purple-dark/80 text-mystic-purple-light hover:text-mystic-gold hover:border-mystic-gold transition-all text-sm whitespace-nowrap"
           >
             <ArrowUpDown className="w-4 h-4" />
-            Preço
+            {t('consultants.filters.price', 'Preço')}
             {sortOrder !== 'none' && (
               <span className="ml-1 text-[10px]">
                 {sortOrder === 'asc' ? '↑' : '↓'}
@@ -173,12 +175,12 @@ export function ConsultantMarketplaceNew({
                   }`}></span>
                 </span>
                 <span className="text-xs text-mystic-purple-light uppercase tracking-wider">
-                  {consultant.status || 'Offline'}
+                  {consultant.status || t('consultants.filters.offline', 'Offline')}
                 </span>
               </div>
               {consultant.isPremium && (
                 <span className="px-3 py-1 rounded-full bg-gradient-to-r from-mystic-gold to-mystic-gold-light text-mystic-black text-[10px] font-bold uppercase tracking-widest shadow-gold-glow">
-                  Premium
+                  {t('consultants.badges.premium', 'Premium')}
                 </span>
               )}
             </div>
@@ -232,7 +234,7 @@ export function ConsultantMarketplaceNew({
                 disabled={consultant.status !== 'Online'}
                 className="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 text-white font-bold tracking-wide text-sm uppercase transition-shadow disabled:cursor-not-allowed disabled:opacity-45 enabled:hover:shadow-[0_0_20px_rgba(16,185,129,0.5)]"
               >
-                Vídeo • R$ {consultant.pricePerMinute.toFixed(2)}/min
+                {t('consultants.services.video', 'Vídeo')} • R$ {consultant.pricePerMinute.toFixed(2)}/min
               </button>
               
               {/* 3 Perguntas */}
@@ -243,7 +245,7 @@ export function ConsultantMarketplaceNew({
                 }}
                 className="w-full rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 px-2 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-mystic-gold transition-colors hover:bg-mystic-gold/20 sm:text-xs sm:tracking-[0.12em]"
               >
-                3 Perguntas • R$ {consultant.priceThreeQuestions.toFixed(0)}
+                {t('consultants.services.three_questions', '3 Perguntas')} • R$ {consultant.priceThreeQuestions.toFixed(0)}
               </button>
               
               {/* 5 Perguntas */}
@@ -254,7 +256,7 @@ export function ConsultantMarketplaceNew({
                 }}
                 className="w-full rounded-lg border border-mystic-gold/50 bg-mystic-gold/10 px-2 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-mystic-gold transition-colors hover:bg-mystic-gold/20 sm:text-xs sm:tracking-[0.12em]"
               >
-                5 Perguntas • R$ {consultant.priceFiveQuestions.toFixed(0)}
+                {t('consultants.services.five_questions', '5 Perguntas')} • R$ {consultant.priceFiveQuestions.toFixed(0)}
               </button>
             </div>
           </div>
@@ -302,7 +304,7 @@ export function ConsultantMarketplaceNew({
 
       {currentConsultants.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-mystic-purple-light text-lg">Nenhum consultor encontrado com esses filtros.</p>
+          <p className="text-mystic-purple-light text-lg">{t('consultants.empty_filtered', 'Nenhum consultor encontrado com esses filtros.')}</p>
         </div>
       )}
     </div>

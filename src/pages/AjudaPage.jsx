@@ -2,53 +2,31 @@ import { PageShell } from '../components/PageShell'
 import { SacredGeometry } from '../components/SacredGeometry'
 import { Search, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
-const faqCategories = [
-  {
-    category: 'Conta e Cadastro',
-    faqList: [
-      { q: 'Como faço para me cadastrar?', a: 'Acesse a página de cadastro, preencha seus dados e confirme seu email. Em segundos você estará pronto para usar!' },
-      { q: 'Esqueci minha senha, como recupero?', a: 'Clique em "Esqueci minha senha" na tela de login e siga as instruções enviadas para seu email.' },
-      { q: 'Posso usar mais de uma conta?', a: 'Cada pessoa pode ter apenas uma conta. Contas duplicadas serão removidas.' },
-      { q: 'Como deleto minha conta?', a: 'Em configurações, procure por "Deletar conta" e siga as instruções. Seus dados serão permanentemente removidos.' },
-    ]
-  },
-  {
-    category: 'Pagamento e Recarga',
-    faqList: [
-      { q: 'Como recarrego meu saldo?', a: 'Vá para "Recarregar", escolha o valor e a forma de pagamento. A recarrega é instantânea!' },
-      { q: 'Quais são as formas de pagamento?', a: 'Cartão de crédito, débito, PIX, transferência bancária e carteiras digitais.' },
-      { q: 'Há limite de recarga?', a: 'Não há limite por transação, mas existem limites diários conforme sua institução bancária.' },
-      { q: 'Como vejo meu histórico de transações?', a: 'Na aba "Carteira", você pode ver todas as recargas e gastos com consultas.' },
-    ]
-  },
-  {
-    category: 'Consultas e Serviços',
-    faqList: [
-      { q: 'Como faço uma consulta?', a: 'Escolha um consultor, selecione o serviço (perguntas ou vídeo) e confirme a transação.' },
-      { q: 'Posso reagendar uma consulta?', a: 'Para video: até 2 horas antes. Para perguntas: após recebimento da primeira resposta.' },
-      { q: 'O consultor pode recusar a sessão?', a: 'Consultores têm direito de recusar em casos extremos. Você receberá reembolso integral.' },
-      { q: 'Quanto tempo leva para receber a resposta?', a: '3-5 horas para perguntas. Vídeo é em tempo real quando o consultor está online.' },
-    ]
-  },
-  {
-    category: 'Privacidade e Segurança',
-    faqList: [
-      { q: 'Meus dados são seguros?', a: 'Sim! Usamos criptografia SSL e não compartilhamos seus dados com terceiros.' },
-      { q: 'As consultas são anônimas?', a: 'Sim, você pode usar um pseudônimo se desejar. O consultor não sabe seu nome real.' },
-      { q: 'Posso denunciar um consultor?', a: 'Sim, use o botão "Denunciar" no perfil. Nossa equipe investigará imediatamente.' },
-      { q: 'Como são armazenadas as gravações?', a: 'Não gravamos sessões de vídeo automaticamente. Ambos podem solicitar gravação por escrito.' },
-    ]
-  }
+const FAQ_STRUCTURE = [
+  { key: 'account', count: 4 },
+  { key: 'payment', count: 4 },
+  { key: 'consultations', count: 4 },
+  { key: 'privacy', count: 4 },
 ]
 
 export function AjudaPage() {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState({})
   const [searchTerm, setSearchTerm] = useState('')
 
   const toggleFAQ = (id) => {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
   }
+
+  const faqCategories = FAQ_STRUCTURE.map((section) => ({
+    category: t(`help_center.faq.${section.key}.title`),
+    faqList: Array.from({ length: section.count }, (_, idx) => ({
+      q: t(`help_center.faq.${section.key}.q${idx + 1}`),
+      a: t(`help_center.faq.${section.key}.a${idx + 1}`),
+    })),
+  }))
 
   const filteredCategories = faqCategories.map(cat => ({
     ...cat,
@@ -63,7 +41,7 @@ export function AjudaPage() {
       <div className="fixed inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-mystic-purple-dark/40 via-mystic-black to-mystic-black" />
       <SacredGeometry />
 
-      <PageShell title="Central de Ajuda" subtitle="Encontre respostas para suas dúvidas">
+      <PageShell title={t('help_center.title')} subtitle={t('help_center.subtitle')}>
         
         {/* Search Bar */}
         <div className="mb-12 max-w-2xl mx-auto">
@@ -71,7 +49,7 @@ export function AjudaPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-mystic-gold pointer-events-none" />
             <input
               type="text"
-              placeholder="Busque sua dúvida..."
+              placeholder={t('help_center.search_placeholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-6 py-3 rounded-full border border-mystic-gold/50 bg-mystic-purple-dark/30 text-white placeholder-mystic-purple-light/50 focus:outline-none focus:border-mystic-gold backdrop-blur-sm"
@@ -115,8 +93,8 @@ export function AjudaPage() {
         {/* No Results */}
         {filteredCategories.length === 0 && searchTerm && (
           <div className="text-center py-16">
-            <p className="text-mystic-purple-light text-lg mb-4">Nenhum resultado encontrado para "{searchTerm}"</p>
-            <p className="text-mystic-purple-light/60">Tente usar diferentes palavras-chave</p>
+            <p className="text-mystic-purple-light text-lg mb-4">{t('help_center.no_results_prefix')} "{searchTerm}"</p>
+            <p className="text-mystic-purple-light/60">{t('help_center.try_other_keywords')}</p>
           </div>
         )}
 

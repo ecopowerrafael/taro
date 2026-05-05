@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Mic, Send, X } from 'lucide-react'
 import { AudioRecorder } from './AudioRecorder'
+import { useTranslation } from 'react-i18next'
 
 const inferAudioExtension = (mimeType) => {
   const normalized = String(mimeType || '').toLowerCase()
@@ -26,6 +27,7 @@ export function QuestionFlowModal({
   onClose,
   onConfirmSend,
 }) {
+  const { t } = useTranslation()
   const [step, setStep] = useState(0)
   const [entries, setEntries] = useState(() => createInitialEntries(questionCount))
   const [audioError, setAudioError] = useState('')
@@ -72,7 +74,7 @@ export function QuestionFlowModal({
     audio.onloadedmetadata = () => {
       URL.revokeObjectURL(objectUrl)
       if (audio.duration > 120) {
-        setAudioError('O áudio deve ter no máximo 2 minutos.')
+        setAudioError(t('question_flow.errors.max_audio_duration', 'O áudio deve ter no máximo 2 minutos.'))
         return
       }
       setEntry(step, {
@@ -82,7 +84,7 @@ export function QuestionFlowModal({
     }
     audio.onerror = () => {
       URL.revokeObjectURL(objectUrl)
-      setAudioError('Não foi possível ler o áudio selecionado.')
+      setAudioError(t('question_flow.errors.audio_read', 'Não foi possível ler o áudio selecionado.'))
     }
   }
 
@@ -113,10 +115,10 @@ export function QuestionFlowModal({
       <div className="w-full max-w-2xl rounded-2xl border border-stardust-gold/50 bg-[#120a1f] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.55)]">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-ethereal-silver/65">Envio de Perguntas</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-ethereal-silver/65">{t('question_flow.title', 'Envio de Perguntas')}</p>
             <h3 className="font-text font-bold text-3xl text-stardust-gold">{consultant.name}</h3>
             <p className="text-sm text-ethereal-silver/80">
-              Pacote de {questionCount} perguntas • Débito {price.toFixed(2)}
+              {t('question_flow.package_prefix', 'Pacote de')} {questionCount} {t('question_flow.questions', 'perguntas')} • {t('question_flow.debit', 'Débito')} {price.toFixed(2)}
             </p>
           </div>
           <button
@@ -130,7 +132,7 @@ export function QuestionFlowModal({
         {!isReviewStep && (
           <div className="grid gap-4">
             <p className="text-sm text-ethereal-silver/85">
-              Pergunta {step + 1} de {questionCount}
+              {t('question_flow.question_of_prefix', 'Pergunta')} {step + 1} {t('question_flow.question_of_middle', 'de')} {questionCount}
             </p>
             <div className="flex gap-2">
               <button
@@ -141,7 +143,7 @@ export function QuestionFlowModal({
                     : 'border-stardust-gold/35 text-ethereal-silver/80 hover:bg-stardust-gold/10'
                 }`}
               >
-                Escrever
+                {t('question_flow.actions.write', 'Escrever')}
               </button>
               <button
                 onClick={() => setEntry(step, { type: 'audio', text: '' })}
@@ -152,7 +154,7 @@ export function QuestionFlowModal({
                 }`}
               >
                 <Mic size={14} />
-                Áudio
+                {t('question_flow.actions.audio', 'Áudio')}
               </button>
             </div>
 
@@ -161,7 +163,7 @@ export function QuestionFlowModal({
                 rows={5}
                 value={currentEntry.text}
                 onChange={(event) => setEntry(step, { text: event.target.value })}
-                placeholder="Digite a sua pergunta..."
+                placeholder={t('question_flow.placeholder', 'Digite a sua pergunta...')}
                 className="rounded-xl border border-stardust-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-stardust-gold/60 focus:ring-2"
               />
             ) : (
@@ -185,15 +187,15 @@ export function QuestionFlowModal({
 
         {isReviewStep && (
           <div className="grid gap-2 rounded-xl border border-stardust-gold/30 bg-black/30 p-3">
-            <p className="text-sm text-stardust-gold">Confirme o envio para o consultor:</p>
+            <p className="text-sm text-stardust-gold">{t('question_flow.confirm_send', 'Confirme o envio para o consultor:')}</p>
             {entries.map((entry, index) => (
               <div key={`${entry.type}-${index}`} className="rounded-lg border border-stardust-gold/20 bg-black/30 p-2">
-                <p className="text-xs text-ethereal-silver/75">Pergunta {index + 1}</p>
+                <p className="text-xs text-ethereal-silver/75">{t('question_flow.question', 'Pergunta')} {index + 1}</p>
                 {entry.type === 'text' ? (
                   <p className="text-sm text-ethereal-silver/90">{entry.text}</p>
                 ) : (
                   <p className="text-sm text-ethereal-silver/90">
-                    Áudio: {entry.file?.name ?? 'Sem arquivo'} ({Math.round(entry.durationSeconds)}s)
+                    {t('question_flow.audio_label', 'Áudio')}: {entry.file?.name ?? t('question_flow.no_file', 'Sem arquivo')} ({Math.round(entry.durationSeconds)}s)
                   </p>
                 )}
               </div>
@@ -207,7 +209,7 @@ export function QuestionFlowModal({
             disabled={step === 0}
             className="rounded-lg border border-stardust-gold/35 px-4 py-2 text-sm text-ethereal-silver/85 transition enabled:hover:bg-stardust-gold/10 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Voltar
+            {t('common.back', 'Voltar')}
           </button>
           {!isReviewStep ? (
             <button
@@ -215,7 +217,7 @@ export function QuestionFlowModal({
               disabled={!canGoNext}
               className="rounded-lg border border-stardust-gold/75 bg-gradient-to-r from-stardust-gold/90 to-amber-500/85 px-4 py-2 text-sm font-medium text-black transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
             >
-              Próxima
+              {t('question_flow.actions.next', 'Próxima')}
             </button>
           ) : (
             <button
@@ -223,7 +225,7 @@ export function QuestionFlowModal({
               className="inline-flex items-center gap-2 rounded-lg border border-stardust-gold/75 bg-gradient-to-r from-stardust-gold/90 to-amber-500/85 px-4 py-2 text-sm font-medium text-black transition hover:brightness-110"
             >
               <Send size={14} />
-              Confirmar envio
+              {t('question_flow.actions.confirm_send', 'Confirmar envio')}
             </button>
           )}
         </div>

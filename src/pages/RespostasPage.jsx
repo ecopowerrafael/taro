@@ -4,8 +4,10 @@ import { motion as Motion, AnimatePresence } from 'framer-motion'
 import { PageShell } from '../components/PageShell'
 import { ReviewModal } from '../components/ReviewModal'
 import { usePlatformContext } from '../context/platform-context'
+import { useTranslation } from 'react-i18next'
 
 export function RespostasPage() {
+  const { t } = useTranslation()
   const { profile, authLoading, isAuthenticated, questionRequests, token } = usePlatformContext()
   const [expandedAnswerId, setExpandedAnswerId] = useState(null)
   const [reviewModal, setReviewModal] = useState({ isOpen: false, consultantId: '', consultantName: '', referenceId: '' })
@@ -49,7 +51,7 @@ export function RespostasPage() {
 
   if (authLoading) {
     return (
-      <PageShell title="Carregando..." subtitle="">
+      <PageShell title={t('common.loading', 'Carregando...')} subtitle="">
         <div className="flex h-64 items-center justify-center">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-mystic-gold border-t-transparent" />
         </div>
@@ -69,11 +71,11 @@ export function RespostasPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(46,2,73,0.65),transparent)]" />
       </div>
 
-      <PageShell title="Respostas" subtitle="Todas as respostas das suas perguntas em um só lugar.">
+      <PageShell title={t('answers.page_title', 'Respostas')} subtitle={t('answers.page_subtitle', 'Todas as respostas das suas perguntas em um só lugar.')}>
         <div className="mx-auto max-w-lg px-4 pb-36 pt-2">
           {myAnswers.length === 0 ? (
             <div className="rounded-2xl border border-stardust-gold/20 bg-[rgba(10,0,20,0.5)] px-5 py-6 text-center text-sm text-ethereal-silver/60">
-              Você ainda não recebeu respostas.
+              {t('answers.empty', 'Você ainda não recebeu respostas.')}
             </div>
           ) : (
             <div className="grid gap-3">
@@ -119,7 +121,7 @@ export function RespostasPage() {
                         <div className="space-y-3 border-t border-stardust-gold/15 px-4 py-4">
                           {Array.isArray(answer.entries) && answer.entries.length > 0 && (
                             <div className="rounded-xl bg-black/40 p-3 space-y-2">
-                              <p className="mb-1 text-[11px] font-semibold tracking-widest uppercase text-stardust-gold/60">Suas perguntas</p>
+                              <p className="mb-1 text-[11px] font-semibold tracking-widest uppercase text-stardust-gold/60">{t('answers.labels.your_questions', 'Suas perguntas')}</p>
                               {answer.entries.map((entry, idx) => (
                                 <p key={entry.id || idx} className="border-b border-stardust-gold/10 pb-2 text-xs text-amber-100/80 last:border-0">
                                   <span className="font-bold text-stardust-gold">P{idx + 1}.</span>{' '}
@@ -129,12 +131,12 @@ export function RespostasPage() {
                             </div>
                           )}
                           <div className="rounded-xl bg-black/40 p-3">
-                            <p className="mb-2 text-[11px] font-semibold tracking-widest uppercase text-stardust-gold/60">Resposta</p>
+                            <p className="mb-2 text-[11px] font-semibold tracking-widest uppercase text-stardust-gold/60">{t('answers.labels.answer', 'Resposta')}</p>
                             {Array.isArray(answer.entries) && answer.entries.length > 0 ? (
                               <div className="space-y-2">
                                 {answer.entries.map((entry, idx) => (
                                   <div key={entry.id || idx} className="rounded-lg border border-stardust-gold/20 bg-black/30 p-2">
-                                    <p className="mb-1 text-[11px] text-ethereal-silver/70">Resposta {idx + 1}</p>
+                                    <p className="mb-1 text-[11px] text-ethereal-silver/70">{t('answers.labels.answer', 'Resposta')} {idx + 1}</p>
                                     {entry.answerType === 'audio' && entry.answerAudioDataUrl ? (
                                       <audio controls src={entry.answerAudioDataUrl} className="w-full" controlsList="nodownload" />
                                     ) : (
@@ -162,12 +164,12 @@ export function RespostasPage() {
                                 }
                                 className="inline-flex items-center gap-1.5 rounded-xl border border-stardust-gold/40 bg-black/30 px-3 py-1.5 text-xs text-stardust-gold transition hover:bg-stardust-gold/10"
                               >
-                                <Star size={12} /> Avaliar consultor
+                                <Star size={12} /> {t('answers.actions.review_consultant', 'Avaliar consultor')}
                               </button>
                             </div>
                           )}
                           {reviewedIds.has(answer.id) && (
-                            <p className="text-right text-xs text-emerald-400/80">✓ Avaliado</p>
+                            <p className="text-right text-xs text-emerald-400/80">✓ {t('answers.status.reviewed', 'Avaliado')}</p>
                           )}
                         </div>
                       </Motion.div>

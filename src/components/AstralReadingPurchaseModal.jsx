@@ -6,11 +6,13 @@ import { usePlatformContext } from '../context/platform-context'
 import { generatePixPayload } from '../utils/pix'
 import { GlassCard } from './GlassCard'
 import { AstralReadingStripeCheckoutForm } from './AstralReadingStripeCheckoutForm'
+import { useTranslation } from 'react-i18next'
 
 const ASTRAL_READING_PRICE = 49.9
 const ASTRAL_READING_TITLE = 'Leitura Astral Completa'
 
 export function AstralReadingPurchaseModal({ onClose }) {
+  const { t } = useTranslation()
   const { profile, isAuthenticated, mpCredentials, createAstralReadingPixOrder } = usePlatformContext()
   const [paymentMethod, setPaymentMethod] = useState(null)
   const [copied, setCopied] = useState(false)
@@ -51,7 +53,7 @@ export function AstralReadingPurchaseModal({ onClose }) {
     setPixFeedback('')
     const result = await createAstralReadingPixOrder()
     setPixSubmitting(false)
-    setPixFeedback(result?.message || 'Pedido PIX registrado.')
+    setPixFeedback(result?.message || t('astral_purchase.pix_registered', 'Pedido PIX registrado.'))
   }
 
   return (
@@ -63,35 +65,35 @@ export function AstralReadingPurchaseModal({ onClose }) {
             className="inline-flex items-center gap-2 rounded-lg border border-mystic-gold/35 bg-black/45 px-3 py-2 text-sm text-amber-100/85 transition hover:bg-black/60"
           >
             <X size={16} />
-            Fechar
+            {t('common.close', 'Fechar')}
           </button>
         </div>
 
         <div className="grid gap-4">
-          <GlassCard title="Solicitar leitura completa" subtitle="Receba por e-mail um PDF com cerca de 20 páginas com a leitura completa do seu mapa astral.">
+          <GlassCard title={t('astral_purchase.title', 'Solicitar leitura completa')} subtitle={t('astral_purchase.subtitle', 'Receba por e-mail um PDF com cerca de 20 páginas com a leitura completa do seu mapa astral.')}>
             <div className="grid gap-5">
               <div className="rounded-2xl border border-mystic-gold/25 bg-black/25 p-5 text-center md:p-6">
                 <p className="text-lg leading-relaxed text-amber-50">
-                  Você está contratando <span className="font-semibold text-mystic-goldSoft">{ASTRAL_READING_TITLE}</span>.
+                  {t('astral_purchase.hiring_prefix', 'Você está contratando')} <span className="font-semibold text-mystic-goldSoft">{ASTRAL_READING_TITLE}</span>.
                 </p>
                 <p className="mt-3 text-base text-amber-100/85">
-                  Valor de <span className="font-display text-2xl text-mystic-goldSoft">R$ {ASTRAL_READING_PRICE.toFixed(2)}</span>
+                  {t('astral_purchase.price_prefix', 'Valor de')} <span className="font-display text-2xl text-mystic-goldSoft">R$ {ASTRAL_READING_PRICE.toFixed(2)}</span>
                 </p>
                 <p className="mt-4 text-sm text-amber-100/75">
-                  O material será enviado para <span className="font-semibold text-mystic-goldSoft">{profile?.email || 'seu e-mail cadastrado'}</span>.
+                  {t('astral_purchase.delivery_prefix', 'O material será enviado para')} <span className="font-semibold text-mystic-goldSoft">{profile?.email || t('astral_purchase.registered_email', 'seu e-mail cadastrado')}</span>.
                 </p>
-                <p className="mt-4 text-sm uppercase tracking-[0.18em] text-amber-100/60">Como vc prefere pagar?</p>
+                <p className="mt-4 text-sm uppercase tracking-[0.18em] text-amber-100/60">{t('astral_purchase.payment_question', 'Como vc prefere pagar?')}</p>
               </div>
 
               {!isAuthenticated ? (
                 <div className="grid gap-4">
-                  <p className="text-sm text-amber-100/75">Faça login ou crie uma conta para concluir o pedido da sua leitura astral.</p>
+                  <p className="text-sm text-amber-100/75">{t('astral_purchase.login_required', 'Faça login ou crie uma conta para concluir o pedido da sua leitura astral.')}</p>
                   <div className="flex flex-wrap justify-center gap-3">
                     <Link to="/entrar" className="rounded-lg bg-mystic-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110" onClick={onClose}>
-                      Entrar
+                      {t('nav.login', 'Entrar')}
                     </Link>
                     <Link to="/cadastro" className="rounded-lg border border-mystic-gold/45 px-4 py-2 text-sm text-mystic-goldSoft transition hover:bg-mystic-gold/10" onClick={onClose}>
-                      Criar conta
+                      {t('astral_purchase.create_account', 'Criar conta')}
                     </Link>
                   </div>
                 </div>
@@ -101,7 +103,7 @@ export function AstralReadingPurchaseModal({ onClose }) {
                     <CheckCircle2 size={40} />
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-mystic-goldSoft">Pedido confirmado</p>
+                    <p className="text-lg font-semibold text-mystic-goldSoft">{t('astral_purchase.order_confirmed', 'Pedido confirmado')}</p>
                     <p className="mt-2 text-sm text-amber-100/70">{stripeSuccess}</p>
                   </div>
                 </div>
@@ -128,13 +130,13 @@ export function AstralReadingPurchaseModal({ onClose }) {
                       }`}
                     >
                       <CreditCard size={18} />
-                      Cartão de crédito
+                      {t('astral_purchase.credit_card', 'Cartão de crédito')}
                     </button>
                   </div>
 
                   {paymentMethod === 'pix' ? (
                     <div className="grid gap-4 rounded-2xl border border-mystic-gold/20 bg-black/20 p-4">
-                      <p className="text-sm text-amber-100/70">Escaneie o QR Code, conclua o PIX e depois registre o pedido para validação.</p>
+                      <p className="text-sm text-amber-100/70">{t('astral_purchase.pix_instructions', 'Escaneie o QR Code, conclua o PIX e depois registre o pedido para validação.')}</p>
                       <div className="grid gap-5 md:grid-cols-[220px_1fr] md:items-start">
                         <div className="flex justify-center">
                           {pixPayload ? (
@@ -143,17 +145,17 @@ export function AstralReadingPurchaseModal({ onClose }) {
                             </div>
                           ) : (
                             <div className="flex h-[216px] w-[216px] items-center justify-center rounded-xl border border-dashed border-mystic-gold/30 bg-black/20 text-center text-xs text-amber-100/40">
-                              PIX não configurado no admin.
+                              {t('astral_purchase.pix_not_configured', 'PIX não configurado no admin.')}
                             </div>
                           )}
                         </div>
                         <div className="grid gap-4">
                           <div className="rounded-xl border border-mystic-gold/25 bg-black/25 p-4">
-                            <p className="text-xs uppercase tracking-[0.18em] text-amber-100/55">Copia e cola</p>
+                            <p className="text-xs uppercase tracking-[0.18em] text-amber-100/55">{t('astral_purchase.copy_paste', 'Copia e cola')}</p>
                             <div className="mt-3 flex gap-2">
                               <textarea
                                 readOnly
-                                value={pixPayload || 'Código indisponível'}
+                                value={pixPayload || t('astral_purchase.code_unavailable', 'Código indisponível')}
                                 className="min-h-24 flex-1 resize-none rounded-lg border border-mystic-gold/25 bg-black/40 p-3 text-xs text-amber-50 outline-none"
                               />
                               <button
@@ -172,7 +174,7 @@ export function AstralReadingPurchaseModal({ onClose }) {
                             className="inline-flex items-center justify-center gap-2 rounded-lg border border-mystic-gold/55 bg-mystic-gold/90 px-4 py-3 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {pixSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                            {pixSubmitting ? 'Registrando pedido...' : 'Já paguei no PIX'}
+                            {pixSubmitting ? t('astral_purchase.registering_order', 'Registrando pedido...') : t('astral_purchase.already_paid_pix', 'Já paguei no PIX')}
                           </button>
 
                           {pixFeedback && <p className="text-sm text-amber-100/80">{pixFeedback}</p>}
@@ -184,7 +186,7 @@ export function AstralReadingPurchaseModal({ onClose }) {
                   {paymentMethod === 'card' ? (
                     <AstralReadingStripeCheckoutForm
                       amount={ASTRAL_READING_PRICE}
-                      onSuccess={(result) => setStripeSuccess(result?.message || 'Pagamento confirmado e pedido registrado.')}
+                      onSuccess={(result) => setStripeSuccess(result?.message || t('astral_purchase.payment_confirmed', 'Pagamento confirmado e pedido registrado.'))}
                       onError={() => {}}
                     />
                   ) : null}

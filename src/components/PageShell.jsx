@@ -69,7 +69,7 @@ export function PageShell({ title, subtitle, children, mobileMenuFooter = null }
                 type="button"
                 className="inline-flex items-center justify-center rounded-lg border border-mystic-gold/35 p-2 text-mystic-goldSoft transition hover:bg-mystic-gold/10"
                 onClick={() => setMobileMenuOpen((current) => !current)}
-                aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+                aria-label={mobileMenuOpen ? t('shell.menu.close', 'Fechar menu') : t('shell.menu.open', 'Abrir menu')}
                 aria-expanded={mobileMenuOpen}
               >
                 {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -84,8 +84,8 @@ export function PageShell({ title, subtitle, children, mobileMenuFooter = null }
             <div className="rounded-[28px] border border-mystic-gold/25 bg-[linear-gradient(180deg,rgba(33,18,54,0.96),rgba(10,7,18,0.94))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45),0_0_30px_rgba(197,160,89,0.12)]">
               <div className="mb-5 flex items-center justify-between gap-3 border-b border-mystic-gold/15 pb-4">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.28em] text-amber-100/50">Navegação</p>
-                  <p className="mt-1 font-display text-2xl text-mystic-goldSoft">Menu</p>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-amber-100/50">{t('shell.mobile_nav.title', 'Navegação')}</p>
+                  <p className="mt-1 font-display text-2xl text-mystic-goldSoft">{t('shell.mobile_nav.menu', 'Menu')}</p>
                 </div>
                 <button
                   type="button"
@@ -93,7 +93,7 @@ export function PageShell({ title, subtitle, children, mobileMenuFooter = null }
                   className="inline-flex items-center gap-2 rounded-xl border border-mystic-gold/30 bg-black/25 px-3 py-2 text-sm text-mystic-goldSoft transition hover:bg-mystic-gold/10"
                 >
                   <X size={16} />
-                  Fechar
+                  {t('common.close', 'Fechar')}
                 </button>
               </div>
 

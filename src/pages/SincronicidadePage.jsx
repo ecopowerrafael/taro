@@ -3,21 +3,22 @@ import { motion as Motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { AstralReadingPurchaseModal } from '../components/AstralReadingPurchaseModal'
+import { useTranslation } from 'react-i18next'
 
 // ─── Dados dos signos ────────────────────────────────────────────────────────
 const SIGNOS = [
-  { id: 'aries',       label: 'Áries',       symbol: '♈', elemento: 'fogo',  datas: '21/03 – 19/04' },
-  { id: 'taurus',      label: 'Touro',        symbol: '♉', elemento: 'terra', datas: '20/04 – 20/05' },
-  { id: 'gemini',      label: 'Gêmeos',       symbol: '♊', elemento: 'ar',    datas: '21/05 – 20/06' },
-  { id: 'cancer',      label: 'Câncer',       symbol: '♋', elemento: 'agua',  datas: '21/06 – 22/07' },
-  { id: 'leo',         label: 'Leão',         symbol: '♌', elemento: 'fogo',  datas: '23/07 – 22/08' },
-  { id: 'virgo',       label: 'Virgem',       symbol: '♍', elemento: 'terra', datas: '23/08 – 22/09' },
-  { id: 'libra',       label: 'Libra',        symbol: '♎', elemento: 'ar',    datas: '23/09 – 22/10' },
-  { id: 'scorpio',     label: 'Escorpião',    symbol: '♏', elemento: 'agua',  datas: '23/10 – 21/11' },
-  { id: 'sagittarius', label: 'Sagitário',    symbol: '♐', elemento: 'fogo',  datas: '22/11 – 21/12' },
-  { id: 'capricorn',   label: 'Capricórnio', symbol: '♑', elemento: 'terra', datas: '22/12 – 19/01' },
-  { id: 'aquarius',    label: 'Aquário',      symbol: '♒', elemento: 'ar',    datas: '20/01 – 18/02' },
-  { id: 'pisces',      label: 'Peixes',       symbol: '♓', elemento: 'agua',  datas: '19/02 – 20/03' },
+  { id: 'aries',       symbol: '♈', elemento: 'fogo' },
+  { id: 'taurus',      symbol: '♉', elemento: 'terra' },
+  { id: 'gemini',      symbol: '♊', elemento: 'ar' },
+  { id: 'cancer',      symbol: '♋', elemento: 'agua' },
+  { id: 'leo',         symbol: '♌', elemento: 'fogo' },
+  { id: 'virgo',       symbol: '♍', elemento: 'terra' },
+  { id: 'libra',       symbol: '♎', elemento: 'ar' },
+  { id: 'scorpio',     symbol: '♏', elemento: 'agua' },
+  { id: 'sagittarius', symbol: '♐', elemento: 'fogo' },
+  { id: 'capricorn',   symbol: '♑', elemento: 'terra' },
+  { id: 'aquarius',    symbol: '♒', elemento: 'ar' },
+  { id: 'pisces',      symbol: '♓', elemento: 'agua' },
 ]
 
 // Cores por elemento
@@ -26,70 +27,6 @@ const ELEMENTO_COLORS = {
   terra: { primary: '#8B7355', glow: 'rgba(139,115,85,0.6)', smoke: ['#8B7355','#C5A059','#6B8E23'] },
   ar:    { primary: '#87CEEB', glow: 'rgba(135,206,235,0.6)', smoke: ['#87CEEB','#E0E7FF','#C8D6F0'] },
   agua:  { primary: '#4A90D9', glow: 'rgba(74,144,217,0.6)', smoke: ['#4A90D9','#7B68EE','#00CED1'] },
-}
-
-// ─── Perfis amorosos dos signos ──────────────────────────────────────────────
-const SIGNO_PERFIS = {
-  aries: {
-    titulo: 'O Conquistador Audaz',
-    particularidade: 'Precisa de autonomia e de uma "causa" dentro da relação. Se o tédio se instala, a chama apaga.',
-    vantagem: 'Lealdade feroz e uma honestidade brutal que elimina joguinhos. Com Áries, você sempre sabe onde pisa.',
-  },
-  taurus: {
-    titulo: 'O Âncora de Vênus',
-    particularidade: 'O amor passa pelos cinco sentidos. Se não houver toque, boa comida e estabilidade financeira, ele se retrai.',
-    vantagem: 'É o signo mais construtor do zodíaco. Estar com Touro é ter a garantia de que o relacionamento será um investimento sólido e seguro.',
-  },
-  gemini: {
-    titulo: 'O Poliglota do Afeto',
-    particularidade: 'O órgão mais sexual de Gêmeos é o cérebro. Se a conversa morrer, o interesse morre junto.',
-    vantagem: 'Adaptabilidade extrema. Eles trazem leveza, riso e uma renovação constante que impede o relacionamento de envelhecer.',
-  },
-  cancer: {
-    titulo: 'O Guardião do Ninho',
-    particularidade: 'Memória emocional implacável. Eles não esquecem como você os fez sentir há dez anos.',
-    vantagem: 'Uma capacidade de cuidado e intuição que faz o parceiro se sentir a pessoa mais protegida do mundo. É o acolhimento absoluto.',
-  },
-  leo: {
-    titulo: 'O Sol do Relacionamento',
-    particularidade: 'Precisa de admiração mútua. Se ele não se sente o "protagonista" na vida do parceiro, o brilho se torna drama.',
-    vantagem: 'Generosidade magnânima. Leão eleva o parceiro, celebra suas vitórias como se fossem dele e traz um romance digno de cinema.',
-  },
-  virgo: {
-    titulo: 'O Alquimista da Rotina',
-    particularidade: 'Demonstra amor através do serviço. Ele não vai fazer um poema, mas vai consertar o seu computador e organizar sua agenda.',
-    vantagem: 'A busca pela melhor versão do casal. Virgem lapida a relação até que ela funcione como uma máquina perfeita e saudável.',
-  },
-  libra: {
-    titulo: 'O Arquiteto da Harmonia',
-    particularidade: 'Horror ao conflito. Pode omitir o que sente para não quebrar a paz, o que exige um parceiro atento às entrelinhas.',
-    vantagem: 'A arte da parceria. Libra é o mestre em fazer o outro se sentir ouvido, valorizado e esteticamente em paz.',
-  },
-  scorpio: {
-    titulo: 'O Mergulhador de Abismos',
-    particularidade: '"Tudo ou nada". Não suporta conexões superficiais. Ele exige a entrega das sombras, não apenas das luzes.',
-    vantagem: 'Uma lealdade transformadora. Escorpião cura o parceiro através da profundidade e protege a relação com uma intensidade mística.',
-  },
-  sagittarius: {
-    titulo: 'O Arqueiro da Liberdade',
-    particularidade: 'O relacionamento deve ser uma expansão, nunca uma gaiola. Ele precisa sentir que a vida é maior ao seu lado.',
-    vantagem: 'Otimismo contagiante. Sagitário transforma qualquer crise em uma aventura filosófica e mantém a chama da esperança sempre acesa.',
-  },
-  capricorn: {
-    titulo: 'O Arquiteto do Legado',
-    particularidade: 'O amor é um compromisso sério, quase um contrato de alma. Ele demora a se abrir, mas quando o faz, é para sempre.',
-    vantagem: 'Provedoria e suporte inabalável. Capricórnio é a rocha que sustenta o parceiro nos momentos de maior tempestade.',
-  },
-  aquarius: {
-    titulo: 'O Visionário do Desapego',
-    particularidade: 'Precisa de amizade antes do romance. Ele valoriza o espaço individual tanto quanto a conexão do casal.',
-    vantagem: 'Originalidade e zero posse. Com Aquário, você terá um parceiro que respeita sua individualidade e te incentiva a ser autêntico.',
-  },
-  pisces: {
-    titulo: 'O Poeta do Invisível',
-    particularidade: 'Tende a idealizar o parceiro. Vive em uma frequência mística onde o amor é uma forma de sacrifício e beleza.',
-    vantagem: 'Empatia sem limites. Peixes sente a sua dor antes de você falar, oferecendo uma conexão espiritual que transcende o plano físico.',
-  },
 }
 
 // ─── Utilitários ─────────────────────────────────────────────────────────────
@@ -103,12 +40,31 @@ function getSigno(id) {
   return SIGNOS.find((s) => s.id === id)
 }
 
-function buildFallbackResultado(signA, signB) {
+function getSignLabel(t, id) {
+  return t(`synchronicity.signs.${id}.label`)
+}
+
+function getSignDates(t, id) {
+  return t(`synchronicity.signs.${id}.dates`)
+}
+
+function getElementLabel(t, elementKey) {
+  return t(`synchronicity.elements.${elementKey}`)
+}
+
+function getSignProfile(t, id) {
+  return {
+    titulo: t(`synchronicity.profiles.${id}.title`),
+    particularidade: t(`synchronicity.profiles.${id}.trait`),
+    vantagem: t(`synchronicity.profiles.${id}.advantage`),
+  }
+}
+
+function buildFallbackResultado(signA, signB, t) {
   return {
     percent: 62,
-    dinamica: `${signA?.label ?? 'Signo A'} + ${signB?.label ?? 'Signo B'}`,
-    texto:
-      'A conexão mostrou um padrão energético raro. Refaça o cálculo em instantes ou aprofunde a leitura com um consultor para detalhes de Vênus, Marte e Lua.',
+    dinamica: `${signA ? getSignLabel(t, signA.id) : t('synchronicity.labels.sign_a')} + ${signB ? getSignLabel(t, signB.id) : t('synchronicity.labels.sign_b')}`,
+    texto: t('synchronicity.fallback_text'),
   }
 }
 
@@ -222,6 +178,7 @@ function HeartsLayer() {
 
 // ─── Seletor de signo ─────────────────────────────────────────────────────────
 function SignSelector({ label, value, onChange, iconSrc, iconAlt }) {
+  const { t } = useTranslation()
   const selected = value ? getSigno(value) : null
   const [open, setOpen] = useState(false)
 
@@ -256,10 +213,10 @@ function SignSelector({ label, value, onChange, iconSrc, iconAlt }) {
             className="h-12 w-12 object-contain drop-shadow-[0_0_12px_rgba(197,160,89,0.45)]"
           />
           <span className="font-display text-lg text-mystic-goldSoft">
-            {selected ? selected.label : label}
+            {selected ? getSignLabel(t, selected.id) : label}
           </span>
           {selected && (
-            <span className="text-[11px] tracking-widest text-ethereal-silver/50 uppercase">{selected.datas}</span>
+            <span className="text-[11px] tracking-widest text-ethereal-silver/50 uppercase">{getSignDates(t, selected.id)}</span>
           )}
         </div>
       </Motion.button>
@@ -287,15 +244,15 @@ function SignSelector({ label, value, onChange, iconSrc, iconAlt }) {
                     <LuxurySignSeal sign={s} size={36} />
                   </span>
                   <div>
-                    <div className="text-sm font-medium">{s.label}</div>
-                    <div className="text-[10px] text-ethereal-silver/40">{s.datas}</div>
+                    <div className="text-sm font-medium">{getSignLabel(t, s.id)}</div>
+                    <div className="text-[10px] text-ethereal-silver/40">{getSignDates(t, s.id)}</div>
                   </div>
                   <span className={`ml-auto text-[10px] capitalize px-1.5 py-0.5 rounded-full border ${
                     s.elemento === 'fogo'  ? 'border-orange-500/40 text-orange-400' :
                     s.elemento === 'terra' ? 'border-yellow-700/40 text-yellow-600' :
                     s.elemento === 'ar'    ? 'border-sky-400/40   text-sky-300' :
                                              'border-blue-500/40  text-blue-400'
-                  }`}>{s.elemento}</span>
+                  }`}>{getElementLabel(t, s.elemento)}</span>
                 </button>
               ))}
             </div>
@@ -426,13 +383,14 @@ function LuxurySignSeal({ sign, size = 92, pulse = false }) {
 
 // ─── Reveal: card com perfil do signo antes da fusão ────────────────────────
 function SignRevealPhase({ signoA, signoB, onComplete }) {
+  const { t } = useTranslation()
   const [index, setIndex] = useState(0)
   const [canContinue, setCanContinue] = useState(false)
 
   const signIds = signoA === signoB ? [signoA] : [signoA, signoB]
   const currentSignId = signIds[index]
   const currentSign = getSigno(currentSignId)
-  const perfil = SIGNO_PERFIS[currentSignId]
+  const perfil = getSignProfile(t, currentSignId)
   const palette = ELEMENTO_COLORS[currentSign.elemento]
 
   const particMs = perfil.particularidade.length * 18
@@ -509,14 +467,14 @@ function SignRevealPhase({ signoA, signoB, onComplete }) {
         {/* Nome + título */}
         <div className="relative mb-6 text-center">
           <p className="font-display text-2xl tracking-[0.12em] text-mystic-goldSoft sm:text-3xl">
-            {currentSign.symbol} {currentSign.label}
+            {currentSign.symbol} {getSignLabel(t, currentSign.id)}
           </p>
           <p className="mt-1 text-sm italic tracking-wider text-stardust-gold/55">{perfil.titulo}</p>
         </div>
 
         {/* Particularidade */}
         <div className="relative mb-4 rounded-2xl border border-stardust-gold/20 bg-black/35 p-4">
-          <p className="mb-2 text-[10px] font-semibold tracking-[0.26em] uppercase text-stardust-gold/65">✦ Particularidade</p>
+          <p className="mb-2 text-[10px] font-semibold tracking-[0.26em] uppercase text-stardust-gold/65">✦ {t('synchronicity.labels.trait')}</p>
           <p className="min-h-[3em] text-sm leading-relaxed text-ethereal-silver/85">
             <Typewriter text={perfil.particularidade} delay={0} speed={18} />
           </p>
@@ -524,7 +482,7 @@ function SignRevealPhase({ signoA, signoB, onComplete }) {
 
         {/* Vantagem */}
         <div className="relative rounded-2xl border border-emerald-500/20 bg-black/35 p-4">
-          <p className="mb-2 text-[10px] font-semibold tracking-[0.26em] uppercase text-emerald-400/65">✦ Vantagem</p>
+          <p className="mb-2 text-[10px] font-semibold tracking-[0.26em] uppercase text-emerald-400/65">✦ {t('synchronicity.labels.advantage')}</p>
           <p className="min-h-[3em] text-sm leading-relaxed text-ethereal-silver/85">
             <Typewriter text={perfil.vantagem} delay={particMs / 1000 + 0.3} speed={18} />
           </p>
@@ -542,7 +500,7 @@ function SignRevealPhase({ signoA, signoB, onComplete }) {
                 : 'bg-stardust-gold/20 text-stardust-gold/40'
             }`}
           >
-            {index < signIds.length - 1 ? 'Continuar' : 'Iniciar Cálculo'}
+            {index < signIds.length - 1 ? t('synchronicity.actions.continue') : t('synchronicity.actions.start_calculation')}
           </Motion.button>
         </div>
       </Motion.div>
@@ -552,6 +510,7 @@ function SignRevealPhase({ signoA, signoB, onComplete }) {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 export function SincronicidadePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [signoA, setSignoA] = useState('')
   const [signoB, setSignoB] = useState('')
@@ -588,16 +547,16 @@ export function SincronicidadePage() {
     try {
       const data = await (matchDataPromiseRef.current ?? getMatch(signoA, signoB))
       await new Promise((r) => setTimeout(r, 2800))
-      setResultado(data ?? buildFallbackResultado(getSigno(signoA), getSigno(signoB)))
+      setResultado(data ?? buildFallbackResultado(getSigno(signoA), getSigno(signoB), t))
       setFase('resultado')
       setShowHearts(true)
     } catch {
       await new Promise((r) => setTimeout(r, 2800))
-      setResultado(buildFallbackResultado(getSigno(signoA), getSigno(signoB)))
+      setResultado(buildFallbackResultado(getSigno(signoA), getSigno(signoB), t))
       setFase('resultado')
       setShowHearts(true)
     }
-  }, [signoA, signoB])
+  }, [signoA, signoB, t])
 
   const handleReset = () => {
     setFase('input')
@@ -623,8 +582,8 @@ export function SincronicidadePage() {
       <StarField count={70} />
 
       <PageShell
-        title="Sincronicidade de Almas"
-        subtitle="Descubra a frequência da sua conexão"
+        title={t('synchronicity.page_title')}
+        subtitle={t('synchronicity.page_subtitle')}
       >
         <div className="mx-auto max-w-2xl px-4 pb-32 pt-4">
 
@@ -641,11 +600,11 @@ export function SincronicidadePage() {
                 {/* Seletores */}
                 <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:gap-8">
                   <SignSelector
-                    label="Seu signo"
+                    label={t('synchronicity.your_sign')}
                     value={signoA}
                     onChange={setSignoA}
                     iconSrc="/signodela.png"
-                    iconAlt="Ícone para selecionar seu signo"
+                    iconAlt={t('synchronicity.alt.select_your_sign')}
                   />
 
                   {/* Ícone central */}
@@ -658,11 +617,11 @@ export function SincronicidadePage() {
                   </Motion.div>
 
                   <SignSelector
-                    label="Signo da outra pessoa"
+                    label={t('synchronicity.other_person_sign')}
                     value={signoB}
                     onChange={setSignoB}
                     iconSrc="/signodele.png"
-                    iconAlt="Ícone para selecionar o signo da outra pessoa"
+                    iconAlt={t('synchronicity.alt.select_other_sign')}
                   />
                 </div>
 
@@ -674,11 +633,11 @@ export function SincronicidadePage() {
                     className="mt-6 flex justify-center gap-4 text-sm"
                   >
                     <span className="rounded-full border border-stardust-gold/30 bg-stardust-gold/10 px-3 py-1 capitalize text-stardust-gold">
-                      {signoAData.elemento}
+                      {getElementLabel(t, signoAData.elemento)}
                     </span>
                     <span className="text-stardust-gold/40">+</span>
                     <span className="rounded-full border border-stardust-gold/30 bg-stardust-gold/10 px-3 py-1 capitalize text-stardust-gold">
-                      {signoBData.elemento}
+                      {getElementLabel(t, signoBData.elemento)}
                     </span>
                   </Motion.div>
                 )}
@@ -704,13 +663,13 @@ export function SincronicidadePage() {
                         style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)', backgroundSize: '200%' }}
                       />
                     )}
-                    <span className="relative z-10">✦ Ver Sincronicidade</span>
+                    <span className="relative z-10">✦ {t('synchronicity.actions.view')}</span>
                   </Motion.button>
                 </div>
 
                 {/* Disclaimer */}
                 <p className="mt-6 text-center text-sm leading-relaxed text-ethereal-silver/60">
-                  Duas trajetórias, um único desenho estelar. Selecione as energias que deseja cruzar e observe como os elementos reagem à presença um do outro. O Cosmo não comete erros de cálculo; ele apenas revela afinidades.
+                  {t('synchronicity.disclaimer')}
                 </p>
               </Motion.div>
             )}
@@ -725,7 +684,7 @@ export function SincronicidadePage() {
                 transition={{ duration: 0.45 }}
               >
                 <p className="mb-4 text-center text-[11px] tracking-[0.28em] uppercase text-stardust-gold/45">
-                  Lendo as energias dos signos...
+                  {t('synchronicity.reading_energies')}
                 </p>
                 <SignRevealPhase
                   signoA={signoA}
@@ -796,7 +755,7 @@ export function SincronicidadePage() {
                   animate={{ opacity: [0.4, 1, 0.4] }}
                   transition={{ duration: 1.6, repeat: Infinity }}
                 >
-                  Calculando sincronicidade...
+                  {t('synchronicity.calculating')}
                 </Motion.p>
               </Motion.div>
             )}
@@ -836,7 +795,7 @@ export function SincronicidadePage() {
                       >
                         <LuxurySignSeal sign={signoAData} size={90} pulse />
                       </Motion.div>
-                      <span className="mt-1 text-xs text-ethereal-silver/50">{signoAData.label}</span>
+                      <span className="mt-1 text-xs text-ethereal-silver/50">{getSignLabel(t, signoAData.id)}</span>
                     </div>
 
                     <div className="flex flex-col items-center gap-1">
@@ -857,7 +816,7 @@ export function SincronicidadePage() {
                       >
                         <LuxurySignSeal sign={signoBData} size={90} pulse />
                       </Motion.div>
-                      <span className="mt-1 text-xs text-ethereal-silver/50">{signoBData.label}</span>
+                      <span className="mt-1 text-xs text-ethereal-silver/50">{getSignLabel(t, signoBData.id)}</span>
                     </div>
                   </div>
 
@@ -887,7 +846,7 @@ export function SincronicidadePage() {
                     transition={{ delay: 0.4 }}
                     className="mb-5 text-center font-display text-xl tracking-[0.15em] text-mystic-goldSoft"
                   >
-                    {resultado?.dinamica ?? 'Conexão em análise'}
+                    {resultado?.dinamica ?? t('synchronicity.in_analysis')}
                   </Motion.p>
 
                   {/* Texto de gancho (typewriter) */}
@@ -897,7 +856,7 @@ export function SincronicidadePage() {
                     transition={{ delay: 0.7 }}
                     className="mx-auto mb-8 max-w-sm text-center text-sm leading-relaxed text-ethereal-silver/75"
                   >
-                    <Typewriter text={resultado?.texto ?? 'A leitura foi concluída com dados parciais. Refaça o cálculo em alguns instantes.'} delay={0.9} />
+                    <Typewriter text={resultado?.texto ?? t('synchronicity.partial_data_text')} delay={0.9} />
                   </Motion.p>
 
                   {/* Divisor */}
@@ -915,35 +874,20 @@ export function SincronicidadePage() {
                     className="mb-4 rounded-2xl border border-mystic-purple-light/30 bg-mystic-purple/30 p-4 text-center"
                   >
                     <p className="mb-2 text-base font-semibold text-mystic-goldSoft">
-                      Faça uma leitura completa do Casal
+                      {t('synchronicity.complete_reading_title')}
                     </p>
 
                     <p className="mb-3 text-sm tracking-widest text-stardust-gold/60 uppercase">
-                      O Sol atrai, mas é a dança de Vênus e Marte que mantém.
+                      {t('synchronicity.complete_reading_subtitle')}
                     </p>
 
                     <div className="space-y-3 text-left text-sm leading-relaxed text-ethereal-silver/75">
-                      <p>
-                        Você descobriu a sintonia de superfície entre seus signos, mas a verdadeira química de um casal está escondida nos detalhes que os olhos não veem.
-                      </p>
-
-                      <p>Enquanto o Sol mostra quem vocês são, o Mapa Astral de Sincronicidade (Sinastria) revela:</p>
-
-                      <p>
-                        A Química do Desejo: Como o Marte de um ativa os instintos do outro.
-                      </p>
-
-                      <p>
-                        A Linguagem do Afeto: Onde o Vênus de vocês se encontra para criar um amor duradouro.
-                      </p>
-
-                      <p>
-                        O Nó Cármico: Quais desafios vocês vieram resolver juntos nesta existência.
-                      </p>
-
-                      <p>
-                        Não deixe o futuro do seu relacionamento à mercê do acaso. Entenda os mecanismos ocultos da sua união e transforme a paixão em um destino inabalável.
-                      </p>
+                      <p>{t('synchronicity.pitch.p1')}</p>
+                      <p>{t('synchronicity.pitch.p2')}</p>
+                      <p>{t('synchronicity.pitch.p3')}</p>
+                      <p>{t('synchronicity.pitch.p4')}</p>
+                      <p>{t('synchronicity.pitch.p5')}</p>
+                      <p>{t('synchronicity.pitch.p6')}</p>
                     </div>
 
                     <Motion.button
@@ -952,7 +896,7 @@ export function SincronicidadePage() {
                       onClick={() => setShowPurchaseModal(true)}
                       className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#C5A059] via-[#E0C27A] to-[#C5A059] py-3 font-bold tracking-[0.08em] text-mystic-black shadow-[0_0_24px_rgba(197,160,89,0.4)] transition-all hover:shadow-[0_0_36px_rgba(197,160,89,0.6)]"
                     >
-                      DESBLOQUEAR O MAPA COMPLETO DO CASAL
+                      {t('synchronicity.actions.unlock_full_map')}
                     </Motion.button>
                   </Motion.div>
 
@@ -963,14 +907,14 @@ export function SincronicidadePage() {
                     transition={{ delay: 1.5 }}
                     whileHover={{ scale: 1.02 }}
                     onClick={() => {
-                      const selectedSigns = `${signoAData.symbol} ${signoAData.label} + ${signoBData.symbol} ${signoBData.label}`
+                      const selectedSigns = `${signoAData.symbol} ${getSignLabel(t, signoAData.id)} + ${signoBData.symbol} ${getSignLabel(t, signoBData.id)}`
                       const text =
-                        `Acabei de fazer um *Teste de Sincronicidade de Almas*\n` +
-                        `No Aplicativo *Astria*\n` +
-                        `e sabia que: ${selectedSigns} (signos selecionados)\n` +
-                        `✦ Nossa Sincronicidade é de ${resultado?.percent ?? 0}% ✦\n` +
-                        `O que você achou do Resultado?\n` +
-                        `Que tal você também fazer um teste:\n` +
+                        `${t('synchronicity.share.line_1')}\n` +
+                        `${t('synchronicity.share.line_2')}\n` +
+                        `${t('synchronicity.share.line_3_prefix')} ${selectedSigns} ${t('synchronicity.share.line_3_suffix')}\n` +
+                        `✦ ${t('synchronicity.share.line_4_prefix')} ${resultado?.percent ?? 0}% ✦\n` +
+                        `${t('synchronicity.share.line_5')}\n` +
+                        `${t('synchronicity.share.line_6')}\n` +
                         `https://appastria.online/`
 
                       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`
@@ -978,7 +922,7 @@ export function SincronicidadePage() {
                     }}
                     className="mb-6 w-full rounded-xl border border-emerald-400/30 bg-emerald-500/10 py-3 text-sm font-semibold tracking-wider text-emerald-200 transition hover:border-emerald-300/50 hover:bg-emerald-500/20"
                   >
-                    🟢 Compartilhar
+                    🟢 {t('synchronicity.actions.share')}
                   </Motion.button>
 
                   {/* Refazer */}
@@ -986,7 +930,7 @@ export function SincronicidadePage() {
                     onClick={handleReset}
                     className="w-full text-center text-xs tracking-widest text-ethereal-silver/30 transition hover:text-ethereal-silver/60"
                   >
-                    Calcular outra combinação
+                    {t('synchronicity.actions.calculate_another')}
                   </button>
                 </div>
               </Motion.div>

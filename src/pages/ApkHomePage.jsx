@@ -3,15 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import { usePlatformContext } from "../context/platform-context";
 import { PageShell } from '../components/PageShell'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 export function ApkHomePage() {
+  const { t } = useTranslation()
   const { profile } = usePlatformContext()
   const navigate = useNavigate()
 
   const hasUsedFreeOracle = profile?.oracle_used_free || false
 
   return (
-    <PageShell title="Seu Destino" subtitle="O que os astros revelam hoje?">
+    <PageShell title={t('apk_home.title', 'Seu Destino')} subtitle={t('apk_home.subtitle', 'O que os astros revelam hoje?')}>
       <div className="grid gap-6 px-4 py-8 max-w-sm mx-auto relative z-10 w-full">
         
         {/* Card Principal - Oráculo */}
@@ -25,9 +27,9 @@ export function ApkHomePage() {
         >
           <div className="absolute inset-0 bg-gradient-to-br from-mystic-purple/30 via-transparent to-black/80 opacity-80 pointer-events-none" />
           
-          <img src="/oraculo.png" alt="Oráculo" className="relative z-10 w-28 h-28 mb-4 object-contain drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]" />
+          <img src="/oraculo.png" alt={t('apk_home.alt.oracle', 'Oráculo')} className="relative z-10 w-28 h-28 mb-4 object-contain drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]" />
           <h3 className="relative z-10 font-serif text-xl text-mystic-gold tracking-widest uppercase font-bold text-center leading-tight [text-shadow:_0_0_10px_#ffd700,_0_0_20px_#ffd700]">
-            Consulte seu<br/>oráculo grátis
+            {t('apk_home.oracle_cta_line_1', 'Consulte seu')}<br/>{t('apk_home.oracle_cta_line_2', 'oráculo grátis')}
           </h3>
         </motion.button>
 
@@ -42,16 +44,16 @@ export function ApkHomePage() {
             onClick={() => navigate('/consultores')}
             className="flex flex-col items-center justify-center p-4 rounded-xl border border-mystic-gold/20 bg-black/50 hover:bg-mystic-gold/10 transition-colors shadow-lg backdrop-blur-sm"
           >
-            <img src="/especialistas-reais.png" alt="Consultores" className="w-12 h-12 mb-3 object-contain drop-shadow-md" />
-            <span className="text-sm font-medium text-amber-50 uppercase tracking-wide">Tarólogos</span>
+            <img src="/especialistas-reais.png" alt={t('apk_home.alt.consultants', 'Consultores')} className="w-12 h-12 mb-3 object-contain drop-shadow-md" />
+            <span className="text-sm font-medium text-amber-50 uppercase tracking-wide">{t('apk_home.tarologists', 'Tarólogos')}</span>
           </button>
           
           <button
             onClick={() => navigate('/recarregar')}
             className="flex flex-col items-center justify-center p-4 rounded-xl border border-mystic-gold/20 bg-black/50 hover:bg-mystic-gold/10 transition-colors shadow-lg backdrop-blur-sm"
           >
-            <img src="/economia.png" alt="Recarregar" className="w-12 h-12 mb-3 object-contain drop-shadow-md" />
-            <span className="text-sm font-medium text-amber-50 uppercase tracking-wide">Recarregar</span>
+            <img src="/economia.png" alt={t('apk_home.alt.recharge', 'Recarregar')} className="w-12 h-12 mb-3 object-contain drop-shadow-md" />
+            <span className="text-sm font-medium text-amber-50 uppercase tracking-wide">{t('apk_home.recharge', 'Recarregar')}</span>
           </button>
 
           <button
@@ -59,9 +61,9 @@ export function ApkHomePage() {
             className="col-span-2 flex flex-col justify-center items-center p-4 rounded-xl border border-mystic-gold/20 bg-black/40 hover:bg-mystic-gold/10 transition-colors shadow-lg backdrop-blur-sm"
           >
             <span className="flex items-center gap-3">
-              <img src="/seja-um-consultor.png" alt="Seja Consultor" className="w-10 h-10 object-contain drop-shadow-md" />
+              <img src="/seja-um-consultor.png" alt={t('apk_home.alt.be_consultant', 'Seja Consultor')} className="w-10 h-10 object-contain drop-shadow-md" />
                <span className="text-xs font-bold text-amber-50 uppercase tracking-wider">
-                 Trabalhe Conosco
+                 {t('apk_home.work_with_us', 'Trabalhe Conosco')}
                </span>
             </span>
           </button>

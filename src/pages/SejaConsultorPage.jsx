@@ -4,8 +4,10 @@ import { Camera, Loader2 } from 'lucide-react'
 import { GlassCard } from '../components/GlassCard'
 import { PageShell } from '../components/PageShell'
 import { usePlatformContext } from '../context/platform-context'
+import { useTranslation } from 'react-i18next'
 
 export function SejaConsultorPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { registerConsultant, setSystemNotice, profile, isAuthenticated } = usePlatformContext()
   const [useCurrentUser, setUseCurrentUser] = useState(isAuthenticated)
@@ -106,10 +108,10 @@ export function SejaConsultorPage() {
     setLoading(false)
     if (result.ok) {
       setSubmitted(true)
-      setSystemNotice('Cadastro realizado com sucesso! Bem-vindo à equipe.')
+      setSystemNotice(t('be_consultant.notices.success', 'Cadastro realizado com sucesso! Bem-vindo à equipe.'))
       setTimeout(() => navigate('/area-consultor'), 2000)
     } else {
-      setErrorNotice(result.message || 'Erro ao realizar cadastro.')
+      setErrorNotice(result.message || t('be_consultant.errors.register_failed', 'Erro ao realizar cadastro.'))
       setTimeout(() => {
         if (errorRef.current) {
           errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -120,25 +122,25 @@ export function SejaConsultorPage() {
 
   return (
     <PageShell
-      title="Faça parte do nosso time de consultores"
-      subtitle="Cadastro de Consultor"
+      title={t('be_consultant.page_title', 'Faça parte do nosso time de consultores')}
+      subtitle={t('be_consultant.page_subtitle', 'Cadastro de Consultor')}
     >
       <GlassCard
-        title="Cadastro de Consultor"
-        subtitle="Complete o formulário abaixo para se registrar como consultor astral em nossa plataforma."
+        title={t('be_consultant.form_title', 'Cadastro de Consultor')}
+        subtitle={t('be_consultant.form_subtitle', 'Complete o formulário abaixo para se registrar como consultor astral em nossa plataforma.')}
       >
         {isAuthenticated && (
           <div className="md:col-span-2 mb-2">
             <div className="rounded-lg border border-mystic-gold/40 bg-black/30 px-4 py-3 text-sm text-mystic-goldSoft">
-              Você já está logado como <b>{profile?.email}</b>.<br />
-              Deseja usar este usuário para se tornar consultor?
+              {t('be_consultant.logged_as', 'Você já está logado como')} <b>{profile?.email}</b>.<br />
+              {t('be_consultant.use_current_user_question', 'Deseja usar este usuário para se tornar consultor?')}
             </div>
             <div className="flex gap-4 mt-2">
               <button type="button" className={`px-4 py-2 rounded-lg font-bold ${useCurrentUser ? 'bg-mystic-gold text-black' : 'bg-black text-mystic-gold border border-mystic-gold/60'}`} onClick={() => setUseCurrentUser(true)}>
-                Sim, usar este usuário
+                {t('be_consultant.actions.use_current_user', 'Sim, usar este usuário')}
               </button>
               <button type="button" className={`px-4 py-2 rounded-lg font-bold ${!useCurrentUser ? 'bg-mystic-gold text-black' : 'bg-black text-mystic-gold border border-mystic-gold/60'}`} onClick={() => setUseCurrentUser(false)}>
-                Não, cadastrar novo usuário
+                {t('be_consultant.actions.register_new_user', 'Não, cadastrar novo usuário')}
               </button>
             </div>
           </div>
@@ -153,7 +155,7 @@ export function SejaConsultorPage() {
           {(!isAuthenticated || !useCurrentUser) && (
             <>
               <label className="grid gap-2 text-sm text-amber-100/80">
-                Nome Completo
+                {t('be_consultant.fields.full_name', 'Nome Completo')}
                 <input
                   required
                   value={form.name}
@@ -162,7 +164,7 @@ export function SejaConsultorPage() {
                 />
               </label>
               <label className="grid gap-2 text-sm text-amber-100/80">
-                E-mail
+                {t('be_consultant.fields.email', 'E-mail')}
                 <input
                   type="email"
                   required
@@ -172,7 +174,7 @@ export function SejaConsultorPage() {
                 />
               </label>
               <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
-                Senha (mínimo 6 caracteres)
+                {t('be_consultant.fields.password', 'Senha (mínimo 6 caracteres)')}
                 <input
                   type="password"
                   minLength={6}
@@ -183,14 +185,14 @@ export function SejaConsultorPage() {
                 />
               </label>
               <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
-                Data de Nascimento
+                {t('be_consultant.fields.birth_date', 'Data de Nascimento')}
                 <input
                   type="text"
                   inputMode="numeric"
                   pattern="\d{2}/\d{2}/\d{4}"
                   maxLength={10}
                   required
-                  placeholder="DD/MM/AAAA"
+                  placeholder={t('be_consultant.fields.birth_date_placeholder', 'DD/MM/AAAA')}
                   value={form.birthDate}
                   onChange={(event) => {
                     let v = event.target.value.replace(/\D/g, "");
@@ -206,19 +208,19 @@ export function SejaConsultorPage() {
             </>
           )}
           <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
-            Foto de Perfil
+            {t('be_consultant.fields.profile_photo', 'Foto de Perfil')}
             <div className="rounded-lg border border-dashed border-mystic-gold/50 bg-black/25 p-4">
               <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-mystic-gold/40 bg-mystic-gold/10 px-3 py-2 text-sm text-mystic-goldSoft transition hover:bg-mystic-gold/20">
                 <Camera size={16} />
-                📸 Clique para selecionar uma foto
+                📸 {t('be_consultant.fields.select_photo', 'Clique para selecionar uma foto')}
                 <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
               </label>
-              <p className="mt-2 text-xs text-amber-100/65">Recomendado: 300x300 pixels, máximo 5MB</p>
+              <p className="mt-2 text-xs text-amber-100/65">{t('be_consultant.fields.photo_recommendation', 'Recomendado: 300x300 pixels, máximo 5MB')}</p>
               {form.profilePhoto && (
                 <div className="mt-3 flex items-center gap-3">
                   <img
                     src={photoPreviewUrl}
-                    alt="Pré-visualização da foto de perfil"
+                    alt={t('be_consultant.fields.profile_photo_preview', 'Pré-visualização da foto de perfil')}
                     className="h-16 w-16 rounded-full border-2 border-mystic-gold/70 object-cover"
                   />
                   <p className="text-xs text-emerald-200">{form.profilePhoto.name}</p>
@@ -227,28 +229,28 @@ export function SejaConsultorPage() {
             </div>
           </label>
           <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
-            Frase de Efeito (Tagline)
+            {t('be_consultant.fields.tagline', 'Frase de Efeito (Tagline)')}
             <input
               required
               value={form.tagline}
               onChange={(event) => updateField('tagline', event.target.value)}
-              placeholder="Ex: Leio energias de amor com objetividade."
+              placeholder={t('be_consultant.fields.tagline_placeholder', 'Ex: Leio energias de amor com objetividade.')}
               className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
             />
           </label>
           <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
-            Sobre Você (Descrição)
+            {t('be_consultant.fields.about', 'Sobre Você (Descrição)')}
             <textarea
               required
               rows={4}
               value={form.description}
               onChange={(event) => updateField('description', event.target.value)}
-              placeholder="Conte um pouco sobre sua experiência e especialidades..."
+              placeholder={t('be_consultant.fields.about_placeholder', 'Conte um pouco sobre sua experiência e especialidades...')}
               className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-amber-50 outline-none ring-mystic-gold/60 focus:ring-2"
             />
           </label>
           <label className="grid gap-2 text-sm text-amber-100/80 md:col-span-2">
-            Preço por Minuto (R$)
+            {t('be_consultant.fields.price_per_minute', 'Preço por Minuto (R$)')}
             <input
               type="text"
               required
@@ -259,7 +261,7 @@ export function SejaConsultorPage() {
             />
           </label>
           <label className="grid gap-2 text-sm text-amber-100/80">
-            Preço para responder 3 perguntas (R$)
+            {t('be_consultant.fields.price_three_questions', 'Preço para responder 3 perguntas (R$)')}
             <input
               type="text"
               required
@@ -270,7 +272,7 @@ export function SejaConsultorPage() {
             />
           </label>
           <label className="grid gap-2 text-sm text-amber-100/80">
-            Preço para responder 5 perguntas (R$)
+            {t('be_consultant.fields.price_five_questions', 'Preço para responder 5 perguntas (R$)')}
             <input
               type="text"
               required
@@ -288,26 +290,25 @@ export function SejaConsultorPage() {
             {loading ? (
               <>
                 <Loader2 className="animate-spin" size={20} />
-                Processando...
+                {t('be_consultant.actions.processing', 'Processando...')}
               </>
             ) : (
-              'Enviar Cadastro'
+              t('be_consultant.actions.submit', 'Enviar Cadastro')
             )}
           </button>
         </form>
         {submitted && (
           <p className="mt-4 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-            Candidatura recebida. Nossa equipe fará contato em breve.
+            {t('be_consultant.success_notice', 'Candidatura recebida. Nossa equipe fará contato em breve.')}
           </p>
         )}
         <p className="mt-4 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
-          Lembre-se que 30% do valor será cobrado de comissão para manutenção e divulgação do
-          aplicativo.
+          {t('be_consultant.commission_notice', 'Lembre-se que 30% do valor será cobrado de comissão para manutenção e divulgação do aplicativo.')}
         </p>
         <p className="mt-4 text-sm text-amber-100/80">
-          Já tem cadastro?{' '}
+          {t('be_consultant.already_registered', 'Já tem cadastro?')}{' '}
           <Link to="/entrar" className="text-mystic-goldSoft hover:text-mystic-gold">
-            Faça login aqui
+            {t('be_consultant.login_here', 'Faça login aqui')}
           </Link>
         </p>
       </GlassCard>

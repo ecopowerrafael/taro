@@ -118,7 +118,7 @@ export function MagiaProdutoPage() {
               {spell.imageUrl ? (
                 <img src={spell.imageUrl} alt={getTranslatedField(spell, 'title')} className="h-[320px] w-full object-cover md:h-[420px]" />
               ) : (
-                <div className="flex h-[320px] items-center justify-center text-sm text-ethereal-silver/45 md:h-[420px]">Imagem não informada</div>
+                <div className="flex h-[320px] items-center justify-center text-sm text-ethereal-silver/45 md:h-[420px]">{t('spells.image_not_provided', 'Imagem não informada')}</div>
               )}
             </div>
 

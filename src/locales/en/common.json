@@ -13,11 +13,13 @@
     "profile": "Profile",
     "consultant_area": "Consultant Area",
     "admin": "Admin",
-    "logout": "Logout"
+    "logout": "Logout",
+    "blog": "Blog"
   },
   "common": {
     "back": "Back",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "close": "Close"
   },
   "consultants": {
     "page_title": "Find Consultant",
@@ -36,7 +38,32 @@
     "confirm_call_title": "Confirm Consultation Start",
     "confirm_call_desc": "You are about to start a video call with",
     "confirm_call_price": "The rate is R$ {{amount}} per minute.",
-    "confirm_start": "Confirm Start"
+    "confirm_start": "Confirm Start",
+    "search_placeholder": "Search by name, specialty...",
+    "filters": {
+      "all": "All",
+      "online": "Online",
+      "busy": "Busy",
+      "offline": "Offline",
+      "price": "Price"
+    },
+    "badges": {
+      "premium": "Premium"
+    },
+    "empty_filtered": "No consultants found with these filters.",
+    "total_consultations": "Total consultations",
+    "services": {
+      "video": "Video",
+      "three_questions": "3 Questions",
+      "five_questions": "5 Questions",
+      "video_service": "Video service",
+      "package_three": "3-question package",
+      "package_five": "5-question package"
+    },
+    "pagination": {
+      "page_of": "Page",
+      "of": "of"
+    }
   },
   "consultant_profile": {
     "page_title": "Consultant Profile",
@@ -92,14 +119,19 @@
     "flow": "Flow",
     "flow_step_1": "1. Choose the payment method and confirm the order.",
     "flow_step_2": "2. The mentor gets in touch if they need to align additional information.",
-    "flow_step_3": "3. The ritual is conducted according to the intention and requested demand."
+    "flow_step_3": "3. The ritual is conducted according to the intention and requested demand.",
+    "image_not_provided": "Image not provided",
+    "made_by": "Made by"
   },
   "daily_card": {
     "title": "Your Daily Card",
     "tap_to_reveal": "Tap to reveal your cosmic advice",
     "available_once": "Available once a day, always after 08:00 AM",
     "come_back_tomorrow": "Come back tomorrow after 08:00 AM for a new card",
-    "reflect": "Choose the topic you want to know about and reflect on the message received."
+    "reflect": "Choose the topic you want to know about and reflect on the message received.",
+    "title_prefix": "Card of the",
+    "title_highlight": "Day",
+    "footer_text": "Astria Tarot interpretations are based on ancestral wisdom combined with the energetic flow of the present moment."
   },
   "numerology": {
     "portal_title": "Numerology Portal",
@@ -112,31 +144,100 @@
     "destiny_number": "Your Destiny Number",
     "journey_revealed": "Your numerological journey revealed",
     "frequency_alert_desc": "Energy oscillations detected in your current cycle. Special attention is recommended to repetitive patterns and important decisions.",
-    "frequency_alert_soon": "Coming soon: personalized tips to deal with your frequency!"
+    "frequency_alert_soon": "Coming soon: personalized tips to deal with your frequency!",
+    "page_title_prefix": "Numerology",
+    "page_title_highlight": "Map",
+    "footer_text": "Pythagorean numerology reveals the sacred vibration your name and birth imprint on the fabric of the universe."
   },
   "tarot": {
-    "major_0": { "name": "The Fool", "message": "A new beginning approaches. Embrace the unknown with courage and optimism. It's time to take a leap of faith." },
-    "major_1": { "name": "The Magician", "message": "You have all the necessary tools to achieve your goals. Manifest your will in the world." },
-    "major_2": { "name": "The High Priestess", "message": "Listen to your intuition and trust your inner wisdom. Secrets may be revealed today." },
-    "major_3": { "name": "The Empress", "message": "A day of abundance, creativity, and fertility. Take care of yourself and those around you." },
-    "major_4": { "name": "The Emperor", "message": "Time to take the lead, establish order, and organize your projects with authority and structure." },
-    "major_5": { "name": "The Hierophant", "message": "Seek wisdom in traditions. Learning and spiritual guidance will bring the answers you seek." },
-    "major_6": { "name": "The Lovers", "message": "Deep connections and important choices mark the day. Follow the path that resonates with your heart." },
-    "major_7": { "name": "The Chariot", "message": "Progress and victory are on the horizon. Stay focused, overcome obstacles, and take the reins of your life." },
-    "major_8": { "name": "Strength", "message": "Use your inner strength, patience, and compassion to tame adversities, not brute force." },
-    "major_9": { "name": "The Hermit", "message": "Time for introspection and reflection. Step away from external distractions to find your own light." },
-    "major_10": { "name": "Wheel of Fortune", "message": "Changes are on the way. The cycle of life turns, bringing luck and new opportunities. Be open!" },
-    "major_11": { "name": "Justice", "message": "Things will balance out. Fair decisions and karmic consequences guide today's energies." },
-    "major_12": { "name": "The Hanged Man", "message": "A necessary pause. Look at things from a new perspective. Sacrifices now will bring enlightenment later." },
-    "major_13": { "name": "Death", "message": "End of one cycle and beginning of another. Let go of what no longer serves you to make room for the new." },
-    "major_14": { "name": "Temperance", "message": "Balance and moderation are key today. Blend patience and harmony in your actions." },
-    "major_15": { "name": "The Devil", "message": "Beware of attachments and toxic habits. Recognize the chains that bind you and find the key to free yourself." },
-    "major_16": { "name": "The Tower", "message": "Unstable structures may crumble. Do not fear sudden revelations, as they clear the ground for truth." },
-    "major_17": { "name": "The Star", "message": "Hope, inspiration, and renewal. Keep the faith, the universe is pouring blessings upon you." },
-    "major_18": { "name": "The Moon", "message": "Illusions may cloud your judgment. Pay attention to your dreams and navigate carefully through confusing feelings." },
-    "major_19": { "name": "The Sun", "message": "Clarity, joy, and vitality shine on your projects. It is a day of success and revealing your true essence." },
-    "major_20": { "name": "Judgement", "message": "Time to awaken. You are being called to a higher purpose. Evaluate the past and move forward renewed." },
-    "major_21": { "name": "The World", "message": "Successful conclusion of a journey! Celebrate your achievements and prepare to embrace the totality of life." }
+    "major_0": {
+      "name": "The Fool",
+      "message": "A new beginning approaches. Embrace the unknown with courage and optimism. It's time to take a leap of faith."
+    },
+    "major_1": {
+      "name": "The Magician",
+      "message": "You have all the necessary tools to achieve your goals. Manifest your will in the world."
+    },
+    "major_2": {
+      "name": "The High Priestess",
+      "message": "Listen to your intuition and trust your inner wisdom. Secrets may be revealed today."
+    },
+    "major_3": {
+      "name": "The Empress",
+      "message": "A day of abundance, creativity, and fertility. Take care of yourself and those around you."
+    },
+    "major_4": {
+      "name": "The Emperor",
+      "message": "Time to take the lead, establish order, and organize your projects with authority and structure."
+    },
+    "major_5": {
+      "name": "The Hierophant",
+      "message": "Seek wisdom in traditions. Learning and spiritual guidance will bring the answers you seek."
+    },
+    "major_6": {
+      "name": "The Lovers",
+      "message": "Deep connections and important choices mark the day. Follow the path that resonates with your heart."
+    },
+    "major_7": {
+      "name": "The Chariot",
+      "message": "Progress and victory are on the horizon. Stay focused, overcome obstacles, and take the reins of your life."
+    },
+    "major_8": {
+      "name": "Strength",
+      "message": "Use your inner strength, patience, and compassion to tame adversities, not brute force."
+    },
+    "major_9": {
+      "name": "The Hermit",
+      "message": "Time for introspection and reflection. Step away from external distractions to find your own light."
+    },
+    "major_10": {
+      "name": "Wheel of Fortune",
+      "message": "Changes are on the way. The cycle of life turns, bringing luck and new opportunities. Be open!"
+    },
+    "major_11": {
+      "name": "Justice",
+      "message": "Things will balance out. Fair decisions and karmic consequences guide today's energies."
+    },
+    "major_12": {
+      "name": "The Hanged Man",
+      "message": "A necessary pause. Look at things from a new perspective. Sacrifices now will bring enlightenment later."
+    },
+    "major_13": {
+      "name": "Death",
+      "message": "End of one cycle and beginning of another. Let go of what no longer serves you to make room for the new."
+    },
+    "major_14": {
+      "name": "Temperance",
+      "message": "Balance and moderation are key today. Blend patience and harmony in your actions."
+    },
+    "major_15": {
+      "name": "The Devil",
+      "message": "Beware of attachments and toxic habits. Recognize the chains that bind you and find the key to free yourself."
+    },
+    "major_16": {
+      "name": "The Tower",
+      "message": "Unstable structures may crumble. Do not fear sudden revelations, as they clear the ground for truth."
+    },
+    "major_17": {
+      "name": "The Star",
+      "message": "Hope, inspiration, and renewal. Keep the faith, the universe is pouring blessings upon you."
+    },
+    "major_18": {
+      "name": "The Moon",
+      "message": "Illusions may cloud your judgment. Pay attention to your dreams and navigate carefully through confusing feelings."
+    },
+    "major_19": {
+      "name": "The Sun",
+      "message": "Clarity, joy, and vitality shine on your projects. It is a day of success and revealing your true essence."
+    },
+    "major_20": {
+      "name": "Judgement",
+      "message": "Time to awaken. You are being called to a higher purpose. Evaluate the past and move forward renewed."
+    },
+    "major_21": {
+      "name": "The World",
+      "message": "Successful conclusion of a journey! Celebrate your achievements and prepare to embrace the totality of life."
+    }
   },
   "admin": {
     "magic_panel": {
@@ -153,5 +254,797 @@
   },
   "header": {
     "language": "Language"
+  },
+  "home": {
+    "cta": {
+      "header": {
+        "view_consultants": "View Consultants",
+        "book_session": "Book Session"
+      },
+      "mobile": {
+        "view_consultants": "View Consultants",
+        "login_book": "Login / Book"
+      }
+    },
+    "hero": {
+      "badge": "Connect with the Invisible"
+    },
+    "why_astria": {
+      "title": "Why choose"
+    },
+    "benefits": {
+      "clarity": {
+        "title": "Immediate Clarity",
+        "description": "Fast answers for doubts that keep you awake."
+      },
+      "experts": {
+        "title": "Real Experts",
+        "description": "Professionals rated by the community and platform."
+      },
+      "privacy": {
+        "title": "Total Privacy",
+        "description": "100% anonymous and secure video sessions."
+      },
+      "savings": {
+        "title": "Savings",
+        "description": "You only pay for the minutes you use."
+      }
+    },
+    "stats": {
+      "active_consultants": "Active Consultants",
+      "completed_sessions": "Completed Sessions",
+      "average_rating": "Average Rating",
+      "always_available": "Always Available"
+    },
+    "pro_section": {
+      "title_prefix": "Turn your Gift into",
+      "title_highlight": "Career",
+      "description": "Flexible schedules, weekly PIX payments, and full professional support. Join our consultant elite.",
+      "cta": "I Want to Be a Consultant"
+    },
+    "pro_benefits": {
+      "flexibility": {
+        "title": "Total Flexibility",
+        "description": "Work when and where you want"
+      },
+      "weekly_payment": {
+        "title": "Weekly Payment",
+        "description": "Get paid via PIX every week"
+      },
+      "support": {
+        "title": "Dedicated Support",
+        "description": "A team ready to help you"
+      }
+    }
+  },
+  "footer": {
+    "security": {
+      "secure_connection": "Secure Connection",
+      "ssl_encrypted": "SSL Encrypted"
+    }
+  },
+  "shell": {
+    "menu": {
+      "close": "Close menu",
+      "open": "Open menu"
+    },
+    "mobile_nav": {
+      "title": "Navigation",
+      "menu": "Menu"
+    }
+  },
+  "loader": {
+    "default_message": "Loading experience...",
+    "error": {
+      "stuck_message": "We had trouble loading this page. You can try again now."
+    },
+    "actions": {
+      "reload": "Reload page",
+      "back_home": "Back to home"
+    }
+  },
+  "app": {
+    "loader": {
+      "opening_portal": "Opening portal...",
+      "syncing_account": "Syncing account..."
+    }
+  },
+  "spell_purchase": {
+    "title": "Complete purchase",
+    "subtitle": "Review the details before choosing a payment method.",
+    "hiring_text_prefix": "You are hiring",
+    "hiring_text_with": "with",
+    "price_prefix": "The price is",
+    "payment_question": "How do you prefer to pay?",
+    "login_required_prefix": "Log in or create an account to complete the spell order",
+    "create_account": "Create account",
+    "purchase_approved": "Purchase approved",
+    "credit_card": "Credit card",
+    "pix_instructions": "Scan the QR Code, complete PIX, then register the order for validation.",
+    "pix_not_configured": "PIX is not configured in admin.",
+    "copy_paste": "Copy and paste",
+    "code_unavailable": "Code unavailable",
+    "registering_order": "Registering order...",
+    "already_paid_pix": "I already paid with PIX",
+    "payment_confirmed": "Payment confirmed and order registered.",
+    "pix_order_registered": "PIX order registered."
+  },
+  "recharge": {
+    "pix_description_prefix": "Astria Recharge",
+    "package_prefix": "Package",
+    "page_title": "Recharge Balance",
+    "page_subtitle": "Choose how you want to add credits to your account.",
+    "current_balance_title": "Current balance",
+    "current_balance_subtitle": "You can add balance based on your need.",
+    "choose_package_title": "Choose a Package",
+    "choose_package_subtitle": "Select the desired recharge amount.",
+    "most_selected": "Most selected",
+    "select_package": "Select this package",
+    "back_to_packages": "Back to packages",
+    "choose_payment_method": "Choose the payment method for this package.",
+    "pay_with_pix": "Pay with Pix",
+    "manual_qr": "Manual / QR Code",
+    "credit_card": "Credit Card",
+    "pix_payment_title": "Pix Payment",
+    "pix_payment_subtitle": "Scan the QR Code or use the copy-and-paste code.",
+    "qr_error": "Error generating QR Code. Check admin settings.",
+    "copy_paste_code": "Copy-and-paste code",
+    "code_unavailable": "Code unavailable",
+    "already_paid": "I already made the payment",
+    "balance_release_note": "Balance will be released after manual admin confirmation.",
+    "payment_confirmed_title": "Payment Confirmed",
+    "payment_confirmed_subtitle": "Your payment has been processed successfully!",
+    "payment_received": "Payment Received!",
+    "stripe_success_detail": "Your credits were processed and Stripe confirmation was completed.",
+    "check_updated_balance": "You can now go back and check your updated balance."
+  },
+  "contact": {
+    "page": {
+      "title": "Get in Touch",
+      "subtitle": "Talk to our team"
+    },
+    "info": {
+      "title": "Contact Information",
+      "email_label": "Email",
+      "email_response_time": "Reply within 24 hours",
+      "whatsapp_label": "WhatsApp",
+      "whatsapp_hours": "Mon-Sun: 9am to 10pm",
+      "address_label": "Address",
+      "country": "Brazil"
+    },
+    "form": {
+      "badge": "Send Message",
+      "name_label": "Your Name",
+      "name_placeholder": "Your name",
+      "email_label": "Your Email",
+      "email_placeholder": "you@email.com",
+      "subject_label": "Subject",
+      "subject_placeholder": "Message subject",
+      "message_label": "Message",
+      "message_placeholder": "Your message here...",
+      "submit": "Send Message"
+    },
+    "success": {
+      "title": "Message Sent!",
+      "description": "Thanks for contacting us. Our team will reply shortly."
+    },
+    "schedule": {
+      "title": "Business Hours",
+      "weekdays": "Monday to Friday",
+      "weekdays_time": "9am to 6pm",
+      "saturday": "Saturday",
+      "saturday_time": "10am to 4pm",
+      "sunday": "Sunday",
+      "sunday_time": "Closed"
+    }
+  },
+  "support": {
+    "page": {
+      "title": "Support Center",
+      "subtitle": "We are here to help you"
+    },
+    "channels": {
+      "email": {
+        "title": "Email",
+        "action": "Send"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "action": "Chat"
+      },
+      "live_chat": {
+        "title": "Live Chat",
+        "desc": "Available 24/7",
+        "action": "Start"
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "What are the support hours?",
+      "q2": "How do I recover my password?",
+      "q3": "How do I cancel a session?",
+      "default_answer": "Answer available in our help center."
+    }
+  },
+  "how_it_works": {
+    "page": {
+      "title": "How it Works",
+      "subtitle": "Complete guide to using the Astria platform"
+    },
+    "intro": {
+      "badge": "Your Path to Answers",
+      "title_line_1": "6 Simple Steps",
+      "title_line_2": "for Transformation",
+      "description": "The Astria platform was designed to be intuitive and accessible. In just 6 steps, you get access to personalized consultations, tarot readings, magical rituals, and much more."
+    },
+    "steps": {
+      "1": {
+        "title": "Sign Up",
+        "description": "Create your account in minutes with your details and choose a secure password."
+      },
+      "2": {
+        "title": "Balance Recharge",
+        "description": "Recharge your digital wallet with your desired amount to start consultations."
+      },
+      "3": {
+        "title": "Choose Consultant",
+        "description": "Browse the platform and choose the ideal consultant for your needs."
+      },
+      "4": {
+        "title": "Ask Questions",
+        "description": "Send your questions in 3 or 5-question packs for specialist answers."
+      },
+      "5": {
+        "title": "Live Call",
+        "description": "Connect in real time via secure video for immediate consultation."
+      },
+      "6": {
+        "title": "Hire Services",
+        "description": "Choose magical ritual bookings performed by specialized professionals."
+      }
+    },
+    "features": {
+      "title_prefix": "What you can do on",
+      "consultants": {
+        "title": "Tarot Consultations",
+        "item_1": "✨ In-person tarot reading",
+        "item_2": "💭 Question packs (3 or 5)",
+        "item_3": "📞 Live video calls",
+        "item_4": "⭐ Ratings and consultation history"
+      },
+      "magic": {
+        "title": "Magical Services",
+        "item_1": "🔮 Personalized rituals",
+        "item_2": "💝 Love-binding works",
+        "item_3": "🪙 Prosperity rituals",
+        "item_4": "🛡️ Spiritual protection"
+      },
+      "security": {
+        "title": "Security and Privacy",
+        "item_1": "🔒 100% anonymous consultations",
+        "item_2": "🔐 SSL encryption",
+        "item_3": "🛡️ Personal data protection",
+        "item_4": "✅ Confidentiality guarantee"
+      },
+      "payment": {
+        "title": "Flexible Payment",
+        "item_1": "💳 Multiple payment methods",
+        "item_2": "⏱️ Per-minute video billing",
+        "item_3": "📊 Always-available balance",
+        "item_4": "🔄 Fast and secure recharges"
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "How do I recharge my balance?",
+      "a1": "Go to the \"Recharge\" section in your customer area. Choose the amount and payment method. Recharge is processed instantly.",
+      "q2": "Can I trust consultation privacy?",
+      "a2": "Yes! All consultations are 100% anonymous and protected by SSL encryption. Your data is never shared.",
+      "q3": "How are consultants selected?",
+      "a3": "All consultants go through a strict verification process. Ratings and customer history ensure quality.",
+      "q4": "Can I make video calls with any consultant?",
+      "a4": "Yes, as long as the consultant is online or you can schedule a call. Consultants offer different availability.",
+      "q5": "What if I am not satisfied?",
+      "a5": "We have a customer satisfaction policy. Contact support for resolution of any issue.",
+      "q6": "What payment options are available?",
+      "a6": "We accept credit cards, debit cards, PIX, bank transfer, and several digital wallets for your convenience."
+    },
+    "cta": {
+      "title": "Ready to Start?",
+      "description": "Create your account in minutes and immediately access the best spiritual experts.",
+      "button": "Create My Account Now"
+    }
+  },
+  "consultant_area": {
+    "page": {
+      "title": "Consultant Area",
+      "subtitle": "Question support, video calls, and consultant wallet."
+    },
+    "restricted": {
+      "subtitle": "Restricted Panel",
+      "title": "Restricted Access",
+      "description": "This area is exclusive to our consultants. If you are an experienced tarot reader, join our team!",
+      "become_consultant": "Become a Consultant",
+      "back_home": "Back to Home"
+    },
+    "status": {
+      "online": "ONLINE",
+      "offline": "OFFLINE"
+    },
+    "errors": {
+      "audio_process": "Could not process the response audio.",
+      "audio_prepare": "Error preparing response audio.",
+      "request_not_found": "Request not found or already answered.",
+      "answer_all_required": "Answer all questions before sending.",
+      "send_failed": "Could not send the response.",
+      "send_retry": "Error sending response. Try again.",
+      "invalid_pix": "Enter a valid PIX key.",
+      "invalid_withdrawal": "Enter a valid withdrawal amount.",
+      "invalid_image": "Select a valid image file."
+    },
+    "notices": {
+      "went_offline": "You are now offline and will not receive new calls.",
+      "incoming_call_prefix": "Incoming call from",
+      "incoming_call_suffix": "Ringtone and notification activated.",
+      "customer": "customer",
+      "went_online": "You are now online. Wake Lock and call listening were activated.",
+      "cannot_go_online": "Could not activate online mode right now.",
+      "alert_silenced": "Call alert silenced.",
+      "audio_saved_prefix": "Answer audio",
+      "audio_saved_suffix": "saved.",
+      "response_sent": "Response sent and net amount credited to consultant wallet.",
+      "pix_saved": "PIX key saved successfully.",
+      "profile_image_loaded": "Profile image loaded. Click Save profile to confirm.",
+      "profile_saved": "Consultant profile updated successfully."
+    },
+    "video_pending": {
+      "title": "Pending Video Calls",
+      "subtitle": "Clients are waiting for you to enter the room.",
+      "client": "Client",
+      "requested_recently": "Requested just now",
+      "enter_room": "Enter Room"
+    },
+    "questions": {
+      "title": "Question Support",
+      "subtitle": "View and answer each item sent by the client.",
+      "pending": "Pending",
+      "answered": "Answered",
+      "no_pending": "You have no pending messages.",
+      "client": "Client",
+      "package": "Package",
+      "questions": "questions",
+      "estimated_commission": "Estimated commission",
+      "birth": "Birth",
+      "zodiac": "Zodiac",
+      "not_informed": "Not informed",
+      "reply_text": "Reply in text",
+      "reply_audio": "Reply in audio",
+      "answer_placeholder_prefix": "Type the answer for Question",
+      "sending": "Sending...",
+      "send_response": "Send Response"
+    },
+    "profile": {
+      "title": "Edit My Profile",
+      "subtitle": "Update public info and service pricing.",
+      "image_label": "Profile image",
+      "image_help": "Upload an image from your device to update the public card.",
+      "image_preview_alt": "Profile photo preview",
+      "image_preview_help": "Preview image shown to clients.",
+      "public_name": "Public name",
+      "public_name_help": "Name shown to clients in card and profile.",
+      "name_placeholder": "Name",
+      "contact_email": "Contact email",
+      "contact_email_help": "Used for consultant admin identification.",
+      "email_placeholder": "Email",
+      "tagline_label": "Profile tagline",
+      "tagline_help": "Short phrase shown below your name.",
+      "tagline_placeholder": "Tagline",
+      "full_description": "Full description",
+      "full_description_help": "Explain your approach, specialties, and differentiators.",
+      "description_placeholder": "Description",
+      "price_per_minute": "Price per minute (R$)",
+      "price_per_minute_help": "Amount charged for video service.",
+      "package_three": "3-question package (R$)",
+      "package_three_help": "Fixed amount to answer 3 questions.",
+      "package_five": "5-question package (R$)",
+      "package_five_help": "Fixed amount to answer 5 questions.",
+      "save": "Save profile"
+    },
+    "wallet": {
+      "title": "Consultant Wallet",
+      "subtitle": "Earnings, PIX, and withdrawal control.",
+      "available_balance": "Available balance",
+      "filtered_earnings": "Filtered earnings",
+      "add_pix_key": "Add PIX key for payout",
+      "current_pix": "Current",
+      "pix_placeholder": "Enter PIX key",
+      "save_pix_key": "Save PIX key",
+      "request_withdrawal": "Request withdrawal",
+      "minimum": "Minimum"
+    },
+    "filters": {
+      "total": "Total",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    }
+  },
+  "oracle": {
+    "intro": {
+      "daily": {
+        "title": "Daily Oracle",
+        "text": "The sky is never the same twice. Today, the stars align in a unique configuration for you. Let the Oracle decode the frequencies of this day and reveal where your energy should shine. The Universe is whispering now. Are you ready to tune in?",
+        "button": "Do My Daily Reading"
+      },
+      "natal": {
+        "title": "Birth Chart",
+        "text": "Sync yourself with the Universe. At Astria, we transform astronomical data into ancestral wisdom. Discover the secrets shaping your personality, your challenges, and your hidden strength. The Cosmos has a message for you. Shall we hear it?",
+        "button": "Generate My Birth Chart"
+      }
+    },
+    "messages": {
+      "daily_transits_error": "Error loading daily transits.",
+      "chart_generate_error": "Could not generate the birth chart right now.",
+      "missing_birth_data": "Valid birth data is missing. Fill it in again to generate the birth chart.",
+      "chart_empty": "Could not generate the chart with the current data. Review and try again.",
+      "save_location_error_prefix": "Error saving location",
+      "insufficient_balance": "Insufficient balance. Please recharge your account before continuing.",
+      "payment_process_error": "Error processing payment."
+    },
+    "guest_modal": {
+      "alt": "Birth Chart",
+      "title": "Birth Chart",
+      "description": "To create your birth chart, sign up or log in and accept notifications.",
+      "register": "Sign Up",
+      "login": "Login"
+    },
+    "birth_city": {
+      "title": "Where and when did the stars shine at your birth?",
+      "birth_date": "Birth Date",
+      "birth_date_placeholder": "DD/MM/YYYY",
+      "birth_time": "Birth Time",
+      "birth_time_placeholder": "HH:MM",
+      "city_label": "Your birth city (Where you were born)",
+      "city_help": "Choose an option from the list to validate location. Just typing city name does not generate coordinates.",
+      "submit": "Tune Cosmos"
+    },
+    "payment": {
+      "title": "Cross the Threshold",
+      "first_free_title": "First Free Consultation",
+      "first_free_desc": "You can ask the stars for guidance at no cost. Use it wisely, Traveler.",
+      "mystic_connection": "Mystic Connection",
+      "price_prefix": "A tribute of",
+      "price_suffix": "is required to open the paths.",
+      "start_free": "Start for Free",
+      "offer_start": "Offer and Start",
+      "recharge": "Recharge",
+      "cancel_setup": "Cancel Preparation"
+    },
+    "tabs": {
+      "natal": "Natal Map",
+      "daily": "Daily Oracle"
+    },
+    "ritual": {
+      "destiny_from": "Destiny traced from",
+      "born_on": "Born on",
+      "drawing_natal_sky": "Drawing your natal sky...",
+      "retry_message": "Some clouds blocked the star reading. Wait 1 minute and click generate again.",
+      "try_again": "Try again",
+      "fill_data_again": "Fill data again",
+      "preparing_natal_map": "Preparing your natal map...",
+      "consulting_ephemerides": "Consulting today's ephemerides...",
+      "no_significant_transits": "No significant transits detected for today.",
+      "reload": "Reload",
+      "abandon": "Abandon Ritual"
+    },
+    "result": {
+      "title": "Your Astria Revelation",
+      "finish": "Finish Ritual"
+    },
+    "debug": {
+      "title": "DEBUG ORACLE (active for diagnostics)",
+      "yes": "yes",
+      "no": "no"
+    },
+    "city_autocomplete": {
+      "placeholder": "Type the name of the city where you were born...",
+      "fetch_error": "Error searching cities:"
+    }
+  },
+  "question_flow": {
+    "title": "Question Submission",
+    "package_prefix": "Package of",
+    "questions": "questions",
+    "debit": "Debit",
+    "question_of_prefix": "Question",
+    "question_of_middle": "of",
+    "question": "Question",
+    "placeholder": "Type your question...",
+    "confirm_send": "Confirm sending to consultant:",
+    "audio_label": "Audio",
+    "no_file": "No file",
+    "actions": {
+      "write": "Write",
+      "audio": "Audio",
+      "next": "Next",
+      "confirm_send": "Confirm send"
+    },
+    "errors": {
+      "max_audio_duration": "Audio must be at most 2 minutes long.",
+      "audio_read": "Could not read selected audio."
+    }
+  },
+  "answers": {
+    "page_title": "Answers",
+    "page_subtitle": "All answers to your questions in one place.",
+    "empty": "You have not received answers yet.",
+    "labels": {
+      "your_questions": "Your questions",
+      "answer": "Answer"
+    },
+    "actions": {
+      "review_consultant": "Review consultant"
+    },
+    "status": {
+      "reviewed": "Reviewed"
+    }
+  },
+  "video_room": {
+    "title": "Consultation Room",
+    "access_denied": "Access denied",
+    "back_home": "Back to Home",
+    "consultation_with": "Consultation with",
+    "private_session": "Private Video Session",
+    "ready_room": "Room Ready",
+    "waiting_consultant": "Waiting for Consultant",
+    "notices": {
+      "call_ended": "Call ended successfully."
+    },
+    "messages": {
+      "consultant_waiting": "The client is waiting. Click below to start the video call.",
+      "consultant_available": "Consultant available. Tap below to enable camera and microphone in Safari and join the call.",
+      "room_created_wait": "Your room has been created and the consultant has been notified by email and dashboard. Please wait while we call the consultant."
+    },
+    "actions": {
+      "connecting": "Connecting...",
+      "start_service": "Start Service",
+      "join_call": "Join Call",
+      "end_call": "End Call"
+    },
+    "errors": {
+      "load_room": "Error loading room.",
+      "browser_media_unsupported": "Your browser does not support camera/microphone on this page.",
+      "start_call_failed": "Could not start the call. Confirm customer and consultant are online on this page.",
+      "media_permission_denied": "Camera/microphone permissions not granted.",
+      "connect_video_room": "Error connecting to video room."
+    }
+  },
+  "login": {
+    "page_title": "Login",
+    "page_subtitle": "Access your account to continue your spiritual journey.",
+    "card_title": "Client Access",
+    "fields": {
+      "email": "Email",
+      "password": "Password"
+    },
+    "actions": {
+      "signing_in": "Signing in...",
+      "sign_in": "Sign In",
+      "create_account_prompt": "No account yet? Create now",
+      "become_consultant": "Work with us: Become a consultant"
+    },
+    "notices": {
+      "welcome_back": "Welcome back!"
+    },
+    "errors": {
+      "invalid_credentials": "Login failed. Check your credentials."
+    }
+  },
+  "register": {
+    "page_title": "Create Account",
+    "page_subtitle": "Complete your registration with essential data to personalize your consultations.",
+    "notices": {
+      "created": "Account created successfully!"
+    },
+    "errors": {
+      "create_failed": "Error creating account."
+    }
+  },
+  "numerology_purchase": {
+    "title": "Vibrational Frequency Portal",
+    "subtitle": "Sync your identity with the mathematics of destiny.",
+    "fields": {
+      "full_name": "Full name",
+      "full_name_placeholder": "Your full name",
+      "birth_date": "Birth date",
+      "birth_date_placeholder": "dd/mm/yyyy"
+    },
+    "hiring_prefix": "You are hiring",
+    "price_prefix": "Price",
+    "delivery_prefix": "Material will be sent to",
+    "registered_email": "your registered email",
+    "payment_question": "How do you prefer to pay?",
+    "login_required": "Log in or create an account to complete your numerology reading order.",
+    "create_account": "Create account",
+    "order_confirmed": "Order confirmed",
+    "credit_card": "Credit card",
+    "pix_instructions": "Scan the QR Code, complete PIX, then register the order for validation.",
+    "pix_not_configured": "PIX not configured in admin.",
+    "copy_paste": "Copy and paste",
+    "code_unavailable": "Code unavailable",
+    "copied": "Copied!",
+    "copy": "Copy",
+    "reveal_map": "REVEAL MY SACRED MAP ?",
+    "payment_confirmed": "Payment confirmed! Order sent to admin.",
+    "payment_error": "Error processing payment.",
+    "pix_registered": "PIX order registered."
+  },
+  "astral_purchase": {
+    "title": "Request full reading",
+    "subtitle": "Receive by email a PDF with about 20 pages with your full astral reading.",
+    "hiring_prefix": "You are hiring",
+    "price_prefix": "Price",
+    "delivery_prefix": "Material will be sent to",
+    "registered_email": "your registered email",
+    "payment_question": "How do you prefer to pay?",
+    "login_required": "Log in or create an account to complete your astral reading order.",
+    "create_account": "Create account",
+    "order_confirmed": "Order confirmed",
+    "credit_card": "Credit card",
+    "pix_instructions": "Scan the QR Code, complete PIX, then register the order for validation.",
+    "pix_not_configured": "PIX not configured in admin.",
+    "copy_paste": "Copy and paste",
+    "code_unavailable": "Code unavailable",
+    "registering_order": "Registering order...",
+    "already_paid_pix": "I already paid with PIX",
+    "payment_confirmed": "Payment confirmed and order registered.",
+    "pix_registered": "PIX order registered."
+  },
+  "stripe_checkout": {
+    "card_unavailable": "Card unavailable",
+    "card_unavailable_subtitle": "Configure Stripe public key in admin to enable card checkout.",
+    "card_unavailable_desc": "Card payment depends on Stripe credentials configured in the admin panel.",
+    "payment_with_card": "Card payment",
+    "processing": "Processing...",
+    "pay_amount": "Pay R$",
+    "fields": {
+      "card_number": "Card number",
+      "expiry": "Expiry",
+      "cvc": "CVC"
+    },
+    "errors": {
+      "not_loaded": "Stripe did not load correctly.",
+      "start_payment": "Error starting card payment.",
+      "card_field_missing": "Card field unavailable.",
+      "processing": "Error processing payment.",
+      "not_approved": "Payment has not yet been approved by Stripe.",
+      "confirmation": "Error confirming payment.",
+      "pay_with_card": "Error paying with card."
+    }
+  },
+  "astral_checkout": {
+    "subtitle": "Secure purchase of your Complete Astral Reading."
+  },
+  "numerology_checkout": {
+    "subtitle": "Secure purchase of your Complete Numerology Reading."
+  },
+  "spell_checkout": {
+    "subtitle_prefix": "Secure purchase of spell"
+  },
+  "review": {
+    "title": "Review Consultant",
+    "subtitle_prefix": "How was your experience with",
+    "rating_hint": "Tap stars to rate",
+    "rating_1": "Very bad",
+    "rating_2": "Bad",
+    "rating_3": "Fair",
+    "rating_4": "Good",
+    "rating_5": "Excellent!",
+    "comment_placeholder": "Leave a comment (optional)...",
+    "actions": {
+      "sending": "Sending...",
+      "submit": "Submit Review",
+      "skip": "Skip for now"
+    },
+    "errors": {
+      "select_rating": "Select a rating from 1 to 5 stars.",
+      "submit_failed": "Error submitting review.",
+      "connection": "Connection error. Try again."
+    }
+  },
+  "consultants_marketplace": {
+    "title": "Consultants Marketplace",
+    "subtitle": "Choose a specialist and prepare the real-time call.",
+    "sort_by_price": "Sort by price",
+    "lowest_price": "Lowest Price",
+    "highest_price": "Highest Price"
+  },
+  "client_dashboard": {
+    "title": "Client Dashboard",
+    "welcome": "Welcome",
+    "subtitle_guest": "Sign up to personalize your experience",
+    "current_balance": "Current balance",
+    "daily_horoscope": "Daily Horoscope"
+  },
+  "help_center": {
+    "title": "Help Center",
+    "subtitle": "Find answers to your questions",
+    "search_placeholder": "Search your question...",
+    "no_results_prefix": "No results found for",
+    "try_other_keywords": "Try different keywords"
+  },
+  "apk_home": {
+    "title": "Your Destiny",
+    "subtitle": "What do the stars reveal today?",
+    "oracle_cta_line_1": "Consult your",
+    "oracle_cta_line_2": "free oracle",
+    "tarologists": "Tarot Readers",
+    "recharge": "Recharge",
+    "work_with_us": "Work with us",
+    "alt": {
+      "oracle": "Oracle",
+      "consultants": "Consultants",
+      "recharge": "Recharge",
+      "be_consultant": "Become Consultant"
+    }
+  },
+  "be_consultant": {
+    "page_title": "Join our consultant team",
+    "page_subtitle": "Consultant Registration",
+    "form_title": "Consultant Registration",
+    "form_subtitle": "Fill out the form below to register as an astral consultant on our platform.",
+    "logged_as": "You are already logged in as",
+    "use_current_user_question": "Do you want to use this user to become a consultant?",
+    "fields": {
+      "full_name": "Full Name",
+      "email": "Email",
+      "password": "Password (minimum 6 characters)",
+      "birth_date": "Birth Date",
+      "birth_date_placeholder": "DD/MM/YYYY",
+      "profile_photo": "Profile Photo",
+      "select_photo": "Click to select a photo",
+      "photo_recommendation": "Recommended: 300x300 pixels, max 5MB",
+      "profile_photo_preview": "Profile photo preview",
+      "tagline": "Tagline",
+      "tagline_placeholder": "Ex: I read love energies with objectivity.",
+      "about": "About You (Description)",
+      "about_placeholder": "Tell a bit about your experience and specialties...",
+      "price_per_minute": "Price per Minute (R$)",
+      "price_three_questions": "Price for 3 questions (R$)",
+      "price_five_questions": "Price for 5 questions (R$)"
+    },
+    "actions": {
+      "use_current_user": "Yes, use this user",
+      "register_new_user": "No, register new user",
+      "processing": "Processing...",
+      "submit": "Submit Registration"
+    },
+    "notices": {
+      "success": "Registration completed successfully! Welcome to the team."
+    },
+    "errors": {
+      "register_failed": "Registration failed."
+    },
+    "success_notice": "Application received. Our team will contact you soon.",
+    "commission_notice": "Remember that 30% commission will be charged for app maintenance and promotion.",
+    "already_registered": "Already registered?",
+    "login_here": "Log in here"
+  },
+  "synchronicity": {
+    "page_title": "Soul Synchronicity",
+    "page_subtitle": "Discover your connection frequency",
+    "your_sign": "Your sign",
+    "other_person_sign": "Other person sign",
+    "disclaimer": "Two paths, one stellar design. Select the energies you want to cross and see how elements react to each other.",
+    "reading_energies": "Reading sign energies...",
+    "calculating": "Calculating synchronicity...",
+    "complete_reading_title": "Get a complete couple reading",
+    "complete_reading_subtitle": "The Sun attracts, but the dance of Venus and Mars sustains.",
+    "actions": {
+      "view": "View Synchronicity",
+      "unlock_full_map": "UNLOCK FULL COUPLE MAP",
+      "share": "Share",
+      "calculate_another": "Calculate another combination"
+    }
   }
 }

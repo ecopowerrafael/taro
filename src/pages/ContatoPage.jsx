@@ -2,8 +2,10 @@ import { PageShell } from '../components/PageShell'
 import { SacredGeometry } from '../components/SacredGeometry'
 import { Mail, MapPin, Phone, Send, Sparkles } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export function ContatoPage() {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -33,12 +35,12 @@ export function ContatoPage() {
       <div className="fixed inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-mystic-purple-dark/40 via-mystic-black to-mystic-black" />
       <SacredGeometry />
 
-      <PageShell title="Entre em Contato" subtitle="Conversar com nossa equipe">
+      <PageShell title={t('contact.page.title', 'Entre em Contato')} subtitle={t('contact.page.subtitle', 'Conversar com nossa equipe')}>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-16">
           {/* Contact Info */}
           <div>
-            <h2 className="font-playfair text-3xl text-white mb-8">Informações de Contato</h2>
+            <h2 className="font-playfair text-3xl text-white mb-8">{t('contact.info.title', 'Informações de Contato')}</h2>
             
             <div className="space-y-8">
               <div className="flex gap-4">
@@ -48,9 +50,9 @@ export function ContatoPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-playfair text-lg text-white mb-1">Email</h3>
+                  <h3 className="font-playfair text-lg text-white mb-1">{t('contact.info.email_label', 'Email')}</h3>
                   <p className="text-mystic-purple-light">contato@astria.com.br</p>
-                  <p className="text-mystic-purple-light/60 text-sm">Resposta em até 24 horas</p>
+                  <p className="text-mystic-purple-light/60 text-sm">{t('contact.info.email_response_time', 'Resposta em até 24 horas')}</p>
                 </div>
               </div>
 
@@ -61,9 +63,9 @@ export function ContatoPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-playfair text-lg text-white mb-1">WhatsApp</h3>
+                  <h3 className="font-playfair text-lg text-white mb-1">{t('contact.info.whatsapp_label', 'WhatsApp')}</h3>
                   <p className="text-mystic-purple-light">+55 (11) 98765-4321</p>
-                  <p className="text-mystic-purple-light/60 text-sm">Seg-Dom: 9h às 22h</p>
+                  <p className="text-mystic-purple-light/60 text-sm">{t('contact.info.whatsapp_hours', 'Seg-Dom: 9h às 22h')}</p>
                 </div>
               </div>
 
@@ -74,9 +76,9 @@ export function ContatoPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-playfair text-lg text-white mb-1">Endereço</h3>
+                  <h3 className="font-playfair text-lg text-white mb-1">{t('contact.info.address_label', 'Endereço')}</h3>
                   <p className="text-mystic-purple-light">São Paulo, SP</p>
-                  <p className="text-mystic-purple-light/60 text-sm">Brasil</p>
+                  <p className="text-mystic-purple-light/60 text-sm">{t('contact.info.country', 'Brasil')}</p>
                 </div>
               </div>
             </div>
@@ -87,20 +89,20 @@ export function ContatoPage() {
             <div className="rounded-2xl glass-panel border border-mystic-purple-light/20 p-8 md:p-12">
               <div className="flex items-center gap-2 mb-6">
                 <Sparkles className="w-5 h-5 text-mystic-gold" />
-                <span className="text-xs uppercase tracking-widest text-mystic-purple-light">Enviar Mensagem</span>
+                <span className="text-xs uppercase tracking-widest text-mystic-purple-light">{t('contact.form.badge', 'Enviar Mensagem')}</span>
               </div>
 
               {submitted ? (
                 <div className="text-center py-12">
                   <div className="text-5xl mb-4">✨</div>
-                  <p className="font-playfair text-2xl text-mystic-gold mb-2">Mensagem Enviada!</p>
-                  <p className="text-mystic-purple-light">Obrigado por entrar em contato. Nossa equipe responderá em breve.</p>
+                  <p className="font-playfair text-2xl text-mystic-gold mb-2">{t('contact.success.title', 'Mensagem Enviada!')}</p>
+                  <p className="text-mystic-purple-light">{t('contact.success.description', 'Obrigado por entrar em contato. Nossa equipe responderá em breve.')}</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-semibold text-mystic-gold mb-2">Seu Nome</label>
+                      <label className="block text-sm font-semibold text-mystic-gold mb-2">{t('contact.form.name_label', 'Seu Nome')}</label>
                       <input
                         type="text"
                         name="name"
@@ -108,11 +110,11 @@ export function ContatoPage() {
                         value={formData.name}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-lg border border-mystic-purple-light/30 bg-mystic-purple-dark/30 text-white placeholder-mystic-purple-light/40 focus:outline-none focus:border-mystic-gold transition-colors"
-                        placeholder="Seu nome"
+                        placeholder={t('contact.form.name_placeholder', 'Seu nome')}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-mystic-gold mb-2">Seu Email</label>
+                      <label className="block text-sm font-semibold text-mystic-gold mb-2">{t('contact.form.email_label', 'Seu Email')}</label>
                       <input
                         type="email"
                         name="email"
@@ -120,13 +122,13 @@ export function ContatoPage() {
                         value={formData.email}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-lg border border-mystic-purple-light/30 bg-mystic-purple-dark/30 text-white placeholder-mystic-purple-light/40 focus:outline-none focus:border-mystic-gold transition-colors"
-                        placeholder="seu@email.com"
+                        placeholder={t('contact.form.email_placeholder', 'seu@email.com')}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-mystic-gold mb-2">Assunto</label>
+                    <label className="block text-sm font-semibold text-mystic-gold mb-2">{t('contact.form.subject_label', 'Assunto')}</label>
                     <input
                       type="text"
                       name="subject"
@@ -134,12 +136,12 @@ export function ContatoPage() {
                       value={formData.subject}
                       onChange={handleChange}
                       className="w-full px-4 py-3 rounded-lg border border-mystic-purple-light/30 bg-mystic-purple-dark/30 text-white placeholder-mystic-purple-light/40 focus:outline-none focus:border-mystic-gold transition-colors"
-                      placeholder="Assunto da mensagem"
+                      placeholder={t('contact.form.subject_placeholder', 'Assunto da mensagem')}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-mystic-gold mb-2">Mensagem</label>
+                    <label className="block text-sm font-semibold text-mystic-gold mb-2">{t('contact.form.message_label', 'Mensagem')}</label>
                     <textarea
                       name="message"
                       required
@@ -147,7 +149,7 @@ export function ContatoPage() {
                       onChange={handleChange}
                       rows={5}
                       className="w-full px-4 py-3 rounded-lg border border-mystic-purple-light/30 bg-mystic-purple-dark/30 text-white placeholder-mystic-purple-light/40 focus:outline-none focus:border-mystic-gold transition-colors resize-none"
-                      placeholder="Sua mensagem aqui..."
+                      placeholder={t('contact.form.message_placeholder', 'Sua mensagem aqui...')}
                     />
                   </div>
 
@@ -156,7 +158,7 @@ export function ContatoPage() {
                     className="w-full rounded-lg bg-gradient-to-r from-mystic-gold to-mystic-gold-light text-mystic-black font-bold py-3 hover:shadow-gold-glow transition-all flex items-center justify-center gap-2 group"
                   >
                     <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    Enviar Mensagem
+                    {t('contact.form.submit', 'Enviar Mensagem')}
                   </button>
                 </form>
               )}
@@ -166,12 +168,12 @@ export function ContatoPage() {
 
         {/* Map or additional info */}
         <div className="rounded-2xl glass-panel border border-mystic-purple-light/20 p-8 text-center">
-          <h3 className="font-playfair text-2xl text-white mb-4">Horário de Funcionamento</h3>
+          <h3 className="font-playfair text-2xl text-white mb-4">{t('contact.schedule.title', 'Horário de Funcionamento')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { day: 'Segunda a Sexta', time: '9h às 18h' },
-              { day: 'Sábado', time: '10h às 16h' },
-              { day: 'Domingo', time: 'Fechado' },
+              { day: t('contact.schedule.weekdays', 'Segunda a Sexta'), time: t('contact.schedule.weekdays_time', '9h às 18h') },
+              { day: t('contact.schedule.saturday', 'Sábado'), time: t('contact.schedule.saturday_time', '10h às 16h') },
+              { day: t('contact.schedule.sunday', 'Domingo'), time: t('contact.schedule.sunday_time', 'Fechado') },
             ].map((schedule, idx) => (
               <div key={idx} className="p-4">
                 <p className="text-mystic-gold font-semibold mb-1">{schedule.day}</p>

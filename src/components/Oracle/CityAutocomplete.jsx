@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader2, Navigation } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function CityAutocomplete({ onSelect }) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -39,7 +41,7 @@ export function CityAutocomplete({ onSelect }) {
           setIsOpen(false);
         }
       } catch (error) {
-        console.error("Erro ao buscar cidades:", error);
+        console.error(t('oracle.city_autocomplete.fetch_error', 'Erro ao buscar cidades:'), error);
       } finally {
         setLoading(false);
       }
@@ -78,7 +80,7 @@ export function CityAutocomplete({ onSelect }) {
             onSelect(null); 
           }}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
-          placeholder="Digite o nome da cidade em que nasceu..."
+          placeholder={t('oracle.city_autocomplete.placeholder', 'Digite o nome da cidade em que nasceu...')}
           className="w-full bg-black/60 border border-mystic-purple/50 rounded-lg px-4 py-4 pl-12 text-white placeholder-gray-400 focus:outline-none focus:border-mystic-gold focus:ring-1 focus:ring-mystic-gold transition-all"
         />
         <div className="absolute left-4 top-4 text-mystic-gold/70">

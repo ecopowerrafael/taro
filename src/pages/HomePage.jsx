@@ -6,25 +6,30 @@ import { usePlatformContext } from '../context/platform-context'
 import { DailyTarotCard } from '../components/DailyTarotCard'
 import { SacredGeometry } from '../components/SacredGeometry'
 import { FloatingCard } from '../components/FloatingCard'
+import { LanguageSelector } from '../components/LanguageSelector'
 import { buildHeaderLinks, publicNavLinks } from '../utils/navigation'
 
 const benefits = [
   {
+    key: 'clarity',
     title: 'Clareza Imediata',
     description: 'Respostas rápidas para dúvidas que tiram seu sono.',
     image: '/clareza-imediata.png',
   },
   {
+    key: 'experts',
     title: 'Especialistas Reais',
     description: 'Profissionais avaliados pela comunidade e pela plataforma.',
     image: '/especialistas-reais.png',
   },
   {
+    key: 'privacy',
     title: 'Privacidade Total',
     description: 'Consultas 100% anônimas e seguras via vídeo.',
     image: '/privacidade-total.png',
   },
   {
+    key: 'savings',
     title: 'Economia',
     description: 'Você paga apenas pelos minutos que utilizar.',
     image: '/economia.png',
@@ -32,9 +37,9 @@ const benefits = [
 ]
 
 const professionalBenefits = [
-  { title: 'Flexibilidade Total', description: 'Trabalhe quando e onde quiser', image: '/flexibilidade-total.png' },
-  { title: 'Pagamento Semanal', description: 'Receba via PIX toda semana', image: '/pagamento-semanal.png' },
-  { title: 'Suporte Dedicado', description: 'Equipe pronta para te ajudar', image: '/suporte-dedicado.png' },
+  { key: 'flexibility', title: 'Flexibilidade Total', description: 'Trabalhe quando e onde quiser', image: '/flexibilidade-total.png' },
+  { key: 'weekly_payment', title: 'Pagamento Semanal', description: 'Receba via PIX toda semana', image: '/pagamento-semanal.png' },
+  { key: 'support', title: 'Suporte Dedicado', description: 'Equipe pronta para te ajudar', image: '/suporte-dedicado.png' },
 ]
 
 function useCountAnimation({ start, end, duration, shouldStart }) {
@@ -132,10 +137,10 @@ export function HomePage() {
       ? String(completedSessions).padStart(3, '0')
       : new Intl.NumberFormat('pt-BR').format(completedSessions)
   const stats = [
-    { value: `${activeConsultants}+`, label: 'Consultores Ativos' },
-    { value: `${completedSessionsText}+`, label: 'Consultas Realizadas' },
-    { value: '4.9', label: 'Avaliação Média' },
-    { value: '24/7', label: 'Sempre Disponíveis' },
+    { value: `${activeConsultants}+`, label: t('home.stats.active_consultants', 'Consultores Ativos') },
+    { value: `${completedSessionsText}+`, label: t('home.stats.completed_sessions', 'Consultas Realizadas') },
+    { value: '4.9', label: t('home.stats.average_rating', 'Avaliação Média') },
+    { value: '24/7', label: t('home.stats.always_available', 'Sempre Disponíveis') },
   ]
 
   const { isAuthenticated } = usePlatformContext()
@@ -189,7 +194,7 @@ export function HomePage() {
             ) : null}
             <Link to={isAuthenticated ? '/consultores' : '/cadastro'} className="relative group overflow-hidden rounded-full px-8 py-3 bg-gradient-to-r from-mystic-purple-dark to-mystic-black border border-mystic-gold/50 hover:border-mystic-gold transition-all duration-300 shadow-gold-glow hover:shadow-gold-glow-lg">
               <span className="relative z-10 font-semibold text-sm tracking-widest text-gradient-gold uppercase">
-                {isAuthenticated ? 'Ver Consultores' : 'Agendar Sessão'}
+                {isAuthenticated ? t('home.cta.header.view_consultants', 'Ver Consultores') : t('home.cta.header.book_session', 'Agendar Sessão')}
               </span>
               <div className="absolute inset-0 w-full h-full bg-mystic-gold opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
             </Link>
@@ -212,7 +217,7 @@ export function HomePage() {
           )
         })}
         <Link to={isAuthenticated ? '/consultores' : '/cadastro'} onClick={() => setMobileMenuOpen(false)} className="mt-8 rounded-full px-10 py-4 border border-mystic-gold text-gradient-gold font-bold tracking-widest uppercase">
-          {isAuthenticated ? 'Ver Consultores' : 'Entrar / Agendar'}
+          {isAuthenticated ? t('home.cta.mobile.view_consultants', 'Ver Consultores') : t('home.cta.mobile.login_book', 'Entrar / Agendar')}
         </Link>
       </div>
 
@@ -226,7 +231,7 @@ export function HomePage() {
           <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left z-20 mt-10 lg:mt-0">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-mystic-purple-light/30 bg-mystic-purple-light/10 backdrop-blur-sm mb-8 animate-pulse">
               <Sparkles className="w-4 h-4 text-mystic-gold" />
-              <span className="text-xs uppercase tracking-widest text-mystic-purple-light">Conecte-se com o Invisível</span>
+              <span className="text-xs uppercase tracking-widest text-mystic-purple-light">{t('home.hero.badge', 'Conecte-se com o Invisível')}</span>
             </div>
             
             <h1 className="font-playfair text-5xl md:text-7xl lg:text-8xl leading-[1.1] mb-6 drop-shadow-2xl">
@@ -262,7 +267,7 @@ export function HomePage() {
         {/* BENEFITS SECTION */}
         <section className="container mx-auto px-6 md:px-12 mt-32 mb-32">
           <h2 className="font-playfair text-3xl md:text-4xl text-white text-center mb-12 flex items-center justify-center gap-3">
-            Por que escolher <span className="text-gradient-gold italic">Astria</span>
+            {t('home.why_astria.title', 'Por que escolher')} <span className="text-gradient-gold italic">Astria</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
@@ -278,10 +283,10 @@ export function HomePage() {
                   </div>
                   
                   <h3 className="relative font-playfair text-2xl text-white mb-2 group-hover:text-mystic-gold transition-colors">
-                    {benefit.title}
+                    {t(`home.benefits.${benefit.key}.title`, benefit.title)}
                   </h3>
                   <p className="relative text-mystic-purple-light text-sm">
-                    {benefit.description}
+                    {t(`home.benefits.${benefit.key}.description`, benefit.description)}
                   </p>
                 </div>
               )
@@ -310,10 +315,10 @@ export function HomePage() {
         <section className="container mx-auto px-6 md:px-12 mb-32">
           <div className="rounded-2xl glass-panel border border-mystic-purple-light/20 p-12 text-center">
             <h2 className="font-playfair text-4xl text-white mb-4 flex flex-col items-center justify-center sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <span>Transforme seu Dom em</span> <span className="text-gradient-gold italic">Carreira</span>
+              <span>{t('home.pro_section.title_prefix', 'Transforme seu Dom em')}</span> <span className="text-gradient-gold italic">{t('home.pro_section.title_highlight', 'Carreira')}</span>
             </h2>
             <p className="text-mystic-purple-light max-w-2xl mb-12 mx-auto">
-              Horários flexíveis, pagamentos semanais via PIX e suporte total ao profissional. Junte-se a nossa elite de consultores.
+              {t('home.pro_section.description', 'Horários flexíveis, pagamentos semanais via PIX e suporte total ao profissional. Junte-se a nossa elite de consultores.')}
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
@@ -323,15 +328,15 @@ export function HomePage() {
                     <div className="mb-4 inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-mystic-gold/35 bg-black/20 p-2 shadow-[0_0_20px_rgba(197,160,89,0.12)] transition-transform group-hover:scale-105">
                       <img src={benefit.image} alt={benefit.title} className="h-full w-full object-contain" />
                     </div>
-                    <h3 className="font-playfair text-xl text-white mb-2">{benefit.title}</h3>
-                    <p className="text-mystic-purple-light text-sm">{benefit.description}</p>
+                    <h3 className="font-playfair text-xl text-white mb-2">{t(`home.pro_benefits.${benefit.key}.title`, benefit.title)}</h3>
+                    <p className="text-mystic-purple-light text-sm">{t(`home.pro_benefits.${benefit.key}.description`, benefit.description)}</p>
                   </div>
                 )
               })}
             </div>
 
             <Link to="/seja-consultor" className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-mystic-gold to-mystic-gold-light text-mystic-black font-bold uppercase tracking-widest text-sm hover:shadow-gold-glow-lg transition-shadow group mx-auto">
-              Quero Ser Consultor
+              {t('home.pro_section.cta', 'Quero Ser Consultor')}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -366,7 +371,7 @@ export function HomePage() {
                   { label: t('nav.consultants', 'Consultores'), to: '/consultores' },
                   { label: t('nav.spells', 'Serviços'), to: '/magias' },
                   { label: t('nav.how_it_works', 'Como Funciona'), to: '/como-funciona' },
-                  { label: 'Blog', to: '/blog' }
+                  { label: t('nav.blog', 'Blog'), to: '/blog' }
                 ].map((link, i) => (
                   <li key={i}>
                     <Link to={link.to} className="text-mystic-purple-light hover:text-mystic-gold text-sm transition-colors flex items-center gap-2">
@@ -422,8 +427,9 @@ export function HomePage() {
               © {new Date().getFullYear()} Astria. {t('footer.rights', 'Todos os direitos reservados.')}
             </p>
             <div className="flex items-center gap-4">
-              <span className="text-mystic-purple-light/60 text-xs flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span> Conexão Segura</span>
-              <span className="text-mystic-purple-light/60 text-xs">SSL Criptografado</span>
+              <LanguageSelector />
+              <span className="text-mystic-purple-light/60 text-xs flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span> {t('footer.security.secure_connection', 'Conexão Segura')}</span>
+              <span className="text-mystic-purple-light/60 text-xs">{t('footer.security.ssl_encrypted', 'SSL Criptografado')}</span>
             </div>
           </div>
         </div>

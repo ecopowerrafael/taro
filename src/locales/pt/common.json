@@ -13,11 +13,13 @@
     "profile": "Perfil",
     "consultant_area": "Área do Consultor",
     "admin": "Admin",
-    "logout": "Sair"
+    "logout": "Sair",
+    "blog": "Blog"
   },
   "common": {
     "back": "Voltar",
-    "loading": "Carregando..."
+    "loading": "Carregando...",
+    "close": "Fechar"
   },
   "consultants": {
     "page_title": "Encontrar Consultor",
@@ -36,7 +38,32 @@
     "confirm_call_title": "Confirmar Início da Consulta",
     "confirm_call_desc": "Você está prestes a iniciar uma chamada de vídeo com",
     "confirm_call_price": "O valor é de R$ {{amount}} por minuto.",
-    "confirm_start": "Confirmar Início"
+    "confirm_start": "Confirmar Início",
+    "search_placeholder": "Busque por nome, especialidade...",
+    "filters": {
+      "all": "Todos",
+      "online": "Online",
+      "busy": "Ocupado",
+      "offline": "Offline",
+      "price": "Pre�o"
+    },
+    "badges": {
+      "premium": "Premium"
+    },
+    "empty_filtered": "Nenhum consultor encontrado com esses filtros.",
+    "total_consultations": "Consultas totais",
+    "services": {
+      "video": "V�deo",
+      "three_questions": "3 Perguntas",
+      "five_questions": "5 Perguntas",
+      "video_service": "Atendimento por v�deo",
+      "package_three": "Pacote 3 perguntas",
+      "package_five": "Pacote 5 perguntas"
+    },
+    "pagination": {
+      "page_of": "P�gina",
+      "of": "de"
+    }
   },
   "consultant_profile": {
     "page_title": "Perfil do Consultor",
@@ -92,14 +119,19 @@
     "flow": "Fluxo",
     "flow_step_1": "1. Escolha a forma de pagamento e confirme o pedido.",
     "flow_step_2": "2. O mentor entra em contato se precisar alinhar informações adicionais.",
-    "flow_step_3": "3. O ritual é conduzido conforme a intenção e a demanda solicitada."
+    "flow_step_3": "3. O ritual é conduzido conforme a intenção e a demanda solicitada.",
+    "image_not_provided": "Imagem n�o informada",
+    "made_by": "Feita por"
   },
   "daily_card": {
     "title": "Sua Carta do Dia",
     "tap_to_reveal": "Toque para revelar seu conselho cósmico",
     "available_once": "Disponível 1 vez por dia, sempre a partir das 08:00",
     "come_back_tomorrow": "Volte amanhã após 08:00 para uma nova carta",
-    "reflect": "Escolha o Tema que quer saber e reflita sobre a mensagem recebida."
+    "reflect": "Escolha o Tema que quer saber e reflita sobre a mensagem recebida.",
+    "title_prefix": "Carta do",
+    "title_highlight": "Dia",
+    "footer_text": "As interpreta��es do Tarot Astria s�o baseadas em sabedoria ancestral combinada com o fluxo energ�tico do momento presente."
   },
   "numerology": {
     "portal_title": "Portal da Numerologia",
@@ -112,31 +144,100 @@
     "destiny_number": "Seu Número de Destino",
     "journey_revealed": "Sua jornada numerológica revelada",
     "frequency_alert_desc": "Oscilações energéticas detectadas em seu ciclo atual. Recomenda-se atenção especial a padrões repetitivos e decisões importantes.",
-    "frequency_alert_soon": "Em breve: dicas personalizadas para lidar com sua frequência!"
+    "frequency_alert_soon": "Em breve: dicas personalizadas para lidar com sua frequência!",
+    "page_title_prefix": "Mapa",
+    "page_title_highlight": "Numerol�gico",
+    "footer_text": "A numerologia pitag�rica revela a vibra��o sagrada que seu nome e nascimento imprimem no tecido do universo."
   },
   "tarot": {
-    "major_0": { "name": "O Louco", "message": "Um novo começo se aproxima. Abrace o desconhecido com coragem e otimismo. É hora de dar um salto de fé." },
-    "major_1": { "name": "O Mago", "message": "Você tem todas as ferramentas necessárias para alcançar seus objetivos. Manifeste sua vontade no mundo." },
-    "major_2": { "name": "A Sacerdotisa", "message": "Ouça sua intuição e confie na sua sabedoria interior. Segredos podem ser revelados hoje." },
-    "major_3": { "name": "A Imperatriz", "message": "Dia de abundância, criatividade e fertilidade. Cuide de si mesmo e daqueles ao seu redor." },
-    "major_4": { "name": "O Imperador", "message": "Momento de assumir a liderança, estabelecer ordem e organizar seus projetos com autoridade e estrutura." },
-    "major_5": { "name": "O Hierofante", "message": "Busque sabedoria nas tradições. O aprendizado e a orientação espiritual trarão as respostas que procura." },
-    "major_6": { "name": "Os Enamorados", "message": "Conexões profundas e escolhas importantes marcam o dia. Siga o caminho que ressoa com seu coração." },
-    "major_7": { "name": "O Carro", "message": "Avanço e vitória estão no horizonte. Mantenha o foco, supere os obstáculos e tome as rédeas da sua vida." },
-    "major_8": { "name": "A Força", "message": "Use sua força interior, paciência e compaixão para domar as adversidades, não a força bruta." },
-    "major_9": { "name": "O Eremita", "message": "Tempo de introspecção e reflexão. Afaste-se das distrações externas para encontrar a sua própria luz." },
-    "major_10": { "name": "A Roda da Fortuna", "message": "Mudanças estão a caminho. O ciclo da vida gira, trazendo sorte e novas oportunidades. Esteja aberto!" },
-    "major_11": { "name": "A Justiça", "message": "As coisas se equilibrarão. Decisões justas e consequências cármicas pautam as energias de hoje." },
-    "major_12": { "name": "O Enforcado", "message": "Pausa necessária. Olhe as coisas por uma nova perspectiva. Sacrifícios agora trarão iluminação depois." },
-    "major_13": { "name": "A Morte", "message": "Fim de um ciclo e início de outro. Deixe ir o que não lhe serve mais para abrir espaço para o novo." },
-    "major_14": { "name": "A Temperança", "message": "Equilíbrio e moderação são fundamentais hoje. Misture paciência e harmonia em suas ações." },
-    "major_15": { "name": "O Diabo", "message": "Atenção aos apegos e hábitos tóxicos. Reconheça as correntes que te prendem e encontre a chave para se libertar." },
-    "major_16": { "name": "A Torre", "message": "Estruturas instáveis podem ruir. Não tema as revelações bruscas, pois elas limpam o terreno para a verdade." },
-    "major_17": { "name": "A Estrela", "message": "Esperança, inspiração e renovação. Mantenha a fé, o universo está derramando bênçãos sobre você." },
-    "major_18": { "name": "A Lua", "message": "Ilusões podem nublar seu julgamento. Preste atenção aos seus sonhos e navegue com cuidado por sentimentos confusos." },
-    "major_19": { "name": "O Sol", "message": "Clareza, alegria e vitalidade brilham sobre seus projetos. É um dia de sucesso e de revelar sua verdadeira essência." },
-    "major_20": { "name": "O Julgamento", "message": "Hora de despertar. Você está sendo chamado para um propósito maior. Avalie o passado e siga renovado." },
-    "major_21": { "name": "O Mundo", "message": "Conclusão bem-sucedida de uma jornada! Celebre suas conquistas e prepare-se para abraçar a totalidade da vida." }
+    "major_0": {
+      "name": "O Louco",
+      "message": "Um novo começo se aproxima. Abrace o desconhecido com coragem e otimismo. É hora de dar um salto de fé."
+    },
+    "major_1": {
+      "name": "O Mago",
+      "message": "Você tem todas as ferramentas necessárias para alcançar seus objetivos. Manifeste sua vontade no mundo."
+    },
+    "major_2": {
+      "name": "A Sacerdotisa",
+      "message": "Ouça sua intuição e confie na sua sabedoria interior. Segredos podem ser revelados hoje."
+    },
+    "major_3": {
+      "name": "A Imperatriz",
+      "message": "Dia de abundância, criatividade e fertilidade. Cuide de si mesmo e daqueles ao seu redor."
+    },
+    "major_4": {
+      "name": "O Imperador",
+      "message": "Momento de assumir a liderança, estabelecer ordem e organizar seus projetos com autoridade e estrutura."
+    },
+    "major_5": {
+      "name": "O Hierofante",
+      "message": "Busque sabedoria nas tradições. O aprendizado e a orientação espiritual trarão as respostas que procura."
+    },
+    "major_6": {
+      "name": "Os Enamorados",
+      "message": "Conexões profundas e escolhas importantes marcam o dia. Siga o caminho que ressoa com seu coração."
+    },
+    "major_7": {
+      "name": "O Carro",
+      "message": "Avanço e vitória estão no horizonte. Mantenha o foco, supere os obstáculos e tome as rédeas da sua vida."
+    },
+    "major_8": {
+      "name": "A Força",
+      "message": "Use sua força interior, paciência e compaixão para domar as adversidades, não a força bruta."
+    },
+    "major_9": {
+      "name": "O Eremita",
+      "message": "Tempo de introspecção e reflexão. Afaste-se das distrações externas para encontrar a sua própria luz."
+    },
+    "major_10": {
+      "name": "A Roda da Fortuna",
+      "message": "Mudanças estão a caminho. O ciclo da vida gira, trazendo sorte e novas oportunidades. Esteja aberto!"
+    },
+    "major_11": {
+      "name": "A Justiça",
+      "message": "As coisas se equilibrarão. Decisões justas e consequências cármicas pautam as energias de hoje."
+    },
+    "major_12": {
+      "name": "O Enforcado",
+      "message": "Pausa necessária. Olhe as coisas por uma nova perspectiva. Sacrifícios agora trarão iluminação depois."
+    },
+    "major_13": {
+      "name": "A Morte",
+      "message": "Fim de um ciclo e início de outro. Deixe ir o que não lhe serve mais para abrir espaço para o novo."
+    },
+    "major_14": {
+      "name": "A Temperança",
+      "message": "Equilíbrio e moderação são fundamentais hoje. Misture paciência e harmonia em suas ações."
+    },
+    "major_15": {
+      "name": "O Diabo",
+      "message": "Atenção aos apegos e hábitos tóxicos. Reconheça as correntes que te prendem e encontre a chave para se libertar."
+    },
+    "major_16": {
+      "name": "A Torre",
+      "message": "Estruturas instáveis podem ruir. Não tema as revelações bruscas, pois elas limpam o terreno para a verdade."
+    },
+    "major_17": {
+      "name": "A Estrela",
+      "message": "Esperança, inspiração e renovação. Mantenha a fé, o universo está derramando bênçãos sobre você."
+    },
+    "major_18": {
+      "name": "A Lua",
+      "message": "Ilusões podem nublar seu julgamento. Preste atenção aos seus sonhos e navegue com cuidado por sentimentos confusos."
+    },
+    "major_19": {
+      "name": "O Sol",
+      "message": "Clareza, alegria e vitalidade brilham sobre seus projetos. É um dia de sucesso e de revelar sua verdadeira essência."
+    },
+    "major_20": {
+      "name": "O Julgamento",
+      "message": "Hora de despertar. Você está sendo chamado para um propósito maior. Avalie o passado e siga renovado."
+    },
+    "major_21": {
+      "name": "O Mundo",
+      "message": "Conclusão bem-sucedida de uma jornada! Celebre suas conquistas e prepare-se para abraçar a totalidade da vida."
+    }
   },
   "admin": {
     "magic_panel": {
@@ -153,5 +254,793 @@
   },
   "header": {
     "language": "Idioma"
+  },
+  "home": {
+    "cta": {
+      "header": {
+        "view_consultants": "Ver Consultores",
+        "book_session": "Agendar Sessão"
+      },
+      "mobile": {
+        "view_consultants": "Ver Consultores",
+        "login_book": "Entrar / Agendar"
+      }
+    },
+    "hero": {
+      "badge": "Conecte-se com o Invisível"
+    },
+    "why_astria": {
+      "title": "Por que escolher"
+    },
+    "benefits": {
+      "clarity": {
+        "title": "Clareza Imediata",
+        "description": "Respostas rápidas para dúvidas que tiram seu sono."
+      },
+      "experts": {
+        "title": "Especialistas Reais",
+        "description": "Profissionais avaliados pela comunidade e pela plataforma."
+      },
+      "privacy": {
+        "title": "Privacidade Total",
+        "description": "Consultas 100% anônimas e seguras via vídeo."
+      },
+      "savings": {
+        "title": "Economia",
+        "description": "Você paga apenas pelos minutos que utilizar."
+      }
+    },
+    "stats": {
+      "active_consultants": "Consultores Ativos",
+      "completed_sessions": "Consultas Realizadas",
+      "average_rating": "Avaliação Média",
+      "always_available": "Sempre Disponíveis"
+    },
+    "pro_section": {
+      "title_prefix": "Transforme seu Dom em",
+      "title_highlight": "Carreira",
+      "description": "Horários flexíveis, pagamentos semanais via PIX e suporte total ao profissional. Junte-se a nossa elite de consultores.",
+      "cta": "Quero Ser Consultor"
+    },
+    "pro_benefits": {
+      "flexibility": {
+        "title": "Flexibilidade Total",
+        "description": "Trabalhe quando e onde quiser"
+      },
+      "weekly_payment": {
+        "title": "Pagamento Semanal",
+        "description": "Receba via PIX toda semana"
+      },
+      "support": {
+        "title": "Suporte Dedicado",
+        "description": "Equipe pronta para te ajudar"
+      }
+    }
+  },
+  "footer": {
+    "security": {
+      "secure_connection": "Conexão Segura",
+      "ssl_encrypted": "SSL Criptografado"
+    }
+  },
+  "shell": {
+    "menu": {
+      "close": "Fechar menu",
+      "open": "Abrir menu"
+    },
+    "mobile_nav": {
+      "title": "Navegação",
+      "menu": "Menu"
+    }
+  },
+  "loader": {
+    "default_message": "Carregando experiencia...",
+    "error": {
+      "stuck_message": "Encontramos dificuldade para carregar esta página. Você pode tentar novamente agora."
+    },
+    "actions": {
+      "reload": "Recarregar página",
+      "back_home": "Voltar ao início"
+    }
+  },
+  "app": {
+    "loader": {
+      "opening_portal": "Abrindo portal...",
+      "syncing_account": "Sincronizando conta..."
+    }
+  },
+  "spell_purchase": {
+    "title": "Finalizar contratação",
+    "subtitle": "Confira os dados antes de escolher a forma de pagamento.",
+    "hiring_text_prefix": "Você está contratando",
+    "hiring_text_with": "com o",
+    "price_prefix": "O valor é de",
+    "payment_question": "Como vc prefere pagar?",
+    "login_required_prefix": "Faça login ou crie uma conta para concluir o pedido da magia",
+    "create_account": "Criar conta",
+    "purchase_approved": "Compra aprovada",
+    "credit_card": "Cartão de crédito",
+    "pix_instructions": "Escaneie o QR Code, conclua o PIX e depois registre o pedido para validação.",
+    "pix_not_configured": "PIX não configurado no admin.",
+    "copy_paste": "Copia e cola",
+    "code_unavailable": "Código indisponível",
+    "registering_order": "Registrando pedido...",
+    "already_paid_pix": "Já paguei no PIX",
+    "payment_confirmed": "Pagamento confirmado e pedido registrado.",
+    "pix_order_registered": "Pedido PIX registrado."
+  },
+  "recharge": {
+    "pix_description_prefix": "Recarga Astria",
+    "package_prefix": "Pacote",
+    "page_title": "Recarregar Saldo",
+    "page_subtitle": "Escolha como deseja adicionar créditos à sua conta.",
+    "current_balance_title": "Saldo atual",
+    "current_balance_subtitle": "Você pode adicionar Saldo conforme sua necessidade.",
+    "choose_package_title": "Escolha um Pacote",
+    "choose_package_subtitle": "Selecione o valor desejado para recarga.",
+    "most_selected": "Mais escolhido",
+    "select_package": "Selecionar este pacote",
+    "back_to_packages": "Voltar para pacotes",
+    "choose_payment_method": "Escolha o método de pagamento para este pacote.",
+    "pay_with_pix": "Pagar com Pix",
+    "manual_qr": "Manual / QR Code",
+    "credit_card": "Cartão de Crédito",
+    "pix_payment_title": "Pagamento via Pix",
+    "pix_payment_subtitle": "Escaneie o QR Code ou use o código Copia e Cola.",
+    "qr_error": "Erro ao gerar QR Code. Verifique as configurações no admin.",
+    "copy_paste_code": "Código Copia e Cola",
+    "code_unavailable": "Código não disponível",
+    "already_paid": "Já realizei o pagamento",
+    "balance_release_note": "O saldo será liberado após a confirmação manual do administrador.",
+    "payment_confirmed_title": "Pagamento Confirmado",
+    "payment_confirmed_subtitle": "Seu pagamento foi processado com sucesso!",
+    "payment_received": "Pagamento Recebido!",
+    "stripe_success_detail": "Seus créditos foram processados e a confirmação do Stripe foi concluída.",
+    "check_updated_balance": "Você já pode voltar e conferir o saldo atualizado."
+  },
+  "contact": {
+    "page": {
+      "title": "Entre em Contato",
+      "subtitle": "Conversar com nossa equipe"
+    },
+    "info": {
+      "title": "Informações de Contato",
+      "email_label": "Email",
+      "email_response_time": "Resposta em até 24 horas",
+      "whatsapp_label": "WhatsApp",
+      "whatsapp_hours": "Seg-Dom: 9h às 22h",
+      "address_label": "Endereço",
+      "country": "Brasil"
+    },
+    "form": {
+      "badge": "Enviar Mensagem",
+      "name_label": "Seu Nome",
+      "name_placeholder": "Seu nome",
+      "email_label": "Seu Email",
+      "email_placeholder": "seu@email.com",
+      "subject_label": "Assunto",
+      "subject_placeholder": "Assunto da mensagem",
+      "message_label": "Mensagem",
+      "message_placeholder": "Sua mensagem aqui...",
+      "submit": "Enviar Mensagem"
+    },
+    "success": {
+      "title": "Mensagem Enviada!",
+      "description": "Obrigado por entrar em contato. Nossa equipe responderá em breve."
+    },
+    "schedule": {
+      "title": "Horário de Funcionamento",
+      "weekdays": "Segunda a Sexta",
+      "weekdays_time": "9h às 18h",
+      "saturday": "Sábado",
+      "saturday_time": "10h às 16h",
+      "sunday": "Domingo",
+      "sunday_time": "Fechado"
+    }
+  },
+  "support": {
+    "page": {
+      "title": "Centro de Suporte",
+      "subtitle": "Estamos aqui para ajudar você"
+    },
+    "channels": {
+      "email": {
+        "title": "Email",
+        "action": "Enviar"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "action": "Chatear"
+      },
+      "live_chat": {
+        "title": "Chat ao Vivo",
+        "desc": "Disponível 24/7",
+        "action": "Iniciar"
+      }
+    },
+    "faq": {
+      "title": "Dúvidas Frequentes",
+      "q1": "Qual é o horário de atendimento?",
+      "q2": "Como recupero minha senha?",
+      "q3": "Como cancelo uma sessão?",
+      "default_answer": "Resposta disponível no nosso centro de ajuda."
+    }
+  },
+  "how_it_works": {
+    "page": {
+      "title": "Como Funciona",
+      "subtitle": "Guia completo para usar a plataforma Astria"
+    },
+    "intro": {
+      "badge": "Seu Caminho até as Respostas",
+      "title_line_1": "6 Passos Simples",
+      "title_line_2": "para Transformação",
+      "description": "A plataforma Astria foi desenvolvida para ser intuitiva e acessível. Em apenas 6 passos, você terá acesso a consultas personalizadas, leituras de tarot, rituais mágicos e muito mais."
+    },
+    "steps": {
+      "1": {
+        "title": "Cadastro",
+        "description": "Crie sua conta em poucos minutos com seus dados e escolha uma senha segura."
+      },
+      "2": {
+        "title": "Recarga de Saldo",
+        "description": "Recarregue sua carteira digital com o valor desejado para iniciar consultas."
+      },
+      "3": {
+        "title": "Escolher Consultor",
+        "description": "Navegue pela plataforma e escolha o consultor ideal para suas necessidades."
+      },
+      "4": {
+        "title": "Fazer Pergunta",
+        "description": "Envie suas perguntas em pacotes de 3 ou 5 questões para resposta do especialista."
+      },
+      "5": {
+        "title": "Chamada ao Vivo",
+        "description": "Conecte-se em tempo real via vídeo seguro para consulta imediata do especialista."
+      },
+      "6": {
+        "title": "Contrate Serviços",
+        "description": "Escolha entre agendamento de rituais mágicos executados por profissionais especializados."
+      }
+    },
+    "features": {
+      "title_prefix": "O que você pode fazer em",
+      "consultants": {
+        "title": "Consultas com Tarólogos",
+        "item_1": "✨ Leitura de tarot presencial",
+        "item_2": "💭 Pacotes de perguntas (3 ou 5)",
+        "item_3": "📞 Chamadas ao vivo em vídeo",
+        "item_4": "⭐ Avaliação e histórico de consultas"
+      },
+      "magic": {
+        "title": "Serviços Mágicos",
+        "item_1": "🔮 Ritua Personalizados",
+        "item_2": "💝 Trabalhos de Amarração",
+        "item_3": "🪙 Rituais de Prosperidade",
+        "item_4": "🛡️ Proteção Espiritual"
+      },
+      "security": {
+        "title": "Segurança e Privacidade",
+        "item_1": "🔒 Consultações 100% anônimas",
+        "item_2": "🔐 Criptografia SSL",
+        "item_3": "🛡️ Proteção de dados pessoais",
+        "item_4": "✅ Garantia de confidencialidade"
+      },
+      "payment": {
+        "title": "Pagamento Flexível",
+        "item_1": "💳 Múltiplas formas de pagamento",
+        "item_2": "⏱️ Cobrança por minuto em vídeo",
+        "item_3": "📊 Saldo sempre disponível",
+        "item_4": "🔄 Recargas rápidas e seguras"
+      }
+    },
+    "faq": {
+      "title": "Perguntas Frequentes",
+      "q1": "Como faço para recarregar meu saldo?",
+      "a1": "Acesse a seção \"Recarregar\" na sua área do cliente. Escolha o valor e a forma de pagamento. A recarrega é processada instantaneamente.",
+      "q2": "Posso confiar na privacidade das consultas?",
+      "a2": "Sim! Todas as consultas são 100% anônimas e protegidas por criptografia SSL. Seus dados nunca são compartilhados.",
+      "q3": "Como os consultores são selecionados?",
+      "a3": "Todos os consultores passam por um rigoroso processo de verificação. Avaliações e histórico de clientes garantem qualidade.",
+      "q4": "Posso fazer chamadas de vídeo com qualquer consultor?",
+      "a4": "Sim, desde que o consultor esteja online ou você possa agendar uma chamada. Consultores oferecem diferentes disponibilidades.",
+      "q5": "O que fazer se não estiver satisfeito?",
+      "a5": "Temos política de satisfação do cliente. Entre em contato com nosso suporte para resolução de qualquer problema.",
+      "q6": "Quais são as opções de pagamento?",
+      "a6": "Aceitamos cartões de crédito, débito, PIX, transferência bancária e várias carteiras digitais para sua comodidade."
+    },
+    "cta": {
+      "title": "Pronto para Começar?",
+      "description": "Faça seu cadastro em poucos minutos e acesse imediatamente os melhores especialistas espirituais.",
+      "button": "Criar Minha Conta Agora"
+    }
+  },
+  "consultant_area": {
+    "page": {
+      "title": "Área do Consultor",
+      "subtitle": "Atendimentos de perguntas, vídeo e carteira do consultor."
+    },
+    "restricted": {
+      "subtitle": "Painel Restrito",
+      "title": "Acesso Restrito",
+      "description": "Esta área é exclusiva para nossos consultores. Se você é um tarólogo experiente, venha fazer parte do nosso time!",
+      "become_consultant": "Torne-se um Consultor",
+      "back_home": "Voltar para a Home"
+    },
+    "status": {
+      "online": "ONLINE",
+      "offline": "OFFLINE"
+    },
+    "errors": {
+      "audio_process": "Não foi possível processar o áudio da resposta.",
+      "audio_prepare": "Erro ao preparar áudio da resposta.",
+      "request_not_found": "Atendimento não encontrado ou já respondido.",
+      "answer_all_required": "Responda todas as perguntas antes de enviar.",
+      "send_failed": "Não foi possível enviar a resposta.",
+      "send_retry": "Erro ao enviar resposta. Tente novamente.",
+      "invalid_pix": "Informe uma chave PIX válida.",
+      "invalid_withdrawal": "Informe um valor de saque válido.",
+      "invalid_image": "Selecione um arquivo de imagem válido."
+    },
+    "notices": {
+      "went_offline": "Você ficou offline e não receberá novas chamadas.",
+      "incoming_call_prefix": "Chamada recebida de",
+      "incoming_call_suffix": "Toque e notificação ativados.",
+      "customer": "cliente",
+      "went_online": "Você ficou online. Wake Lock e escuta de chamadas foram ativados.",
+      "cannot_go_online": "Não foi possível ativar o modo online no momento.",
+      "alert_silenced": "Alerta de chamada silenciado.",
+      "audio_saved_prefix": "Áudio da resposta",
+      "audio_saved_suffix": "salvo.",
+      "response_sent": "Resposta enviada e valor líquido creditado na carteira do consultor.",
+      "pix_saved": "Chave PIX salva com sucesso.",
+      "profile_image_loaded": "Imagem de perfil carregada. Clique em Salvar perfil para confirmar.",
+      "profile_saved": "Perfil do consultor atualizado com sucesso."
+    },
+    "video_pending": {
+      "title": "Chamadas de Vídeo Pendentes",
+      "subtitle": "Clientes aguardando você entrar na sala.",
+      "client": "Cliente",
+      "requested_recently": "Solicitado agora pouco",
+      "enter_room": "Entrar na Sala"
+    },
+    "questions": {
+      "title": "Atendimento de Perguntas",
+      "subtitle": "Visualize e responda cada item enviado pelo cliente.",
+      "pending": "Pendentes",
+      "answered": "Respondidas",
+      "no_pending": "Você não possui mensagens pendentes.",
+      "client": "Cliente",
+      "package": "Pacote",
+      "questions": "perguntas",
+      "estimated_commission": "Comissão estimada",
+      "birth": "Nascimento",
+      "zodiac": "Signo",
+      "not_informed": "Não informado",
+      "reply_text": "Responder em texto",
+      "reply_audio": "Responder em áudio",
+      "answer_placeholder_prefix": "Digite a resposta para a Pergunta",
+      "sending": "Enviando...",
+      "send_response": "Enviar Resposta"
+    },
+    "profile": {
+      "title": "Editar Meu Perfil",
+      "subtitle": "Atualize dados públicos e preços do seu atendimento.",
+      "image_label": "Imagem de perfil",
+      "image_help": "Envie uma imagem do seu dispositivo para atualizar o card público.",
+      "image_preview_alt": "Prévia da foto do perfil",
+      "image_preview_help": "Prévia da imagem exibida para clientes.",
+      "public_name": "Nome público",
+      "public_name_help": "Nome exibido para os clientes no card e perfil.",
+      "name_placeholder": "Nome",
+      "contact_email": "E-mail de contato",
+      "contact_email_help": "Usado para identificação administrativa do consultor.",
+      "email_placeholder": "E-mail",
+      "tagline_label": "Tagline do perfil",
+      "tagline_help": "Frase curta que aparece abaixo do seu nome.",
+      "tagline_placeholder": "Tagline",
+      "full_description": "Descrição completa",
+      "full_description_help": "Explique sua abordagem, especialidades e diferenciais.",
+      "description_placeholder": "Descrição",
+      "price_per_minute": "Preço por minuto (R$)",
+      "price_per_minute_help": "Valor cobrado no atendimento por vídeo.",
+      "package_three": "Pacote 3 perguntas (R$)",
+      "package_three_help": "Valor fechado para responder 3 perguntas.",
+      "package_five": "Pacote 5 perguntas (R$)",
+      "package_five_help": "Valor fechado para responder 5 perguntas.",
+      "save": "Salvar perfil"
+    },
+    "wallet": {
+      "title": "Carteira do Consultor",
+      "subtitle": "Controle de ganhos, PIX e solicitação de saque.",
+      "available_balance": "Saldo disponível",
+      "filtered_earnings": "Ganhos filtrados",
+      "add_pix_key": "Adicionar chave PIX para recebimento",
+      "current_pix": "Atual",
+      "pix_placeholder": "Digite a chave PIX",
+      "save_pix_key": "Salvar chave PIX",
+      "request_withdrawal": "Solicitar saque",
+      "minimum": "Mínimo"
+    },
+    "filters": {
+      "total": "Total",
+      "daily": "Diário",
+      "weekly": "Semanal",
+      "monthly": "Mensal"
+    }
+  },
+  "oracle": {
+    "intro": {
+      "daily": {
+        "title": "Oráculo Diário",
+        "text": "O céu nunca é o mesmo duas vezes. Hoje, os astros se alinham em uma configuração única para você. Deixe que o Oráculo decifre as frequências deste dia e revele onde sua energia deve brilhar. O Universo está sussurrando agora. Você está pronto para sintonizar?",
+        "button": "Fazer Minha Leitura Diária"
+      },
+      "natal": {
+        "title": "Mapa Astral",
+        "text": "Sincronize-se com o Universo. Na Astria, transformamos dados astronômicos em sabedoria ancestral. Descubra os segredos que moldam sua personalidade, seus desafios e sua força oculta. O Cosmo tem uma mensagem para você. Vamos ouvi-la?",
+        "button": "Gerar meu Mapa Astral"
+      }
+    },
+    "messages": {
+      "daily_transits_error": "Erro ao carregar trânsitos diários.",
+      "chart_generate_error": "Não foi possível gerar o mapa astral agora.",
+      "missing_birth_data": "Faltam dados de nascimento válidos. Preencha novamente para gerar o mapa astral.",
+      "chart_empty": "Não foi possível gerar o mapa com os dados atuais. Revise e tente novamente.",
+      "save_location_error_prefix": "Erro salvar local",
+      "insufficient_balance": "Saldo insuficiente. Por favor, recarregue sua conta antes de continuar.",
+      "payment_process_error": "Erro ao processar pagamento."
+    },
+    "guest_modal": {
+      "alt": "Mapa Astral",
+      "title": "Mapa Astral",
+      "description": "Para realizar seu mapa astral faça seu cadastro ou login e aceite receber notificações.",
+      "register": "Cadastro",
+      "login": "Login"
+    },
+    "birth_city": {
+      "title": "Onde e quando as estrelas brilharam no seu nascimento?",
+      "birth_date": "Data de Nascimento",
+      "birth_date_placeholder": "DD/MM/AAAA",
+      "birth_time": "Horário de Nascimento",
+      "birth_time_placeholder": "HH:MM",
+      "city_label": "Sua cidade natal (Onde você nasceu)",
+      "city_help": "Escolha uma opção da lista para validar a localização. Apenas digitar o nome da cidade não gera coordenadas.",
+      "submit": "Sintonizar Cosmos"
+    },
+    "payment": {
+      "title": "Cruzar o Limiar",
+      "first_free_title": "Primeira Consulta Gratuita",
+      "first_free_desc": "Você tem direito a pedir orientação às estrelas sem custo. Use sabiamente, Viajante.",
+      "mystic_connection": "Conexão Mística",
+      "price_prefix": "Um tributo de",
+      "price_suffix": "é necessário para abrir os caminhos.",
+      "start_free": "Iniciar Gratuitamente",
+      "offer_start": "Ofertar e Iniciar",
+      "recharge": "Realizar Recarga",
+      "cancel_setup": "Cancelar Preparação"
+    },
+    "tabs": {
+      "natal": "Mapa Natal",
+      "daily": "Oráculo Diário"
+    },
+    "ritual": {
+      "destiny_from": "Destino traçado a partir de",
+      "born_on": "Nascido em",
+      "drawing_natal_sky": "Desenhando seu céu natal...",
+      "retry_message": "Algumas nuvens impediram a leitura dos astros, espere 1 minuto e clique em gerar novamente.",
+      "try_again": "Tentar novamente",
+      "fill_data_again": "Preencher dados novamente",
+      "preparing_natal_map": "Preparando seu mapa natal...",
+      "consulting_ephemerides": "Consultando as efemérides de hoje...",
+      "no_significant_transits": "Nenhum trânsito significativo detectado para hoje.",
+      "reload": "Recarregar",
+      "abandon": "Abandonar Ritual"
+    },
+    "result": {
+      "title": "Sua Revelação Astria",
+      "finish": "Finalizar Ritual"
+    },
+    "debug": {
+      "title": "DEBUG ORACLE (ativo para diagnóstico)",
+      "yes": "sim",
+      "no": "não"
+    }
+  },
+  "question_flow": {
+    "title": "Envio de Perguntas",
+    "package_prefix": "Pacote de",
+    "questions": "perguntas",
+    "debit": "D�bito",
+    "question_of_prefix": "Pergunta",
+    "question_of_middle": "de",
+    "question": "Pergunta",
+    "placeholder": "Digite a sua pergunta...",
+    "confirm_send": "Confirme o envio para o consultor:",
+    "audio_label": "�udio",
+    "no_file": "Sem arquivo",
+    "actions": {
+      "write": "Escrever",
+      "audio": "�udio",
+      "next": "Pr�xima",
+      "confirm_send": "Confirmar envio"
+    },
+    "errors": {
+      "max_audio_duration": "O �udio deve ter no m�ximo 2 minutos.",
+      "audio_read": "N�o foi poss�vel ler o �udio selecionado."
+    }
+  },
+  "answers": {
+    "page_title": "Respostas",
+    "page_subtitle": "Todas as respostas das suas perguntas em um s� lugar.",
+    "empty": "Voc� ainda n�o recebeu respostas.",
+    "labels": {
+      "your_questions": "Suas perguntas",
+      "answer": "Resposta"
+    },
+    "actions": {
+      "review_consultant": "Avaliar consultor"
+    },
+    "status": {
+      "reviewed": "Avaliado"
+    }
+  },
+  "video_room": {
+    "title": "Sala de Consulta",
+    "access_denied": "Acesso negado",
+    "back_home": "Voltar ao In�cio",
+    "consultation_with": "Consulta com",
+    "private_session": "Sess�o de V�deo Privada",
+    "ready_room": "Sala Pronta",
+    "waiting_consultant": "Aguardando Consultor",
+    "notices": {
+      "call_ended": "Chamada encerrada com sucesso."
+    },
+    "messages": {
+      "consultant_waiting": "O cliente est� esperando. Clique no bot�o abaixo para iniciar a videochamada.",
+      "consultant_available": "Consultor dispon�vel. Toque no bot�o abaixo para liberar c�mera e microfone no Safari e entrar na chamada.",
+      "room_created_wait": "Sua sala j� foi criada e o consultor foi notificado por e-mail e painel. Aguarde que estamos chamando o consultor para lhe atender."
+    },
+    "actions": {
+      "connecting": "Conectando...",
+      "start_service": "Iniciar Atendimento",
+      "join_call": "Entrar na Chamada",
+      "end_call": "Encerrar Chamada"
+    },
+    "errors": {
+      "load_room": "Erro ao carregar a sala.",
+      "browser_media_unsupported": "Seu navegador n�o suporta c�mera/microfone nesta p�gina.",
+      "start_call_failed": "N�o foi poss�vel iniciar a chamada. Confirme que cliente e consultor est�o online nesta p�gina.",
+      "media_permission_denied": "Permiss�es de c�mera/microfone n�o concedidas.",
+      "connect_video_room": "Erro ao conectar na sala de v�deo."
+    }
+  },
+  "login": {
+    "page_title": "Entrar",
+    "page_subtitle": "Acesse sua conta para continuar sua jornada espiritual.",
+    "card_title": "Acesso do Cliente",
+    "fields": {
+      "email": "Email",
+      "password": "Senha"
+    },
+    "actions": {
+      "signing_in": "Entrando...",
+      "sign_in": "Entrar na Conta",
+      "create_account_prompt": "Ainda n�o tem conta? Criar agora",
+      "become_consultant": "Trabalhe conosco: Seja um consultor"
+    },
+    "notices": {
+      "welcome_back": "Bem-vindo de volta!"
+    },
+    "errors": {
+      "invalid_credentials": "Erro ao entrar. Verifique suas credenciais."
+    }
+  },
+  "register": {
+    "page_title": "Criar Conta",
+    "page_subtitle": "Complete seu cadastro com dados essenciais para personalizar suas consultas.",
+    "notices": {
+      "created": "Conta criada com sucesso!"
+    },
+    "errors": {
+      "create_failed": "Erro ao criar conta."
+    }
+  },
+  "numerology_purchase": {
+    "title": "Portal de Frequ�ncias Vibracionais",
+    "subtitle": "Sincronize sua identidade com a matem�tica do destino.",
+    "fields": {
+      "full_name": "Nome completo",
+      "full_name_placeholder": "Seu nome completo",
+      "birth_date": "Data de nascimento",
+      "birth_date_placeholder": "dd/mm/aaaa"
+    },
+    "hiring_prefix": "Voc� est� contratando",
+    "price_prefix": "Valor de",
+    "delivery_prefix": "O material ser� enviado para",
+    "registered_email": "seu e-mail cadastrado",
+    "payment_question": "Como voc� prefere pagar?",
+    "login_required": "Fa�a login ou crie uma conta para concluir o pedido da sua leitura numerol�gica.",
+    "create_account": "Criar conta",
+    "order_confirmed": "Pedido confirmado",
+    "credit_card": "Cart�o de cr�dito",
+    "pix_instructions": "Escaneie o QR Code, conclua o PIX e depois registre o pedido para valida��o.",
+    "pix_not_configured": "PIX n�o configurado no admin.",
+    "copy_paste": "Copia e cola",
+    "code_unavailable": "C�digo indispon�vel",
+    "copied": "Copiado!",
+    "copy": "Copiar",
+    "reveal_map": "REVELAR MEU MAPA SAGRADO ?",
+    "payment_confirmed": "Pagamento confirmado! Pedido enviado ao admin.",
+    "payment_error": "Erro ao processar pagamento.",
+    "pix_registered": "Pedido PIX registrado."
+  },
+  "astral_purchase": {
+    "title": "Solicitar leitura completa",
+    "subtitle": "Receba por e-mail um PDF com cerca de 20 p�ginas com a leitura completa do seu mapa astral.",
+    "hiring_prefix": "Voc� est� contratando",
+    "price_prefix": "Valor de",
+    "delivery_prefix": "O material ser� enviado para",
+    "registered_email": "seu e-mail cadastrado",
+    "payment_question": "Como vc prefere pagar?",
+    "login_required": "Fa�a login ou crie uma conta para concluir o pedido da sua leitura astral.",
+    "create_account": "Criar conta",
+    "order_confirmed": "Pedido confirmado",
+    "credit_card": "Cart�o de cr�dito",
+    "pix_instructions": "Escaneie o QR Code, conclua o PIX e depois registre o pedido para valida��o.",
+    "pix_not_configured": "PIX n�o configurado no admin.",
+    "copy_paste": "Copia e cola",
+    "code_unavailable": "C�digo indispon�vel",
+    "registering_order": "Registrando pedido...",
+    "already_paid_pix": "J� paguei no PIX",
+    "payment_confirmed": "Pagamento confirmado e pedido registrado.",
+    "pix_registered": "Pedido PIX registrado."
+  },
+  "stripe_checkout": {
+    "card_unavailable": "Cart�o indispon�vel",
+    "card_unavailable_subtitle": "Configure a chave p�blica da Stripe no admin para liberar o checkout com cart�o.",
+    "card_unavailable_desc": "A forma de pagamento por cart�o depende das credenciais Stripe configuradas no painel administrativo.",
+    "payment_with_card": "Pagamento com cart�o",
+    "processing": "Processando...",
+    "pay_amount": "Pagar R$",
+    "fields": {
+      "card_number": "N�mero do cart�o",
+      "expiry": "Validade",
+      "cvc": "CVC"
+    },
+    "errors": {
+      "not_loaded": "Stripe n�o carregou corretamente.",
+      "start_payment": "Erro ao iniciar pagamento com cart�o.",
+      "card_field_missing": "Campo de cart�o n�o dispon�vel.",
+      "processing": "Erro ao processar pagamento.",
+      "not_approved": "Pagamento ainda n�o foi aprovado pela Stripe.",
+      "confirmation": "Erro ao confirmar pagamento.",
+      "pay_with_card": "Erro ao pagar com cart�o."
+    }
+  },
+  "astral_checkout": {
+    "subtitle": "Compra segura da sua Leitura Astral Completa."
+  },
+  "numerology_checkout": {
+    "subtitle": "Compra segura da sua Leitura Numerol�gica Completa."
+  },
+  "spell_checkout": {
+    "subtitle_prefix": "Compra segura da magia"
+  },
+  "review": {
+    "title": "Avaliar Consultor",
+    "subtitle_prefix": "Como foi sua experi�ncia com",
+    "rating_hint": "Toque nas estrelas para avaliar",
+    "rating_1": "Muito ruim",
+    "rating_2": "Ruim",
+    "rating_3": "Regular",
+    "rating_4": "Bom",
+    "rating_5": "Excelente!",
+    "comment_placeholder": "Deixe um coment�rio (opcional)...",
+    "actions": {
+      "sending": "Enviando...",
+      "submit": "Enviar Avalia��o",
+      "skip": "Pular por agora"
+    },
+    "errors": {
+      "select_rating": "Selecione uma nota de 1 a 5 estrelas.",
+      "submit_failed": "Erro ao enviar avalia��o.",
+      "connection": "Erro de conex�o. Tente novamente."
+    }
+  },
+  "consultants_marketplace": {
+    "title": "Marketplace de Consultores",
+    "subtitle": "Escolha um especialista e prepare a chamada em tempo real.",
+    "sort_by_price": "Ordenar por valor",
+    "lowest_price": "Menor Pre�o",
+    "highest_price": "Maior Pre�o"
+  },
+  "client_dashboard": {
+    "title": "Dashboard do Cliente",
+    "welcome": "Bem-vindo",
+    "subtitle_guest": "Fa�a cadastro para personalizar sua experi�ncia",
+    "current_balance": "Saldo atual",
+    "daily_horoscope": "Hor�scopo Di�rio"
+  },
+  "help_center": {
+    "title": "Central de Ajuda",
+    "subtitle": "Encontre respostas para suas d�vidas",
+    "search_placeholder": "Busque sua d�vida...",
+    "no_results_prefix": "Nenhum resultado encontrado para",
+    "try_other_keywords": "Tente usar diferentes palavras-chave"
+  },
+  "apk_home": {
+    "title": "Seu Destino",
+    "subtitle": "O que os astros revelam hoje?",
+    "oracle_cta_line_1": "Consulte seu",
+    "oracle_cta_line_2": "or�culo gr�tis",
+    "tarologists": "Tar�logos",
+    "recharge": "Recarregar",
+    "work_with_us": "Trabalhe Conosco",
+    "alt": {
+      "oracle": "Or�culo",
+      "consultants": "Consultores",
+      "recharge": "Recarregar",
+      "be_consultant": "Seja Consultor"
+    }
+  },
+  "be_consultant": {
+    "page_title": "Fa�a parte do nosso time de consultores",
+    "page_subtitle": "Cadastro de Consultor",
+    "form_title": "Cadastro de Consultor",
+    "form_subtitle": "Complete o formul�rio abaixo para se registrar como consultor astral em nossa plataforma.",
+    "logged_as": "Voc� j� est� logado como",
+    "use_current_user_question": "Deseja usar este usu�rio para se tornar consultor?",
+    "fields": {
+      "full_name": "Nome Completo",
+      "email": "E-mail",
+      "password": "Senha (m�nimo 6 caracteres)",
+      "birth_date": "Data de Nascimento",
+      "birth_date_placeholder": "DD/MM/AAAA",
+      "profile_photo": "Foto de Perfil",
+      "select_photo": "Clique para selecionar uma foto",
+      "photo_recommendation": "Recomendado: 300x300 pixels, m�ximo 5MB",
+      "profile_photo_preview": "Pr�-visualiza��o da foto de perfil",
+      "tagline": "Frase de Efeito (Tagline)",
+      "tagline_placeholder": "Ex: Leio energias de amor com objetividade.",
+      "about": "Sobre Voc� (Descri��o)",
+      "about_placeholder": "Conte um pouco sobre sua experi�ncia e especialidades...",
+      "price_per_minute": "Pre�o por Minuto (R$)",
+      "price_three_questions": "Pre�o para responder 3 perguntas (R$)",
+      "price_five_questions": "Pre�o para responder 5 perguntas (R$)"
+    },
+    "actions": {
+      "use_current_user": "Sim, usar este usu�rio",
+      "register_new_user": "N�o, cadastrar novo usu�rio",
+      "processing": "Processando...",
+      "submit": "Enviar Cadastro"
+    },
+    "notices": {
+      "success": "Cadastro realizado com sucesso! Bem-vindo � equipe."
+    },
+    "errors": {
+      "register_failed": "Erro ao realizar cadastro."
+    },
+    "success_notice": "Candidatura recebida. Nossa equipe far� contato em breve.",
+    "commission_notice": "Lembre-se que 30% do valor ser� cobrado de comiss�o para manuten��o e divulga��o do aplicativo.",
+    "already_registered": "J� tem cadastro?",
+    "login_here": "Fa�a login aqui"
+  },
+  "synchronicity": {
+    "page_title": "Sincronicidade de Almas",
+    "page_subtitle": "Descubra a frequ�ncia da sua conex�o",
+    "your_sign": "Seu signo",
+    "other_person_sign": "Signo da outra pessoa",
+    "disclaimer": "Duas trajet�rias, um �nico desenho estelar. Selecione as energias que deseja cruzar e observe como os elementos reagem � presen�a um do outro. O Cosmo n�o comete erros de c�lculo; ele apenas revela afinidades.",
+    "reading_energies": "Lendo as energias dos signos...",
+    "calculating": "Calculando sincronicidade...",
+    "complete_reading_title": "Fa�a uma leitura completa do Casal",
+    "complete_reading_subtitle": "O Sol atrai, mas � a dan�a de V�nus e Marte que mant�m.",
+    "actions": {
+      "view": "Ver Sincronicidade",
+      "unlock_full_map": "DESBLOQUEAR O MAPA COMPLETO DO CASAL",
+      "share": "Compartilhar",
+      "calculate_another": "Calcular outra combina��o"
+    }
   }
 }
