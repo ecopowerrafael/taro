@@ -421,13 +421,16 @@ export function HomePage() {
 
           </div>
 
+          <div className="mb-6 flex justify-center md:justify-end">
+            <LanguageSelector />
+          </div>
+
           {/* Copyright & Security */}
           <div className="pt-8 border-t border-mystic-purple-light/20 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-mystic-purple-light/60 text-xs">
               © {new Date().getFullYear()} Astria. {t('footer.rights', 'Todos os direitos reservados.')}
             </p>
             <div className="flex items-center gap-4">
-              <LanguageSelector />
               <span className="text-mystic-purple-light/60 text-xs flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span> {t('footer.security.secure_connection', 'Conexão Segura')}</span>
               <span className="text-mystic-purple-light/60 text-xs">{t('footer.security.ssl_encrypted', 'SSL Criptografado')}</span>
             </div>
