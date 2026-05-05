@@ -120,8 +120,8 @@
     "flow_step_1": "1. Elige la forma de pago y confirma el pedido.",
     "flow_step_2": "2. El mentor se pone en contacto si necesita alinear información adicional.",
     "flow_step_3": "3. El ritual se lleva a cabo según la intención y la demanda solicitada.",
-    "image_not_provided": "Imagen no informada TODO_I18N",
-    "made_by": "Hecha por TODO_I18N"
+    "image_not_provided": "Imagen no informada",
+    "made_by": "Hecha por"
   },
   "daily_card": {
     "title": "Tu Carta del Día",
@@ -263,15 +263,15 @@
     "hero_desc": "Consulta a los mejores oraculistas en una plataforma inmersiva. Encuentra respuestas, paz y dirección espiritual.",
     "hero_btn_consultant": "Encontrar Consultor",
     "hero_btn_guide": "Encontrar Guía",
-    "hero_btn_explore": "Explorar Tarotistas",
+    "hero_btn_explore": "Explorar Consultores",
     "cta": {
       "header": {
         "view_consultants": "Ver Consultores",
-        "book_session": "Agendar Sesión TODO_I18N"
+        "book_session": "Reservar Consulta"
       },
       "mobile": {
         "view_consultants": "Ver Consultores",
-        "login_book": "Entrar / Agendar TODO_I18N"
+        "login_book": "Acceder / Reservar"
       }
     },
     "hero": {
@@ -403,7 +403,7 @@
     "back_to_packages": "Volver a paquetes",
     "choose_payment_method": "Elige el método de pago para este paquete.",
     "pay_with_pix": "Pagar con Pix",
-    "manual_qr": "Manual / QR Code TODO_I18N",
+    "manual_qr": "Código QR",
     "credit_card": "Tarjeta de Crédito",
     "pix_payment_title": "Pago vía Pix",
     "pix_payment_subtitle": "Escanea el QR o usa el código Copia y Pega.",
@@ -426,7 +426,7 @@
     "info": {
       "title": "Información de Contacto",
       "email_label": "Email",
-      "email_response_time": "Respuesta en hasta 24 horas TODO_I18N",
+      "email_response_time": "Respuesta en hasta 24 horas",
       "whatsapp_label": "WhatsApp",
       "whatsapp_hours": "Lun-Dom: 9h a 22h",
       "address_label": "Dirección",
@@ -494,7 +494,7 @@
     "intro": {
       "badge": "Tu Camino hacia las Respuestas",
       "title_line_1": "6 Pasos Simples",
-      "title_line_2": "para Transformación TODO_I18N",
+      "title_line_2": "para Transformación",
       "description": "La plataforma Astria fue desarrollada para ser intuitiva y accesible. En solo 6 pasos, tendrás acceso a consultas personalizadas, lecturas de tarot, rituales mágicos y mucho más."
     },
     "steps": {
@@ -527,7 +527,7 @@
       "title_prefix": "Lo que puedes hacer en",
       "consultants": {
         "title": "Consultas con Tarotistas",
-        "item_1": "✨ Lectura de tarot presencial TODO_I18N",
+        "item_1": "✨ Lectura de tarot presencial",
         "item_2": "💭 Paquetes de preguntas (3 o 5)",
         "item_3": "📞 Llamadas en vivo por video",
         "item_4": "⭐ Evaluación e historial de consultas"
@@ -656,9 +656,9 @@
       "contact_email": "Email de contacto",
       "contact_email_help": "Usado para identificación administrativa del consultor.",
       "email_placeholder": "Email",
-      "tagline_label": "Tagline del perfil TODO_I18N",
+      "tagline_label": "Tagline del perfil",
       "tagline_help": "Frase corta que aparece debajo de tu nombre.",
-      "tagline_placeholder": "Tagline TODO_I18N",
+      "tagline_placeholder": "Tagline",
       "full_description": "Descripción completa",
       "full_description_help": "Explica tu enfoque, especialidades y diferenciales.",
       "description_placeholder": "Descripción",
@@ -726,7 +726,7 @@
       "birth_time_placeholder": "HH:MM",
       "city_label": "Tu ciudad natal (donde naciste)",
       "city_help": "Elige una opción de la lista para validar la ubicación. Solo escribir la ciudad no genera coordenadas.",
-      "submit": "Sintonizar Cosmos TODO_I18N"
+      "submit": "Sintonizar Cosmos"
     },
     "payment": {
       "title": "Cruzar el Umbral",
@@ -736,7 +736,7 @@
       "price_prefix": "Un tributo de",
       "price_suffix": "es necesario para abrir los caminos.",
       "start_free": "Iniciar Gratis",
-      "offer_start": "Ofertar e Iniciar TODO_I18N",
+      "offer_start": "Ofertar e Iniciar",
       "recharge": "Recargar",
       "cancel_setup": "Cancelar Preparación"
     },
@@ -775,7 +775,7 @@
     "title": "Env�o de Preguntas",
     "package_prefix": "Paquete de",
     "questions": "preguntas",
-    "debit": "D�bito TODO_I18N",
+    "debit": "D�bito",
     "question_of_prefix": "Pregunta",
     "question_of_middle": "de",
     "question": "Pregunta",
@@ -880,7 +880,7 @@
       "birth_date_placeholder": "dd/mm/aaaa"
     },
     "hiring_prefix": "Est�s contratando",
-    "price_prefix": "Valor de TODO_I18N",
+    "price_prefix": "Valor de",
     "delivery_prefix": "El material ser� enviado a",
     "registered_email": "tu correo registrado",
     "payment_question": "�C�mo prefieres pagar?",
@@ -894,7 +894,7 @@
     "code_unavailable": "C�digo no disponible",
     "copied": "�Copiado!",
     "copy": "Copiar",
-    "reveal_map": "REVELAR MI MAPA SAGRADO ? TODO_I18N",
+    "reveal_map": "REVELAR MI MAPA SAGRADO ?",
     "payment_confirmed": "�Pago confirmado! Pedido enviado al admin.",
     "payment_error": "Error al procesar pago.",
     "pix_registered": "Pedido PIX registrado."
@@ -903,7 +903,7 @@
     "title": "Solicitar lectura completa",
     "subtitle": "Recibe por email un PDF con cerca de 20 p�ginas con la lectura completa de tu mapa astral.",
     "hiring_prefix": "Est�s contratando",
-    "price_prefix": "Valor de TODO_I18N",
+    "price_prefix": "Valor de",
     "delivery_prefix": "El material ser� enviado a",
     "registered_email": "tu correo registrado",
     "payment_question": "�C�mo prefieres pagar?",
@@ -1025,7 +1025,7 @@
       "select_photo": "Haz clic para seleccionar una foto",
       "photo_recommendation": "Recomendado: 300x300 p�xeles, m�ximo 5MB",
       "profile_photo_preview": "Vista previa de la foto de perfil",
-      "tagline": "Frase (Tagline) TODO_I18N",
+      "tagline": "Frase (Tagline)",
       "tagline_placeholder": "Ej: Leo energ�as de amor con objetividad.",
       "about": "Sobre Ti (Descripci�n)",
       "about_placeholder": "Cuenta un poco sobre tu experiencia y especialidades...",
@@ -1062,7 +1062,7 @@
     "complete_reading_subtitle": "El Sol atrae, pero es la danza de Venus y Marte la que sostiene.",
     "actions": {
       "view": "Ver Sincronicidad",
-      "unlock_full_map": "DESBLOQUEAR MAPA COMPLETO DE LA PAREJA TODO_I18N",
+      "unlock_full_map": "DESBLOQUEAR MAPA COMPLETO DE LA PAREJA",
       "share": "Compartir",
       "calculate_another": "Calcular otra combinaci�n"
     }
