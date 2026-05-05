@@ -144,7 +144,7 @@ export function HomePage() {
   ]
 
   const { isAuthenticated } = usePlatformContext()
-  const navLinks = buildHeaderLinks({ isAuthenticated, isConsultant: false, isAdmin: false })
+  const navLinks = buildHeaderLinks({ isAuthenticated, isConsultant: false, isAdmin: false, t })
 
   return (
     <div className="min-h-screen bg-mystic-black text-white overflow-x-hidden font-lato selection:bg-mystic-gold/30 selection:text-mystic-gold">
@@ -175,10 +175,10 @@ export function HomePage() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            {publicNavLinks.filter((link) => link.label !== 'Home').map((link) => {
+            {publicNavLinks.filter((link) => link.labelKey !== 'nav.home').map((link) => {
               return (
                 <Link key={link.to} to={link.to} className="text-sm uppercase tracking-widest text-mystic-purple-light hover:text-mystic-gold transition-colors duration-300 relative group">
-                  {link.label}
+                  {t(link.labelKey, link.label)}
                   <span className="absolute -bottom-2 left-0 w-0 h-px bg-mystic-gold transition-all duration-300 group-hover:w-full"></span>
                 </Link>
               )

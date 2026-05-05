@@ -256,6 +256,14 @@
     "language": "Idioma"
   },
   "home": {
+    "hero_title_1": "Desvende os",
+    "hero_title_2": "Mistérios",
+    "hero_title_3": "do",
+    "hero_title_4": "Seu Destino",
+    "hero_desc": "Consulte os melhores oraculistas em uma plataforma imersiva. Encontre respostas, paz e direção espiritual.",
+    "hero_btn_consultant": "Encontrar Consultor",
+    "hero_btn_guide": "Encontrar Guia",
+    "hero_btn_explore": "Explorar Tarólogos",
     "cta": {
       "header": {
         "view_consultants": "Ver Consultores",
@@ -318,6 +326,18 @@
     }
   },
   "footer": {
+    "brand_desc": "A ponte entre o seu momento atual e o destino que o universo preparou para você.",
+    "platform": "Plataforma",
+    "for_consultants": "Para Consultores",
+    "be_consultant": "Seja Consultor",
+    "consultant_area": "Área do Consultor",
+    "support": "Suporte",
+    "legal": "Legal",
+    "terms": "Termos de Uso",
+    "privacy": "Privacidade",
+    "help_center": "Central de Ajuda",
+    "contact": "Contato",
+    "rights": "Todos os direitos reservados.",
     "security": {
       "secure_connection": "Conexão Segura",
       "ssl_encrypted": "SSL Criptografado"

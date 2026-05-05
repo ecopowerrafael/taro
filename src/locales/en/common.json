@@ -256,6 +256,14 @@
     "language": "Language"
   },
   "home": {
+    "hero_title_1": "Unveil the",
+    "hero_title_2": "Mysteries",
+    "hero_title_3": "of Your",
+    "hero_title_4": "Destiny",
+    "hero_desc": "Consult the best oraculists on an immersive platform. Find answers, peace, and spiritual direction.",
+    "hero_btn_consultant": "Find Consultant",
+    "hero_btn_guide": "Find Guide",
+    "hero_btn_explore": "Explore Tarot Readers",
     "cta": {
       "header": {
         "view_consultants": "View Consultants",
@@ -318,6 +326,18 @@
     }
   },
   "footer": {
+    "brand_desc": "The bridge between your current moment and the destiny the universe has prepared for you.",
+    "platform": "Platform",
+    "for_consultants": "For Consultants",
+    "be_consultant": "Become a Consultant",
+    "consultant_area": "Consultant Area",
+    "support": "Support",
+    "legal": "Legal",
+    "terms": "Terms of Use",
+    "privacy": "Privacy",
+    "help_center": "Help Center",
+    "contact": "Contact",
+    "rights": "All rights reserved.",
     "security": {
       "secure_connection": "Secure Connection",
       "ssl_encrypted": "SSL Encrypted"
