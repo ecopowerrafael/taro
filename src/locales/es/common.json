@@ -56,12 +56,12 @@
       "video": "Video",
       "three_questions": "3 Preguntas",
       "five_questions": "5 Preguntas",
-      "video_service": "Atenci�n por video",
+      "video_service": "Atención por video",
       "package_three": "Paquete 3 preguntas",
       "package_five": "Paquete 5 preguntas"
     },
     "pagination": {
-      "page_of": "P�gina",
+      "page_of": "Página",
       "of": "de"
     }
   },
@@ -130,8 +130,8 @@
     "come_back_tomorrow": "Vuelve mañana después de las 08:00 AM para una nueva carta",
     "reflect": "Elige el tema que deseas conocer y reflexiona sobre el mensaje recibido.",
     "title_prefix": "Carta del",
-    "title_highlight": "D�a",
-    "footer_text": "Las interpretaciones del Tarot Astria se basan en sabidur�a ancestral combinada con el flujo energ�tico del momento presente."
+    "title_highlight": "Día",
+    "footer_text": "Las interpretaciones del Tarot Astria se basan en sabiduría ancestral combinada con el flujo energético del momento presente."
   },
   "numerology": {
     "portal_title": "Portal de Numerología",
@@ -146,8 +146,8 @@
     "frequency_alert_desc": "Oscilaciones energéticas detectadas en tu ciclo actual. Se recomienda especial atención a patrones repetitivos y decisiones importantes.",
     "frequency_alert_soon": "Próximamente: ¡consejos personalizados para lidiar con tu frecuencia!",
     "page_title_prefix": "Mapa",
-    "page_title_highlight": "Numerol�gico",
-    "footer_text": "La numerolog�a pitag�rica revela la vibraci�n sagrada que tu nombre y nacimiento imprimen en el tejido del universo."
+    "page_title_highlight": "Numerológico",
+    "footer_text": "La numerología pitagórica revela la vibración sagrada que tu nombre y nacimiento imprimen en el tejido del universo."
   },
   "tarot": {
     "major_0": {
@@ -772,32 +772,32 @@
     }
   },
   "question_flow": {
-    "title": "Env�o de Preguntas",
+    "title": "Envío de Preguntas",
     "package_prefix": "Paquete de",
     "questions": "preguntas",
-    "debit": "D�bito",
+    "debit": "Débito",
     "question_of_prefix": "Pregunta",
     "question_of_middle": "de",
     "question": "Pregunta",
     "placeholder": "Escribe tu pregunta...",
-    "confirm_send": "Confirma el env�o al consultor:",
+    "confirm_send": "Confirma el envío al consultor:",
     "audio_label": "Audio",
     "no_file": "Sin archivo",
     "actions": {
       "write": "Escribir",
       "audio": "Audio",
       "next": "Siguiente",
-      "confirm_send": "Confirmar env�o"
+      "confirm_send": "Confirmar envío"
     },
     "errors": {
-      "max_audio_duration": "El audio debe durar como m�ximo 2 minutos.",
+      "max_audio_duration": "El audio debe durar como máximo 2 minutos.",
       "audio_read": "No fue posible leer el audio seleccionado."
     }
   },
   "answers": {
     "page_title": "Respuestas",
     "page_subtitle": "Todas las respuestas de tus preguntas en un solo lugar.",
-    "empty": "Todav�a no recibiste respuestas.",
+    "empty": "Todavía no recibiste respuestas.",
     "labels": {
       "your_questions": "Tus preguntas",
       "answer": "Respuesta"
@@ -814,28 +814,28 @@
     "access_denied": "Acceso denegado",
     "back_home": "Volver al Inicio",
     "consultation_with": "Consulta con",
-    "private_session": "Sesi�n de Video Privada",
+    "private_session": "Sesión de Video Privada",
     "ready_room": "Sala Lista",
     "waiting_consultant": "Esperando Consultor",
     "notices": {
-      "call_ended": "Llamada finalizada con �xito."
+      "call_ended": "Llamada finalizada con éxito."
     },
     "messages": {
-      "consultant_waiting": "El cliente est� esperando. Haz clic abajo para iniciar la videollamada.",
-      "consultant_available": "Consultor disponible. Toca abajo para habilitar c�mara y micr�fono en Safari y entrar en la llamada.",
+      "consultant_waiting": "El cliente está esperando. Haz clic abajo para iniciar la videollamada.",
+      "consultant_available": "Consultor disponible. Toca abajo para habilitar cámara y micrófono en Safari y entrar en la llamada.",
       "room_created_wait": "Tu sala ya fue creada y el consultor fue notificado por correo y panel. Espera, estamos llamando al consultor para atenderte."
     },
     "actions": {
       "connecting": "Conectando...",
-      "start_service": "Iniciar Atenci�n",
+      "start_service": "Iniciar Atención",
       "join_call": "Entrar en la Llamada",
       "end_call": "Finalizar Llamada"
     },
     "errors": {
       "load_room": "Error al cargar la sala.",
-      "browser_media_unsupported": "Tu navegador no soporta c�mara/micr�fono en esta p�gina.",
-      "start_call_failed": "No fue posible iniciar la llamada. Confirma que cliente y consultor est�n online en esta p�gina.",
-      "media_permission_denied": "Permisos de c�mara/micr�fono no concedidos.",
+      "browser_media_unsupported": "Tu navegador no soporta cámara/micrófono en esta página.",
+      "start_call_failed": "No fue posible iniciar la llamada. Confirma que cliente y consultor están online en esta página.",
+      "media_permission_denied": "Permisos de cámara/micrófono no concedidos.",
       "connect_video_room": "Error al conectar a la sala de video."
     }
   },
@@ -845,16 +845,16 @@
     "card_title": "Acceso del Cliente",
     "fields": {
       "email": "Email",
-      "password": "Contrase�a"
+      "password": "Contraseña"
     },
     "actions": {
       "signing_in": "Entrando...",
       "sign_in": "Entrar en la Cuenta",
-      "create_account_prompt": "�A�n no tienes cuenta? Crear ahora",
-      "become_consultant": "Trabaja con nosotros: S� consultor"
+      "create_account_prompt": "¿Aún no tienes cuenta? Crear ahora",
+      "become_consultant": "Trabaja con nosotros: Sí consultor"
     },
     "notices": {
-      "welcome_back": "�Bienvenido de vuelta!"
+      "welcome_back": "¡Bienvenido de vuelta!"
     },
     "errors": {
       "invalid_credentials": "Error al entrar. Verifica tus credenciales."
@@ -864,7 +864,7 @@
     "page_title": "Crear Cuenta",
     "page_subtitle": "Completa tu registro con datos esenciales para personalizar tus consultas.",
     "notices": {
-      "created": "�Cuenta creada con �xito!"
+      "created": "¡Cuenta creada con éxito!"
     },
     "errors": {
       "create_failed": "Error al crear cuenta."
@@ -872,72 +872,72 @@
   },
   "numerology_purchase": {
     "title": "Portal de Frecuencias Vibracionales",
-    "subtitle": "Sincroniza tu identidad con la matem�tica del destino.",
+    "subtitle": "Sincroniza tu identidad con la matemática del destino.",
     "fields": {
       "full_name": "Nombre completo",
       "full_name_placeholder": "Tu nombre completo",
       "birth_date": "Fecha de nacimiento",
       "birth_date_placeholder": "dd/mm/aaaa"
     },
-    "hiring_prefix": "Est�s contratando",
+    "hiring_prefix": "Estás contratando",
     "price_prefix": "Valor de",
-    "delivery_prefix": "El material ser� enviado a",
+    "delivery_prefix": "El material será enviado a",
     "registered_email": "tu correo registrado",
-    "payment_question": "�C�mo prefieres pagar?",
-    "login_required": "Inicia sesi�n o crea una cuenta para completar el pedido de tu lectura numerol�gica.",
+    "payment_question": "¿Cómo prefieres pagar?",
+    "login_required": "Inicia sesión o crea una cuenta para completar el pedido de tu lectura numerológica.",
     "create_account": "Crear cuenta",
     "order_confirmed": "Pedido confirmado",
-    "credit_card": "Tarjeta de cr�dito",
-    "pix_instructions": "Escanea el QR, completa PIX y luego registra el pedido para validaci�n.",
+    "credit_card": "Tarjeta de crédito",
+    "pix_instructions": "Escanea el QR, completa PIX y luego registra el pedido para validación.",
     "pix_not_configured": "PIX no configurado en admin.",
     "copy_paste": "Copia y pega",
-    "code_unavailable": "C�digo no disponible",
-    "copied": "�Copiado!",
+    "code_unavailable": "Código no disponible",
+    "copied": "¡Copiado!",
     "copy": "Copiar",
     "reveal_map": "REVELAR MI MAPA SAGRADO ?",
-    "payment_confirmed": "�Pago confirmado! Pedido enviado al admin.",
+    "payment_confirmed": "¡Pago confirmado! Pedido enviado al admin.",
     "payment_error": "Error al procesar pago.",
     "pix_registered": "Pedido PIX registrado."
   },
   "astral_purchase": {
     "title": "Solicitar lectura completa",
-    "subtitle": "Recibe por email un PDF con cerca de 20 p�ginas con la lectura completa de tu mapa astral.",
-    "hiring_prefix": "Est�s contratando",
+    "subtitle": "Recibe por email un PDF con cerca de 20 páginas con la lectura completa de tu mapa astral.",
+    "hiring_prefix": "Estás contratando",
     "price_prefix": "Valor de",
-    "delivery_prefix": "El material ser� enviado a",
+    "delivery_prefix": "El material será enviado a",
     "registered_email": "tu correo registrado",
-    "payment_question": "�C�mo prefieres pagar?",
-    "login_required": "Inicia sesi�n o crea una cuenta para completar el pedido de tu lectura astral.",
+    "payment_question": "¿Cómo prefieres pagar?",
+    "login_required": "Inicia sesión o crea una cuenta para completar el pedido de tu lectura astral.",
     "create_account": "Crear cuenta",
     "order_confirmed": "Pedido confirmado",
-    "credit_card": "Tarjeta de cr�dito",
-    "pix_instructions": "Escanea el QR, completa PIX y luego registra el pedido para validaci�n.",
+    "credit_card": "Tarjeta de crédito",
+    "pix_instructions": "Escanea el QR, completa PIX y luego registra el pedido para validación.",
     "pix_not_configured": "PIX no configurado en admin.",
     "copy_paste": "Copia y pega",
-    "code_unavailable": "C�digo no disponible",
+    "code_unavailable": "Código no disponible",
     "registering_order": "Registrando pedido...",
-    "already_paid_pix": "Ya pagu� con PIX",
+    "already_paid_pix": "Ya pagué con PIX",
     "payment_confirmed": "Pago confirmado y pedido registrado.",
     "pix_registered": "Pedido PIX registrado."
   },
   "stripe_checkout": {
     "card_unavailable": "Tarjeta no disponible",
-    "card_unavailable_subtitle": "Configura la clave p�blica de Stripe en admin para habilitar checkout con tarjeta.",
+    "card_unavailable_subtitle": "Configura la clave pública de Stripe en admin para habilitar checkout con tarjeta.",
     "card_unavailable_desc": "El pago con tarjeta depende de las credenciales de Stripe configuradas en el panel administrativo.",
     "payment_with_card": "Pago con tarjeta",
     "processing": "Procesando...",
     "pay_amount": "Pagar R$",
     "fields": {
-      "card_number": "N�mero de tarjeta",
+      "card_number": "Número de tarjeta",
       "expiry": "Vencimiento",
       "cvc": "CVC"
     },
     "errors": {
-      "not_loaded": "Stripe no carg� correctamente.",
+      "not_loaded": "Stripe no cargó correctamente.",
       "start_payment": "Error al iniciar pago con tarjeta.",
       "card_field_missing": "Campo de tarjeta no disponible.",
       "processing": "Error al procesar pago.",
-      "not_approved": "El pago a�n no fue aprobado por Stripe.",
+      "not_approved": "El pago aún no fue aprobado por Stripe.",
       "confirmation": "Error al confirmar pago.",
       "pay_with_card": "Error al pagar con tarjeta."
     }
@@ -946,30 +946,30 @@
     "subtitle": "Compra segura de tu Lectura Astral Completa."
   },
   "numerology_checkout": {
-    "subtitle": "Compra segura de tu Lectura Numerol�gica Completa."
+    "subtitle": "Compra segura de tu Lectura Numerológica Completa."
   },
   "spell_checkout": {
     "subtitle_prefix": "Compra segura de la magia"
   },
   "review": {
     "title": "Evaluar Consultor",
-    "subtitle_prefix": "�C�mo fue tu experiencia con",
+    "subtitle_prefix": "¿Cómo fue tu experiencia con",
     "rating_hint": "Toca las estrellas para evaluar",
     "rating_1": "Muy malo",
     "rating_2": "Malo",
     "rating_3": "Regular",
     "rating_4": "Bueno",
-    "rating_5": "�Excelente!",
+    "rating_5": "¡Excelente!",
     "comment_placeholder": "Deja un comentario (opcional)...",
     "actions": {
       "sending": "Enviando...",
-      "submit": "Enviar Evaluaci�n",
+      "submit": "Enviar Evaluación",
       "skip": "Saltar por ahora"
     },
     "errors": {
       "select_rating": "Selecciona una nota de 1 a 5 estrellas.",
-      "submit_failed": "Error al enviar evaluaci�n.",
-      "connection": "Error de conexi�n. Intenta nuevamente."
+      "submit_failed": "Error al enviar evaluación.",
+      "connection": "Error de conexión. Intenta nuevamente."
     }
   },
   "consultants_marketplace": {
@@ -982,9 +982,9 @@
   "client_dashboard": {
     "title": "Dashboard del Cliente",
     "welcome": "Bienvenido",
-    "subtitle_guest": "Reg�strate para personalizar tu experiencia",
+    "subtitle_guest": "Regístrate para personalizar tu experiencia",
     "current_balance": "Saldo actual",
-    "daily_horoscope": "Hor�scopo Diario"
+    "daily_horoscope": "Horóscopo Diario"
   },
   "help_center": {
     "title": "Centro de Ayuda",
@@ -995,14 +995,14 @@
   },
   "apk_home": {
     "title": "Tu Destino",
-    "subtitle": "�Qu� revelan hoy los astros?",
+    "subtitle": "¿Qué revelan hoy los astros?",
     "oracle_cta_line_1": "Consulta tu",
-    "oracle_cta_line_2": "or�culo gratis",
-    "tarologists": "Tar�logos",
+    "oracle_cta_line_2": "oráculo gratis",
+    "tarologists": "Tarólogos",
     "recharge": "Recargar",
     "work_with_us": "Trabaja con nosotros",
     "alt": {
-      "oracle": "Or�culo",
+      "oracle": "Oráculo",
       "consultants": "Consultores",
       "recharge": "Recargar",
       "be_consultant": "Ser Consultor"
@@ -1013,50 +1013,50 @@
     "page_subtitle": "Registro de Consultor",
     "form_title": "Registro de Consultor",
     "form_subtitle": "Completa el formulario para registrarte como consultor astral en nuestra plataforma.",
-    "logged_as": "Ya est�s logueado como",
-    "use_current_user_question": "�Deseas usar este usuario para ser consultor?",
+    "logged_as": "Ya estás logueado como",
+    "use_current_user_question": "¿Deseas usar este usuario para ser consultor?",
     "fields": {
       "full_name": "Nombre Completo",
       "email": "Email",
-      "password": "Contrase�a (m�nimo 6 caracteres)",
+      "password": "Contraseña (mínimo 6 caracteres)",
       "birth_date": "Fecha de Nacimiento",
       "birth_date_placeholder": "DD/MM/AAAA",
       "profile_photo": "Foto de Perfil",
       "select_photo": "Haz clic para seleccionar una foto",
-      "photo_recommendation": "Recomendado: 300x300 p�xeles, m�ximo 5MB",
+      "photo_recommendation": "Recomendado: 300x300 píxeles, máximo 5MB",
       "profile_photo_preview": "Vista previa de la foto de perfil",
       "tagline": "Frase (Tagline)",
-      "tagline_placeholder": "Ej: Leo energ�as de amor con objetividad.",
-      "about": "Sobre Ti (Descripci�n)",
+      "tagline_placeholder": "Ej: Leo energías de amor con objetividad.",
+      "about": "Sobre Ti (Descripción)",
       "about_placeholder": "Cuenta un poco sobre tu experiencia y especialidades...",
       "price_per_minute": "Precio por Minuto (R$)",
       "price_three_questions": "Precio para responder 3 preguntas (R$)",
       "price_five_questions": "Precio para responder 5 preguntas (R$)"
     },
     "actions": {
-      "use_current_user": "S�, usar este usuario",
+      "use_current_user": "Sí, usar este usuario",
       "register_new_user": "No, registrar nuevo usuario",
       "processing": "Procesando...",
       "submit": "Enviar Registro"
     },
     "notices": {
-      "success": "�Registro realizado con �xito! Bienvenido al equipo."
+      "success": "¡Registro realizado con éxito! Bienvenido al equipo."
     },
     "errors": {
       "register_failed": "Error al realizar registro."
     },
-    "success_notice": "Candidatura recibida. Nuestro equipo se pondr� en contacto pronto.",
-    "commission_notice": "Recuerda que se cobrar� 30% de comisi�n para mantenimiento y difusi�n de la app.",
-    "already_registered": "�Ya tienes registro?",
-    "login_here": "Inicia sesi�n aqu�"
+    "success_notice": "Candidatura recibida. Nuestro equipo se pondrá en contacto pronto.",
+    "commission_notice": "Recuerda que se cobrará 30% de comisión para mantenimiento y difusión de la app.",
+    "already_registered": "¿Ya tienes registro?",
+    "login_here": "Inicia sesión aquí"
   },
   "synchronicity": {
     "page_title": "Sincronicidad de Almas",
-    "page_subtitle": "Descubre la frecuencia de tu conexi�n",
+    "page_subtitle": "Descubre la frecuencia de tu conexión",
     "your_sign": "Tu signo",
     "other_person_sign": "Signo de la otra persona",
-    "disclaimer": "Dos trayectorias, un �nico dise�o estelar. Selecciona las energ�as que deseas cruzar y observa c�mo reaccionan los elementos ante la presencia del otro.",
-    "reading_energies": "Leyendo las energ�as de los signos...",
+    "disclaimer": "Dos trayectorias, un único diseño estelar. Selecciona las energías que deseas cruzar y observa cómo reaccionan los elementos ante la presencia del otro.",
+    "reading_energies": "Leyendo las energías de los signos...",
     "calculating": "Calculando sincronicidad...",
     "complete_reading_title": "Haz una lectura completa de la pareja",
     "complete_reading_subtitle": "El Sol atrae, pero es la danza de Venus y Marte la que sostiene.",
@@ -1064,7 +1064,7 @@
       "view": "Ver Sincronicidad",
       "unlock_full_map": "DESBLOQUEAR MAPA COMPLETO DE LA PAREJA",
       "share": "Compartir",
-      "calculate_another": "Calcular otra combinaci�n"
+      "calculate_another": "Calcular otra combinación"
     }
   }
 }
