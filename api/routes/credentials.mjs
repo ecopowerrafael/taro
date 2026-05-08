@@ -128,6 +128,7 @@ export const createCredentialsRouter = (pool) => {
         stripePublicKey: 'stripePublicKey',
         stripeSecretKey: 'stripeSecretKey',
         globalCommission: 'globalCommission',
+        facebookPixelId: 'facebookPixelId',
         smtpHost: 'smtpHost',
         smtpPort: 'smtpPort',
         smtpUser: 'smtpUser',
@@ -199,6 +200,7 @@ export const createCredentialsRouter = (pool) => {
         pix: ['pixKey', 'pixReceiverName', 'pixReceiverCity'],
         stripe: ['stripePublicKey', 'stripeSecretKey'],
         commission: ['globalCommission'],
+        pixel: ['facebookPixelId'],
         smtp: ['smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpFrom'],
         oracle: ['oracleHereApiKey', 'oracleGeminiKey', 'oracleGeminiModel', 'oracleProkeralaId', 'oracleProkeralaSecret', 'oracleSystemPrompt', 'oraclePrice'],
       }

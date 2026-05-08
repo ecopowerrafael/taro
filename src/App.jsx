@@ -1,4 +1,4 @@
-import { createElement, lazy, Suspense, useEffect } from 'react'
+import { createElement, lazy, Suspense, useEffect, useRef } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { usePlatformContext } from './context/platform-context'
@@ -87,8 +87,11 @@ function ProtectedRoute({ children, role }) {
 function AppContent() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { inAppNotifications, removeInAppNotification, isAuthenticated, authLoading } = usePlatformContext()
+  const { inAppNotifications, removeInAppNotification, isAuthenticated, authLoading, trackingCredentials } =
+    usePlatformContext()
   const routeSeo = getRouteSeo(location.pathname)
+  const facebookPixelId = (trackingCredentials?.facebookPixelId ?? '').trim()
+  const lastFacebookPixelPageViewRef = useRef(null)
 
   useEffect(() => {
     // Evita variação /rota e /rota/ que pode causar inconsistências de navegação.
@@ -103,6 +106,56 @@ function AppContent() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!facebookPixelId) {
+      return
+    }
+
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    if (!window.fbq) {
+      ;(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return
+        n = f.fbq = function () {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+        }
+        if (!f._fbq) f._fbq = n
+        n.push = n
+        n.loaded = true
+        n.version = '2.0'
+        n.queue = []
+        t = b.createElement(e)
+        t.async = true
+        t.src = v
+        s = b.getElementsByTagName(e)[0]
+        s.parentNode.insertBefore(t, s)
+      })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js')
+    }
+
+    try {
+      window.fbq('init', facebookPixelId)
+      window.fbq('track', 'PageView')
+    } catch {}
+  }, [facebookPixelId])
+
+  useEffect(() => {
+    if (!facebookPixelId || typeof window === 'undefined' || !window.fbq) {
+      return
+    }
+
+    const currentKey = `${location.pathname}${location.search}${location.hash}`
+    if (lastFacebookPixelPageViewRef.current === currentKey) {
+      return
+    }
+    lastFacebookPixelPageViewRef.current = currentKey
+
+    try {
+      window.fbq('track', 'PageView')
+    } catch {}
+  }, [facebookPixelId, location.hash, location.pathname, location.search])
 
   const renderHome = () => {
     if (isNativeAndroidApp()) {

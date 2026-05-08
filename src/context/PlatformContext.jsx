@@ -432,6 +432,9 @@ export function PlatformProvider({ children }) {
     oracleGeminiKey: '',
     oracleSystemPrompt: '',
   })
+  const [trackingCredentials, setTrackingCredentialsState] = useState({
+    facebookPixelId: '',
+  })
   const [questionRequests, setQuestionRequests] = useState([])
   const [consultantWallets, setConsultantWallets] = useState(initialConsultantWallets)
   const [paymentResult] = useState(null)
@@ -927,6 +930,11 @@ export function PlatformProvider({ children }) {
         if (type === 'pix') setMpCredentials(data)
         if (type === 'oracle') setOracleCredentialsState(data)
         if (type === 'stripe') setStripeCredentials(data)
+        if (type === 'pixel') {
+          setTrackingCredentialsState({
+            facebookPixelId: data?.facebookPixelId ?? '',
+          })
+        }
         if (type === 'smtp') setMpCredentials(data)
         if (type === 'commission') {
           const nextCommission = Number(data?.globalCommission)
@@ -1836,6 +1844,9 @@ export function PlatformProvider({ children }) {
           oracleSystemPrompt: payload?.oracleSystemPrompt ?? '',
 		oraclePrice: payload?.oraclePrice ?? '5.00',
         }
+        const tracking = {
+          facebookPixelId: payload?.facebookPixelId ?? '',
+        }
         const nextGlobalCommission = Number(payload?.globalCommission)
         mpCredentialsRef.current = mp
         dailyCredentialsRef.current = daily
@@ -1845,6 +1856,7 @@ export function PlatformProvider({ children }) {
         setDailyCredentialsState(daily)
         setStripeCredentialsState(stripe)
         setOracleCredentialsState(oracle)
+        setTrackingCredentialsState(tracking)
         setGlobalCommissionState(Number.isFinite(nextGlobalCommission) ? nextGlobalCommission : 30)
         } catch (err) {
           console.error('[loadCredentials] Error:', err)
@@ -2534,6 +2546,7 @@ export function PlatformProvider({ children }) {
     setStripeCredentials,
     oracleCredentials,
     setOracleCredentialsState,
+    trackingCredentials,
     submitQuestionConsultation,
     questionRequests,
     respondToQuestionRequest,

@@ -251,6 +251,7 @@ export const initializeSchema = async (pool) => {
       stripePublicKey VARCHAR(255) NULL,
       stripeSecretKey VARCHAR(255) NULL,
       globalCommission DECIMAL(5,2) NOT NULL DEFAULT 30,
+      facebookPixelId VARCHAR(64) NULL,
       smtpHost VARCHAR(255) NULL,
       smtpPort INT NULL,
       smtpUser VARCHAR(255) NULL,
@@ -272,6 +273,7 @@ export const initializeSchema = async (pool) => {
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpUser VARCHAR(255) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpPass VARCHAR(255) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN smtpFrom VARCHAR(255) NULL') } catch (e) {}
+  try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN facebookPixelId VARCHAR(64) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleHereApiKey VARCHAR(255) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleProkeralaId VARCHAR(255) NULL') } catch (e) {}
   try { await pool.query('ALTER TABLE platform_credentials ADD COLUMN oracleProkeralaSecret VARCHAR(255) NULL') } catch (e) {}

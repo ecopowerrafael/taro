@@ -64,6 +64,8 @@ export function AdminPanel({
   onStripeCredentialsChange,
   oracleCredentials,
   onOracleCredentialsChange,
+  trackingCredentials,
+  onTrackingCredentialsChange,
   adminUsers,
   onRefreshAdminUsers,
   onResetUserOracle,
@@ -120,6 +122,7 @@ export function AdminPanel({
     pixKey: '',
     pixReceiverName: '',
     pixReceiverCity: '',
+    facebookPixelId: '',
     smtpHost: '',
     smtpPort: '',
     smtpUser: '',
@@ -155,7 +158,7 @@ export function AdminPanel({
   }, [])
 
   useEffect(() => {
-    if (mpCredentials || dailyCredentials || stripeCredentials || oracleCredentials) {
+    if (mpCredentials || dailyCredentials || stripeCredentials || oracleCredentials || trackingCredentials) {
       setCredentialsDraft({
         mpPublicKey: mpCredentials?.publicKey || '',
         mpAccessToken: mpCredentials?.accessToken || '',
@@ -168,6 +171,7 @@ export function AdminPanel({
         pixKey: mpCredentials?.pixKey || '',
         pixReceiverName: mpCredentials?.pixReceiverName || '',
         pixReceiverCity: mpCredentials?.pixReceiverCity || '',
+        facebookPixelId: trackingCredentials?.facebookPixelId || '',
         smtpHost: dailyCredentials?.smtpHost || '',
         smtpPort: dailyCredentials?.smtpPort || '',
         smtpUser: dailyCredentials?.smtpUser || '',
@@ -181,7 +185,7 @@ export function AdminPanel({
         oraclePrice: oracleCredentials?.oraclePrice || '0.00',
       })
     }
-  }, [mpCredentials, dailyCredentials, stripeCredentials, oracleCredentials])
+  }, [mpCredentials, dailyCredentials, stripeCredentials, oracleCredentials, trackingCredentials])
 
   useEffect(() => {
     setFinanceDraft(
@@ -224,6 +228,10 @@ export function AdminPanel({
         stripePublicKey: credentialsDraft.stripePublicKey,
         stripeSecretKey: credentialsDraft.stripeSecretKey,
       }
+    } else if (type === 'pixel') {
+      data = {
+        facebookPixelId: credentialsDraft.facebookPixelId,
+      }
     } else if (type === 'smtp') {
       data = {
         smtpHost: credentialsDraft.smtpHost,
@@ -244,7 +252,8 @@ export function AdminPanel({
     }
     
     // Call savePlatformCredentials and wait for response
-    const result = await onMpCredentialsChange(type, data)
+    const saveFn = type === 'pixel' ? (onTrackingCredentialsChange || onMpCredentialsChange) : onMpCredentialsChange
+    const result = await saveFn(type, data)
     
     if (result?.ok) {
       setCredentialsFeedback(`✓ Credenciais de ${type} salvas com sucesso!`)
@@ -1741,6 +1750,34 @@ export function AdminPanel({
                     value={credentialsDraft.stripeSecretKey}
                     onChange={(e) => setCredentialsDraft({ ...credentialsDraft, stripeSecretKey: e.target.value })}
                     placeholder="sk_live_... ou sk_test_..."
+                    className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="rounded-lg border border-mystic-gold/30 bg-black/25 p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-xl text-mystic-goldSoft">Meta Pixel (Facebook)</h3>
+                  <p className="text-xs text-ethereal-silver/70">ID do Pixel para rastreamento de PageView.</p>
+                </div>
+                <button
+                  onClick={() => handleSavePartial('pixel')}
+                  disabled={credentialsSaving}
+                  className="flex items-center gap-1 rounded-lg bg-mystic-gold/90 px-3 py-1 text-xs font-bold text-black transition hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save size={14} />
+                  {credentialsSaving ? 'Salvando...' : 'Salvar Pixel'}
+                </button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="grid gap-1.5 text-sm text-amber-100/75">
+                  Pixel ID
+                  <input
+                    value={credentialsDraft.facebookPixelId}
+                    onChange={(e) => setCredentialsDraft({ ...credentialsDraft, facebookPixelId: e.target.value })}
+                    placeholder="ex: 123456789012345"
                     className="rounded-lg border border-mystic-gold/35 bg-black/35 px-3 py-2 text-sm text-amber-50 outline-none focus:ring-2 focus:ring-mystic-gold/60"
                   />
                 </label>
