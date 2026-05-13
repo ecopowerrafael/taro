@@ -1807,6 +1807,24 @@ export function PlatformProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    const loadPublicTracking = async () => {
+      try {
+        const response = await fetch(buildApiUrl('/api/credentials/public'))
+        if (!response.ok) {
+          return
+        }
+        const payload = await response.json().catch(() => ({}))
+        setTrackingCredentialsState({
+          facebookPixelId: payload?.facebookPixelId ?? '',
+        })
+      } catch {
+        return
+      }
+    }
+    void loadPublicTracking()
+  }, [])
+
+  useEffect(() => {
     const loadCredentials = async () => {
       if (!token) return
       try {

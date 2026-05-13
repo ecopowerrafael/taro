@@ -86,6 +86,30 @@ export function AdminPanel({
   adminNumerologyOrders = [],
   fetchAdminNumerologyOrders,
 }) {
+  const extractFacebookPixelId = (value) => {
+    const text = String(value ?? '').trim()
+    if (!text) {
+      return ''
+    }
+
+    const initMatch = text.match(/fbq\(\s*['"]init['"]\s*,\s*['"](\d+)['"]\s*\)/i)
+    if (initMatch?.[1]) {
+      return initMatch[1]
+    }
+
+    const urlMatch = text.match(/facebook\.com\/tr\?id=(\d+)/i) || text.match(/tr\?id=(\d+)/i)
+    if (urlMatch?.[1]) {
+      return urlMatch[1]
+    }
+
+    const digitsOnly = text.replace(/[^\d]/g, '')
+    if (digitsOnly.length >= 10) {
+      return digitsOnly
+    }
+
+    return text
+  }
+
   const [activeTab, setActiveTab] = useState('dashboard') // ... | 'numerologia'
     // Buscar pedidos de numerologia ao ativar a aba
     useEffect(() => {
@@ -230,7 +254,7 @@ export function AdminPanel({
       }
     } else if (type === 'pixel') {
       data = {
-        facebookPixelId: credentialsDraft.facebookPixelId,
+        facebookPixelId: extractFacebookPixelId(credentialsDraft.facebookPixelId),
       }
     } else if (type === 'smtp') {
       data = {

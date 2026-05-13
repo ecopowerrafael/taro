@@ -32,6 +32,20 @@ export const createCredentialsRouter = (pool) => {
     }
   })
 
+  router.get('/public', async (_request, response) => {
+    try {
+      const [rows] = await pool.query(
+        'SELECT facebookPixelId FROM platform_credentials WHERE id = 1 LIMIT 1',
+      )
+      response.json({
+        facebookPixelId: rows?.[0]?.facebookPixelId ?? '',
+      })
+    } catch (error) {
+      console.error('[API/Credentials] Erro ao buscar credenciais públicas:', error)
+      response.status(500).json({ message: 'Erro ao buscar credenciais públicas.' })
+    }
+  })
+
   // Rota de teste pública para confirmar se o backend atualizou
   router.get('/ping-v4', (_request, response) => {
     response.json({ 

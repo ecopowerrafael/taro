@@ -136,7 +136,26 @@ function AppContent() {
 
     try {
       window.fbq('init', facebookPixelId)
+      const initialKey = `${window.location.pathname}${window.location.search}${window.location.hash}`
+      lastFacebookPixelPageViewRef.current = initialKey
       window.fbq('track', 'PageView')
+    } catch {}
+
+    try {
+      const existingNoScript = document.getElementById('facebook-pixel-noscript')
+      if (!existingNoScript) {
+        const noScript = document.createElement('noscript')
+        noScript.id = 'facebook-pixel-noscript'
+        const img = document.createElement('img')
+        img.height = 1
+        img.width = 1
+        img.style.display = 'none'
+        img.src = `https://www.facebook.com/tr?id=${encodeURIComponent(
+          facebookPixelId,
+        )}&ev=PageView&noscript=1`
+        noScript.appendChild(img)
+        document.body.appendChild(noScript)
+      }
     } catch {}
   }, [facebookPixelId])
 
