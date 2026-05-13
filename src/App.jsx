@@ -13,6 +13,7 @@ import { MobileBottomNav } from './components/MobileBottomNav'
 import { NotificationToast } from './components/NotificationToast'
 import { attachNativeAppUrlListener } from './services/nativeMobilePush'
 import { useTranslation } from 'react-i18next'
+import { MaintenanceModal } from './components/MaintenanceModal'
 
 import { isNativeAndroidApp } from './services/nativeMobilePush'
 
@@ -224,6 +225,7 @@ function AppContent() {
         onClose={removeInAppNotification}
       />
       <PermissionPromptModal />
+      <MaintenanceModal />
     </>
   )
 }
