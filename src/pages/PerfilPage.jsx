@@ -117,6 +117,7 @@ export function PerfilPage() {
     authLoading,
     isAuthenticated,
     questionRequests,
+    refreshQuestionRequests,
   } = usePlatformContext()
   const navigate = useNavigate()
   const [seenAnswerIds, setSeenAnswerIds] = useState(new Set())
@@ -143,6 +144,22 @@ export function PerfilPage() {
     }
   }, [profile, seenStorageKey])
 
+  useEffect(() => {
+    if (!refreshQuestionRequests) return
+    void refreshQuestionRequests()
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshQuestionRequests()
+      }
+    }
+    window.addEventListener('focus', handleVisibility)
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      window.removeEventListener('focus', handleVisibility)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [refreshQuestionRequests])
+
   const handleLogout = () => {
     logout()
     navigate('/')
@@ -160,8 +177,11 @@ export function PerfilPage() {
 
   if (!profile) return null
 
+  const myEmail = String(profile.email || '').trim().toLowerCase()
   const myAnswers = questionRequests.filter(
-    (request) => request.customerEmail === profile.email && request.status === 'answered'
+    (request) =>
+      String(request.customerEmail || '').trim().toLowerCase() === myEmail &&
+      request.status === 'answered',
   )
 
   const unreadAnswersCount = myAnswers.filter((answer) => !seenAnswerIds.has(answer.id)).length

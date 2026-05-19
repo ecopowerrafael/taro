@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next'
 
 export function RespostasPage() {
   const { t } = useTranslation()
-  const { profile, authLoading, isAuthenticated, questionRequests, token } = usePlatformContext()
+  const { profile, authLoading, isAuthenticated, questionRequests, refreshQuestionRequests, token } = usePlatformContext()
   const [expandedAnswerId, setExpandedAnswerId] = useState(null)
   const [reviewModal, setReviewModal] = useState({ isOpen: false, consultantId: '', consultantName: '', referenceId: '' })
   const [reviewedIds, setReviewedIds] = useState(new Set())
@@ -32,6 +32,22 @@ export function RespostasPage() {
       // Ignora storage inválido
     }
   }, [seenStorageKey])
+
+  useEffect(() => {
+    if (!refreshQuestionRequests) return
+    void refreshQuestionRequests()
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshQuestionRequests()
+      }
+    }
+    window.addEventListener('focus', handleVisibility)
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      window.removeEventListener('focus', handleVisibility)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [refreshQuestionRequests])
 
   const persistSeen = (nextSet) => {
     setSeenIds(nextSet)
@@ -61,9 +77,25 @@ export function RespostasPage() {
 
   if (!isAuthenticated || !profile) return null
 
+  const myEmail = String(profile.email || '').trim().toLowerCase()
+  const toTime = (value) => {
+    if (!value) return 0
+    const date = new Date(value)
+    const time = date.getTime()
+    return Number.isFinite(time) ? time : 0
+  }
+  const formatDate = (value) => {
+    const time = toTime(value)
+    if (!time) return '—'
+    return new Date(time).toLocaleDateString('pt-BR')
+  }
   const myAnswers = questionRequests
-    .filter((request) => request.customerEmail === profile.email && request.status === 'answered')
-    .sort((a, b) => new Date(b.answeredAt || 0) - new Date(a.answeredAt || 0))
+    .filter(
+      (request) =>
+        String(request.customerEmail || '').trim().toLowerCase() === myEmail &&
+        request.status === 'answered',
+    )
+    .sort((a, b) => toTime(b.answeredAt) - toTime(a.answeredAt))
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-mystic-black">
@@ -95,7 +127,7 @@ export function RespostasPage() {
                     <div>
                       <p className="font-semibold text-mystic-goldSoft">{answer.consultantName}</p>
                       <p className="mt-0.5 text-[10px] text-ethereal-silver/40">
-                        {new Date(answer.answeredAt).toLocaleDateString('pt-BR')} · {answer.questionCount} pergunta(s)
+                        {formatDate(answer.answeredAt)} · {answer.questionCount} pergunta(s)
                       </p>
                     </div>
                     <div className="flex items-center gap-2">

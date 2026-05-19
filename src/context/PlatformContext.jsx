@@ -34,7 +34,7 @@
       return { ok: false, message: 'Erro de conexão ao registrar pedido PIX.' }
     }
   }
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { getZodiacSign } from '../utils/zodiac'
 import { useBilling } from '../hooks/useBilling'
@@ -1925,23 +1925,24 @@ export function PlatformProvider({ children }) {
     void loadMinutePackages()
   }, [])
 
-  useEffect(() => {
-    const loadQuestionRequests = async () => {
-      try {
-        const response = await fetch(buildApiUrl('/api/question-requests'))
-        if (!response.ok) {
-          return
-        }
-        const payload = await response.json()
-        if (!Array.isArray(payload)) {
-          return
-        }
-        setQuestionRequests(payload.map(normalizeQuestionRequest))
-      } catch {
-        return
+  const refreshQuestionRequests = useCallback(async () => {
+    try {
+      const response = await fetch(buildApiUrl('/api/question-requests'), { cache: 'no-store' })
+      if (!response.ok) {
+        return { ok: false }
       }
+      const payload = await response.json()
+      if (!Array.isArray(payload)) {
+        return { ok: false }
+      }
+      setQuestionRequests(payload.map(normalizeQuestionRequest))
+      return { ok: true }
+    } catch {
+      return { ok: false }
     }
+  }, [])
 
+  useEffect(() => {
     const loadWallets = async () => {
       try {
         const response = await fetch(buildApiUrl('/api/wallets'))
@@ -1958,9 +1959,9 @@ export function PlatformProvider({ children }) {
       }
     }
 
-    void loadQuestionRequests()
+    void refreshQuestionRequests()
     void loadWallets()
-  }, [])
+  }, [refreshQuestionRequests])
 
   const selectConsultant = (consultant) => {
     setSelectedConsultant(consultant)
@@ -2567,6 +2568,7 @@ export function PlatformProvider({ children }) {
     trackingCredentials,
     submitQuestionConsultation,
     questionRequests,
+    refreshQuestionRequests,
     respondToQuestionRequest,
     updateConsultantBaseConsultations,
     consultantWallets,
