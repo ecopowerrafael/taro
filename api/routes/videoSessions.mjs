@@ -87,70 +87,15 @@ export const createVideoSessionsRouter = (pool) => {
         consultantUserId = consultantUsers[0]?.id || null
       }
 
-      // Obter credenciais do Daily.co e SMTP
-      const [creds] = await pool.query('SELECT dailyApiKey, dailyDomain, smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom FROM platform_credentials WHERE id = 1')
+      const [creds] = await pool.query('SELECT smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom FROM platform_credentials WHERE id = 1')
       const credentials = creds[0] || {}
-
-      // Gerar um ID de sala único
-      const roomId = `room_${crypto.randomBytes(8).toString('hex')}`
-      let roomUrl = ''
-
-      // Se tivermos a API do Daily, podemos criar a sala via API. Caso contrário, montamos a URL se for demo
-      let apiKey = credentials.dailyApiKey
-      if (apiKey) {
-        apiKey = apiKey.trim()
-      }
-
-      if (apiKey && credentials.dailyDomain) {
-        try {
-          console.log('[videoSessions POST] Criando room via Daily.co API')
-          console.log('[videoSessions POST] roomId:', roomId)
-          console.log('[videoSessions POST] dailyDomain:', credentials.dailyDomain)
-          
-          const dailyRes = await fetch('https://api.daily.co/v1/rooms', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-              name: roomId,
-              privacy: 'private',
-              properties: {
-                exp: Math.floor(Date.now() / 1000) + 24 * 3600
-              }
-            })
-          })
-          
-          if (dailyRes.ok) {
-            const dailyData = await dailyRes.json()
-            roomUrl = dailyData.url
-            console.log('[videoSessions POST] ✓ Room criada com sucesso. URL:', roomUrl)
-          } else {
-            try {
-              const errorData = await dailyRes.json()
-              console.error('[videoSessions POST] ✗ Erro ao criar room:', errorData)
-            } catch (e) {
-              console.error('[videoSessions POST] ✗ Erro ao criar room (não-JSON):', dailyRes.status, dailyRes.statusText)
-            }
-            roomUrl = `https://${credentials.dailyDomain}/${roomId}`
-          }
-        } catch (e) {
-          console.error('[videoSessions POST] Exception ao criar room:', e.message)
-          roomUrl = `https://${credentials.dailyDomain}/${roomId}`
-        }
-      } else {
-        const domain = credentials.dailyDomain || 'demo.daily.co'
-        roomUrl = `https://${domain}/${roomId}`
-        console.log('[videoSessions POST] Usando fallback URL:', roomUrl)
-      }
 
       // Salvar a sessão no banco
       const sessionId = `vs_${crypto.randomBytes(8).toString('hex')}`
       await pool.query(`
         INSERT INTO video_sessions (id, userId, consultantId, status, roomUrl, createdAt)
-        VALUES (?, ?, ?, 'waiting', ?, NOW())
-      `, [sessionId, userId, consultantId, roomUrl])
+        VALUES (?, ?, ?, 'waiting', NULL, NOW())
+      `, [sessionId, userId, consultantId])
 
       // Enviar emails se SMTP estiver configurado
       if (credentials.smtpHost && credentials.smtpUser && credentials.smtpPass) {
@@ -197,7 +142,6 @@ export const createVideoSessionsRouter = (pool) => {
         io.to(`consultant_${consultantId}`).emit('incoming_call', {
           sessionId,
           customerName: user.name,
-          roomUrl
         })
       }
 
@@ -219,7 +163,6 @@ export const createVideoSessionsRouter = (pool) => {
           nativeRoute: `/area-consultor?tab=video&sessionId=${sessionId}`,
           type: 'incoming_call',
           sessionId,
-          roomUrl,
           customerName: user.name,
           consultantId,
         }
@@ -258,7 +201,7 @@ export const createVideoSessionsRouter = (pool) => {
         })
       }
 
-      response.status(201).json({ sessionId, roomUrl })
+      response.status(201).json({ sessionId })
 
     } catch (error) {
       console.error('Erro ao criar sessão de vídeo:', error)
@@ -376,6 +319,12 @@ export const createVideoSessionsRouter = (pool) => {
 
       // Adicionamos o daily token se for uma sala privada e tivermos API key
       let dailyToken = null
+      const includeTokenRaw = request.query?.includeToken
+      const includeToken =
+        includeTokenRaw === true ||
+        includeTokenRaw === 1 ||
+        String(includeTokenRaw || '').toLowerCase() === '1' ||
+        String(includeTokenRaw || '').toLowerCase() === 'true'
       const [creds] = await pool.query('SELECT dailyApiKey FROM platform_credentials WHERE id = 1')
       let apiKey = creds[0]?.dailyApiKey
 
@@ -384,7 +333,7 @@ export const createVideoSessionsRouter = (pool) => {
         apiKey = apiKey.trim()
       }
 
-      if (apiKey) {
+      if (includeToken && apiKey && session.roomUrl && presence.customerOnline && presence.consultantOnline) {
         try {
           const roomName = session.roomUrl.split('/').pop()
           console.log('[videoSessions GET /:sessionId] ═══════════════════════════════════════')
@@ -427,7 +376,7 @@ export const createVideoSessionsRouter = (pool) => {
           console.error('[videoSessions GET /:sessionId] ✗ Exception ao gerar token:', e.message)
         }
       } else {
-        console.warn('[videoSessions GET /:sessionId] ⚠️  apiKey vazia - dailyToken será null')
+        console.warn('[videoSessions GET /:sessionId] ⚠️  Token Daily não solicitado ou apiKey vazia - dailyToken será null')
       }
       
       console.log('[videoSessions GET /:sessionId] ═════ RESPOSTA FINAL ═════')
@@ -505,6 +454,13 @@ export const createVideoSessionsRouter = (pool) => {
         }
 
         const presence = getSessionPresenceSnapshot(request, sessionId)
+        if (!presence.consultantOnline) {
+          return response.status(409).json({
+            message: 'O consultor não está online nesta sala.',
+            currentStatus: session.status,
+            consultantOnline: false,
+          })
+        }
         if (!presence.customerOnline) {
           return response.status(409).json({
             message: 'O cliente não está online nesta sala ou já cancelou a chamada.',
@@ -513,8 +469,55 @@ export const createVideoSessionsRouter = (pool) => {
           })
         }
 
+        let roomUrl = session.roomUrl
+        if (!roomUrl) {
+          const [creds] = await pool.query('SELECT dailyApiKey, dailyDomain FROM platform_credentials WHERE id = 1')
+          const credentials = creds[0] || {}
+          const roomId = `room_${crypto.randomBytes(8).toString('hex')}`
+          const domain = (credentials.dailyDomain || '').trim() || 'demo.daily.co'
+
+          let apiKey = credentials.dailyApiKey
+          if (apiKey) {
+            apiKey = apiKey.trim()
+          }
+
+          if (apiKey && credentials.dailyDomain) {
+            const dailyRes = await fetch('https://api.daily.co/v1/rooms', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${apiKey}`,
+              },
+              body: JSON.stringify({
+                name: roomId,
+                privacy: 'private',
+                properties: {
+                  exp: Math.floor(Date.now() / 1000) + 24 * 3600,
+                },
+              }),
+            })
+
+            if (!dailyRes.ok) {
+              const errorData = await dailyRes.json().catch(() => ({}))
+              console.error('[videoSessions PATCH /status] Erro ao criar room:', errorData)
+              return response.status(502).json({ message: 'Não foi possível criar a sala de vídeo no provedor. Tente novamente.' })
+            }
+
+            const dailyData = await dailyRes.json().catch(() => ({}))
+            roomUrl = dailyData.url
+          } else {
+            roomUrl = `https://${domain}/${roomId}`
+          }
+
+          if (!roomUrl) {
+            return response.status(502).json({ message: 'Não foi possível gerar URL da sala de vídeo. Tente novamente.' })
+          }
+
+          await pool.query('UPDATE video_sessions SET roomUrl = ? WHERE id = ?', [roomUrl, sessionId])
+        }
+
         await pool.query('UPDATE video_sessions SET status = ?, startedAt = NULL WHERE id = ?', [status, sessionId])
-        return response.json({ ok: true, awaitingConnection: true })
+        return response.json({ ok: true, awaitingConnection: true, roomUrl })
       }
 
       if ((status === 'cancelled' || status === 'rejected') && session.status !== 'waiting') {

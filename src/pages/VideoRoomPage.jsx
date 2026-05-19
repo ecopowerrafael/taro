@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
 import { GlassCard } from '../components/GlassCard'
@@ -7,6 +7,7 @@ import { usePlatformContext } from '../context/platform-context'
 import DailyIframe from '@daily-co/daily-js'
 import { io } from 'socket.io-client'
 import { useTranslation } from 'react-i18next'
+import { buildApiUrl } from '../utils/runtimeConfig'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim()
 
@@ -36,12 +37,14 @@ export function VideoRoomPage() {
   const callFrameRef = useRef(null)
   const containerRef = useRef(null)
   const socketRef = useRef(null)
+  const isLeavingRef = useRef(false)
 
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const res = await fetch(`/api/video-sessions/${sessionId}`, {
-          headers: { Authorization: `Bearer ${token}` }
+        const res = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}`), {
+          cache: 'no-store',
+          headers: { Authorization: `Bearer ${token}` },
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.message)
@@ -70,8 +73,9 @@ export function VideoRoomPage() {
     
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/video-sessions/${sessionId}`, {
-          headers: { Authorization: `Bearer ${token}` }
+        const res = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}`), {
+          cache: 'no-store',
+          headers: { Authorization: `Bearer ${token}` },
         })
         const data = await res.json()
         if (!res.ok) return
@@ -95,7 +99,6 @@ export function VideoRoomPage() {
     const role = session.isConsultant ? 'consultant' : 'customer'
     const socket = io(getRealtimeServerUrl(), {
       transports: ['websocket', 'polling'],
-      withCredentials: true,
     })
     socketRef.current = socket
 
@@ -107,9 +110,27 @@ export function VideoRoomPage() {
       })
     }
 
+    const updatePresenceFromMembers = (members) => {
+      const normalized = Array.isArray(members) ? members : []
+      const customerOnline = normalized.some((member) => member.role === 'customer')
+      const consultantOnline = normalized.some((member) => member.role === 'consultant')
+      setSession((prev) => ({
+        ...(prev || {}),
+        presenceMembers: normalized,
+        customerOnline,
+        consultantOnline,
+      }))
+    }
+
     socket.on('connect', joinPresence)
-    socket.on('reconnect', joinPresence)
     joinPresence()
+
+    socket.on('session_presence_update', (payload) => {
+      if (payload?.sessionId && String(payload.sessionId) !== String(sessionId)) {
+        return
+      }
+      updatePresenceFromMembers(payload?.members)
+    })
 
     const leavePresence = () => {
       socket.emit('leave_session_presence', {
@@ -123,12 +144,14 @@ export function VideoRoomPage() {
     }
 
     window.addEventListener('pagehide', handlePageHide)
+    window.addEventListener('focus', joinPresence)
 
     return () => {
       window.removeEventListener('pagehide', handlePageHide)
+      window.removeEventListener('focus', joinPresence)
       leavePresence()
       socket.off('connect', joinPresence)
-      socket.off('reconnect', joinPresence)
+      socket.off('session_presence_update')
       socket.disconnect()
       if (socketRef.current === socket) {
         socketRef.current = null
@@ -144,13 +167,35 @@ export function VideoRoomPage() {
     stream.getTracks().forEach((track) => track.stop())
   }
 
+  const fetchSessionForJoin = async () => {
+    const res = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}?includeToken=1`), {
+      cache: 'no-store',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(data.message || t('video_room.errors.load_room', 'Erro ao carregar a sala.'))
+    }
+    return data
+  }
+
   const joinCall = async (sessionData, { requestPermissionFirst = false } = {}) => {
     if (!containerRef.current) return
     if (callFrameRef.current) return
+
+    if (!sessionData?.customerOnline || (!sessionData?.consultantOnline && !sessionData?.isConsultant)) {
+      setSystemNotice(
+        t(
+          'video_room.errors.both_online_required',
+          'A chamada só pode iniciar quando cliente e consultor estiverem online nesta página.',
+        ),
+      )
+      return
+    }
     
     // Marcar sessão como ativa no DB se ainda não estiver
     if (sessionData.status !== 'active') {
-      const statusRes = await fetch(`/api/video-sessions/${sessionId}/status`, {
+      const statusRes = await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: 'active' })
@@ -176,6 +221,30 @@ export function VideoRoomPage() {
       }
     }
 
+    let joinData = sessionData
+    try {
+      joinData = await fetchSessionForJoin()
+      setSession((prev) => ({ ...(prev || {}), ...joinData }))
+    } catch (joinFetchError) {
+      setSystemNotice(joinFetchError.message || t('video_room.errors.connect_video_room', 'Erro ao conectar na sala de vídeo.'))
+      return
+    }
+
+    if (!joinData?.customerOnline || !joinData?.consultantOnline) {
+      setSystemNotice(
+        t(
+          'video_room.errors.both_online_required',
+          'A chamada só pode iniciar quando cliente e consultor estiverem online nesta página.',
+        ),
+      )
+      return
+    }
+
+    if (!joinData?.roomUrl) {
+      setSystemNotice(t('video_room.errors.connect_video_room', 'Erro ao conectar na sala de vídeo.'))
+      return
+    }
+
     setIsCallActive(true)
     const callFrame = DailyIframe.createFrame(containerRef.current, {
       iframeStyle: {
@@ -189,21 +258,21 @@ export function VideoRoomPage() {
     callFrameRef.current = callFrame
     
     callFrame.on('left-meeting', () => {
-      handleLeaveCall()
+      void handleLeaveCall({ skipLeave: true })
     })
 
     try {
       await callFrame.join({
-        url: sessionData.roomUrl,
-        token: sessionData.dailyToken // Usado se a sala for privada
+        url: joinData.roomUrl,
+        token: joinData.dailyToken || undefined
       })
 
       // Iniciar faturamento apenas depois que entrou com sucesso na chamada
-      if (!sessionData.isConsultant) {
+      if (!joinData.isConsultant) {
         billing.startSession({
-          consultantId: sessionData.consultantId,
-          consultantName: sessionData.consultantName,
-          pricePerMinute: sessionData.pricePerMinute
+          consultantId: joinData.consultantId,
+          consultantName: joinData.consultantName,
+          pricePerMinute: joinData.pricePerMinute
         })
       }
     } catch (e) {
@@ -237,9 +306,15 @@ export function VideoRoomPage() {
     }
   }
 
-  const handleLeaveCall = async () => {
+  const handleLeaveCall = async ({ skipLeave = false } = {}) => {
+    if (isLeavingRef.current) {
+      return
+    }
+    isLeavingRef.current = true
     if (callFrameRef.current) {
-      await callFrameRef.current.leave()
+      if (!skipLeave) {
+        await callFrameRef.current.leave().catch(() => {})
+      }
       callFrameRef.current.destroy()
       callFrameRef.current = null
     }
@@ -255,11 +330,13 @@ export function VideoRoomPage() {
       })
     }
 
-    await fetch(`/api/video-sessions/${sessionId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status: 'finished' })
-    })
+    try {
+      await fetch(buildApiUrl(`/api/video-sessions/${sessionId}/status`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'finished' }),
+      })
+    } catch {}
 
     navigate(session?.isConsultant ? '/area-consultor' : '/consultores')
     setSystemNotice(t('video_room.notices.call_ended', 'Chamada encerrada com sucesso.'))
@@ -323,11 +400,20 @@ export function VideoRoomPage() {
                     ? t('video_room.messages.consultant_available', 'Consultor disponível. Toque no botão abaixo para liberar câmera e microfone no Safari e entrar na chamada.')
                     : t('video_room.messages.room_created_wait', 'Sua sala já foi criada e o consultor foi notificado por e-mail e painel. Aguarde que estamos chamando o consultor para lhe atender.')}
               </p>
+
+              <div className="mt-4 flex flex-wrap justify-center gap-2 text-[11px] text-amber-100/70">
+                <span className={`rounded-full border px-3 py-1 ${session.customerOnline ? 'border-emerald-400/40 bg-emerald-400/10' : 'border-stardust-gold/20 bg-black/20'}`}>
+                  {t('video_room.presence.customer', 'Cliente nesta página')}: {session.customerOnline ? t('common.yes', 'Sim') : t('common.no', 'Não')}
+                </span>
+                <span className={`rounded-full border px-3 py-1 ${session.consultantOnline ? 'border-emerald-400/40 bg-emerald-400/10' : 'border-stardust-gold/20 bg-black/20'}`}>
+                  {t('video_room.presence.consultant', 'Consultor nesta página')}: {session.consultantOnline ? t('common.yes', 'Sim') : t('common.no', 'Não')}
+                </span>
+              </div>
               
               {session.isConsultant && (
                 <button
                   onClick={handleStartByConsultant}
-                  disabled={isJoining}
+                  disabled={isJoining || !session.customerOnline}
                   className="mt-8 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 px-8 py-3 font-bold text-black transition hover:brightness-110"
                 >
                   {isJoining ? t('video_room.actions.connecting', 'Conectando...') : t('video_room.actions.start_service', 'Iniciar Atendimento')}

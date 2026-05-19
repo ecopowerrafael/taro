@@ -1057,6 +1057,47 @@
     "page_subtitle": "Descubre la frecuencia de tu conexión",
     "your_sign": "Tu signo",
     "other_person_sign": "Signo de la otra persona",
+    "fallback_text": "La conexión aún se está revelando. Respira, alinea tus intenciones y vuelve a intentarlo.",
+    "labels": {
+      "sign_a": "Signo A",
+      "sign_b": "Signo B",
+      "trait": "Rasgo",
+      "advantage": "Fortaleza"
+    },
+    "elements": {
+      "fogo": "Fuego",
+      "terra": "Tierra",
+      "ar": "Aire",
+      "agua": "Agua"
+    },
+    "signs": {
+      "aries": { "label": "Aries", "dates": "21/03 – 19/04" },
+      "taurus": { "label": "Tauro", "dates": "20/04 – 20/05" },
+      "gemini": { "label": "Géminis", "dates": "21/05 – 20/06" },
+      "cancer": { "label": "Cáncer", "dates": "21/06 – 22/07" },
+      "leo": { "label": "Leo", "dates": "23/07 – 22/08" },
+      "virgo": { "label": "Virgo", "dates": "23/08 – 22/09" },
+      "libra": { "label": "Libra", "dates": "23/09 – 22/10" },
+      "scorpio": { "label": "Escorpio", "dates": "23/10 – 21/11" },
+      "sagittarius": { "label": "Sagitario", "dates": "22/11 – 21/12" },
+      "capricorn": { "label": "Capricornio", "dates": "22/12 – 19/01" },
+      "aquarius": { "label": "Acuario", "dates": "20/01 – 18/02" },
+      "pisces": { "label": "Piscis", "dates": "19/02 – 20/03" }
+    },
+    "profiles": {
+      "aries": { "title": "Impulso", "trait": "Coraje e iniciativa", "advantage": "Activa el movimiento y abre caminos" },
+      "taurus": { "title": "Estabilidad", "trait": "Constancia y presencia", "advantage": "Construye seguridad y confort" },
+      "gemini": { "title": "Curiosidad", "trait": "Versatilidad y mente rápida", "advantage": "Mantiene viva la conversación" },
+      "cancer": { "title": "Cuidado", "trait": "Sensibilidad y protección", "advantage": "Crea vínculo y refugio emocional" },
+      "leo": { "title": "Brillo", "trait": "Generosidad y expresión", "advantage": "Inspira confianza y alegría" },
+      "virgo": { "title": "Precisión", "trait": "Análisis y servicio", "advantage": "Ordena la rutina y mejora detalles" },
+      "libra": { "title": "Armonía", "trait": "Diplomacia y estética", "advantage": "Equilibra extremos y acerca a las partes" },
+      "scorpio": { "title": "Profundidad", "trait": "Intensidad y lealtad", "advantage": "Transforma y fortalece el vínculo" },
+      "sagittarius": { "title": "Expansión", "trait": "Aventura y fe", "advantage": "Amplía horizontes y sentido" },
+      "capricorn": { "title": "Determinación", "trait": "Disciplina y estrategia", "advantage": "Crea estructura y resultados duraderos" },
+      "aquarius": { "title": "Vanguardia", "trait": "Originalidad y libertad", "advantage": "Rompe patrones y abre posibilidades" },
+      "pisces": { "title": "Intuición", "trait": "Empatía e imaginación", "advantage": "Suaviza el camino y profundiza la conexión" }
+    },
     "disclaimer": "Dos trayectorias, un único diseño estelar. Selecciona las energías que deseas cruzar y observa cómo reaccionan los elementos ante la presencia del otro.",
     "reading_energies": "Leyendo las energías de los signos...",
     "calculating": "Calculando sincronicidad...",

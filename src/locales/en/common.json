@@ -1055,6 +1055,47 @@
     "page_subtitle": "Discover your connection frequency",
     "your_sign": "Your sign",
     "other_person_sign": "Other person sign",
+    "fallback_text": "The connection is still unfolding. Take a breath, align your intentions, and try again.",
+    "labels": {
+      "sign_a": "Sign A",
+      "sign_b": "Sign B",
+      "trait": "Trait",
+      "advantage": "Strength"
+    },
+    "elements": {
+      "fogo": "Fire",
+      "terra": "Earth",
+      "ar": "Air",
+      "agua": "Water"
+    },
+    "signs": {
+      "aries": { "label": "Aries", "dates": "Mar 21 – Apr 19" },
+      "taurus": { "label": "Taurus", "dates": "Apr 20 – May 20" },
+      "gemini": { "label": "Gemini", "dates": "May 21 – Jun 20" },
+      "cancer": { "label": "Cancer", "dates": "Jun 21 – Jul 22" },
+      "leo": { "label": "Leo", "dates": "Jul 23 – Aug 22" },
+      "virgo": { "label": "Virgo", "dates": "Aug 23 – Sep 22" },
+      "libra": { "label": "Libra", "dates": "Sep 23 – Oct 22" },
+      "scorpio": { "label": "Scorpio", "dates": "Oct 23 – Nov 21" },
+      "sagittarius": { "label": "Sagittarius", "dates": "Nov 22 – Dec 21" },
+      "capricorn": { "label": "Capricorn", "dates": "Dec 22 – Jan 19" },
+      "aquarius": { "label": "Aquarius", "dates": "Jan 20 – Feb 18" },
+      "pisces": { "label": "Pisces", "dates": "Feb 19 – Mar 20" }
+    },
+    "profiles": {
+      "aries": { "title": "Drive", "trait": "Courage and initiative", "advantage": "Starts movement and opens paths" },
+      "taurus": { "title": "Stability", "trait": "Consistency and presence", "advantage": "Builds safety and comfort" },
+      "gemini": { "title": "Curiosity", "trait": "Versatility and quick mind", "advantage": "Keeps the conversation alive" },
+      "cancer": { "title": "Care", "trait": "Sensitivity and protection", "advantage": "Creates emotional safety and bonding" },
+      "leo": { "title": "Radiance", "trait": "Generosity and expression", "advantage": "Inspires confidence and joy" },
+      "virgo": { "title": "Precision", "trait": "Analysis and service", "advantage": "Improves routines and details" },
+      "libra": { "title": "Harmony", "trait": "Diplomacy and aesthetics", "advantage": "Brings balance and agreement" },
+      "scorpio": { "title": "Depth", "trait": "Intensity and loyalty", "advantage": "Transforms and strengthens the bond" },
+      "sagittarius": { "title": "Expansion", "trait": "Adventure and faith", "advantage": "Broadens horizons and meaning" },
+      "capricorn": { "title": "Determination", "trait": "Discipline and strategy", "advantage": "Builds structure and lasting results" },
+      "aquarius": { "title": "Vanguard", "trait": "Originality and freedom", "advantage": "Breaks patterns and opens possibilities" },
+      "pisces": { "title": "Intuition", "trait": "Empathy and imagination", "advantage": "Softens the path and deepens connection" }
+    },
     "disclaimer": "Two paths, one stellar design. Select the energies you want to cross and see how elements react to each other.",
     "reading_energies": "Reading sign energies...",
     "calculating": "Calculating synchronicity...",
